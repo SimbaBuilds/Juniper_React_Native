@@ -1,14 +1,17 @@
 // This is a mock authentication service
 // In a real app, this would make API calls to your backend
 
-interface User {
+import { supabase } from '../../supabase/supabase';
+import { User as SupabaseUser } from '@supabase/supabase-js';
+
+interface AuthUser {
   id: string;
   email: string;
-  name: string;
+  name?: string;
 }
 
 interface LoginResponse {
-  user: User;
+  user: AuthUser;
   token: string;
 }
 
@@ -21,100 +24,79 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const authService = {
   /**
-   * Simulate a login API call
+   * Sign in with email and password
    */
   login: async (email: string, password: string): Promise<LoginResponse> => {
-    // Simulate API delay
-    await delay(1000);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     
-    // Simulate validation
-    if (!email || !password) {
-      throw { message: 'Email and password are required' };
-    }
+    if (error) throw error;
     
-    // For demo purposes, accept any email with a valid format and password longer than 5 chars
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      throw { message: 'Invalid email format', code: 'INVALID_EMAIL' };
-    }
-    
-    if (password.length < 6) {
-      throw { message: 'Password must be at least 6 characters', code: 'INVALID_PASSWORD' };
-    }
-    
-    // Simulate successful login
     return {
       user: {
-        id: '1',
-        email,
-        name: email.split('@')[0], // Just use part of email as name for demo
+        id: data.user?.id || '',
+        email: data.user?.email || '',
+        name: data.user?.user_metadata?.name,
       },
-      token: 'mock-jwt-token-' + Math.random().toString(36).substring(2),
+      token: data.session?.access_token || '',
     };
   },
   
   /**
-   * Simulate a registration API call
+   * Sign up with email and password
    */
-  register: async (
-    email: string, 
-    password: string, 
-    name: string
-  ): Promise<LoginResponse> => {
-    // Simulate API delay
-    await delay(1500);
+  register: async (email: string, password: string, name: string): Promise<LoginResponse> => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+        },
+      },
+    });
     
-    // Validation similar to login
-    if (!email || !password || !name) {
-      throw { message: 'All fields are required' };
-    }
+    if (error) throw error;
     
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      throw { message: 'Invalid email format', code: 'INVALID_EMAIL' };
-    }
-    
-    if (password.length < 6) {
-      throw { message: 'Password must be at least 6 characters', code: 'INVALID_PASSWORD' };
-    }
-    
-    if (name.length < 2) {
-      throw { message: 'Name is too short', code: 'INVALID_NAME' };
-    }
-    
-    // Simulate successful registration
     return {
       user: {
-        id: '1',
-        email,
+        id: data.user?.id || '',
+        email: data.user?.email || '',
         name,
       },
-      token: 'mock-jwt-token-' + Math.random().toString(36).substring(2),
+      token: data.session?.access_token || '',
     };
   },
   
   /**
-   * Simulate a logout API call
+   * Sign out
    */
   logout: async (): Promise<void> => {
-    await delay(500);
-    // In a real app, you would invalidate the token on the server
-    return;
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   },
   
   /**
-   * Verify if token is valid
+   * Get current user
    */
-  verifyToken: async (token: string): Promise<User> => {
-    await delay(500);
+  getCurrentUser: async (): Promise<AuthUser | null> => {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return null;
     
-    if (!token || !token.startsWith('mock-jwt-token-')) {
-      throw { message: 'Invalid token', code: 'INVALID_TOKEN' };
-    }
-    
-    // Simulate getting user from token
     return {
-      id: '1',
-      email: 'user@example.com',
-      name: 'User',
+      id: data.user.id,
+      email: data.user.email || '',
+      name: data.user.user_metadata?.name,
     };
+  },
+  
+  /**
+   * Get current session
+   */
+  getSession: async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session;
   },
 }; 

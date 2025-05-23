@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { VoiceProvider } from './src/features/voice/VoiceContext';
@@ -7,15 +7,27 @@ import WakeWordService from './src/features/wakeword/WakeWordService';
 import { HomeScreen } from './src/HomeScreen';
 import { SettingsScreen } from './src/features/settings/SettingsScreen';
 import { Ionicons } from '@expo/vector-icons';
+import { Session } from '@supabase/supabase-js';
+import { supabase } from './src/supabase/supabase';
+import LoginPage from './src/features/auth/LoginPage';
+import SignUpPage from './src/features/auth/SignUpPage';
+import PhoneSignUpPage from './src/features/auth/PhoneSignUpPage';
+import { AuthProvider } from './src/features/auth/AuthContext';
 
 type RootStackParamList = {
   Home: undefined;
   Settings: undefined;
+  Login: undefined;
+  SignUp: undefined;
+  PhoneSignUp: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
   // Initialize any needed configurations here
   useEffect(() => {
     // Initialize app settings
@@ -24,55 +36,111 @@ export default function App() {
         // Check if wake word detection is available
         const isAvailable = await WakeWordService.getInstance().isWakeWordEnabled();
         console.log(`Wake word detection available: ${isAvailable}`);
+        
+        // Get the initial session
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
+        
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, currentSession) => {
+            setSession(currentSession);
+          }
+        );
+        
+        setLoading(false);
+
+        // Cleanup subscription
+        return () => subscription.unsubscribe();
       } catch (error) {
         console.error('Error initializing app:', error);
+        setLoading(false);
       }
     };
     
     initializeApp();
   }, []);
 
+  if (loading) {
+    // You could return a loading component here
+    return null;
+  }
+
   return (
     <NavigationContainer>
-      <VoiceProvider>
-        <WakeWordProvider>
-          <Stack.Navigator
-            screenOptions={{
-              headerStyle: {
-                backgroundColor: '#f5f5f5',
-              },
-              headerTintColor: '#333',
-              headerTitleStyle: {
-                fontWeight: 'bold',
-              },
-            }}
-          >
-            <Stack.Screen 
-              name="Home" 
-              component={HomeScreen} 
-              options={({ navigation }) => ({
-                title: 'Jarvis',
-                headerRight: () => (
-                  <Ionicons 
-                    name="settings-outline" 
-                    size={24} 
-                    color="#333"
-                    style={{ marginRight: 16 }}
-                    onPress={() => navigation.navigate('Settings')}
-                  />
-                ),
-              })}
-            />
-            <Stack.Screen 
-              name="Settings" 
-              component={SettingsScreen}
-              options={{
-                title: 'Settings',
+      <AuthProvider>
+        <VoiceProvider>
+          <WakeWordProvider>
+            <Stack.Navigator
+              screenOptions={{
+                headerStyle: {
+                  backgroundColor: '#f5f5f5',
+                },
+                headerTintColor: '#333',
+                headerTitleStyle: {
+                  fontWeight: 'bold',
+                },
               }}
-            />
-          </Stack.Navigator>
-        </WakeWordProvider>
-      </VoiceProvider>
+              initialRouteName={session ? "Home" : "Login"}
+            >
+              {session ? (
+                <>
+                  <Stack.Screen 
+                    name="Home" 
+                    component={HomeScreen} 
+                    options={({ navigation }) => ({
+                      title: 'Jarvis',
+                      headerRight: () => (
+                        <Ionicons 
+                          name="settings-outline" 
+                          size={24} 
+                          color="#333"
+                          style={{ marginRight: 16 }}
+                          onPress={() => navigation.navigate('Settings')}
+                        />
+                      ),
+                    })}
+                  />
+                  <Stack.Screen 
+                    name="Settings" 
+                    component={SettingsScreen}
+                    options={{
+                      title: 'Settings',
+                    }}
+                  />
+                </>
+              ) : (
+                <>
+                  <Stack.Screen 
+                    name="Login" 
+                    component={LoginPage}
+                    options={{
+                      title: 'Sign In',
+                      headerShown: false,
+                    }}
+                  />
+                  <Stack.Screen 
+                    name="SignUp" 
+                    component={SignUpPage}
+                    options={{
+                      title: 'Create Account',
+                      headerShown: false,
+                    }}
+                  />
+                  <Stack.Screen 
+                    name="PhoneSignUp" 
+                    component={PhoneSignUpPage}
+                    options={{
+                      title: 'Phone Sign Up',
+                      headerShown: false,
+                    }}
+                  />
+                </>
+              )}
+            </Stack.Navigator>
+          </WakeWordProvider>
+        </VoiceProvider>
+      </AuthProvider>
     </NavigationContainer>
   );
 }

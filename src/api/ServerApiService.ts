@@ -1,5 +1,6 @@
 import { ChatMessage } from '../features/voice/VoiceContext';
 import SettingsService from '../app-config/AppConfigService';
+import { FeatureSettings } from '../types/features';
 
 // Default server configuration
 const DEFAULT_SERVER_CONFIG = {
@@ -27,6 +28,7 @@ export interface ChatRequest {
     response_type?: string;
     [key: string]: any;
   };
+  featureSettings?: FeatureSettings;
 }
 
 /**
@@ -85,7 +87,8 @@ class ServerApiService {
   public async sendChatRequest(
     message: string,
     history: ChatMessage[],
-    preferences?: ChatRequest['preferences']
+    preferences?: ChatRequest['preferences'],
+    featureSettings?: FeatureSettings
   ): Promise<ChatResponse> {
     console.log(`Sending chat request to ${this.config.baseUrl}${this.config.apiEndpoint}`);
     
@@ -97,7 +100,8 @@ class ServerApiService {
         preferences: preferences || {
           voice: 'male',
           response_type: 'concise'
-        }
+        },
+        featureSettings
       };
 
       console.log('Request payload:', JSON.stringify(request));

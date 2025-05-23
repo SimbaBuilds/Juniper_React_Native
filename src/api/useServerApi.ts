@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import ServerApiService, { ServerApiConfig, ChatResponse } from './ServerApiService';
 import { ChatMessage } from '../features/voice/VoiceContext';
+import { FeatureSettings } from '../types/features';
 
 /**
  * Return type for the useServerApi hook
@@ -9,7 +10,7 @@ interface UseServerApiResult {
   isLoading: boolean;
   error: Error | null;
   response: ChatResponse | null;
-  sendMessage: (message: string, history: ChatMessage[]) => Promise<ChatResponse>;
+  sendMessage: (message: string, history: ChatMessage[], featureSettings?: FeatureSettings) => Promise<ChatResponse>;
   updateConfig: (config: Partial<ServerApiConfig>) => void;
 }
 
@@ -47,7 +48,8 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
    */
   const sendMessage = useCallback(async (
     message: string, 
-    history: ChatMessage[]
+    history: ChatMessage[],
+    featureSettings?: FeatureSettings
   ): Promise<ChatResponse> => {
     setIsLoading(true);
     setError(null);
@@ -56,7 +58,8 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
       const result = await ServerApiService.sendChatRequest(
         message, 
         history, 
-        options.preferences
+        options.preferences,
+        featureSettings
       );
       
       setResponse(result);

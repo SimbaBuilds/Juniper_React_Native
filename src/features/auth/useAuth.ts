@@ -1,109 +1,45 @@
-import { useState, useEffect, useCallback } from 'react';
-import { authService } from './authService';
+import { useContext } from 'react';
+import { AuthContext } from './AuthContext';
 
-interface UseAuthReturn {
-  user: any | null;
-  token: string | null;
-  isLoading: boolean;
-  error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => Promise<void>;
-}
-
-export const useAuth = (): UseAuthReturn => {
-  const [user, setUser] = useState<any | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Check for existing token in storage on mount
-  useEffect(() => {
-    const checkToken = async () => {
-      try {
-        // In a real app, get token from secure storage
-        const storedToken = null; // await SecureStore.getItemAsync('userToken');
-        
-        if (storedToken) {
-          setIsLoading(true);
-          const userData = await authService.verifyToken(storedToken);
-          setUser(userData);
-          setToken(storedToken);
-        }
-      } catch (err: any) {
-        console.error('Token verification failed:', err);
-        // Token is invalid, clear it
-        // await SecureStore.deleteItemAsync('userToken');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    checkToken();
-  }, []);
-
-  const login = useCallback(async (email: string, password: string) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const response = await authService.login(email, password);
-      setUser(response.user);
-      setToken(response.token);
-      
-      // In a real app, save token to secure storage
-      // await SecureStore.setItemAsync('userToken', response.token);
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
-      console.error('Login error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const register = useCallback(async (email: string, password: string, name: string) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const response = await authService.register(email, password, name);
-      setUser(response.user);
-      setToken(response.token);
-      
-      // In a real app, save token to secure storage
-      // await SecureStore.setItemAsync('userToken', response.token);
-    } catch (err: any) {
-      setError(err.message || 'Registration failed');
-      console.error('Registration error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const logout = useCallback(async () => {
-    setIsLoading(true);
-    
-    try {
-      await authService.logout();
-      setUser(null);
-      setToken(null);
-      
-      // In a real app, remove token from secure storage
-      // await SecureStore.deleteItemAsync('userToken');
-    } catch (err: any) {
-      console.error('Logout error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  
   return {
-    user,
-    token,
-    isLoading,
-    error,
-    login,
-    register,
-    logout,
+    user: context.user,
+    session: context.session,
+    isLoading: context.loading,
+    error: null,
+    
+    // Email authentication
+    login: async (email: string, password: string) => {
+      const { error } = await context.signIn(email, password);
+      if (error) throw error;
+    },
+    register: async (email: string, password: string, name: string) => {
+      const { error } = await context.signUp(email, password, name);
+      if (error) throw error;
+    },
+    
+    // Phone authentication
+    loginWithPhone: async (phone: string) => {
+      const { error } = await context.signInWithPhone(phone);
+      if (error) throw error;
+    },
+    signUpWithPhone: async (phone: string) => {
+      const { error } = await context.signUpWithPhone(phone);
+      if (error) throw error;
+    },
+    verifyOtp: async (phone: string, token: string, type: 'sms' | 'phone_change' = 'sms') => {
+      const { error } = await context.verifyOtp(phone, token, type);
+      if (error) throw error;
+    },
+    
+    // Common
+    logout: async () => {
+      await context.signOut();
+    }
   };
 }; 

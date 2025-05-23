@@ -46,7 +46,6 @@ class VoiceManager private constructor() {
     
     // Voice processor strategy
     private lateinit var voiceProcessor: VoiceProcessor
-    private var useVapiMode = false
     
     // State tracking
     private var lastWakeWordTimestamp = 0L
@@ -106,11 +105,12 @@ class VoiceManager private constructor() {
         // Update constants from config
         MAX_NO_SPEECH_RETRIES = configManager.getMaxNoSpeechRetries()
         
-        // Create default processor (Modular)
-        voiceProcessor = ModularVoiceProcessor(context)
+        // Initialize speech recognition
+        initializeSpeechRecognition()
+        Log.d(TAG, "Speech recognition initialized: $isSpeechRecognitionInitialized")
         
-        // Initialize services
-        initialize()
+        // Initialize voice processor
+        initializeVoiceProcessor()
         
         // Initialize Whisper client
         whisperClient = WhisperClient(context)
@@ -120,27 +120,11 @@ class VoiceManager private constructor() {
     }
     
     /**
-     * Initialize required services
+     * Initialize required services (deprecated - kept for backward compatibility)
      */
     fun initialize() {
-        Log.i(TAG, "Initializing VoiceManager services")
-        
-        // Initialize speech recognition
-        initializeSpeechRecognition()
-        Log.d(TAG, "Speech recognition initialized: $isSpeechRecognitionInitialized")
-        
-        // Initialize voice processor
-        voiceProcessor.initialize()
-        
-        // Also initialize Vapi processor to ensure it's ready if needed
-        if (voiceProcessor !is VapiVoiceProcessor) {
-            try {
-                val vapiProcessor = VapiVoiceProcessor(context)
-                vapiProcessor.initialize()
-            } catch (e: Exception) {
-                Log.e(TAG, "Error pre-initializing Vapi processor", e)
-            }
-        }
+        Log.i(TAG, "Initializing VoiceManager services via deprecated method")
+        // This method is kept for backward compatibility but should not be called directly
     }
     
     /**
@@ -165,31 +149,29 @@ class VoiceManager private constructor() {
     }
     
     /**
-     * Set whether to use Vapi mode
+     * Initialize the voice processor
+     * 
+     * @return True if processor was initialized successfully
      */
-    fun setVapiMode(useVapi: Boolean) {
-        Log.i(TAG, "Setting Vapi mode to: $useVapi")
+    private fun initializeVoiceProcessor(): Boolean {
+        Log.i(TAG, "Initializing voice processor")
         
-        if (useVapi == useVapiMode) {
-            Log.d(TAG, "Already in requested Vapi state: $useVapi")
-            return
-        }
-        
-        useVapiMode = useVapi
-        
-        // Switch voice processors
-        voiceProcessor = if (useVapi) {
-            VapiVoiceProcessor(context)
-        } else {
-            ModularVoiceProcessor(context)
-        }
-        
-        // Initialize the new processor
-        voiceProcessor.initialize()
-        
-        // Start the processor if we're currently in a non-idle state
-        if (_voiceState.value != VoiceState.IDLE) {
-            voiceProcessor.start()
+        try {
+            // Create ModularVoiceProcessor
+            voiceProcessor = ModularVoiceProcessor(context)
+            
+            // Initialize the processor
+            voiceProcessor.initialize()
+            
+            // Start the processor if we're currently in a non-idle state
+            if (_voiceState.value != VoiceState.IDLE) {
+                voiceProcessor.start()
+            }
+            
+            return true
+        } catch (e: Exception) {
+            Log.e(TAG, "Error initializing voice processor", e)
+            return false
         }
     }
     
@@ -521,36 +503,9 @@ class VoiceManager private constructor() {
             Log.e(TAG, "Error processing recognized text", e)
             _voiceState.value = VoiceState.ERROR("Processing error: ${e.message}")
             
-            // If using Vapi and it failed, try switching to modular
-            if (voiceProcessor is VapiVoiceProcessor) {
-                Log.i(TAG, "Switching to modular mode after Vapi processing error")
-                setVapiMode(false)
-                
-                // Try processing with modular
-                try {
-                    voiceProcessor.processText(text) { response ->
-                        if (response.isNotEmpty()) {
-                            _voiceState.value = VoiceState.RESPONDING(response)
-                            
-                            voiceProcessor.speak(response) {
-                                // Don't return to idle when done speaking, set to LISTENING instead
-                                Log.i(TAG, "TTS complete (from modular fallback), setting state to LISTENING to continue conversation")
-                                
-                                // Add a short delay for better transition
-                                Handler(Looper.getMainLooper()).postDelayed({
-                                    updateState(VoiceState.LISTENING)
-                                }, 300)
-                            }
-                        } else {
-                            Log.w(TAG, "Received empty response from modular processor")
-                            _voiceState.value = VoiceState.ERROR("No response received from modular processor")
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error processing with modular processor too", e)
-                    _voiceState.value = VoiceState.ERROR("Modular processing error: ${e.message}")
-                }
-            }
+            // Log the error and set error state
+            Log.e(TAG, "Error processing text with voice processor", e)
+            _voiceState.value = VoiceState.ERROR("Processing error: ${e.message}")
         }
     }
     

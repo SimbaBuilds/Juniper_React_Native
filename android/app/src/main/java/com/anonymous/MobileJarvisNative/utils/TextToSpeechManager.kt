@@ -9,7 +9,7 @@ import java.util.UUID
 
 /**
  * Manager for text-to-speech functionality.
- * This is a temporary fallback solution until the full Vapi audio pipeline is implemented.
+ * Provides a centralized interface for TTS operations throughout the app.
  */
 object TextToSpeechManager {
     private const val TAG = "TextToSpeechManager"

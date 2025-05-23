@@ -3,6 +3,8 @@ import { VoiceState, VoiceContextValue } from './types/voice';
 import VoiceService from './VoiceService';
 import { useServerApi } from '../../api/useServerApi';
 import { useVoiceState as useVoiceStateHook } from './hooks/useVoiceState';
+import { useWakeWord } from '../wakeword/WakeWordContext';
+import { useFeatureSettings } from '../settings/useFeatureSettings';
 
 // Create context with default values
 const VoiceContext = createContext<VoiceContextValue>({
@@ -50,6 +52,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const isListening = voiceStateFromHook.isListening;
   const isSpeaking = voiceStateFromHook.isSpeaking;
   const isError = voiceStateFromHook.isError;
+  
+  // Feature settings hook
+  const { settings: featureSettings } = useFeatureSettings();
   
   // Other state we still need to manage
   const [isWakeWordEnabled, setWakeWordEnabled] = useState<boolean>(false);
@@ -158,14 +163,15 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     try {
       console.log('🌐 Processing speech with server API:', speechText);
       console.log('📜 Current history length:', currentHistory.length);
-      const response = await serverApi.sendMessage(speechText, currentHistory);
+      console.log('⚙️ Using feature settings:', featureSettings);
+      const response = await serverApi.sendMessage(speechText, currentHistory, featureSettings);
       return response;
     } catch (err) {
       // Error handling is done in onError callback
       console.error('Error in processSpeechWithServer:', err);
       return null;
     }
-  }, [serverApi]);
+  }, [serverApi, featureSettings]);
   
   // Use directly the startListening from hook
   const startListening = voiceStateFromHook.startListening;

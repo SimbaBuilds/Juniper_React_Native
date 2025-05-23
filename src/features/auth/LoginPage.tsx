@@ -1,13 +1,52 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import LoginForm from '../features/auth/LoginForm';
-import { useAuth } from '../features/auth/useAuth';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import LoginForm from './LoginForm';
+import { useAuth } from './useAuth';
 
-const LoginPage: React.FC = () => {
-  const { login, isLoading, error } = useAuth();
+type RootStackParamList = {
+  Home: undefined;
+  Settings: undefined;
+  Login: undefined;
+  SignUp: undefined;
+};
 
-  const handleLogin = (email: string, password: string) => {
-    login(email, password);
+type LoginPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
+
+interface LoginPageProps {
+  navigation: LoginPageNavigationProp;
+}
+
+const LoginPage: React.FC<LoginPageProps> = ({ navigation }) => {
+  const { login, isLoading } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      setError(null);
+      await login(email, password);
+    } catch (err) {
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (err instanceof Error) {
+        // Handle specific Supabase auth errors
+        if (err.message.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+        } else if (err.message.includes('Email not confirmed')) {
+          errorMessage = 'Please check your email and click the confirmation link before signing in.';
+        } else if (err.message.includes('Too many requests')) {
+          errorMessage = 'Too many login attempts. Please wait a moment and try again.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
+    }
+  };
+
+  const handleNavigateToSignUp = () => {
+    navigation.navigate('SignUp');
   };
 
   return (
@@ -35,7 +74,7 @@ const LoginPage: React.FC = () => {
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleNavigateToSignUp}>
               <Text style={styles.footerLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
