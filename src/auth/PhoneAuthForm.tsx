@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, TextInput, View, Text } from 'react-native';
-import Button from '../../shared/components/Button';
+import Button from '../shared/components/Button';
 
 interface PhoneAuthFormProps {
   onSubmit: (phone: string) => void;

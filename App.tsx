@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { VoiceProvider } from './src/features/voice/VoiceContext';
-import { WakeWordProvider } from './src/features/wakeword/WakeWordContext';
-import WakeWordService from './src/features/wakeword/WakeWordService';
+import { VoiceProvider } from './src/voice/VoiceContext';
+import { WakeWordProvider } from './src/wakeword/WakeWordContext';
+import WakeWordService from './src/wakeword/WakeWordService';
 import { HomeScreen } from './src/HomeScreen';
-import { SettingsScreen } from './src/features/settings/SettingsScreen';
+import { SettingsScreen } from './src/settings/SettingsScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from './src/supabase/supabase';
-import LoginPage from './src/features/auth/LoginPage';
-import SignUpPage from './src/features/auth/SignUpPage';
-import PhoneSignUpPage from './src/features/auth/PhoneSignUpPage';
-import { AuthProvider } from './src/features/auth/AuthContext';
+import LoginPage from './src/auth/LoginPage';
+import SignUpPage from './src/auth/SignUpPage';
+import PhoneSignUpPage from './src/auth/PhoneSignUpPage';
+import { AuthProvider } from './src/auth/AuthContext';
 
 type RootStackParamList = {
   Home: undefined;

@@ -8,10 +8,10 @@ import { WakeWordStatus } from '../wakeword/components/WakeWordStatus';
 import { usePermissions } from './usePermissions';
 import { useFeatureSettings } from './useFeatureSettings';
 import { useAuth } from '../auth/AuthContext';
-import { SettingsToggle } from '../../shared/components/SettingsToggle';
-import { SettingsArrayInput } from '../../shared/components/SettingsArrayInput';
-import { SettingsDropdown } from '../../shared/components/SettingsDropdown';
-import { SettingsTextInput } from '../../shared/components/SettingsTextInput';
+import { SettingsToggle } from '../shared/components/SettingsToggle';
+import { SettingsArrayInput } from '../shared/components/SettingsArrayInput';
+import { SettingsDropdown } from '../shared/components/SettingsDropdown';
+import { SettingsTextInput } from '../shared/components/SettingsTextInput';
 
 type RootStackParamList = {
   Home: undefined;
@@ -37,7 +37,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const {
     settings,
     loading: settingsLoading,
-    updatePortfolioSettings,
+    updateTickersSettings,
     updateNewsSettings,
     updateCalendarSettings,
     updateTellMeThingsSettings,
@@ -138,11 +138,31 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Features</Text>
 
           <SettingsToggle
-            label="Portfolio"
-            value={settings.portfolio.enabled}
-            onValueChange={(enabled) => updatePortfolioSettings({ enabled })}
-            description="Track your investment portfolio and market data"
+            label="Tickers"
+            value={settings.tickers.enabled}
+            onValueChange={(enabled) => updateTickersSettings({ enabled })}
+            description="Track your investment tickers and market data"
           />
+
+          {settings.tickers.enabled && (
+            <View style={styles.subSettingsContainer}>
+              <SettingsArrayInput
+                label="Ticker Symbols"
+                values={settings.tickers.tickers}
+                onValuesChange={async (tickers) => {
+                  try {
+                    await updateTickersSettings({ tickers });
+                  } catch (error) {
+                    console.error('Error updating tickers:', error);
+                    // Could show a toast notification here if needed
+                  }
+                }}
+                placeholder="Add ticker symbol (e.g., AAPL, MSFT)..."
+                description="Stock symbols to track in your tickers"
+                maxItems={20}
+              />
+            </View>
+          )}
 
           <SettingsToggle
             label="News"
@@ -152,7 +172,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           />
 
           {settings.news.enabled && (
-            <>
+            <View style={styles.subSettingsContainer}>
               <SettingsToggle
                 label="XAI LiveSearch API"
                 value={settings.news.xaiLiveSearchEnabled}
@@ -175,7 +195,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 description="Your preferred news sources for personalized updates"
                 maxItems={10}
               />
-            </>
+            </View>
           )}
 
           <SettingsToggle
@@ -189,11 +209,11 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             label="Tell Me The Things"
             value={settings.tellMeThings.enabled}
             onValueChange={(enabled) => updateTellMeThingsSettings({ enabled })}
-            description="Daily briefing with portfolio, news, and calendar"
+            description="Daily briefing with tickers, news, and calendar"
           />
 
           {settings.tellMeThings.enabled && (
-            <>
+            <View style={styles.subSettingsContainer}>
               <SettingsArrayInput
                 label="Trigger Phrases"
                 values={settings.tellMeThings.triggerPhrases}
@@ -204,10 +224,10 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               />
 
               <SettingsToggle
-                label="Include Portfolio"
-                value={settings.tellMeThings.includePortfolio}
-                onValueChange={(includePortfolio) => updateTellMeThingsSettings({ includePortfolio })}
-                description="Include portfolio updates in briefing"
+                label="Include Tickers"
+                value={settings.tellMeThings.includeTickers}
+                onValueChange={(includeTickers) => updateTellMeThingsSettings({ includeTickers })}
+                description="Include tickers updates in briefing"
               />
 
               <SettingsToggle
@@ -223,7 +243,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 onValueChange={(includeCalendar) => updateTellMeThingsSettings({ includeCalendar })}
                 description="Include today's calendar in briefing"
               />
-            </>
+            </View>
           )}
 
           <SettingsToggle
@@ -234,7 +254,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           />
 
           {settings.projectUnderstanding.enabled && (
-            <>
+            <View style={styles.subSettingsContainer}>
               <SettingsToggle
                 label="Google Keep"
                 value={settings.projectUnderstanding.googleKeepEnabled}
@@ -262,7 +282,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 onValueChange={(emailToSelfEnabled) => updateProjectUnderstandingSettings({ emailToSelfEnabled })}
                 description="Email notes to yourself"
               />
-            </>
+            </View>
           )}
         </View>
 
@@ -459,5 +479,15 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 14,
     color: '#FFFFFF',
+  },
+  subSettingsContainer: {
+    marginLeft: 24,
+    paddingLeft: 16,
+    borderLeftWidth: 2,
+    borderLeftColor: '#4A90E2',
+    backgroundColor: '#181818',
+    borderRadius: 8,
+    marginTop: 8,
+    paddingVertical: 8,
   },
 }); 

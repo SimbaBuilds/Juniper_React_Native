@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { FeatureSettings, defaultFeatureSettings } from '../../types/features';
+import { FeatureSettings, defaultFeatureSettings } from '../features/features';
+import { tickerService } from '../features/tickers/tickerService';
 
 const FEATURE_SETTINGS_KEY = 'feature_settings';
 
@@ -13,14 +14,60 @@ export const useFeatureSettings = () => {
     try {
       setLoading(true);
       const storedSettings = await AsyncStorage.getItem(FEATURE_SETTINGS_KEY);
+      
+      let parsedSettings: Partial<FeatureSettings> = {};
       if (storedSettings) {
-        const parsedSettings = JSON.parse(storedSettings);
-        // Merge with defaults to ensure all properties exist
-        setSettings({
-          ...defaultFeatureSettings,
-          ...parsedSettings,
-        });
+        parsedSettings = JSON.parse(storedSettings);
       }
+
+      // Initialize tickers from database if user is authenticated
+      let dbTickers: string[] = [];
+      try {
+        dbTickers = await tickerService.initializeUserTickers();
+      } catch (error) {
+        console.log('User not authenticated or error loading tickers, using defaults');
+        dbTickers = defaultFeatureSettings.tickers.tickers;
+      }
+
+      // Deep merge with defaults to ensure all properties exist
+      const mergedSettings: FeatureSettings = {
+        ...defaultFeatureSettings,
+        ...parsedSettings,
+        tickers: {
+          ...defaultFeatureSettings.tickers,
+          ...parsedSettings.tickers,
+          tickers: dbTickers, // Use database tickers as source of truth
+        },
+        news: {
+          ...defaultFeatureSettings.news,
+          ...parsedSettings.news,
+        },
+        calendar: {
+          ...defaultFeatureSettings.calendar,
+          ...parsedSettings.calendar,
+        },
+        tellMeThings: {
+          ...defaultFeatureSettings.tellMeThings,
+          ...parsedSettings.tellMeThings,
+        },
+        projectUnderstanding: {
+          ...defaultFeatureSettings.projectUnderstanding,
+          ...parsedSettings.projectUnderstanding,
+        },
+        voice: {
+          ...defaultFeatureSettings.voice,
+          ...parsedSettings.voice,
+        },
+        groceries: {
+          ...defaultFeatureSettings.groceries,
+          ...parsedSettings.groceries,
+        },
+        alarmClock: {
+          ...defaultFeatureSettings.alarmClock,
+          ...parsedSettings.alarmClock,
+        },
+      };
+      setSettings(mergedSettings);
     } catch (error) {
       console.error('Error loading feature settings:', error);
       setSettings(defaultFeatureSettings);
@@ -40,11 +87,22 @@ export const useFeatureSettings = () => {
   }, []);
 
   // Update specific feature settings
-  const updatePortfolioSettings = useCallback((updates: Partial<FeatureSettings['portfolio']>) => {
+  const updateTickersSettings = useCallback(async (updates: Partial<FeatureSettings['tickers']>) => {
     const newSettings = {
       ...settings,
-      portfolio: { ...settings.portfolio, ...updates },
+      tickers: { ...settings.tickers, ...updates },
     };
+    
+    // If tickers array was updated, sync with database
+    if (updates.tickers) {
+      try {
+        await tickerService.syncTickers(updates.tickers);
+      } catch (error) {
+        console.error('Error syncing tickers with database:', error);
+        // Still save locally even if DB sync fails
+      }
+    }
+    
     saveSettings(newSettings);
   }, [settings, saveSettings]);
 
@@ -117,7 +175,7 @@ export const useFeatureSettings = () => {
   return {
     settings,
     loading,
-    updatePortfolioSettings,
+    updateTickersSettings,
     updateNewsSettings,
     updateCalendarSettings,
     updateTellMeThingsSettings,

@@ -1,5 +1,6 @@
-export interface PortfolioSettings {
+export interface TickersSettings {
   enabled: boolean;
+  tickers: string[];
 }
 
 export interface NewsSettings {
@@ -16,7 +17,7 @@ export interface CalendarSettings {
 export interface TellMeThingsSettings {
   enabled: boolean;
   triggerPhrases: string[];
-  includePortfolio: boolean;
+  includeTickers: boolean;
   includeNews: boolean;
   includeCalendar: boolean;
 }
@@ -44,7 +45,7 @@ export interface AlarmClockSettings {
 }
 
 export interface FeatureSettings {
-  portfolio: PortfolioSettings;
+  tickers: TickersSettings;
   news: NewsSettings;
   calendar: CalendarSettings;
   tellMeThings: TellMeThingsSettings;
@@ -56,8 +57,9 @@ export interface FeatureSettings {
 
 // Default settings
 export const defaultFeatureSettings: FeatureSettings = {
-  portfolio: {
+  tickers: {
     enabled: false,
+    tickers: ['SPX'],
   },
   news: {
     enabled: false,
@@ -71,7 +73,7 @@ export const defaultFeatureSettings: FeatureSettings = {
   tellMeThings: {
     enabled: false,
     triggerPhrases: ['Ok Jarvis tell me the things', 'Julie, do the thing', 'Morning'],
-    includePortfolio: true,
+    includeTickers: true,
     includeNews: true,
     includeCalendar: true,
   },

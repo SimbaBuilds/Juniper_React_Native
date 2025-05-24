@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode, useMemo, useRef } from 'react';
 import { VoiceState, VoiceContextValue } from './types/voice';
 import VoiceService from './VoiceService';
-import { useServerApi } from '../../api/useServerApi';
+import { useServerApi } from '../api/useServerApi';
 import { useVoiceState as useVoiceStateHook } from './hooks/useVoiceState';
-import { useWakeWord } from '../wakeword/WakeWordContext';
 import { useFeatureSettings } from '../settings/useFeatureSettings';
 
 // Create context with default values

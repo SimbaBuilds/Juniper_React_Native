@@ -1,7 +1,7 @@
 // This is a mock authentication service
 // In a real app, this would make API calls to your backend
 
-import { supabase } from '../../supabase/supabase';
+import { supabase } from '../supabase/supabase';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AuthUser {

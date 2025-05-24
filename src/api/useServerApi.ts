@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import ServerApiService, { ServerApiConfig, ChatResponse } from './ServerApiService';
-import { ChatMessage } from '../features/voice/VoiceContext';
-import { FeatureSettings } from '../types/features';
+import { ChatMessage } from '../voice/VoiceContext';
+import { FeatureSettings } from '../features/features';
 
 /**
  * Return type for the useServerApi hook

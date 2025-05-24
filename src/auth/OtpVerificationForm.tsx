@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, TextInput, View, Text, TouchableOpacity } from 'react-native';
-import Button from '../../shared/components/Button';
+import Button from '../shared/components/Button';
 
 interface OtpVerificationFormProps {
   phoneNumber: string;
