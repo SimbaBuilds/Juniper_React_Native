@@ -1,6 +1,8 @@
 import { Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import { supabase } from '../../supabase/supabase';
+import type { GoogleCalendarIntegration } from '../../supabase/tables';
 
 // Google Calendar API configuration - TO BE SET BY DEVELOPER
 const GOOGLE_CONFIG = {
@@ -131,8 +133,14 @@ export class GoogleCalendarService {
         throw new Error('Google Calendar credentials not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_API_KEY environment variables');
       }
       
-      // Load stored auth data
+      // Load stored auth data from local storage first
       await this.loadAuthData();
+      
+      // Try to load from Supabase if no local data or if local data is expired
+      if (!this.authData || Date.now() >= (this.authData.expiresAt - 300000)) {
+        await this.loadIntegrationFromSupabase();
+      }
+      
       this.isInitialized = true;
       
       console.log('GoogleCalendarService initialized');
@@ -214,8 +222,11 @@ export class GoogleCalendarService {
         expiresAt: Date.now() + (tokenData.expires_in * 1000),
       };
 
-      // Store auth data
+      // Store auth data locally
       await this.saveAuthData();
+      
+      // Save integration to Supabase
+      await this.saveIntegrationToSupabase(tokenData);
       
       console.log('✅ Google Calendar authentication successful');
       this.notifyAuthCallbacks();
@@ -223,6 +234,49 @@ export class GoogleCalendarService {
     } catch (error) {
       console.error('❌ Error handling auth callback:', error);
       return false;
+    }
+  }
+
+  /**
+   * Save the Google Calendar integration to Supabase
+   */
+  private async saveIntegrationToSupabase(tokenData: any): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated with Supabase');
+      }
+
+      const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+      
+      // First, deactivate any existing integrations for this user
+      await supabase
+        .from('google_calendar_integrations')
+        .update({ is_active: false })
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+
+      // Insert the new integration
+      const { error } = await supabase
+        .from('google_calendar_integrations')
+        .insert({
+          user_id: user.id,
+          access_token: tokenData.access_token,
+          refresh_token: tokenData.refresh_token,
+          expires_at: expiresAt.toISOString(),
+          scope: GOOGLE_CONFIG.SCOPES,
+          is_active: true,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ Google Calendar integration saved to Supabase');
+    } catch (error) {
+      console.error('❌ Error saving integration to Supabase:', error);
+      // Don't throw here - we don't want to fail the entire auth flow if Supabase fails
     }
   }
 
@@ -298,9 +352,9 @@ export class GoogleCalendarService {
   }
 
   /**
-   * Get upcoming events (next 10 events)
+   * Get upcoming events (next 5 events)
    */
-  async getUpcomingEvents(maxResults: number = 10): Promise<CalendarEvent[]> {
+  async getUpcomingEvents(maxResults: number = 5): Promise<CalendarEvent[]> {
     try {
       const timeMin = new Date().toISOString();
       const response = await this.getEvents('primary', timeMin, undefined, maxResults);
@@ -316,12 +370,46 @@ export class GoogleCalendarService {
    */
   async signOut(): Promise<void> {
     try {
+      // Deactivate integration in Supabase
+      await this.deactivateIntegrationInSupabase();
+      
+      // Clear local data
       this.authData = null;
       await AsyncStorage.removeItem('google_calendar_auth');
+      
       console.log('Google Calendar signed out');
       this.notifyAuthCallbacks();
     } catch (error) {
       console.error('Error signing out:', error);
+    }
+  }
+
+  /**
+   * Deactivate the Google Calendar integration in Supabase
+   */
+  private async deactivateIntegrationInSupabase(): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.warn('User not authenticated with Supabase during sign out');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('google_calendar_integrations')
+        .update({ is_active: false })
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ Google Calendar integration deactivated in Supabase');
+    } catch (error) {
+      console.error('❌ Error deactivating integration in Supabase:', error);
+      // Don't throw here - we still want to clear local data even if Supabase fails
     }
   }
 
@@ -399,7 +487,45 @@ export class GoogleCalendarService {
     this.authData.accessToken = tokenData.access_token;
     this.authData.expiresAt = Date.now() + (tokenData.expires_in * 1000);
 
+    // Save updated tokens locally
     await this.saveAuthData();
+    
+    // Update tokens in Supabase
+    await this.updateTokensInSupabase(tokenData);
+  }
+
+  /**
+   * Update the access token in Supabase after refresh
+   */
+  private async updateTokensInSupabase(tokenData: any): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.warn('User not authenticated with Supabase during token refresh');
+        return;
+      }
+
+      const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+
+      const { error } = await supabase
+        .from('google_calendar_integrations')
+        .update({ 
+          access_token: tokenData.access_token,
+          expires_at: expiresAt.toISOString(),
+        })
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ Google Calendar tokens updated in Supabase');
+    } catch (error) {
+      console.error('❌ Error updating tokens in Supabase:', error);
+      // Don't throw here - we still want the local refresh to succeed
+    }
   }
 
   private async ensureValidToken(): Promise<void> {
@@ -431,6 +557,61 @@ export class GoogleCalendarService {
       }
     } catch (error) {
       console.error('Error saving auth data:', error);
+    }
+  }
+
+  /**
+   * Load the Google Calendar integration from Supabase
+   */
+  private async loadIntegrationFromSupabase(): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log('User not authenticated with Supabase, skipping integration load');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('google_calendar_integrations')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No rows found - user hasn't connected Google Calendar yet
+          console.log('No active Google Calendar integration found in Supabase');
+          return;
+        }
+        throw error;
+      }
+
+      if (data) {
+        const expiresAt = new Date(data.expires_at).getTime();
+        
+        // Check if the token is still valid (with 5 minute buffer)
+        if (Date.now() < (expiresAt - 300000)) {
+          this.authData = {
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+            expiresAt: expiresAt,
+          };
+          
+          // Also save to local storage for faster access
+          await this.saveAuthData();
+          
+          console.log('✅ Google Calendar integration loaded from Supabase');
+        } else {
+          console.log('Google Calendar integration found but expired, will need re-authentication');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error loading integration from Supabase:', error);
+      // Don't throw here - we can still function with local storage or require re-auth
     }
   }
 } 

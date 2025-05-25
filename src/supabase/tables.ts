@@ -333,3 +333,22 @@ export type UserProfile = {
     'section_order', 'custom_sections', 'created_at', 'updated_at'
   ] as const;
   export type DailyBriefingConfigField = (typeof dailyBriefingConfigFields)[number];
+
+  export type GoogleCalendarIntegration = {
+    id: string;
+    user_id: string;
+    access_token: string;
+    refresh_token: string;
+    expires_at: Date;
+    scope: string;
+    is_active: boolean;
+    last_sync?: Date;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const googleCalendarIntegrationFields = [
+    'id', 'user_id', 'access_token', 'refresh_token', 'expires_at',
+    'scope', 'is_active', 'last_sync', 'created_at', 'updated_at'
+  ] as const;
+  export type GoogleCalendarIntegrationField = (typeof googleCalendarIntegrationFields)[number];
