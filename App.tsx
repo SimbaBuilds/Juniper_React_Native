@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Linking } from 'react-native';
 import { VoiceProvider } from './src/voice/VoiceContext';
 import { WakeWordProvider } from './src/wakeword/WakeWordContext';
 import WakeWordService from './src/wakeword/WakeWordService';
+import { GoogleCalendarService } from './src/features/calendar/GoogleCalendarService';
 import { HomeScreen } from './src/HomeScreen';
 import { SettingsScreen } from './src/settings/SettingsScreen';
 import { Ionicons } from '@expo/vector-icons';
@@ -59,6 +61,71 @@ export default function App() {
     };
     
     initializeApp();
+  }, []);
+
+  // Handle Google Calendar OAuth deep links
+  useEffect(() => {
+    const handleDeepLink = (event: { url: string }) => {
+      const url = event.url;
+      console.log('Received deep link:', url);
+      
+      // Handle the new OAuth callback format: mobilejarvisnative://oauth/callback
+      if (url.startsWith('mobilejarvisnative://oauth/callback')) {
+        try {
+          const urlParts = url.split('?');
+          if (urlParts.length > 1) {
+            const urlParams = new URLSearchParams(urlParts[1]);
+            const code = urlParams.get('code');
+            const error = urlParams.get('error');
+            
+            if (error) {
+              console.error('OAuth error:', error);
+              return;
+            }
+            
+            if (code) {
+              console.log('Processing OAuth callback with code');
+              GoogleCalendarService.getInstance().handleAuthCallback(code);
+            }
+          }
+        } catch (error) {
+          console.error('Error processing OAuth callback:', error);
+        }
+      }
+      
+      // Keep backward compatibility with the old format for now
+      if (url.includes('oauth2redirect')) {
+        try {
+          const urlParams = new URLSearchParams(url.split('?')[1]);
+          const code = urlParams.get('code');
+          const error = urlParams.get('error');
+          
+          if (error) {
+            console.error('OAuth error:', error);
+            return;
+          }
+          
+          if (code) {
+            console.log('Processing OAuth callback with code (legacy format)');
+            GoogleCalendarService.getInstance().handleAuthCallback(code);
+          }
+        } catch (error) {
+          console.error('Error processing OAuth callback:', error);
+        }
+      }
+    };
+
+    // Listen for deep links when app is running
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+    
+    // Check if app was opened from a deep link (cold start)
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        handleDeepLink({ url });
+      }
+    });
+    
+    return () => subscription?.remove();
   }, []);
 
   if (loading) {

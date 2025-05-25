@@ -3,11 +3,24 @@ export interface TickersSettings {
   tickers: string[];
 }
 
+export interface NewsSource {
+  id: string;
+  name: string;
+  affiliation?: string;
+  medium?: string;
+}
+
+export interface NewsCategory {
+  id: string;
+  name: string;
+  sources: NewsSource[];
+}
+
 export interface NewsSettings {
   enabled: boolean;
   xaiLiveSearchEnabled: boolean;
   twitterSearchEnabled: boolean;
-  favoriteSources: string[];
+  categories: NewsCategory[];
 }
 
 export interface CalendarSettings {
@@ -65,7 +78,7 @@ export const defaultFeatureSettings: FeatureSettings = {
     enabled: false,
     xaiLiveSearchEnabled: false,
     twitterSearchEnabled: false,
-    favoriteSources: [],
+    categories: [],
   },
   calendar: {
     enabled: false,

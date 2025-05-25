@@ -77,43 +77,34 @@ export type UserProfile = {
   ] as const;
   export type MemoryField = (typeof memoryFields)[number];
   
-  export type NewsSource = {
-    id: string;
-    userId: string;
-    name: string;
-    sourceType: string;
-    identifier: string;
-    isActive: boolean;
-    priority: number;
-    createdAt: Date;
-  };
-  
-  export const newsSourceFields = [
-    'id', 'userId', 'name', 'sourceType', 'identifier', 
-    'isActive', 'priority', 'createdAt'
-  ] as const;
-  export type NewsSourceField = (typeof newsSourceFields)[number];
-  
-  export type NewsItem = {
+  export type NewsCategory = {
     id: string;
     user_id: string;
-    source_id?: string;
-    title: string;
-    content?: string;
-    url?: string;
-    author?: string;
-    published_at?: Date;
-    summary?: string;
-    tags: string[];
-    isRead: boolean;
+    name: string;
     created_at: Date;
   };
   
-  export const newsItemFields = [
-    'id', 'user_id', 'source_id', 'title', 'content', 'url', 'author',
-    'published_at', 'summary', 'tags', 'isRead', 'created_at'
+  export const newsCategoryFields = [
+    'id', 'user_id', 'name', 'created_at'
   ] as const;
-  export type NewsItemField = (typeof newsItemFields)[number];
+  export type NewsCategoryField = (typeof newsCategoryFields)[number];
+  
+  export type NewsSource = {
+    id: string;
+    user_id: string;
+    category_id: string;
+    name: string;
+    affiliation?: string;
+    medium?: string;
+    created_at: Date;
+  };
+  
+  export const newsSourceFields = [
+    'id', 'user_id', 'category_id', 'name', 'affiliation', 
+    'medium', 'created_at'
+  ] as const;
+  export type NewsSourceField = (typeof newsSourceFields)[number];
+  
   
   export type PortfolioAccount = {
     id: string;

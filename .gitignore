@@ -38,3 +38,5 @@ yarn-error.*
 android/app/src/main/assets/config.properties
 android/.gradle/buildOutputCleanup/
 android/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+
+app.config.js

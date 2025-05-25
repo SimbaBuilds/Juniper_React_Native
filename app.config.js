@@ -7,6 +7,7 @@ export default {
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
     newArchEnabled: true,
+    scheme: "mobilejarvisnative",
     plugins: [
       "./expo-plugins/withNativeModules"
     ],
@@ -25,14 +26,30 @@ export default {
         backgroundColor: "#ffffff"
       },
       edgeToEdgeEnabled: true,
-      package: "com.anonymous.MobileJarvisNative"
+      package: "com.anonymous.MobileJarvisNative",
+      intentFilters: [
+        {
+          action: "VIEW",
+          data: {
+            scheme: "mobilejarvisnative",
+            host: "oauth",
+            pathPrefix: "/callback"
+          },
+          category: ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     web: {
       favicon: "./assets/favicon.png"
     },
     extra: {
+      eas: {
+        projectId: "a1ca031e-4068-49f1-84f5-ab872bc450dc"
+      },
       SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
       SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+      GOOGLE_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+      GOOGLE_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_API_KEY,
     }
   }
 }; 

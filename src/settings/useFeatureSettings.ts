@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FeatureSettings, defaultFeatureSettings } from '../features/features';
 import { tickerService } from '../features/tickers/tickerService';
+import { newsService } from '../features/news/newsService';
 
 const FEATURE_SETTINGS_KEY = 'feature_settings';
 
@@ -29,6 +30,15 @@ export const useFeatureSettings = () => {
         dbTickers = defaultFeatureSettings.tickers.tickers;
       }
 
+      // Initialize news categories from database if user is authenticated
+      let dbNewsCategories = [];
+      try {
+        dbNewsCategories = await newsService.initializeUserNewsCategories();
+      } catch (error) {
+        console.log('User not authenticated or error loading news categories, using defaults');
+        dbNewsCategories = defaultFeatureSettings.news.categories;
+      }
+
       // Deep merge with defaults to ensure all properties exist
       const mergedSettings: FeatureSettings = {
         ...defaultFeatureSettings,
@@ -41,6 +51,7 @@ export const useFeatureSettings = () => {
         news: {
           ...defaultFeatureSettings.news,
           ...parsedSettings.news,
+          categories: dbNewsCategories,
         },
         calendar: {
           ...defaultFeatureSettings.calendar,
@@ -106,11 +117,22 @@ export const useFeatureSettings = () => {
     saveSettings(newSettings);
   }, [settings, saveSettings]);
 
-  const updateNewsSettings = useCallback((updates: Partial<FeatureSettings['news']>) => {
+  const updateNewsSettings = useCallback(async (updates: Partial<FeatureSettings['news']>) => {
     const newSettings = {
       ...settings,
       news: { ...settings.news, ...updates },
     };
+    
+    // If news categories were updated, sync with database
+    if (updates.categories) {
+      try {
+        await newsService.syncNewsCategories(updates.categories);
+      } catch (error) {
+        console.error('Error syncing news categories with database:', error);
+        // Still save locally even if DB sync fails
+      }
+    }
+    
     saveSettings(newSettings);
   }, [settings, saveSettings]);
 

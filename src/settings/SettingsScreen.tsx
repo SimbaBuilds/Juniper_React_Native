@@ -8,10 +8,13 @@ import { WakeWordStatus } from '../wakeword/components/WakeWordStatus';
 import { usePermissions } from './usePermissions';
 import { useFeatureSettings } from './useFeatureSettings';
 import { useAuth } from '../auth/AuthContext';
-import { SettingsToggle } from '../shared/components/SettingsToggle';
-import { SettingsArrayInput } from '../shared/components/SettingsArrayInput';
-import { SettingsDropdown } from '../shared/components/SettingsDropdown';
-import { SettingsTextInput } from '../shared/components/SettingsTextInput';
+import { SettingsToggle } from './components/SettingsToggle';
+import { ExpandableSettingsToggle } from './components/ExpandableSettingsToggle';
+import { SettingsArrayInput } from './components/SettingsArrayInput';
+import { SettingsDropdown } from './components/SettingsDropdown';
+import { SettingsTextInput } from './components/SettingsTextInput';
+import { NewsCategoryManager } from '../features/news/NewsCategoryManager';
+import { GoogleCalendarManager } from '../features/calendar/GoogleCalendarManager';
 
 type RootStackParamList = {
   Home: undefined;
@@ -137,164 +140,160 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Features</Text>
 
-          <SettingsToggle
+          <ExpandableSettingsToggle
             label="Tickers"
             value={settings.tickers.enabled}
             onValueChange={(enabled) => updateTickersSettings({ enabled })}
             description="Track your investment tickers and market data"
-          />
+            hasSubSettings={true}
+          >
+            <SettingsArrayInput
+              label="Ticker Symbols"
+              values={settings.tickers.tickers}
+              onValuesChange={async (tickers) => {
+                try {
+                  await updateTickersSettings({ tickers });
+                } catch (error) {
+                  console.error('Error updating tickers:', error);
+                  // Could show a toast notification here if needed
+                }
+              }}
+              placeholder="Add ticker symbol (e.g., AAPL, MSFT)..."
+              description="Stock symbols to track in your tickers"
+              maxItems={20}
+            />
+          </ExpandableSettingsToggle>
 
-          {settings.tickers.enabled && (
-            <View style={styles.subSettingsContainer}>
-              <SettingsArrayInput
-                label="Ticker Symbols"
-                values={settings.tickers.tickers}
-                onValuesChange={async (tickers) => {
-                  try {
-                    await updateTickersSettings({ tickers });
-                  } catch (error) {
-                    console.error('Error updating tickers:', error);
-                    // Could show a toast notification here if needed
-                  }
-                }}
-                placeholder="Add ticker symbol (e.g., AAPL, MSFT)..."
-                description="Stock symbols to track in your tickers"
-                maxItems={20}
-              />
-            </View>
-          )}
-
-          <SettingsToggle
+          <ExpandableSettingsToggle
             label="News"
             value={settings.news.enabled}
             onValueChange={(enabled) => updateNewsSettings({ enabled })}
             description="Get news updates and market information"
-          />
+            hasSubSettings={true}
+          >
+            <SettingsToggle
+              label="XAI LiveSearch API"
+              value={settings.news.xaiLiveSearchEnabled}
+              onValueChange={(xaiLiveSearchEnabled) => updateNewsSettings({ xaiLiveSearchEnabled })}
+              description="Use XAI LiveSearch for real-time news"
+            />
 
-          {settings.news.enabled && (
-            <View style={styles.subSettingsContainer}>
-              <SettingsToggle
-                label="XAI LiveSearch API"
-                value={settings.news.xaiLiveSearchEnabled}
-                onValueChange={(xaiLiveSearchEnabled) => updateNewsSettings({ xaiLiveSearchEnabled })}
-                description="Use XAI LiveSearch for real-time news"
-              />
+            <SettingsToggle
+              label="X/Twitter Search"
+              value={settings.news.twitterSearchEnabled}
+              onValueChange={(twitterSearchEnabled) => updateNewsSettings({ twitterSearchEnabled })}
+              description="Search X/Twitter (free tier, 100 requests/month)"
+            />
 
-              <SettingsToggle
-                label="X/Twitter Search"
-                value={settings.news.twitterSearchEnabled}
-                onValueChange={(twitterSearchEnabled) => updateNewsSettings({ twitterSearchEnabled })}
-                description="Search X/Twitter (free tier, 100 requests/month)"
-              />
+            <NewsCategoryManager
+              categories={settings.news.categories}
+              onCategoriesChange={async (categories) => {
+                try {
+                  await updateNewsSettings({ categories });
+                } catch (error) {
+                  console.error('Error updating news categories:', error);
+                  // Could show a toast notification here if needed
+                }
+              }}
+              description="Organize your news sources by category with detailed information"
+            />
+          </ExpandableSettingsToggle>
 
-              <SettingsArrayInput
-                label="Favorite News Sources"
-                values={settings.news.favoriteSources}
-                onValuesChange={(favoriteSources) => updateNewsSettings({ favoriteSources })}
-                placeholder="Add news source..."
-                description="Your preferred news sources for personalized updates"
-                maxItems={10}
-              />
-            </View>
-          )}
-
-          <SettingsToggle
+          <ExpandableSettingsToggle
             label="Calendar"
             value={settings.calendar.enabled}
             onValueChange={(enabled) => updateCalendarSettings({ enabled })}
             description="Calendar integration and event management"
-          />
+            hasSubSettings={true}
+          >
+            <GoogleCalendarManager />
+          </ExpandableSettingsToggle>
 
-          <SettingsToggle
+          <ExpandableSettingsToggle
             label="Tell Me The Things"
             value={settings.tellMeThings.enabled}
             onValueChange={(enabled) => updateTellMeThingsSettings({ enabled })}
             description="Daily briefing with tickers, news, and calendar"
-          />
+            hasSubSettings={true}
+          >
+            <SettingsArrayInput
+              label="Trigger Phrases"
+              values={settings.tellMeThings.triggerPhrases}
+              onValuesChange={(triggerPhrases) => updateTellMeThingsSettings({ triggerPhrases })}
+              placeholder="Add trigger phrase..."
+              description="Phrases that activate your daily briefing"
+              maxItems={5}
+            />
 
-          {settings.tellMeThings.enabled && (
-            <View style={styles.subSettingsContainer}>
-              <SettingsArrayInput
-                label="Trigger Phrases"
-                values={settings.tellMeThings.triggerPhrases}
-                onValuesChange={(triggerPhrases) => updateTellMeThingsSettings({ triggerPhrases })}
-                placeholder="Add trigger phrase..."
-                description="Phrases that activate your daily briefing"
-                maxItems={5}
-              />
+            <SettingsToggle
+              label="Include Tickers"
+              value={settings.tellMeThings.includeTickers}
+              onValueChange={(includeTickers) => updateTellMeThingsSettings({ includeTickers })}
+              description="Include tickers updates in briefing"
+            />
 
-              <SettingsToggle
-                label="Include Tickers"
-                value={settings.tellMeThings.includeTickers}
-                onValueChange={(includeTickers) => updateTellMeThingsSettings({ includeTickers })}
-                description="Include tickers updates in briefing"
-              />
+            <SettingsToggle
+              label="Include News"
+              value={settings.tellMeThings.includeNews}
+              onValueChange={(includeNews) => updateTellMeThingsSettings({ includeNews })}
+              description="Include news updates in briefing"
+            />
 
-              <SettingsToggle
-                label="Include News"
-                value={settings.tellMeThings.includeNews}
-                onValueChange={(includeNews) => updateTellMeThingsSettings({ includeNews })}
-                description="Include news updates in briefing"
-              />
+            <SettingsToggle
+              label="Include Calendar"
+              value={settings.tellMeThings.includeCalendar}
+              onValueChange={(includeCalendar) => updateTellMeThingsSettings({ includeCalendar })}
+              description="Include today's calendar in briefing"
+            />
+          </ExpandableSettingsToggle>
 
-              <SettingsToggle
-                label="Include Calendar"
-                value={settings.tellMeThings.includeCalendar}
-                onValueChange={(includeCalendar) => updateTellMeThingsSettings({ includeCalendar })}
-                description="Include today's calendar in briefing"
-              />
-            </View>
-          )}
-
-          <SettingsToggle
+          <ExpandableSettingsToggle
             label="Project Understanding"
             value={settings.projectUnderstanding.enabled}
             onValueChange={(enabled) => updateProjectUnderstandingSettings({ enabled })}
             description="AI note-taking and project management"
-          />
+            hasSubSettings={true}
+          >
+            <SettingsToggle
+              label="Google Keep"
+              value={settings.projectUnderstanding.googleKeepEnabled}
+              onValueChange={(googleKeepEnabled) => updateProjectUnderstandingSettings({ googleKeepEnabled })}
+              description="Save notes to Google Keep"
+            />
 
-          {settings.projectUnderstanding.enabled && (
-            <View style={styles.subSettingsContainer}>
-              <SettingsToggle
-                label="Google Keep"
-                value={settings.projectUnderstanding.googleKeepEnabled}
-                onValueChange={(googleKeepEnabled) => updateProjectUnderstandingSettings({ googleKeepEnabled })}
-                description="Save notes to Google Keep"
-              />
+            <SettingsToggle
+              label="iCloud Notes"
+              value={settings.projectUnderstanding.icloudNotesEnabled}
+              onValueChange={(icloudNotesEnabled) => updateProjectUnderstandingSettings({ icloudNotesEnabled })}
+              description="Save notes to iCloud Notes app"
+            />
 
-              <SettingsToggle
-                label="iCloud Notes"
-                value={settings.projectUnderstanding.icloudNotesEnabled}
-                onValueChange={(icloudNotesEnabled) => updateProjectUnderstandingSettings({ icloudNotesEnabled })}
-                description="Save notes to iCloud Notes app"
-              />
+            <SettingsToggle
+              label="Google Docs"
+              value={settings.projectUnderstanding.googleDocsEnabled}
+              onValueChange={(googleDocsEnabled) => updateProjectUnderstandingSettings({ googleDocsEnabled })}
+              description="Save notes to Google Docs (default to most recent)"
+            />
 
-              <SettingsToggle
-                label="Google Docs"
-                value={settings.projectUnderstanding.googleDocsEnabled}
-                onValueChange={(googleDocsEnabled) => updateProjectUnderstandingSettings({ googleDocsEnabled })}
-                description="Save notes to Google Docs (default to most recent)"
-              />
-
-              <SettingsToggle
-                label="Email to Self"
-                value={settings.projectUnderstanding.emailToSelfEnabled}
-                onValueChange={(emailToSelfEnabled) => updateProjectUnderstandingSettings({ emailToSelfEnabled })}
-                description="Email notes to yourself"
-              />
-            </View>
-          )}
+            <SettingsToggle
+              label="Email to Self"
+              value={settings.projectUnderstanding.emailToSelfEnabled}
+              onValueChange={(emailToSelfEnabled) => updateProjectUnderstandingSettings({ emailToSelfEnabled })}
+              description="Email notes to yourself"
+            />
+          </ExpandableSettingsToggle>
         </View>
 
         {/* Voice Settings Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Voice & AI Settings</Text>
 
-          <SettingsToggle
+          <ExpandableSettingsToggle
             label="Deepgram Voice"
             value={settings.voice.deepgramEnabled}
             onValueChange={(deepgramEnabled) => updateVoiceSettings({ deepgramEnabled })}
             description="Enhanced voice recognition with Deepgram"
+            hasSubSettings={false}
           />
 
           <SettingsDropdown
@@ -325,19 +324,21 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Other Features</Text>
 
           {/* Groceries */}
-          <SettingsToggle
+          <ExpandableSettingsToggle
             label="Groceries Functionality"
             value={settings.groceries.enabled}
             onValueChange={(enabled) => updateGroceriesSettings({ enabled })}
             description="Grocery list management and shopping assistance"
+            hasSubSettings={false}
           />
 
           {/* Alarm Clock */}
-          <SettingsToggle
+          <ExpandableSettingsToggle
             label="Alarm Clock"
             value={settings.alarmClock.enabled}
             onValueChange={(enabled) => updateAlarmClockSettings({ enabled })}
             description="Voice-controlled alarm and reminder system"
+            hasSubSettings={false}
           />
         </View>
         
@@ -479,15 +480,5 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 14,
     color: '#FFFFFF',
-  },
-  subSettingsContainer: {
-    marginLeft: 24,
-    paddingLeft: 16,
-    borderLeftWidth: 2,
-    borderLeftColor: '#4A90E2',
-    backgroundColor: '#181818',
-    borderRadius: 8,
-    marginTop: 8,
-    paddingVertical: 8,
   },
 }); 
