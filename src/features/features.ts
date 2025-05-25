@@ -25,6 +25,7 @@ export interface NewsSettings {
 
 export interface CalendarSettings {
   enabled: boolean;
+  refreshToken: string;
 }
 
 export interface TellMeThingsSettings {
@@ -82,6 +83,7 @@ export const defaultFeatureSettings: FeatureSettings = {
   },
   calendar: {
     enabled: false,
+    refreshToken: ''
   },
   tellMeThings: {
     enabled: false,

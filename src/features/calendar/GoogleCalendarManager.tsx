@@ -1,137 +1,237 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useGoogleCalendar } from './useGoogleCalendar';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
+import { GoogleCalendarService } from './GoogleCalendarService';
 
-interface GoogleCalendarManagerProps {
-  onConfigChange?: () => void;
+interface CalendarEvent {
+  id: string;
+  summary: string;
+  description?: string;
+  start: {
+    dateTime?: string;
+    date?: string;
+    timeZone?: string;
+  };
+  end: {
+    dateTime?: string;
+    date?: string;
+    timeZone?: string;
+  };
+  location?: string;
 }
 
-export const GoogleCalendarManager: React.FC<GoogleCalendarManagerProps> = ({
-  onConfigChange,
-}) => {
-  const {
-    isAuthenticated,
-    isLoading,
-    error,
-    events,
-    authenticate,
-    signOut,
-    refreshEvents,
-  } = useGoogleCalendar();
+export const GoogleCalendarManager: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const formatEventTime = (event: any) => {
-    const start = event.start?.dateTime || event.start?.date;
-    if (!start) return 'No time specified';
+  const calendarService = GoogleCalendarService.getInstance();
+
+  useEffect(() => {
+    initializeService();
     
-    const date = new Date(start);
-    return date.toLocaleString();
+    // Set up auth callback to update UI when authentication status changes
+    const handleAuthChange = (isAuth: boolean) => {
+      setIsAuthenticated(isAuth);
+      if (isAuth) {
+        // Automatically load events when authentication is successful
+        loadEvents();
+      }
+    };
+    
+    calendarService.addAuthCallback(handleAuthChange);
+    
+    // Cleanup callback on unmount
+    return () => {
+      calendarService.removeAuthCallback(handleAuthChange);
+    };
+  }, []);
+
+  const initializeService = async () => {
+    try {
+      setIsLoading(true);
+      
+      await calendarService.initialize();
+      const authenticated = calendarService.isAuthenticated();
+      
+      setIsAuthenticated(authenticated);
+      
+      if (authenticated) {
+        await loadEvents();
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  if (error?.includes('credentials not configured')) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Ionicons name="warning-outline" size={24} color="#E74C3C" />
-          <Text style={styles.errorTitle}>Google Calendar Not Configured</Text>
-          <Text style={styles.errorText}>
-            The Google Calendar integration requires developer setup. Please configure the Google Cloud Console credentials in GoogleCalendarService.ts
-          </Text>
-          <Text style={styles.instructionText}>
-            Follow the setup instructions at:{'\n'}
-            https://developers.google.com/workspace/calendar/api/quickstart/js
-          </Text>
-        </View>
-      </View>
-    );
-  }
+  const handleAuthenticate = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const success = await calendarService.authenticate();
+      
+      if (success) {
+        Alert.alert(
+          'Authentication Started',
+          'Please complete the authentication in your browser. The app will automatically continue when you return.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        throw new Error('Failed to start authentication flow');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(errorMessage);
+      Alert.alert('Authentication Error', errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadEvents = async () => {
+    try {
+      setIsLoading(true);
+      
+      const upcomingEvents = await calendarService.getUpcomingEvents(10);
+      setEvents(upcomingEvents);
+      
+      // Update authentication status on successful API call
+      setIsAuthenticated(true);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(errorMessage);
+      
+      // If we get an auth error, user might need to re-authenticate
+      if (errorMessage.includes('Not authenticated') || errorMessage.includes('401')) {
+        setIsAuthenticated(false);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      setIsLoading(true);
+      
+      await calendarService.signOut();
+      setIsAuthenticated(false);
+      setEvents([]);
+      
+      Alert.alert('Signed Out', 'You have been signed out of Google Calendar.');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const formatEventTime = (event: CalendarEvent): string => {
+    const start = event.start.dateTime || event.start.date;
+    if (!start) return 'No time specified';
+    
+    try {
+      const date = new Date(start);
+      return date.toLocaleString();
+    } catch {
+      return start;
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      {!isAuthenticated ? (
-        <View style={styles.authSection}>
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Google Calendar Integration</Text>
+        <Text style={styles.subtitle}>
+          Status: {isAuthenticated ? '✅ Connected' : '❌ Not Connected'}
+        </Text>
+      </View>
+
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Error: {error}</Text>
+        </View>
+      )}
+
+      <View style={styles.buttonContainer}>
+        {!isAuthenticated ? (
           <TouchableOpacity
-            style={styles.addButton}
-            onPress={authenticate}
+            style={[styles.button, styles.primaryButton]}
+            onPress={handleAuthenticate}
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator size="small" color="#4A90E2" />
+              <ActivityIndicator color="white" />
             ) : (
-              <>
-                <Ionicons name="logo-google" size={20} color="#4A90E2" />
-                <Text style={styles.addButtonText}>Connect Google Calendar</Text>
-              </>
+              <Text style={styles.buttonText}>Connect to Google Calendar</Text>
             )}
           </TouchableOpacity>
-          
-          <Text style={styles.helpText}>
-            Authorize access to your Google Calendar to view upcoming events and sync calendar data with your assistant.
-          </Text>
-        </View>
-      ) : (
-        <View style={styles.connectedSection}>
-          <View style={styles.statusRow}>
-            <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-            <Text style={styles.connectedText}>Google Calendar Connected</Text>
-          </View>
-
-          <View style={styles.actionsRow}>
+        ) : (
+          <>
             <TouchableOpacity
-              style={styles.actionButton}
-              onPress={refreshEvents}
+              style={[styles.button, styles.secondaryButton]}
+              onPress={loadEvents}
               disabled={isLoading}
             >
-              <Ionicons name="refresh-outline" size={16} color="#4A90E2" />
-              <Text style={styles.actionButtonText}>Refresh</Text>
+              {isLoading ? (
+                <ActivityIndicator color="#007AFF" />
+              ) : (
+                <Text style={[styles.buttonText, styles.secondaryButtonText]}>
+                  Refresh Events
+                </Text>
+              )}
             </TouchableOpacity>
-
+            
             <TouchableOpacity
-              style={[styles.actionButton, styles.signOutButton]}
-              onPress={signOut}
+              style={[styles.button, styles.dangerButton]}
+              onPress={handleSignOut}
               disabled={isLoading}
             >
-              <Ionicons name="log-out-outline" size={16} color="#E74C3C" />
-              <Text style={[styles.actionButtonText, styles.signOutText]}>Sign Out</Text>
+              <Text style={styles.buttonText}>Sign Out</Text>
             </TouchableOpacity>
-          </View>
+          </>
+        )}
+      </View>
 
-          {events.length > 0 && (
-            <View style={styles.eventsSection}>
-              <Text style={styles.eventsTitle}>Upcoming Events</Text>
-              <ScrollView style={styles.eventsList} nestedScrollEnabled>
-                {events.slice(0, 3).map((event) => (
-                  <View key={event.id} style={styles.eventItem}>
-                    <Text style={styles.eventTitle}>{event.summary}</Text>
-                    <Text style={styles.eventTime}>{formatEventTime(event)}</Text>
-                    {event.location && (
-                      <Text style={styles.eventLocation}>{event.location}</Text>
-                    )}
-                  </View>
-                ))}
-                {events.length > 3 && (
-                  <Text style={styles.moreEventsText}>
-                    +{events.length - 3} more events...
-                  </Text>
-                )}
-              </ScrollView>
+      {isAuthenticated && events.length > 0 && (
+        <View style={styles.eventsContainer}>
+          <Text style={styles.sectionTitle}>Upcoming Events ({events.length})</Text>
+          {events.map((event) => (
+            <View key={event.id} style={styles.eventCard}>
+              <Text style={styles.eventTitle}>{event.summary}</Text>
+              <Text style={styles.eventTime}>{formatEventTime(event)}</Text>
+              {event.location && (
+                <Text style={styles.eventLocation}>📍 {event.location}</Text>
+              )}
+              {event.description && (
+                <Text style={styles.eventDescription} numberOfLines={2}>
+                  {event.description}
+                </Text>
+              )}
             </View>
-          )}
-
-          {events.length === 0 && !isLoading && (
-            <View style={styles.noEventsContainer}>
-              <Text style={styles.noEventsText}>No upcoming events found</Text>
-            </View>
-          )}
+          ))}
         </View>
       )}
 
-      {error && !error.includes('credentials not configured') && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
+      {isAuthenticated && events.length === 0 && !isLoading && (
+        <View style={styles.noEventsContainer}>
+          <Text style={styles.noEventsText}>No upcoming events found</Text>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
@@ -142,10 +242,27 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
   },
-  authSection: {
+  header: {
     alignItems: 'center',
+    marginBottom: 16,
   },
-  addButton: {
+  title: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  subtitle: {
+    color: '#B0B0B0',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 16,
+  },
+  button: {
     backgroundColor: '#2A2A2A',
     padding: 16,
     borderRadius: 8,
@@ -155,71 +272,36 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#4A90E2',
     borderStyle: 'dashed',
-    width: '100%',
-    marginBottom: 12,
+    width: '40%',
   },
-  addButtonText: {
+  primaryButton: {
+    borderColor: '#4CAF50',
+  },
+  secondaryButton: {
+    borderColor: '#007AFF',
+  },
+  dangerButton: {
+    borderColor: '#E74C3C',
+  },
+  buttonText: {
     color: '#4A90E2',
     fontSize: 16,
     fontWeight: '500',
     marginLeft: 8,
   },
-  helpText: {
-    color: '#B0B0B0',
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
+  secondaryButtonText: {
+    color: '#007AFF',
+  },
+  eventsContainer: {
     marginTop: 8,
   },
-  connectedSection: {
-    width: '100%',
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  connectedText: {
-    color: '#4CAF50',
-    fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 8,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  actionButtonText: {
-    color: '#4A90E2',
-    fontSize: 14,
-    marginLeft: 4,
-  },
-  signOutButton: {
-    // No additional styles needed
-  },
-  signOutText: {
-    color: '#E74C3C',
-  },
-  eventsSection: {
-    marginTop: 8,
-  },
-  eventsTitle: {
+  sectionTitle: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '500',
     marginBottom: 12,
   },
-  eventsList: {
-    maxHeight: 200,
-  },
-  eventItem: {
+  eventCard: {
     backgroundColor: '#2A2A2A',
     padding: 12,
     borderRadius: 6,
@@ -241,21 +323,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontStyle: 'italic',
   },
-  moreEventsText: {
+  eventDescription: {
     color: '#B0B0B0',
     fontSize: 12,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    paddingVertical: 8,
-  },
-  noEventsContainer: {
-    padding: 16,
-    alignItems: 'center',
-  },
-  noEventsText: {
-    color: '#B0B0B0',
-    fontSize: 14,
-    fontStyle: 'italic',
+    marginTop: 4,
   },
   errorContainer: {
     backgroundColor: '#4D2020',
@@ -264,23 +335,22 @@ const styles = StyleSheet.create({
     marginTop: 8,
     alignItems: 'center',
   },
-  errorTitle: {
-    color: '#E74C3C',
-    fontSize: 16,
-    fontWeight: '500',
-    marginTop: 8,
-    marginBottom: 8,
-  },
   errorText: {
     color: '#E74C3C',
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 8,
   },
-  instructionText: {
+  noEventsContainer: {
+    backgroundColor: '#2A2A2A',
+    padding: 12,
+    borderRadius: 6,
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  noEventsText: {
     color: '#B0B0B0',
-    fontSize: 12,
+    fontSize: 14,
     textAlign: 'center',
-    fontStyle: 'italic',
   },
 }); 

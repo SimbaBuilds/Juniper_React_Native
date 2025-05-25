@@ -32,13 +32,19 @@
         <data android:scheme="exp+mobilejarvisnative"/>
       </intent-filter>
       <!-- Google OAuth redirect intent filter -->
-      <intent-filter>
+      <intent-filter android:autoVerify="true">
         <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
-        <data
-          android:scheme="com.googleusercontent.apps.66333577628-jr6ag67m9spk0f96l61moim1jjaus4n7"
-          android:host="oauth2redirect"/>
+        <data android:scheme="com.googleusercontent.apps.66333577628-jr6ag67m9spk0f96l61moim1jjaus4n7"/>
+      </intent-filter>
+      <!-- Additional intent filter for oauth2redirect path -->
+      <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="com.googleusercontent.apps.66333577628-jr6ag67m9spk0f96l61moim1jjaus4n7"
+              android:host="oauth2redirect"/>
       </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" android:exported="false"/>

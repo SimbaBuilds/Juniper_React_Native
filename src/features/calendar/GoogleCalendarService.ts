@@ -19,6 +19,9 @@ const GOOGLE_CONFIG = {
     // Extract just the numeric part and app identifier from the full client ID
     // e.g., "123456789-abc123def456.apps.googleusercontent.com" -> "123456789-abc123def456"
     const cleanClientId = clientId.replace('.apps.googleusercontent.com', '');
+    
+    // Use the format that works with Chrome 117+ and Android intent filters
+    // This should match the scheme in AndroidManifest.xml
     return `com.googleusercontent.apps.${cleanClientId}:/oauth2redirect`;
   },
 };
@@ -76,6 +79,7 @@ export class GoogleCalendarService {
   private static instance: GoogleCalendarService | null = null;
   private authData: GoogleCalendarAuth | null = null;
   private isInitialized = false;
+  private authCallbacks: Array<(isAuthenticated: boolean) => void> = [];
 
   private constructor() {}
 
@@ -87,14 +91,34 @@ export class GoogleCalendarService {
   }
 
   /**
-   * Test utility to manually trigger OAuth callback handling
-   * Useful for debugging deep link setup
+   * Add a callback to be notified when authentication status changes
    */
-  static testOAuthCallback(code: string = '1234'): void {
-    const testUrl = `mobilejarvisnative://oauth/callback?code=${code}`;
-    console.log('Testing OAuth callback with URL:', testUrl);
-    // This would normally be called by the deep link handler
-    GoogleCalendarService.getInstance().handleAuthCallback(code);
+  public addAuthCallback(callback: (isAuthenticated: boolean) => void): void {
+    this.authCallbacks.push(callback);
+  }
+
+  /**
+   * Remove an authentication callback
+   */
+  public removeAuthCallback(callback: (isAuthenticated: boolean) => void): void {
+    const index = this.authCallbacks.indexOf(callback);
+    if (index > -1) {
+      this.authCallbacks.splice(index, 1);
+    }
+  }
+
+  /**
+   * Notify all callbacks of authentication status change
+   */
+  private notifyAuthCallbacks(): void {
+    const isAuth = this.isAuthenticated();
+    this.authCallbacks.forEach(callback => {
+      try {
+        callback(isAuth);
+      } catch (error) {
+        console.error('Error in auth callback:', error);
+      }
+    });
   }
 
   /**
@@ -140,19 +164,28 @@ export class GoogleCalendarService {
 
       const authUrl = this.buildAuthUrl();
       
+      console.log('=== STARTING OAUTH FLOW ===');
       console.log('Opening OAuth URL:', authUrl);
       console.log('Expected redirect URI:', GOOGLE_CONFIG.REDIRECT_URI);
+      console.log('Client ID:', GOOGLE_CONFIG.CLIENT_ID);
+      
+      // Validate the redirect URI format
+      if (!GOOGLE_CONFIG.REDIRECT_URI.includes('com.googleusercontent.apps')) {
+        console.warn('⚠️ Redirect URI may not be in the correct format for Chrome 117+');
+      }
       
       // Open the OAuth URL in the system browser
       const supported = await Linking.canOpenURL(authUrl);
       if (supported) {
+        console.log('✅ Opening OAuth URL in browser...');
         await Linking.openURL(authUrl);
+        console.log('✅ OAuth URL opened successfully');
         return true;
       } else {
-        throw new Error('Cannot open OAuth URL');
+        throw new Error('Cannot open OAuth URL - URL not supported');
       }
     } catch (error) {
-      console.error('Error during authentication:', error);
+      console.error('❌ Error during authentication:', error);
       return false;
     }
   }
@@ -163,8 +196,17 @@ export class GoogleCalendarService {
    */
   async handleAuthCallback(code: string): Promise<boolean> {
     try {
+      console.log('=== HANDLING OAUTH CALLBACK ===');
+      
+      if (!code) {
+        throw new Error('No authorization code provided');
+      }
+      
       // Exchange authorization code for access token
+      console.log('🔄 Exchanging code for tokens...');
       const tokenData = await this.exchangeCodeForToken(code);
+      
+      console.log('✅ Token exchange successful');
       
       this.authData = {
         accessToken: tokenData.access_token,
@@ -175,10 +217,11 @@ export class GoogleCalendarService {
       // Store auth data
       await this.saveAuthData();
       
-      console.log('Google Calendar authentication successful');
+      console.log('✅ Google Calendar authentication successful');
+      this.notifyAuthCallbacks();
       return true;
     } catch (error) {
-      console.error('Error handling auth callback:', error);
+      console.error('❌ Error handling auth callback:', error);
       return false;
     }
   }
@@ -276,6 +319,7 @@ export class GoogleCalendarService {
       this.authData = null;
       await AsyncStorage.removeItem('google_calendar_auth');
       console.log('Google Calendar signed out');
+      this.notifyAuthCallbacks();
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -297,24 +341,37 @@ export class GoogleCalendarService {
   }
 
   private async exchangeCodeForToken(code: string): Promise<any> {
+    console.log('🔄 Making token exchange request...');
+    
+    const requestBody = new URLSearchParams();
+    requestBody.append('client_id', GOOGLE_CONFIG.CLIENT_ID!);
+    requestBody.append('code', code);
+    requestBody.append('grant_type', 'authorization_code');
+    requestBody.append('redirect_uri', GOOGLE_CONFIG.REDIRECT_URI);
+    
     const response = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams({
-        client_id: GOOGLE_CONFIG.CLIENT_ID!,
-        code,
-        grant_type: 'authorization_code',
-        redirect_uri: GOOGLE_CONFIG.REDIRECT_URI,
-      }),
+      body: requestBody.toString(),
     });
 
     if (!response.ok) {
-      throw new Error(`Token exchange failed: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('❌ Token exchange failed:', response.status, response.statusText);
+      
+      try {
+        const errorJson = JSON.parse(errorText);
+        throw new Error(`Token exchange failed: ${errorJson.error} - ${errorJson.error_description || response.statusText}`);
+      } catch (parseError) {
+        throw new Error(`Token exchange failed: ${response.status} ${response.statusText}`);
+      }
     }
 
-    return await response.json();
+    const tokenData = await response.json();
+    console.log('✅ Token exchange successful');
+    return tokenData;
   }
 
   private async refreshAccessToken(): Promise<void> {

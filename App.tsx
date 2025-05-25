@@ -65,33 +65,75 @@ export default function App() {
 
   // Handle Google Calendar OAuth deep links
   useEffect(() => {
+    console.log('Setting up deep link handlers...');
+    
     const handleDeepLink = (event: { url: string }) => {
       const url = event.url;
-      console.log('Received deep link:', url);
+      console.log('=== DEEP LINK RECEIVED ===');
+      console.log('Full URL:', url);
+      console.log('URL length:', url.length);
+      console.log('URL type:', typeof url);
+      
+      // Log what we're checking for
+      console.log('Checking for oauth2redirect pattern...');
+      console.log('Contains oauth2redirect?', url.includes('oauth2redirect'));
+      console.log('Checking for custom scheme pattern...');
+      console.log('Starts with mobilejarvisnative://oauth/callback?', url.startsWith('mobilejarvisnative://oauth/callback'));
       
       // Handle the reverse client ID format (primary): com.googleusercontent.apps.{client-id}:/oauth2redirect
-      if (url.includes('oauth2redirect')) {
+      // or com.googleusercontent.apps.{client-id}://oauth2redirect
+      if (url.includes('oauth2redirect') || url.includes('com.googleusercontent.apps')) {
+        console.log('✅ Matched Google OAuth redirect pattern');
         try {
-          const urlParams = new URLSearchParams(url.split('?')[1]);
-          const code = urlParams.get('code');
-          const error = urlParams.get('error');
+          console.log('Parsing URL for parameters...');
           
-          if (error) {
-            console.error('OAuth error:', error);
-            return;
+          // Handle both :/ and :// formats
+          let queryString = '';
+          if (url.includes('?')) {
+            queryString = url.split('?')[1];
+          } else if (url.includes('#')) {
+            // Some OAuth flows use hash fragments
+            queryString = url.split('#')[1];
           }
           
-          if (code) {
-            console.log('Processing OAuth callback with code (reverse client ID format)');
-            GoogleCalendarService.getInstance().handleAuthCallback(code);
+          console.log('Query string:', queryString);
+          
+          if (queryString) {
+            const urlParams = new URLSearchParams(queryString);
+            console.log('URL parameters:', Object.fromEntries(urlParams.entries()));
+            
+            const code = urlParams.get('code');
+            const error = urlParams.get('error');
+            const state = urlParams.get('state');
+            
+            console.log('Extracted code:', code ? `${code.substring(0, 10)}...` : 'null');
+            console.log('Extracted error:', error);
+            console.log('Extracted state:', state);
+            
+            if (error) {
+              console.error('❌ OAuth error:', error);
+              const errorDescription = urlParams.get('error_description');
+              console.error('❌ OAuth error description:', errorDescription);
+              return;
+            }
+            
+            if (code) {
+              console.log('✅ Processing OAuth callback with code');
+              GoogleCalendarService.getInstance().handleAuthCallback(code);
+            } else {
+              console.warn('⚠️ No code parameter found in OAuth redirect URL');
+            }
+          } else {
+            console.warn('⚠️ No query parameters found in OAuth redirect URL');
           }
         } catch (error) {
-          console.error('Error processing OAuth callback:', error);
+          console.error('❌ Error processing OAuth callback:', error);
         }
       }
       
       // Keep custom scheme as fallback: mobilejarvisnative://oauth/callback
       else if (url.startsWith('mobilejarvisnative://oauth/callback')) {
+        console.log('✅ Matched custom scheme pattern');
         try {
           const urlParts = url.split('?');
           if (urlParts.length > 1) {
@@ -100,32 +142,48 @@ export default function App() {
             const error = urlParams.get('error');
             
             if (error) {
-              console.error('OAuth error:', error);
+              console.error('❌ OAuth error:', error);
               return;
             }
             
             if (code) {
-              console.log('Processing OAuth callback with code (custom scheme fallback)');
+              console.log('✅ Processing OAuth callback with code (custom scheme fallback)');
               GoogleCalendarService.getInstance().handleAuthCallback(code);
             }
           }
         } catch (error) {
-          console.error('Error processing OAuth callback:', error);
+          console.error('❌ Error processing OAuth callback:', error);
         }
+      }
+      
+      // Log if no patterns matched
+      else {
+        console.log('❌ URL did not match any OAuth patterns');
+        console.log('Expected patterns:');
+        console.log('  1. Contains "oauth2redirect" or "com.googleusercontent.apps"');
+        console.log('  2. Starts with "mobilejarvisnative://oauth/callback"');
       }
     };
 
     // Listen for deep links when app is running
+    console.log('Adding deep link event listener...');
     const subscription = Linking.addEventListener('url', handleDeepLink);
     
     // Check if app was opened from a deep link (cold start)
+    console.log('Checking for initial URL (cold start)...');
     Linking.getInitialURL().then((url) => {
       if (url) {
+        console.log('Found initial URL:', url);
         handleDeepLink({ url });
+      } else {
+        console.log('No initial URL found');
       }
     });
     
-    return () => subscription?.remove();
+    return () => {
+      console.log('Removing deep link event listener...');
+      subscription?.remove();
+    };
   }, []);
 
   if (loading) {
