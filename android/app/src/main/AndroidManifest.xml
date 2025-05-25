@@ -40,16 +40,6 @@
           android:scheme="com.googleusercontent.apps.66333577628-jr6ag67m9spk0f96l61moim1jjaus4n7"
           android:host="oauth2redirect"/>
       </intent-filter>
-      <!-- Custom OAuth callback intent filter -->
-      <intent-filter>
-        <action android:name="android.intent.action.VIEW"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-        <category android:name="android.intent.category.BROWSABLE"/>
-        <data
-          android:scheme="mobilejarvisnative"
-          android:host="oauth"
-          android:pathPrefix="/callback"/>
-      </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" android:exported="false"/>
     

@@ -7,9 +7,9 @@ echo "Testing deep link intent filter..."
 echo "Make sure your Android device/emulator is connected and the app is installed"
 echo ""
 
-# Test the new OAuth callback format
-echo "Testing new OAuth callback format: mobilejarvisnative://oauth/callback"
-adb shell am start -W -a android.intent.action.VIEW -d "mobilejarvisnative://oauth/callback?code=test1234" com.anonymous.MobileJarvisNative
+# Test the reverse client ID format (primary)
+echo "Testing reverse client ID format: com.googleusercontent.apps.66333577628-jr6ag67m9spk0f96l61moim1jjaus4n7:/oauth2redirect"
+adb shell am start -W -a android.intent.action.VIEW -d "com.googleusercontent.apps.66333577628-jr6ag67m9spk0f96l61moim1jjaus4n7:/oauth2redirect?code=test1234" com.anonymous.MobileJarvisNative
 
 echo ""
 echo "Check your app logs to see if the deep link was received and processed correctly"

@@ -10,8 +10,16 @@ const GOOGLE_CONFIG = {
   SCOPES: 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events',
   // Proper Android OAuth redirect URI format
   get REDIRECT_URI() {
-    // Use the custom scheme format as recommended in workflow improvements
-    return 'mobilejarvisnative://oauth/callback';
+    const clientId = this.CLIENT_ID;
+    if (!clientId) {
+      console.warn('GOOGLE_CLIENT_ID not found in environment variables');
+      return 'com.googleusercontent.apps.MISSING_CLIENT_ID:/oauth2redirect';
+    }
+    
+    // Extract just the numeric part and app identifier from the full client ID
+    // e.g., "123456789-abc123def456.apps.googleusercontent.com" -> "123456789-abc123def456"
+    const cleanClientId = clientId.replace('.apps.googleusercontent.com', '');
+    return `com.googleusercontent.apps.${cleanClientId}:/oauth2redirect`;
   },
 };
 

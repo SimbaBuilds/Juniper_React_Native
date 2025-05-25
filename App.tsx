@@ -69,8 +69,29 @@ export default function App() {
       const url = event.url;
       console.log('Received deep link:', url);
       
-      // Handle the new OAuth callback format: mobilejarvisnative://oauth/callback
-      if (url.startsWith('mobilejarvisnative://oauth/callback')) {
+      // Handle the reverse client ID format (primary): com.googleusercontent.apps.{client-id}:/oauth2redirect
+      if (url.includes('oauth2redirect')) {
+        try {
+          const urlParams = new URLSearchParams(url.split('?')[1]);
+          const code = urlParams.get('code');
+          const error = urlParams.get('error');
+          
+          if (error) {
+            console.error('OAuth error:', error);
+            return;
+          }
+          
+          if (code) {
+            console.log('Processing OAuth callback with code (reverse client ID format)');
+            GoogleCalendarService.getInstance().handleAuthCallback(code);
+          }
+        } catch (error) {
+          console.error('Error processing OAuth callback:', error);
+        }
+      }
+      
+      // Keep custom scheme as fallback: mobilejarvisnative://oauth/callback
+      else if (url.startsWith('mobilejarvisnative://oauth/callback')) {
         try {
           const urlParts = url.split('?');
           if (urlParts.length > 1) {
@@ -84,30 +105,9 @@ export default function App() {
             }
             
             if (code) {
-              console.log('Processing OAuth callback with code');
+              console.log('Processing OAuth callback with code (custom scheme fallback)');
               GoogleCalendarService.getInstance().handleAuthCallback(code);
             }
-          }
-        } catch (error) {
-          console.error('Error processing OAuth callback:', error);
-        }
-      }
-      
-      // Keep backward compatibility with the old format for now
-      if (url.includes('oauth2redirect')) {
-        try {
-          const urlParams = new URLSearchParams(url.split('?')[1]);
-          const code = urlParams.get('code');
-          const error = urlParams.get('error');
-          
-          if (error) {
-            console.error('OAuth error:', error);
-            return;
-          }
-          
-          if (code) {
-            console.log('Processing OAuth callback with code (legacy format)');
-            GoogleCalendarService.getInstance().handleAuthCallback(code);
           }
         } catch (error) {
           console.error('Error processing OAuth callback:', error);

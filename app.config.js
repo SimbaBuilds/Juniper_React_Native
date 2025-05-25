@@ -26,18 +26,7 @@ export default {
         backgroundColor: "#ffffff"
       },
       edgeToEdgeEnabled: true,
-      package: "com.anonymous.MobileJarvisNative",
-      intentFilters: [
-        {
-          action: "VIEW",
-          data: {
-            scheme: "mobilejarvisnative",
-            host: "oauth",
-            pathPrefix: "/callback"
-          },
-          category: ["BROWSABLE", "DEFAULT"]
-        }
-      ]
+      package: "com.anonymous.MobileJarvisNative"
     },
     web: {
       favicon: "./assets/favicon.png"
