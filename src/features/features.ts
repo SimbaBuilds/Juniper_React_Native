@@ -87,7 +87,7 @@ export const defaultFeatureSettings: FeatureSettings = {
   },
   tellMeThings: {
     enabled: false,
-    triggerPhrases: ['Ok Jarvis tell me the things', 'Julie, do the thing', 'Morning'],
+    triggerPhrases: ['tell me the things', 'do the thing', 'morning'],
     includeTickers: true,
     includeNews: true,
     includeCalendar: true,

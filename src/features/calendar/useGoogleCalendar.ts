@@ -127,7 +127,7 @@ export const useGoogleCalendar = (): UseGoogleCalendarReturn => {
       setIsLoading(true);
       setError(null);
       
-      const upcomingEvents = await calendarService.getUpcomingEvents(10);
+      const upcomingEvents = await calendarService.getUpcomingEvents(5);
       setEvents(upcomingEvents);
       
       console.log('Events refreshed:', upcomingEvents.length);

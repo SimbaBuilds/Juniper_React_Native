@@ -104,7 +104,7 @@ export const GoogleCalendarManager: React.FC = () => {
     try {
       setIsLoading(true);
       
-      const upcomingEvents = await calendarService.getUpcomingEvents(10);
+      const upcomingEvents = await calendarService.getUpcomingEvents(5);
       setEvents(upcomingEvents);
       
       // Update authentication status on successful API call
@@ -140,7 +140,19 @@ export const GoogleCalendarManager: React.FC = () => {
   };
 
   const formatEventTime = (event: CalendarEvent): string => {
-    const start = event.start.dateTime || event.start.date;
+    // Check if this is an all-day event (uses 'date' instead of 'dateTime')
+    if (event.start.date && !event.start.dateTime) {
+      // All-day event - just show the date
+      try {
+        const date = new Date(event.start.date + 'T00:00:00'); // Add time to prevent timezone issues
+        return date.toLocaleDateString();
+      } catch {
+        return event.start.date;
+      }
+    }
+    
+    // Regular timed event
+    const start = event.start.dateTime;
     if (!start) return 'No time specified';
     
     try {

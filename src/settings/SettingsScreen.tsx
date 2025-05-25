@@ -144,7 +144,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             label="Tickers"
             value={settings.tickers.enabled}
             onValueChange={(enabled) => updateTickersSettings({ enabled })}
-            description="Track your investment tickers and market data"
+            description="Track your investments and favorite names"
             hasSubSettings={true}
           >
             <SettingsArrayInput
@@ -168,7 +168,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             label="News"
             value={settings.news.enabled}
             onValueChange={(enabled) => updateNewsSettings({ enabled })}
-            description="Get news updates and market information"
+            description="Get news updates from your favorite sources"
             hasSubSettings={true}
           >
             <SettingsToggle
@@ -213,7 +213,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             label="Tell Me The Things"
             value={settings.tellMeThings.enabled}
             onValueChange={(enabled) => updateTellMeThingsSettings({ enabled })}
-            description="Daily briefing with tickers, news, and calendar"
+            description="Daily briefing with tickers, news, calendar, and more"
             hasSubSettings={true}
           >
             <SettingsArrayInput
