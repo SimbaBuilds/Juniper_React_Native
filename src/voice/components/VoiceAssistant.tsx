@@ -29,7 +29,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     isError,
     chatHistory,
     setTranscript,
-    interruptSpeech
+    interruptSpeech,
+    clearChatHistory
   } = useVoice();
 
   // When a speech result is received, call the callback
@@ -64,7 +65,23 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   
   return (
     <View style={styles.container}>
-      <VoiceStatusIndicator />
+      <View style={styles.header}>
+        <VoiceStatusIndicator />
+        
+        {/* Clear chat button - only shown when there are messages */}
+        {chatHistory.length > 0 && (
+          <TouchableOpacity 
+            style={styles.clearButton}
+            onPress={clearChatHistory}
+            activeOpacity={0.7}
+            accessibilityLabel="Clear chat history"
+            accessibilityHint="Clears all messages from the conversation"
+          >
+            <Ionicons name="trash-outline" size={20} color="#888888" />
+            <Text style={styles.clearButtonText}>Clear</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       
       {chatHistory.length > 0 ? (
         <FlatList
@@ -113,6 +130,25 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
     padding: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  clearButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 8,
+    borderRadius: 16,
+    backgroundColor: 'rgba(136, 136, 136, 0.1)',
+  },
+  clearButtonText: {
+    color: '#888888',
+    fontSize: 12,
+    marginLeft: 4,
   },
   chatList: {
     flex: 1,

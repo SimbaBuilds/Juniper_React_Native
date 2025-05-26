@@ -163,6 +163,17 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       console.log('🎤 Speech result received:', event.text);
       setTranscript(event.text);
       
+      // Add user message to chat history
+      const userMessage: ChatMessage = {
+        role: 'user',
+        content: event.text,
+        type: 'text',
+        timestamp: Date.now()
+      };
+      
+      console.log('Adding user message to chat history:', userMessage);
+      setChatHistory(prevHistory => [...prevHistory, userMessage]);
+      
       // Process the speech with server API
       processSpeechWithServer(event.text, chatHistoryRef.current);
     });
@@ -216,6 +227,17 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           console.log('📱 Received process text request from native:', data);
           
           const { text, requestId } = data;
+          
+          // Add user message to chat history
+          const userMessage: ChatMessage = {
+            role: 'user',
+            content: text,
+            type: 'text',
+            timestamp: Date.now()
+          };
+          
+          console.log('Adding user message to chat history from native:', userMessage);
+          setChatHistory(prevHistory => [...prevHistory, userMessage]);
           
           // Process the text using our authenticated API
           try {

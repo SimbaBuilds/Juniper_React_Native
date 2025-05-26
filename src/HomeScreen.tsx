@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Platform } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Platform, TouchableOpacity } from 'react-native';
 import { WakeWordStatus } from './wakeword/components/WakeWordStatus';
 import { WakeWordToggle } from './wakeword/components/WakeWordToggle';
 import { VoiceAssistant } from './voice/components/VoiceAssistant';
 import { VoiceErrorBoundary } from './voice/ErrorBoundary/VoiceErrorBoundary';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useVoice } from './voice/VoiceContext';
+import { Ionicons } from '@expo/vector-icons';
 import DebugApiTest from './api/DebugApiTest';
 
 
@@ -21,12 +23,30 @@ type Props = {
 };
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
+  const { chatHistory, clearChatHistory } = useVoice();
+  
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>Voice Assistant</Text>
-          <Text style={styles.subtitle}>Say "Jarvis" to activate</Text>
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>Voice Assistant</Text>
+            <Text style={styles.subtitle}>Say "Jarvis" to activate</Text>
+          </View>
+          
+          {/* Clear chat button - only shown when there are messages */}
+          {chatHistory.length > 0 && (
+            <TouchableOpacity 
+              style={styles.clearButton}
+              onPress={clearChatHistory}
+              activeOpacity={0.7}
+              accessibilityLabel="Clear conversation"
+              accessibilityHint="Clears all messages from the conversation"
+            >
+              <Ionicons name="trash-outline" size={20} color="#B0B0B0" />
+              <Text style={styles.clearButtonText}>Clear</Text>
+            </TouchableOpacity>
+          )}
         </View>
         
         <View style={styles.settingsSection}>
@@ -62,7 +82,12 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
+    justifyContent: 'space-between',
+    flexDirection: 'row',
     marginBottom: 24,
+  },
+  titleContainer: {
+    alignItems: 'center',
   },
   title: {
     fontSize: 24,
@@ -91,5 +116,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 8,
+  },
+  clearButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    backgroundColor: 'rgba(176, 176, 176, 0.1)',
+    borderRadius: 16,
+  },
+  clearButtonText: {
+    color: '#B0B0B0',
+    fontSize: 12,
+    marginLeft: 4,
   },
 }); 
