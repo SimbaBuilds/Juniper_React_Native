@@ -2,25 +2,37 @@ package com.anonymous.MobileJarvisNative.utils
 
 import android.content.Context
 import android.media.AudioAttributes
-import android.media.AudioFocusRequest
 import android.media.AudioManager
-import android.os.Build
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Manager for text-to-speech functionality.
- * Provides a centralized interface for TTS operations throughout the app.
+ * Now uses centralized AudioManager for audio focus management and includes TTS queuing.
  */
 object TextToSpeechManager {
     private const val TAG = "TextToSpeechManager"
     private var textToSpeech: TextToSpeech? = null
     private var isInitialized = false
-    private var audioManager: AudioManager? = null
-    private var audioFocusRequest: AudioFocusRequest? = null
+    private var centralAudioManager: com.anonymous.MobileJarvisNative.utils.AudioManager? = null
+    private var currentRequestId: String? = null
+    
+    // TTS operation queue to prevent overlapping speech
+    private val ttsQueue = ConcurrentLinkedQueue<TTSRequest>()
+    private var isProcessingQueue = false
+    
+    /**
+     * Data class for TTS requests
+     */
+    private data class TTSRequest(
+        val text: String,
+        val queueMode: Int,
+        val onComplete: (() -> Unit)?
+    )
 
     /**
      * Initialize the TextToSpeech engine
@@ -38,8 +50,9 @@ object TextToSpeechManager {
         try {
             Log.d(TAG, "Initializing TextToSpeech")
             
-            // Initialize AudioManager for audio focus
-            audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            // Initialize centralized AudioManager
+            centralAudioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+            centralAudioManager?.initialize(context)
             
             textToSpeech = TextToSpeech(context) { status ->
                 Log.d(TAG, "TTS initialization callback received with status: $status")
@@ -54,9 +67,9 @@ object TextToSpeechManager {
                         Log.d(TAG, "TextToSpeech initialized successfully")
                         
                         // Set audio attributes for better audio handling
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                             val audioAttributes = AudioAttributes.Builder()
-                                .setUsage(AudioAttributes.USAGE_MEDIA)
+                                .setUsage(AudioAttributes.USAGE_ASSISTANT)
                                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                                 .build()
                             textToSpeech?.setAudioAttributes(audioAttributes)
@@ -64,7 +77,7 @@ object TextToSpeechManager {
                         }
                     }
                 } else {
-                    Log.e(TAG, "Failed to initialize TextToSpeech")
+                    Log.e(TAG, "TextToSpeech initialization failed with status: $status")
                 }
                 onInitListener?.invoke(isInitialized)
             }
@@ -86,47 +99,37 @@ object TextToSpeechManager {
                 }
             })
         } catch (e: Exception) {
-            Log.e(TAG, "Error initializing TextToSpeech", e)
+            Log.e(TAG, "Error initializing TextToSpeech: ${e.message}", e)
+            isInitialized = false
             onInitListener?.invoke(false)
         }
     }
 
     /**
-     * Request audio focus for TTS playback
+     * Request audio focus through centralized manager
      */
     private fun requestAudioFocus(): Boolean {
         return try {
-            // Skip if we already have audio focus
-            if (audioFocusRequest != null) {
-                Log.d(TAG, "🎵 Audio focus already acquired, skipping request")
-                return true
-            }
+            val requestId = "tts_${UUID.randomUUID()}"
+            currentRequestId = requestId
             
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val audioAttributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ASSISTANT)  // Changed from USAGE_MEDIA to USAGE_ASSISTANT
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                    .build()
-                
-                audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)  // Changed from MAY_DUCK to TRANSIENT
-                    .setAudioAttributes(audioAttributes)
-                    .setAcceptsDelayedFocusGain(false)  // Changed to false for immediate focus
-                    .setWillPauseWhenDucked(false)
-                    .build()
-                
-                val result = audioManager?.requestAudioFocus(audioFocusRequest!!)
-                Log.d(TAG, "🎵 Audio focus request result: $result")
-                result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
-            } else {
-                @Suppress("DEPRECATION")
-                val result = audioManager?.requestAudioFocus(
-                    null,
-                    AudioManager.STREAM_MUSIC,
-                    AudioManager.AUDIOFOCUS_GAIN_TRANSIENT  // Changed from MAY_DUCK to TRANSIENT
-                )
-                Log.d(TAG, "🎵 Audio focus request result (legacy): $result")
-                result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
-            }
+            val success = centralAudioManager?.requestAudioFocus(
+                requestType = com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.TTS,
+                requestId = requestId,
+                onFocusGained = {
+                    Log.d(TAG, "🎵 TTS audio focus gained")
+                },
+                onFocusLost = {
+                    Log.d(TAG, "🎵 TTS audio focus lost - stopping speech")
+                    stop()
+                },
+                onFocusDucked = {
+                    Log.d(TAG, "🎵 TTS audio focus ducked - continuing at lower volume")
+                }
+            ) ?: false
+            
+            Log.d(TAG, "🎵 TTS audio focus request result: $success")
+            success
         } catch (e: Exception) {
             Log.e(TAG, "Error requesting audio focus", e)
             false
@@ -134,19 +137,15 @@ object TextToSpeechManager {
     }
 
     /**
-     * Release audio focus
+     * Release audio focus through centralized manager
      */
     private fun releaseAudioFocus() {
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && audioFocusRequest != null) {
-                audioManager?.abandonAudioFocusRequest(audioFocusRequest!!)
-                audioFocusRequest = null  // Clear the reference
-                Log.d(TAG, "🎵 Audio focus released")
-            } else {
-                @Suppress("DEPRECATION")
-                audioManager?.abandonAudioFocus(null)
-                Log.d(TAG, "🎵 Audio focus released (legacy)")
+            currentRequestId?.let { requestId ->
+                centralAudioManager?.releaseAudioFocus(requestId)
+                Log.d(TAG, "🎵 TTS audio focus released")
             }
+            currentRequestId = null
         } catch (e: Exception) {
             Log.e(TAG, "Error releasing audio focus", e)
         }
@@ -161,16 +160,18 @@ object TextToSpeechManager {
     }
 
     /**
-     * Speak the given text
+     * Speak the given text with queuing to prevent overlapping speech
      *
      * @param text Text to speak
-     * @param queueMode How to queue this text
+     * @param queueMode How to queue this text (note: QUEUE_FLUSH will clear the queue)
      * @param onComplete Optional callback for when speech completes
      */
-    fun speak(text: String, queueMode: Int = TextToSpeech.QUEUE_FLUSH, onComplete: (() -> Unit)? = null) {
-        val startTime = System.currentTimeMillis()
-        Log.d(TAG, "🎵 TTS TIMING: speak() called at $startTime with text: '$text', queueMode: $queueMode")
-        Log.d(TAG, "TTS state - isInitialized: $isInitialized, textToSpeech: ${textToSpeech != null}")
+    fun speak(
+        text: String, 
+        queueMode: Int = TextToSpeech.QUEUE_FLUSH,
+        onComplete: (() -> Unit)? = null
+    ) {
+        Log.d(TAG, "🎵 TTS QUEUE: speak() called with text: '$text', queueMode: $queueMode")
         
         if (!isInitialized || textToSpeech == null) {
             Log.e(TAG, "TextToSpeech not initialized - cannot speak")
@@ -178,71 +179,119 @@ object TextToSpeechManager {
             return
         }
 
-        try {
-            // Check current TTS state
-            val preCheckTime = System.currentTimeMillis()
-            Log.d(TAG, "🎵 TTS TIMING: Pre-check at ${preCheckTime - startTime}ms - Current TTS speaking state: ${textToSpeech?.isSpeaking}")
+        val request = TTSRequest(text, queueMode, onComplete)
+        
+        // If QUEUE_FLUSH, clear existing queue and stop current speech
+        if (queueMode == TextToSpeech.QUEUE_FLUSH) {
+            Log.d(TAG, "🎵 TTS QUEUE: QUEUE_FLUSH - clearing queue and stopping current speech")
+            ttsQueue.clear()
+            textToSpeech?.stop()
+        }
+        
+        // Add request to queue
+        ttsQueue.offer(request)
+        Log.d(TAG, "🎵 TTS QUEUE: Added request to queue. Queue size: ${ttsQueue.size}")
+        
+        // Process queue if not already processing
+        if (!isProcessingQueue) {
+            processNextInQueue()
+        }
+    }
+    
+    /**
+     * Process the next TTS request in the queue
+     */
+    private fun processNextInQueue() {
+        if (isProcessingQueue) {
+            Log.d(TAG, "🎵 TTS QUEUE: Already processing queue, skipping")
+            return
+        }
+        
+        val request = ttsQueue.poll()
+        if (request == null) {
+            Log.d(TAG, "🎵 TTS QUEUE: Queue is empty")
+            isProcessingQueue = false
+            return
+        }
+        
+        Log.d(TAG, "🎵 TTS QUEUE: Processing request: '${request.text}'")
+        isProcessingQueue = true
+        
+        speakImmediately(request.text, request.queueMode) {
+            Log.d(TAG, "🎵 TTS QUEUE: Request completed, processing next")
+            request.onComplete?.invoke()
+            isProcessingQueue = false
             
-            // Request audio focus before speaking (skip if already acquired)
-            val audioFocusStartTime = System.currentTimeMillis()
-            val audioFocusGranted = if (audioFocusRequest != null) {
-                Log.d(TAG, "🎵 TTS TIMING: Audio focus already acquired, skipping request")
-                true
-            } else {
-                requestAudioFocus()
+            // Process next request in queue
+            if (ttsQueue.isNotEmpty()) {
+                processNextInQueue()
             }
+        }
+    }
+    
+    /**
+     * Speak immediately without queuing (internal method)
+     */
+    private fun speakImmediately(
+        text: String,
+        queueMode: Int,
+        onComplete: (() -> Unit)?
+    ) {
+        val startTime = System.currentTimeMillis()
+        Log.d(TAG, "🎵 TTS TIMING: speakImmediately() called at $startTime with text: '$text'")
+        
+        try {
+            // Request audio focus through centralized manager
+            val audioFocusStartTime = System.currentTimeMillis()
+            val audioFocusGranted = requestAudioFocus()
             val audioFocusEndTime = System.currentTimeMillis()
             Log.d(TAG, "🎵 TTS TIMING: Audio focus handling took ${audioFocusEndTime - audioFocusStartTime}ms - granted: $audioFocusGranted")
+            
+            if (!audioFocusGranted) {
+                Log.w(TAG, "🎵 Audio focus not granted - proceeding anyway")
+            }
             
             val utteranceId = UUID.randomUUID().toString()
             Log.d(TAG, "Generated utterance ID: $utteranceId")
             
-            // Set up listener for this specific utterance if needed
-            if (onComplete != null) {
-                Log.d(TAG, "Setting up utterance progress listener for completion callback")
-                textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                    override fun onStart(id: String?) {
-                        if (id == utteranceId) {
-                            val actualStartTime = System.currentTimeMillis()
-                            Log.d(TAG, "🎵 TTS TIMING: Speech ACTUALLY started for utterance: $id at ${actualStartTime - startTime}ms from speak() call")
-                        }
+            // Set up listener for this specific utterance
+            textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                override fun onStart(id: String?) {
+                    if (id == utteranceId) {
+                        val actualStartTime = System.currentTimeMillis()
+                        Log.d(TAG, "🎵 TTS TIMING: Speech ACTUALLY started for utterance: $id at ${actualStartTime - startTime}ms")
                     }
+                }
 
-                    override fun onDone(id: String?) {
-                        if (id == utteranceId) {
-                            val doneTime = System.currentTimeMillis()
-                            Log.d(TAG, "🎵 TTS TIMING: Speech completed for utterance: $id at ${doneTime - startTime}ms from speak() call")
-                            releaseAudioFocus()
-                            onComplete.invoke()
-                        }
+                override fun onDone(id: String?) {
+                    if (id == utteranceId) {
+                        val doneTime = System.currentTimeMillis()
+                        Log.d(TAG, "🎵 TTS TIMING: Speech completed for utterance: $id at ${doneTime - startTime}ms")
+                        releaseAudioFocus()
+                        onComplete?.invoke()
                     }
+                }
 
-                    override fun onError(id: String?) {
-                        if (id == utteranceId) {
-                            val errorTime = System.currentTimeMillis()
-                            Log.e(TAG, "🎵 TTS TIMING: Speech error for utterance: $id at ${errorTime - startTime}ms from speak() call")
-                            releaseAudioFocus()
-                            onComplete.invoke()
-                        }
+                override fun onError(id: String?) {
+                    if (id == utteranceId) {
+                        val errorTime = System.currentTimeMillis()
+                        Log.e(TAG, "🎵 TTS TIMING: Speech error for utterance: $id at ${errorTime - startTime}ms")
+                        releaseAudioFocus()
+                        onComplete?.invoke()
                     }
-                })
-            } else {
-                Log.d(TAG, "No completion callback provided")
-            }
+                }
+            })
 
             // Speak the text
             val speakCallTime = System.currentTimeMillis()
-            Log.d(TAG, "🎵 TTS TIMING: Calling textToSpeech.speak() at ${speakCallTime - startTime}ms with text: '$text'")
+            Log.d(TAG, "🎵 TTS TIMING: Calling textToSpeech.speak() at ${speakCallTime - startTime}ms")
             val result = textToSpeech?.speak(text, queueMode, null, utteranceId)
             val speakReturnTime = System.currentTimeMillis()
-            Log.d(TAG, "🎵 TTS TIMING: textToSpeech.speak() returned at ${speakReturnTime - startTime}ms (took ${speakReturnTime - speakCallTime}ms): $result")
+            Log.d(TAG, "🎵 TTS TIMING: textToSpeech.speak() returned at ${speakReturnTime - startTime}ms: $result")
             
             when (result) {
                 TextToSpeech.SUCCESS -> {
                     Log.i(TAG, "TTS speak() call successful")
-                    // Check if it's actually speaking now
-                    val postCheckTime = System.currentTimeMillis()
-                    Log.d(TAG, "🎵 TTS TIMING: Post-check at ${postCheckTime - startTime}ms - TTS speaking state after speak() call: ${textToSpeech?.isSpeaking}")
                 }
                 TextToSpeech.ERROR -> {
                     Log.e(TAG, "TTS speak() call failed with ERROR")
@@ -257,7 +306,7 @@ object TextToSpeechManager {
             }
         } catch (e: Exception) {
             val errorTime = System.currentTimeMillis()
-            Log.e(TAG, "🎵 TTS TIMING: Exception in speak() method at ${errorTime - startTime}ms", e)
+            Log.e(TAG, "🎵 TTS TIMING: Exception in speakImmediately() at ${errorTime - startTime}ms", e)
             releaseAudioFocus()
             onComplete?.invoke()
         }
@@ -278,84 +327,84 @@ object TextToSpeechManager {
     }
 
     /**
-     * Stop any ongoing speech
+     * Stop any ongoing speech and clear the queue
      */
     fun stop() {
+        Log.d(TAG, "🎵 TTS QUEUE: Stopping TTS and clearing queue")
+        ttsQueue.clear()
+        isProcessingQueue = false
         textToSpeech?.stop()
+        releaseAudioFocus()
     }
 
     /**
-     * Interrupt any ongoing speech
+     * Interrupt any ongoing speech and clear the queue
      * 
      * @return True if speech was interrupted, false otherwise
      */
     fun interrupt(): Boolean {
-        try {
-            if (isSpeaking()) {
-                textToSpeech?.stop()
-                Log.d(TAG, "Speech interrupted successfully")
-                return true
+        return try {
+            if (isSpeaking() || ttsQueue.isNotEmpty()) {
+                Log.d(TAG, "🎵 TTS QUEUE: Interrupting TTS speech and clearing queue")
+                stop()
+                true
             } else {
-                Log.d(TAG, "No speech to interrupt")
-                return false
+                Log.d(TAG, "No TTS speech to interrupt and queue is empty")
+                false
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error interrupting speech", e)
-            return false
+            Log.e(TAG, "Error interrupting TTS speech", e)
+            false
         }
     }
 
     /**
-     * Release TTS resources
+     * Shutdown and clean up resources
      */
     fun shutdown() {
+        Log.i(TAG, "Shutting down TextToSpeechManager")
+        
         try {
+            // Clear the queue and stop processing
+            ttsQueue.clear()
+            isProcessingQueue = false
+            
             textToSpeech?.stop()
             textToSpeech?.shutdown()
             textToSpeech = null
             isInitialized = false
-            Log.d(TAG, "TextToSpeech shut down")
+            
+            // Release any held audio focus
+            releaseAudioFocus()
+            
+            Log.d(TAG, "TextToSpeechManager shutdown complete")
         } catch (e: Exception) {
-            Log.e(TAG, "Error shutting down TextToSpeech", e)
+            Log.e(TAG, "Error during TextToSpeechManager shutdown", e)
         }
     }
 
     /**
-     * Check audio settings and log current state
+     * Check audio settings and permissions
      */
-    fun checkAudioSettings(context: Context) {
-        try {
-            val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            
-            // Check current audio mode
-            val audioMode = audioManager.mode
-            Log.d(TAG, "Current audio mode: $audioMode")
-            
-            // Check volume levels
-            val musicVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            val maxMusicVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-            Log.d(TAG, "Music volume: $musicVolume / $maxMusicVolume")
-            
-            val systemVolume = audioManager.getStreamVolume(AudioManager.STREAM_SYSTEM)
-            val maxSystemVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_SYSTEM)
-            Log.d(TAG, "System volume: $systemVolume / $maxSystemVolume")
-            
-            // Check if audio is muted
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val isMusicMuted = audioManager.isStreamMute(AudioManager.STREAM_MUSIC)
-                val isSystemMuted = audioManager.isStreamMute(AudioManager.STREAM_SYSTEM)
-                Log.d(TAG, "Music muted: $isMusicMuted, System muted: $isSystemMuted")
-            }
-            
-            // Check if TTS is available
-            Log.d(TAG, "TTS initialized: $isInitialized")
-            Log.d(TAG, "TTS instance: ${textToSpeech != null}")
-            if (textToSpeech != null) {
-                Log.d(TAG, "TTS is speaking: ${textToSpeech!!.isSpeaking}")
-            }
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "Error checking audio settings", e)
+    fun checkAudioSettings(context: Context): Boolean {
+        Log.d(TAG, "Checking audio settings")
+        
+        // Check if TTS is initialized
+        if (!isInitialized) {
+            Log.w(TAG, "TextToSpeech not initialized")
+            return false
         }
+        
+        // Check if we can acquire audio focus
+        val success = requestAudioFocus()
+        if (!success) {
+            Log.w(TAG, "Could not acquire audio focus")
+            return false
+        }
+        
+        // Release the audio focus since this is just a check
+        releaseAudioFocus()
+        
+        return true
     }
 } 

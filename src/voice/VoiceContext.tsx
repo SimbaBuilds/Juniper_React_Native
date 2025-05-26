@@ -37,18 +37,18 @@ interface VoiceProviderProps {
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
-  type: 'text' | 'image';
   timestamp: number;
 }
 
 /**
  * Provider component for the Voice Context
+ * Now serves as a pure bridge to native state - no duplicate state management
  */
 export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
-  // Use the voice state hook to access native state
+  // Use the voice state hook to access native state (single source of truth)
   const voiceStateFromHook = useVoiceStateHook();
   
-  // Use the voice state from the hook rather than managing our own
+  // All voice state comes directly from native - no duplication
   const voiceState = voiceStateFromHook.voiceState;
   const isListening = voiceStateFromHook.isListening;
   const isSpeaking = voiceStateFromHook.isSpeaking;
@@ -57,7 +57,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   // Feature settings hook
   const { settings: featureSettings } = useFeatureSettings();
   
-  // Other state we still need to manage
+  // Only manage UI-specific state that doesn't exist in native layer
   const [isWakeWordEnabled, setWakeWordEnabled] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<string>('');
@@ -69,365 +69,160 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   
   // Track if listeners are set up
   const listenersSetupRef = useRef(false);
-  
+
   // Server API hook
-  const serverApi = useServerApi({
-    preferences: {
-      voice: 'male',
-      response_type: 'concise'
-    },
-    onResponse: (apiResponse) => {
-      console.log('Received API response:', apiResponse);
+  const { sendMessage } = useServerApi();
+
+  // Set up event listeners once
+  useEffect(() => {
+    if (listenersSetupRef.current) return;
+    
+    console.log('🎤 Setting up voice event listeners');
+    
+    const subscriptions: EmitterSubscription[] = [];
+    
+    // Listen for transcript updates
+    const transcriptSub = DeviceEventEmitter.addListener('VoiceTranscriptUpdate', (event) => {
+      console.log('📝 Transcript update:', event.transcript);
+      setTranscript(event.transcript);
+    });
+    subscriptions.push(transcriptSub);
+    
+    // Listen for response updates
+    const responseSub = DeviceEventEmitter.addListener('VoiceResponseUpdate', (event) => {
+      console.log('💬 Response update:', event.response);
+      setResponse(event.response);
       
-      if (apiResponse.response) {
-        setResponse(apiResponse.response);
-        
-        // Add assistant message to chat history
-        const assistantMessage: ChatMessage = {
+      // Add to chat history
+      if (event.response && event.response.trim()) {
+        setChatHistory(prev => [...prev, {
           role: 'assistant',
-          content: apiResponse.response,
-          type: 'text',
-          timestamp: apiResponse.timestamp || Date.now()
+          content: event.response,
+          timestamp: Date.now()
+        }]);
+      }
+    });
+    subscriptions.push(responseSub);
+    
+    // Listen for error updates
+    const errorSub = DeviceEventEmitter.addListener('VoiceErrorUpdate', (event) => {
+      console.log('❌ Error update:', event.error);
+      setError(event.error);
+    });
+    subscriptions.push(errorSub);
+    
+    // Listen for text processing requests from native (THE MISSING PIECE!)
+    const processTextSub = DeviceEventEmitter.addListener('processTextFromNative', async (event) => {
+      const { text, requestId } = event;
+
+      try {
+        console.log(`🟡 VOICE_SERVICE: Adding user message to chat history`);
+        
+        // Create new message
+        const newMessage: ChatMessage = {
+          role: 'user',
+          content: text,
+          timestamp: Date.now()
         };
         
-        console.log('Adding assistant message to chat history:', assistantMessage);
-        setChatHistory(prevHistory => [...prevHistory, assistantMessage]);
+        // Update chat history and get the updated history
+        let updatedHistory: ChatMessage[] = [];
+        setChatHistory(prev => {
+          updatedHistory = [...prev, newMessage];
+          return updatedHistory;
+        });
         
-        // Use TTS to speak the response
-        speakResponse(apiResponse.response);
-      }
-    },
-    onError: (apiError) => {
-      console.error('API error:', apiError);
-      setError(`Error communicating with server: ${apiError.message}`);
-    }
-  });
-  
-  // Refs to store latest values for event listeners
-  const chatHistoryRef = useRef(chatHistory);
-  const featureSettingsRef = useRef(featureSettings);
-  const serverApiRef = useRef(serverApi);
-  
-  // Update refs when values change
-  useEffect(() => {
-    chatHistoryRef.current = chatHistory;
-  }, [chatHistory]);
-  
-  useEffect(() => {
-    featureSettingsRef.current = featureSettings;
-  }, [featureSettings]);
-  
-  useEffect(() => {
-    serverApiRef.current = serverApi;
-  }, [serverApi]);
-  
-  // Log component mount and initial state
-  useEffect(() => {
-    console.log('🎤 VoiceProvider mounted');
-    console.log('🎤 Initial voice state:', voiceState);
-    console.log('🎤 Initial wake word enabled:', isWakeWordEnabled);
-    return () => {
-      console.log('🎤 VoiceProvider unmounting');
-    };
-  }, []);
-
-  // Log when wake word state changes for debugging purposes
-  useEffect(() => {
-    console.log(`🎤 Wake word enabled state changed to: ${isWakeWordEnabled}`);
-  }, [isWakeWordEnabled]);
-
-  // Log when voice state changes
-  useEffect(() => {
-    console.log(`🎙️ Voice state changed to: ${voiceState}`);
-  }, [voiceState]);
-
-  // Log when listening/speaking states change
-  useEffect(() => {
-    console.log(`🔊 Listening: ${isListening}, Speaking: ${isSpeaking}`);
-  }, [isListening, isSpeaking]);
-  
-  // Set up voice service event listeners
-  useEffect(() => {
-    if (listenersSetupRef.current) {
-      console.log('🎤 Event listeners already set up, skipping...');
-      return;
-    }
-    
-    console.log('🎤 Setting up speech result listener');
-    
-    // Initialize voice service
-    voiceService.initialize();
-    
-    // Speech result listener
-    const speechResultListener = voiceService.onSpeechResult((event: any) => {
-      console.log('🎤 Speech result received:', event.text);
-      setTranscript(event.text);
-      
-      // Add user message to chat history
-      const userMessage: ChatMessage = {
-        role: 'user',
-        content: event.text,
-        type: 'text',
-        timestamp: Date.now()
-      };
-      
-      console.log('Adding user message to chat history:', userMessage);
-      setChatHistory(prevHistory => [...prevHistory, userMessage]);
-      
-      // Process the speech with server API
-      processSpeechWithServer(event.text, chatHistoryRef.current);
-    });
-
-    // Assistant response listener
-    const assistantResponseListener = voiceService.onAssistantResponse((event: any) => {
-      console.log('🔊 Assistant response received:', event.text);
-      setResponse(event.text);
-    });
-
-    // Voice state change listener
-    const stateChangeListener = voiceService.onVoiceStateChange((event: any) => {
-      console.log('🎙️ Voice state changed to:', event.state);
-      // Note: We don't have a setVoiceState here since we're using the hook's state
-      // The voice state is managed by the useVoiceStateHook
-    });
-
-    // Add listener for speech text processing requests from Android
-    const speechTextProcessListener = DeviceEventEmitter.addListener(
-      'speechTextToProcess',
-      async (eventData: string) => {
+        // Send to API with updated history
+        console.log('🟠 VOICE_CONTEXT: Feature settings:', featureSettings);
+        const response = await sendMessage(text, updatedHistory, featureSettings);
+        
+        // Send response back to native
+        await voiceService.handleApiResponse(requestId, response.response);
+        
+      } catch (error) {
+        console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
+        console.error('🟠 VOICE_CONTEXT: Error details:', {
+          name: error instanceof Error ? error.name : 'Unknown',
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        });
+        
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        
+        // Send error response back to native
         try {
-          const data = JSON.parse(eventData);
-          console.log('📱 Received speech text processing request from Android:', data);
-          
-          const { text, requestId, timestamp } = data;
-          
-          // Process the text using our authenticated API
-          try {
-            const response = await serverApiRef.current.sendMessage(text, chatHistoryRef.current, featureSettingsRef.current);
-            console.log('✅ API response for Android request:', response.response);
-            
-            // Send response back to Android
-            await voiceService.handleApiResponse(requestId, response.response);
-          } catch (error) {
-            console.error('❌ Error processing speech for Android:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-            await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
-          }
-        } catch (parseError) {
-          console.error('❌ Error parsing speech text processing event:', parseError);
+          console.log('🟠 VOICE_CONTEXT: Sending error response back to native...');
+          await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
+          console.log('🟠 VOICE_CONTEXT: ✅ Error response sent to native');
+        } catch (responseError) {
+          console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
         }
       }
-    );
-
-    // Add listener for text processing requests from native (new approach)
-    const processTextRequestListener = DeviceEventEmitter.addListener(
-      'processTextRequest',
-      async (data: { text: string; requestId: string }) => {
-        try {
-          console.log('📱 Received process text request from native:', data);
-          
-          const { text, requestId } = data;
-          
-          // Add user message to chat history
-          const userMessage: ChatMessage = {
-            role: 'user',
-            content: text,
-            type: 'text',
-            timestamp: Date.now()
-          };
-          
-          console.log('Adding user message to chat history from native:', userMessage);
-          setChatHistory(prevHistory => [...prevHistory, userMessage]);
-          
-          // Process the text using our authenticated API
-          try {
-            const response = await serverApiRef.current.sendMessage(text, chatHistoryRef.current, featureSettingsRef.current);
-            console.log('✅ API response for native request:', response.response);
-            
-            // Send response back to native using VoiceModule
-            const { VoiceModule } = require('react-native').NativeModules;
-            await VoiceModule.handleNativeApiResponse(requestId, response.response);
-            console.log('📤 Response sent back to native for requestId:', requestId);
-            
-          } catch (error) {
-            console.error('❌ Error processing text for native:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-            
-            // Send error response back to native
-            try {
-              const { VoiceModule } = require('react-native').NativeModules;
-              await VoiceModule.handleNativeApiResponse(requestId, `Error: ${errorMessage}`);
-            } catch (responseError) {
-              console.error('❌ Error sending error response to native:', responseError);
-            }
-          }
-        } catch (parseError) {
-          console.error('❌ Error processing text request event:', parseError);
-        }
-      }
-    );
-
-    // Mark listeners as set up
+    });
+    subscriptions.push(processTextSub);
+    
     listenersSetupRef.current = true;
-
+    
     return () => {
-      console.log('🎤 Cleaning up voice event listeners');
-      speechResultListener();
-      assistantResponseListener();
-      stateChangeListener();
-      speechTextProcessListener.remove();
-      processTextRequestListener.remove();
+      console.log('🧹 Cleaning up voice event listeners');
+      subscriptions.forEach(sub => sub.remove());
       listenersSetupRef.current = false;
     };
-  }, []); // Empty dependency array to run only once
-  
-  // Process speech with server API
-  const processSpeechWithServer = useCallback(async (speechText: string, currentHistory: ChatMessage[]) => {
+  }, [sendMessage, chatHistory, featureSettings, voiceService]);
+
+  // Start listening - delegate to hook
+  const startListening = useCallback(async () => {
     try {
-      // Add a longer delay for Android to ensure voice operations are complete
-      await new Promise(resolve => setTimeout(resolve, 250));
-      
-      console.log('🌐 Processing speech with server API:', speechText);
-      console.log('📜 Current history length:', currentHistory.length);
-      console.log('⚙️ Using feature settings:', featureSettingsRef.current);
-      console.log('📱 Platform: Android - using extended delays and validation');
-      
-      // Force a fresh session check for Android
-      console.log('🔄 Forcing fresh session check for Android...');
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('❌ Session error during voice processing:', sessionError);
-        setError('Session error. Please sign in again.');
-        return null;
-      }
-      
-      if (!sessionData.session) {
-        console.error('❌ No valid session found during voice processing');
-        
-        // Try to refresh session immediately
-        console.log('🔄 Attempting immediate session refresh...');
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-        
-        if (refreshError || !refreshData.session) {
-          console.error('❌ Session refresh failed:', refreshError);
-          setError('Authentication session expired. Please sign in again.');
-          return null;
-        }
-        
-        console.log('✅ Session refreshed successfully');
-      }
-      
-      // Validate authentication state before proceeding
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        console.error('❌ User validation failed during voice processing:', userError);
-        setError('User authentication failed. Please sign in again.');
-        return null;
-      }
-      
-      console.log('✅ Valid session and user found for voice API call');
-      
-      // Add another small delay before API call for Android stability
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Make the call exactly like the debug test does - no custom auth checking
-      const response = await serverApiRef.current.sendMessage(speechText, currentHistory, featureSettingsRef.current);
-      return response;
+      console.log('🎤 Starting listening via context');
+      return await voiceStateFromHook.startListening();
     } catch (err) {
-      console.error('Error in processSpeechWithServer:', err);
-      
-      // Type guard for error handling
-      const error = err as any;
-      const isAuthError = error?.message?.includes('403') || 
-                         error?.message?.includes('auth') || 
-                         error?.response?.status === 403;
-      
-      // If it's an auth error, try to refresh the session
-      if (isAuthError) {
-        console.log('🔄 Auth error detected, attempting session refresh...');
-        try {
-          // Force sign out and back in for Android if refresh fails
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-          if (!refreshError && refreshData.session) {
-            console.log('✅ Session refreshed successfully, retrying API call...');
-            
-            // Add delay before retry for Android
-            await new Promise(resolve => setTimeout(resolve, 200));
-            
-            // Retry the API call once
-            const response = await serverApiRef.current.sendMessage(speechText, currentHistory, featureSettingsRef.current);
-            return response;
-          } else {
-            console.error('❌ Session refresh failed:', refreshError);
-            console.log('🚨 Android: Session refresh failed, user needs to re-authenticate');
-            setError('Authentication session expired. Please sign out and sign in again.');
-          }
-        } catch (retryErr) {
-          console.error('❌ Retry after session refresh failed:', retryErr);
-          setError('Authentication error. Please sign out and sign in again.');
-        }
-      } else {
-        // Error handling is done in onError callback for non-auth errors
-        console.error('Non-auth error in processSpeechWithServer:', err);
-      }
-      return null;
+      console.error('Error starting listening:', err);
+      setError(err instanceof Error ? err.message : 'Failed to start listening');
+      return false;
     }
-  }, []); // Remove all dependencies since we're using refs
-  
-  // Use directly the startListening from hook
-  const startListening = voiceStateFromHook.startListening;
-  
-  // Use native TTS to speak the response
-  const speakResponse = useCallback(async (responseText: string) => {
+  }, [voiceStateFromHook]);
+
+  // Stop listening - delegate to hook
+  const stopListening = useCallback(async () => {
     try {
-      console.log('Speaking response:', responseText);
-      
-      // Already handled by the native side
-      await voiceService.speakResponse(responseText);
-      
-      // The native side will automatically start listening again
-      console.log('Response spoken, native side will automatically restart listening');
+      console.log('🛑 Stopping listening via context');
+      return await voiceStateFromHook.stopListening();
     } catch (err) {
-      console.error('Error speaking response:', err);
-      setError(`Error speaking response: ${err}`);
+      console.error('Error stopping listening:', err);
+      setError(err instanceof Error ? err.message : 'Failed to stop listening');
+      return false;
     }
-  }, [voiceService]);
-  
-  // Use directly the stopListening from hook
-  const stopListening = voiceStateFromHook.stopListening;
-  
-  // Reset state to default (just transcript and response as we're using the hook for state)
+  }, [voiceStateFromHook]);
+
+  // Reset state
   const resetState = useCallback(() => {
+    console.log('🔄 Resetting voice state');
     setError(null);
     setTranscript('');
     setResponse('');
-    // We don't reset isWakeWordEnabled or chatHistory here as those are persistent
+    // Note: voiceState is managed by native layer, not reset here
   }, []);
-  
+
   // Clear chat history
   const clearChatHistory = useCallback(() => {
+    console.log('🗑️ Clearing chat history');
     setChatHistory([]);
   }, []);
-  
-  // Use directly the interruptSpeech from hook
+
+  // Interrupt speech - delegate to hook
   const interruptSpeech = useCallback(async () => {
     try {
       console.log('🛑 Interrupting current speech');
       
-      // Call the hook's interruptSpeech function
       const result = await voiceStateFromHook.interruptSpeech();
       
       if (result) {
-        // Set response to empty to clear any visible response text
+        // Clear response to remove visible response text
         setResponse('');
-        
         console.log('✅ Speech interrupted successfully, transitioning to LISTENING state');
         
         // Add a short delay to allow for native side state updates
         setTimeout(() => {
-          // The native side should handle the transition to LISTENING state
-          // But we can log for debugging purposes
           console.log('🎤 State after interruption:', voiceStateFromHook.voiceState);
         }, 500);
       } else {
@@ -441,18 +236,23 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
   }, [voiceStateFromHook]);
   
-  // Context value
+  // Context value - now purely bridging to native state
   const value: VoiceContextValue = {
+    // Native state (single source of truth)
     voiceState,
+    isListening,
+    isSpeaking,
+    isError,
+    
+    // UI-specific state
     isWakeWordEnabled,
     error,
     transcript,
     response,
     chatHistory,
-    isListening,
-    isSpeaking,
-    isError,
-    setVoiceState: () => {}, // This is now handled by the native side
+    
+    // Actions (delegate to native)
+    setVoiceState: () => {}, // No-op - state managed by native layer
     setWakeWordEnabled,
     setError,
     setTranscript,

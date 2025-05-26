@@ -3,6 +3,43 @@ import SettingsService from '../app-config/AppConfigService';
 import { FeatureSettings } from '../features/features';
 import api from './api';
 
+// Helper function to convert camelCase to snake_case
+function toSnakeCase(str: string): string {
+  // Special case for 'tellMeThings' -> 'tell_me_things'
+  if (str === 'tellMeThings') return 'tell_me_things';
+  // Special case for 'alarmClock' -> 'alarm_clock'
+  if (str === 'alarmClock') return 'alarm_clock';
+  // Special case for 'projectUnderstanding' -> 'project_understanding'
+  if (str === 'projectUnderstanding') return 'project_understanding';
+  
+  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+}
+
+// Helper function to transform object keys to snake_case recursively
+function transformToSnakeCase(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(transformToSnakeCase);
+  }
+  
+  if (obj !== null && typeof obj === 'object') {
+    return Object.keys(obj).reduce((acc, key) => {
+      const snakeKey = toSnakeCase(key);
+      const value = obj[key];
+      
+      // Special handling for feature settings
+      if (key === 'featureSettings') {
+        acc['feature_settings'] = transformToSnakeCase(value);
+      } else {
+        acc[snakeKey] = transformToSnakeCase(value);
+      }
+      
+      return acc;
+    }, {} as any);
+  }
+  
+  return obj;
+}
+
 // Default server configuration
 const DEFAULT_SERVER_CONFIG = {
   baseUrl: 'http://192.168.1.131:8000',
@@ -23,13 +60,18 @@ export interface ServerApiConfig {
 export interface ChatRequest {
   message: string;
   timestamp: number;
-  history: ChatMessage[]; // role, content, type, timestamp
+  history: Array<{
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: number;
+    type: 'text';  // Backend expects 'text' for the type field
+  }>;
   preferences?: {
     voice?: string;
     response_type?: string;
     [key: string]: any;
   };
-  featureSettings?: FeatureSettings;
+  feature_settings?: any; // Using any since we transform it to snake_case
 }
 
 /**
@@ -94,32 +136,49 @@ class ServerApiService {
   ): Promise<ChatResponse> {
     // Queue requests to prevent concurrent auth issues
     return this.requestQueue = this.requestQueue.then(async () => {
-      console.log(`Sending chat request to ${this.config.apiEndpoint}`);
-      console.log('📱 Android: Using request queuing to prevent auth conflicts');
-      
+      console.log(`🔴 SERVER_API: sendChatRequest called`);
+      console.log(`🔴 SERVER_API: Message: "${message}"`);
+
       try {
         // Add a delay to ensure previous operations are complete (longer for Android)
+        console.log('🔴 SERVER_API: Adding delay for Android stability...');
         await new Promise(resolve => setTimeout(resolve, 150));
+        
+        // Transform feature settings to snake_case
+        const transformedFeatureSettings = featureSettings ? transformToSnakeCase(featureSettings) : undefined;
         
         const jsonData: ChatRequest = {
           message,
           timestamp: Date.now(),
-          history,
+          history: history.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+            timestamp: msg.timestamp,
+            type: 'text'  // Always set type to 'text' for now
+          })),
           preferences: preferences || {
             voice: 'male',
             response_type: 'concise'
           },
-          featureSettings
+          feature_settings: transformedFeatureSettings // Use snake_case key
         };
+
+        history.forEach((message, index) => {
+          console.log(`🔴 SERVER_API: History[${index}]:`, {
+            role: message.role,
+            content: message.content?.substring(0, 50) + (message.content?.length > 50 ? '...' : ''),
+            timestamp: message.timestamp,
+            contentLength: message.content?.length || 0
+          });
+        });
+
+        // Log the transformed data for debugging
+        console.log('🔴 SERVER_API: Full request payload:', JSON.stringify(jsonData, null, 2));
 
         // Create FormData and append JSON data
         const formData = new FormData();
         formData.append('json_data', JSON.stringify(jsonData));
 
-        console.log('Request payload:', JSON.stringify(jsonData));
-        console.log('📱 Android: Making queued API request...');
-
-        // Start both the API call and polling in parallel
         const [apiResponse] = await Promise.all([
           api.post(this.config.apiEndpoint, formData, {
             headers: { 
@@ -127,8 +186,8 @@ class ServerApiService {
             },
             timeout: 30000 // 30 second timeout for Android
           }).catch((error: unknown) => {
-            console.error('API request error:', error);
-            console.error('📱 Android: API request failed in queue');
+            console.error('🔴 SERVER_API: ❌ API request error:', error);
+            console.error('🔴 SERVER_API: API request failed in queue');
             throw error;
           })
         ]);
@@ -136,12 +195,11 @@ class ServerApiService {
         // console.log('Response:\n', apiResponse);
 
         const data: ChatResponse = apiResponse.data;
-        console.log('Server response:', data);
-        console.log('📱 Android: Queued request completed successfully');
+        console.log('🔴 SERVER_API: ✅ Server response received');
         return data;
       } catch (error) {
-        console.error('Error sending chat request:', error);
-        console.error('📱 Android: Queued request failed');
+        console.error('🔴 SERVER_API: ❌ Error sending chat request:', error);
+        console.error('🔴 SERVER_API: Queued request failed');
         throw error;
       }
     });

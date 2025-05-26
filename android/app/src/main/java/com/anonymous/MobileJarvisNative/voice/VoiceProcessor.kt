@@ -193,57 +193,18 @@ class ModularVoiceProcessor(private val context: Context) : VoiceProcessor {
     }
     
     override fun speak(text: String, onComplete: () -> Unit) {
-        Log.i(TAG, "Speaking with TTS: $text")
+        Log.i(TAG, "Speaking with System TTS: $text")
         try {
-            // Check if TextToSpeechManager is ready
-            if (!isTextToSpeechReady()) {
-                Log.w(TAG, "Local TTS not ready, attempting to use Deepgram as fallback")
-                useDeepgramTTS(text, onComplete)
-                return
-            }
-            
-            // Use system TTS
+            // Use system TTS directly - simpler and more reliable
             isSpeaking = true
             TextToSpeechManager.speak(text) {
                 isSpeaking = false
                 onComplete()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error speaking with local TTS, trying Deepgram fallback", e)
+            Log.e(TAG, "Error speaking with System TTS", e)
             isSpeaking = false
-            useDeepgramTTS(text, onComplete)
-        }
-    }
-    
-    /**
-     * Check if TextToSpeech is ready to use
-     */
-    private fun isTextToSpeechReady(): Boolean {
-        return TextToSpeechManager.isInitialized()
-    }
-    
-    /**
-     * Use Deepgram TTS as fallback
-     */
-    private fun useDeepgramTTS(text: String, onComplete: () -> Unit) {
-        Log.i(TAG, "Using Deepgram TTS as fallback")
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                isSpeaking = true
-                val deepgramClient = DeepgramClient(context)
-                deepgramClient.initialize()
-                deepgramClient.speak(text)
-                
-                // Wait a bit for the audio to start playing, then call onComplete
-                // Note: Deepgram handles its own completion callback internally
-                kotlinx.coroutines.delay(1000) // Give it time to start
-                isSpeaking = false
-                onComplete()
-            } catch (e: Exception) {
-                Log.e(TAG, "Error with Deepgram TTS fallback", e)
-                isSpeaking = false
-                onComplete()
-            }
+            onComplete()
         }
     }
     
@@ -312,6 +273,6 @@ class ModularVoiceProcessor(private val context: Context) : VoiceProcessor {
     override fun onNoSpeechDetected() {
         Log.i(TAG, "No speech detected in Modular processor")
         // Get VoiceManager instance and delegate handling to it
-        VoiceManager.getInstance()?.handleNoSpeechDetected()
+        VoiceManager.getInstance().handleNoSpeechDetected()
     }
 } 

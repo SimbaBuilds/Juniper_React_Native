@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Alert, Platform, NativeModules } from 'react-native';
 import WakeWordService, { WakeWordEvents } from './WakeWordService';
-import { useVoiceState } from '../voice/hooks/useVoiceState';
+import { useVoice } from '../voice/VoiceContext';
 import { checkWakeWordPermissions, requestWakeWordPermissions } from '../settings/permissions';
 
 /**
@@ -17,7 +17,7 @@ export const useWakeWord = () => {
   const initialized = useRef(false);
   
   // Get voice state context to coordinate with voice recognition
-  const { voiceState, setWakeWordEnabled } = useVoiceState();
+  const { voiceState, setWakeWordEnabled } = useVoice();
   
   // Check if wake word detection is available on this device and load saved state
   useEffect(() => {

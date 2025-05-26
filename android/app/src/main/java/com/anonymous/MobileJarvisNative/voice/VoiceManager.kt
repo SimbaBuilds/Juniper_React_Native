@@ -24,6 +24,9 @@ import com.anonymous.MobileJarvisNative.ConfigManager
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.WritableMap
 
 /**
  * VoiceManager - Unified manager for all voice-related functionality
@@ -108,6 +111,10 @@ class VoiceManager private constructor() {
         // Update constants from config
         MAX_NO_SPEECH_RETRIES = configManager.getMaxNoSpeechRetries()
         
+        // Initialize centralized AudioManager
+        Log.d(TAG, "Initializing centralized AudioManager")
+        com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().initialize(context)
+        
         // Initialize TextToSpeechManager early to ensure it's ready
         Log.d(TAG, "Initializing TextToSpeechManager")
         TextToSpeechManager.initialize(context) { isInitialized ->
@@ -171,7 +178,12 @@ class VoiceManager private constructor() {
             
             // Set API callback for React Native communication
             voiceProcessor.setApiCallback { text, onResult ->
-                processTextWithReactNative(text, onResult)
+                // Use the new direct method via the existing callback
+                Log.d(TAG, "🔵 VOICE_MANAGER: Processing text via new API flow: $text")
+                reactNativeApiCallback?.invoke(text, onResult) ?: run {
+                    Log.e(TAG, "🔵 VOICE_MANAGER: No React Native API callback set")
+                    onResult("Error: React Native API not available")
+                }
             }
             
             // Initialize the processor
@@ -186,17 +198,6 @@ class VoiceManager private constructor() {
         } catch (e: Exception) {
             Log.e(TAG, "Error initializing voice processor", e)
             return false
-        }
-    }
-    
-    /**
-     * Process text with React Native (to be called by VoiceModule)
-     */
-    private fun processTextWithReactNative(text: String, onResult: (String) -> Unit) {
-        Log.d(TAG, "Processing text with React Native: $text")
-        reactNativeApiCallback?.invoke(text, onResult) ?: run {
-            Log.e(TAG, "No React Native API callback set")
-            onResult("Error: React Native API not available")
         }
     }
     
