@@ -1,6 +1,8 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { AppState } from 'react-native';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../supabase/supabase';
+import { UserProfileService } from '../services/userProfileService';
 
 type AuthContextType = {
   session: Session | null;
@@ -40,10 +42,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         console.log('Auth state changed:', event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
+        
+        // Handle profile creation for new users
+        if (event === 'SIGNED_IN' && currentSession?.user) {
+          try {
+            // Check if this is a new user by comparing created_at with current time
+            const userCreatedAt = new Date(currentSession.user.created_at);
+            const now = new Date();
+            const timeDiff = now.getTime() - userCreatedAt.getTime();
+            const isNewUser = timeDiff < 60000; // User created within last minute
+            
+            if (isNewUser) {
+              console.log('New user detected, creating profile...');
+              const displayName = currentSession.user.user_metadata?.display_name || 
+                                 currentSession.user.user_metadata?.full_name;
+              
+              // Check if profile already exists to avoid duplicates
+              const profileExists = await UserProfileService.profileExists(currentSession.user.id);
+              
+              if (!profileExists) {
+                await UserProfileService.createUserProfile(
+                  currentSession.user.id, 
+                  displayName
+                );
+              }
+            }
+          } catch (error) {
+            console.error('Failed to create user profile:', error);
+            // Don't throw here - we don't want to break the auth flow
+          }
+        }
         
         // Handle loading state for auth events
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
@@ -52,8 +84,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
+    // Tells Supabase Auth to continuously refresh the session automatically if
+    // the app is in the foreground. When this is added, you will continue to receive
+    // `onAuthStateChange` events with the `TOKEN_REFRESHED` or `SIGNED_OUT` event
+    // if the user's session is terminated. This should only be registered once.
+    const appStateSubscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        supabase.auth.startAutoRefresh()
+      } else {
+        supabase.auth.stopAutoRefresh()
+      }
+    });
+
     return () => {
       subscription.unsubscribe();
+      appStateSubscription?.remove();
     };
   }, []);
 

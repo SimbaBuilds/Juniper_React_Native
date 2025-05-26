@@ -1,6 +1,7 @@
 import { ChatMessage } from '../voice/VoiceContext';
 import SettingsService from '../app-config/AppConfigService';
 import { FeatureSettings } from '../features/features';
+import api from './api';
 
 // Default server configuration
 const DEFAULT_SERVER_CONFIG = {
@@ -90,10 +91,11 @@ class ServerApiService {
     preferences?: ChatRequest['preferences'],
     featureSettings?: FeatureSettings
   ): Promise<ChatResponse> {
-    console.log(`Sending chat request to ${this.config.baseUrl}${this.config.apiEndpoint}`);
+    console.log(`Sending chat request to ${this.config.apiEndpoint}`);
     
     try {
-      const request: ChatRequest = {
+      // Part 1: JSON payload with metadata
+      const jsonData: ChatRequest = {
         message,
         timestamp: Date.now(),
         history,
@@ -104,25 +106,27 @@ class ServerApiService {
         featureSettings
       };
 
-      console.log('Request payload:', JSON.stringify(request));
+      // Create FormData and append JSON data
+      const formData = new FormData();
+      formData.append('json_data', JSON.stringify(jsonData));
 
-      const response = await fetch(`${this.config.baseUrl}${this.config.apiEndpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(request)
-      });
+      console.log('Request payload:', JSON.stringify(jsonData));
 
-      console.log('Response:\n', response);
+      // Start both the API call and polling in parallel
+      const [apiResponse] = await Promise.all([
+        api.post(this.config.apiEndpoint, formData, {
+          headers: { 
+            'Content-Type': 'multipart/form-data'
+          }
+        }).catch((error: unknown) => {
+          console.error('API request error:', error);
+          throw error;
+        })
+      ]);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server API error:', response.status, errorText);
-        throw new Error(`Server API error: ${response.status} ${errorText}`);
-      }
+      console.log('Response:\n', apiResponse);
 
-      const data: ChatResponse = await response.json();
+      const data: ChatResponse = apiResponse.data;
       console.log('Server response:', data);
       return data;
     } catch (error) {

@@ -5,6 +5,9 @@ import { WakeWordToggle } from './wakeword/components/WakeWordToggle';
 import { VoiceAssistant } from './voice/components/VoiceAssistant';
 import { VoiceErrorBoundary } from './voice/ErrorBoundary/VoiceErrorBoundary';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import DebugApiTest from './api/DebugApiTest';
+
+
 
 type RootStackParamList = {
   Home: undefined;
@@ -29,7 +32,9 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.settingsSection}>
           <WakeWordToggle />
           <WakeWordStatus />
+          <DebugApiTest />
         </View>
+        
 
         <VoiceErrorBoundary>
           <View style={styles.voiceAssistantContainer}>

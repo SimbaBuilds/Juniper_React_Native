@@ -163,6 +163,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       console.log('🌐 Processing speech with server API:', speechText);
       console.log('📜 Current history length:', currentHistory.length);
       console.log('⚙️ Using feature settings:', featureSettings);
+      
       const response = await serverApi.sendMessage(speechText, currentHistory, featureSettings);
       return response;
     } catch (err) {

@@ -98,6 +98,6 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
     error,
     response,
     sendMessage,
-    updateConfig
+    updateConfig,
   };
 }; 
