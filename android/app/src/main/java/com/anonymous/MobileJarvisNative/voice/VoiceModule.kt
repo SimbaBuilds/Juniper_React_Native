@@ -13,9 +13,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import com.anonymous.MobileJarvisNative.utils.Constants
 import android.os.Handler
 import android.os.Looper
+import com.anonymous.MobileJarvisNative.utils.TextToSpeechManager
 
 /**
  * Bridge module for exposing Voice functionality to React Native
@@ -170,7 +172,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
     }
 
     /**
-     * Speak a response using TTS
+     * Speak a response using TTS (Deepgram first, then system TTS fallback)
      */
     @ReactMethod
     fun speakResponse(text: String, promise: Promise) {
@@ -182,52 +184,147 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                     Log.i(TAG, "Setting voice state to SPEAKING")
                     voiceManager.updateState(VoiceManager.VoiceState.SPEAKING)
                     
-                    // Use Deepgram for TTS
-                    val deepgramClient = DeepgramClient(reactContext)
-                    deepgramClient.initialize()
-                    Log.i(TAG, "Speaking response via Deepgram")
-                    deepgramClient.speak(text)
+                    var speechSuccessful = false
                     
-                    // After speaking is complete, reset state
-                    Log.i(TAG, "Speaking complete, setting state to LISTENING directly instead of IDLE")
-                    
-                    // Add a small delay before starting to listen again
-                    Log.i(TAG, "Waiting 800ms before starting listening")
-                    kotlinx.coroutines.delay(800)
-                    
-                    // Ensure we don't go to IDLE which would trigger wake word detection
-                    // Instead go directly to LISTENING state
-                    voiceManager.updateState(VoiceManager.VoiceState.LISTENING)
-                    
-                    Log.i(TAG, "AUTO-RESTART: Response spoken, automatically setting state to LISTENING")
+                    // Try Deepgram TTS first
                     try {
-                        // Explicitly start listening after the state change to avoid race conditions
-                        kotlinx.coroutines.delay(200)
-                        voiceManager.startListening()
-                        Log.i(TAG, "AUTO-RESTART: Successfully started listening")
-                    } catch (startError: Exception) {
-                        Log.e(TAG, "AUTO-RESTART: Failed to start listening", startError)
-                        // Try one more time after a short delay
-                        kotlinx.coroutines.delay(500)
+                        Log.i(TAG, "Attempting Deepgram TTS...")
+                        val deepgramClient = DeepgramClient(reactContext)
+                        deepgramClient.initialize()
+                        deepgramClient.speak(text)
+                        speechSuccessful = true
+                        Log.i(TAG, "Deepgram TTS successful")
+                    } catch (deepgramError: Exception) {
+                        Log.w(TAG, "Deepgram TTS failed: ${deepgramError.message}, falling back to system TTS")
+                        Log.w(TAG, "Deepgram error details: ${deepgramError.javaClass.simpleName}")
+                        
+                        // Fall back to system TTS - this is the critical section that wasn't being reached
+                        Log.i(TAG, "Starting system TTS fallback...")
+                        
                         try {
-                            Log.i(TAG, "AUTO-RESTART: Retrying start listening")
-                            voiceManager.startListening()
-                            Log.i(TAG, "AUTO-RESTART: Successfully started listening on retry")
-                        } catch (retryError: Exception) {
-                            Log.e(TAG, "AUTO-RESTART: Failed to start listening on retry", retryError)
-                            // If we still can't start listening, at least set the state back to IDLE
-                            // so the system isn't stuck in an invalid state
-                            Log.i(TAG, "Setting voice state to IDLE after failed restarts")
-                            voiceManager.updateState(VoiceManager.VoiceState.IDLE)
+                            // Check if TextToSpeechManager is already initialized
+                            if (TextToSpeechManager.isInitialized()) {
+                                Log.i(TAG, "TextToSpeechManager already initialized, using directly")
+                                
+                                // Use a simple callback approach instead of suspendable coroutine
+                                var ttsCompleted = false
+                                TextToSpeechManager.speak(text) {
+                                    Log.i(TAG, "System TTS completed successfully")
+                                    ttsCompleted = true
+                                    speechSuccessful = true
+                                }
+                                
+                                // Wait a moment to see if TTS started successfully
+                                kotlinx.coroutines.delay(100)
+                                
+                                if (TextToSpeechManager.isSpeaking()) {
+                                    Log.i(TAG, "System TTS is now speaking")
+                                    speechSuccessful = true
+                                } else {
+                                    Log.e(TAG, "System TTS failed to start speaking")
+                                    speechSuccessful = false
+                                }
+                            } else {
+                                Log.i(TAG, "TextToSpeechManager not initialized, initializing now...")
+                                
+                                // Initialize TextToSpeechManager with callback
+                                var initCompleted = false
+                                var initSuccess = false
+                                
+                                TextToSpeechManager.initialize(reactContext) { isInitialized ->
+                                    Log.i(TAG, "TextToSpeechManager initialization completed: $isInitialized")
+                                    initCompleted = true
+                                    initSuccess = isInitialized
+                                    
+                                    if (isInitialized) {
+                                        Log.i(TAG, "Starting TTS after successful initialization")
+                                        TextToSpeechManager.speak(text) {
+                                            Log.i(TAG, "System TTS completed after initialization")
+                                            speechSuccessful = true
+                                        }
+                                    } else {
+                                        Log.e(TAG, "TextToSpeechManager initialization failed")
+                                        speechSuccessful = false
+                                    }
+                                }
+                                
+                                // Wait for initialization to complete (with timeout)
+                                var waitTime = 0
+                                while (!initCompleted && waitTime < 3000) {
+                                    kotlinx.coroutines.delay(100)
+                                    waitTime += 100
+                                }
+                                
+                                if (!initCompleted) {
+                                    Log.e(TAG, "TextToSpeechManager initialization timed out")
+                                    speechSuccessful = false
+                                } else if (initSuccess) {
+                                    // Give TTS a moment to start
+                                    kotlinx.coroutines.delay(200)
+                                    if (TextToSpeechManager.isSpeaking()) {
+                                        Log.i(TAG, "System TTS is speaking after initialization")
+                                        speechSuccessful = true
+                                    } else {
+                                        Log.w(TAG, "System TTS not speaking after initialization, but considering successful")
+                                        speechSuccessful = true // Consider it successful if init worked
+                                    }
+                                }
+                            }
+                        } catch (systemTtsError: Exception) {
+                            Log.e(TAG, "System TTS also failed: ${systemTtsError.message}", systemTtsError)
+                            speechSuccessful = false
                         }
                     }
                     
-                    promise.resolve(true)
+                    Log.i(TAG, "TTS process completed. Success: $speechSuccessful")
+                    
+                    if (speechSuccessful) {
+                        Log.i(TAG, "Speech completed successfully, transitioning to LISTENING")
+                        
+                        // Wait for TTS to actually complete before transitioning
+                        var waitTime = 0
+                        while (TextToSpeechManager.isSpeaking() && waitTime < 10000) {
+                            kotlinx.coroutines.delay(500)
+                            waitTime += 500
+                            Log.d(TAG, "Waiting for TTS to complete... ($waitTime ms)")
+                        }
+                        
+                        Log.i(TAG, "TTS playback finished, transitioning to LISTENING state")
+                        
+                        // Transition to LISTENING state
+                        voiceManager.updateState(VoiceManager.VoiceState.LISTENING)
+                        
+                        // Add delay before starting listening
+                        kotlinx.coroutines.delay(500)
+                        
+                        Log.i(TAG, "AUTO-RESTART: Starting listening after speech")
+                        try {
+                            voiceManager.startListening()
+                            Log.i(TAG, "AUTO-RESTART: Successfully started listening")
+                        } catch (startError: Exception) {
+                            Log.e(TAG, "AUTO-RESTART: Failed to start listening", startError)
+                            // Try one more time
+                            kotlinx.coroutines.delay(500)
+                            try {
+                                Log.i(TAG, "AUTO-RESTART: Retrying start listening")
+                                voiceManager.startListening()
+                                Log.i(TAG, "AUTO-RESTART: Successfully started listening on retry")
+                            } catch (retryError: Exception) {
+                                Log.e(TAG, "AUTO-RESTART: Failed to start listening on retry", retryError)
+                                Log.i(TAG, "Setting voice state to IDLE after failed restarts")
+                                voiceManager.updateState(VoiceManager.VoiceState.IDLE)
+                            }
+                        }
+                    } else {
+                        Log.e(TAG, "All TTS methods failed")
+                        voiceManager.updateState(VoiceManager.VoiceState.IDLE)
+                    }
+                    
+                    promise.resolve(speechSuccessful)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error in speakResponse coroutine", e)
-                    // Try to get back to a good state
+                    Log.e(TAG, "Unexpected error in speakResponse coroutine", e)
                     try {
-                        Log.i(TAG, "Setting voice state to IDLE after error")
+                        Log.i(TAG, "Setting voice state to IDLE after unexpected error")
                         voiceManager.updateState(VoiceManager.VoiceState.IDLE)
                     } catch (stateError: Exception) {
                         Log.e(TAG, "Failed to update state after error", stateError)
@@ -236,7 +333,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error speaking response", e)
+            Log.e(TAG, "Error in speakResponse outer try-catch", e)
             promise.reject("ERR_TTS", e.message, e)
         }
     }
@@ -324,6 +421,70 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         } catch (e: Exception) {
             Log.e(TAG, "Error handling native API response", e)
             promise.reject("HANDLE_RESPONSE_ERROR", e.message, e)
+        }
+    }
+
+    /**
+     * Test TTS directly (for debugging)
+     */
+    @ReactMethod
+    fun testTTS(text: String, promise: Promise) {
+        Log.d(TAG, "testTTS called with text: $text")
+        try {
+            // Check audio settings first
+            Log.d(TAG, "Checking audio settings...")
+            TextToSpeechManager.checkAudioSettings(reactContext)
+            
+            // Ensure TextToSpeechManager is initialized
+            if (!TextToSpeechManager.isInitialized()) {
+                Log.i(TAG, "Initializing TextToSpeechManager for test...")
+                TextToSpeechManager.initialize(reactContext) { isInitialized ->
+                    Log.i(TAG, "TextToSpeechManager test initialization result: $isInitialized")
+                    if (isInitialized) {
+                        // Check audio settings again after initialization
+                        Log.d(TAG, "Checking audio settings after initialization...")
+                        TextToSpeechManager.checkAudioSettings(reactContext)
+                        
+                        Log.d(TAG, "Starting test TTS speech...")
+                        TextToSpeechManager.speak(text) {
+                            Log.i(TAG, "Test TTS completed successfully")
+                            promise.resolve(true)
+                        }
+                        
+                        // Check if TTS started speaking
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            val isSpeaking = TextToSpeechManager.isSpeaking()
+                            Log.d(TAG, "TTS speaking state 100ms after speak() call: $isSpeaking")
+                            if (!isSpeaking) {
+                                Log.w(TAG, "TTS not speaking 100ms after speak() call - this might indicate an issue")
+                            }
+                        }, 100)
+                        
+                    } else {
+                        Log.e(TAG, "Failed to initialize TTS for test")
+                        promise.resolve(false)
+                    }
+                }
+            } else {
+                Log.i(TAG, "TextToSpeechManager already initialized, testing directly")
+                Log.d(TAG, "Starting test TTS speech...")
+                TextToSpeechManager.speak(text) {
+                    Log.i(TAG, "Test TTS completed successfully")
+                    promise.resolve(true)
+                }
+                
+                // Check if TTS started speaking
+                Handler(Looper.getMainLooper()).postDelayed({
+                    val isSpeaking = TextToSpeechManager.isSpeaking()
+                    Log.d(TAG, "TTS speaking state 100ms after speak() call: $isSpeaking")
+                    if (!isSpeaking) {
+                        Log.w(TAG, "TTS not speaking 100ms after speak() call - this might indicate an issue")
+                    }
+                }, 100)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in testTTS", e)
+            promise.reject("ERR_TEST_TTS", e.message, e)
         }
     }
 } 

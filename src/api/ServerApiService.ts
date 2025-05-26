@@ -133,7 +133,7 @@ class ServerApiService {
           })
         ]);
 
-        console.log('Response:\n', apiResponse);
+        // console.log('Response:\n', apiResponse);
 
         const data: ChatResponse = apiResponse.data;
         console.log('Server response:', data);

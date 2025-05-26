@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, Platform } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Platform } from 'react-native';
 import { WakeWordStatus } from './wakeword/components/WakeWordStatus';
 import { WakeWordToggle } from './wakeword/components/WakeWordToggle';
 import { VoiceAssistant } from './voice/components/VoiceAssistant';
@@ -23,7 +23,7 @@ type Props = {
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Voice Assistant</Text>
           <Text style={styles.subtitle}>Say "Jarvis" to activate</Text>
@@ -34,7 +34,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <WakeWordStatus />
         </View>
         
-
         <VoiceErrorBoundary>
           <View style={styles.voiceAssistantContainer}>
             <VoiceAssistant onSpeechResult={(text) => console.log('Speech recognized:', text)} />
@@ -47,7 +46,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             When detected, the app will activate voice recognition automatically.
           </Text>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -57,7 +56,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#121212',
   },
-  scrollContent: {
+  content: {
+    flex: 1,
     padding: 16,
   },
   header: {
@@ -78,6 +78,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   voiceAssistantContainer: {
+    flex: 1,
     marginBottom: 24,
   },
   infoSection: {

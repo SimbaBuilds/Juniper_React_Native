@@ -6,6 +6,9 @@ import { useVoice } from '../VoiceContext';
 import { VoiceStatusIndicator } from './VoiceStatusIndicator';
 import { VoiceState } from '../types/voice';
 import { Ionicons } from '@expo/vector-icons';
+import { NativeModules } from 'react-native';
+
+const { VoiceModule } = NativeModules;
 
 interface VoiceAssistantProps {
   onSpeechResult?: (text: string) => void;

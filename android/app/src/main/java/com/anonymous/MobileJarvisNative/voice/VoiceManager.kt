@@ -108,6 +108,12 @@ class VoiceManager private constructor() {
         // Update constants from config
         MAX_NO_SPEECH_RETRIES = configManager.getMaxNoSpeechRetries()
         
+        // Initialize TextToSpeechManager early to ensure it's ready
+        Log.d(TAG, "Initializing TextToSpeechManager")
+        TextToSpeechManager.initialize(context) { isInitialized ->
+            Log.d(TAG, "TextToSpeechManager initialization result: $isInitialized")
+        }
+        
         // Initialize speech recognition
         initializeSpeechRecognition()
         Log.d(TAG, "Speech recognition initialized: $isSpeechRecognitionInitialized")
