@@ -628,6 +628,27 @@ class VoiceManager private constructor() {
      */
     internal fun updateState(newState: VoiceState) {
         val oldState = _voiceState.value
+        
+        // Add deduplication: only update if state actually changed
+        if (oldState.javaClass == newState.javaClass) {
+            // For states with data (like RESPONDING), also check the content
+            if (oldState is VoiceState.RESPONDING && newState is VoiceState.RESPONDING) {
+                if (oldState.message == newState.message) {
+                    Log.d(TAG, "Ignoring duplicate RESPONDING state with same message: ${newState.message}")
+                    return
+                }
+            } else if (oldState is VoiceState.ERROR && newState is VoiceState.ERROR) {
+                if (oldState.message == newState.message) {
+                    Log.d(TAG, "Ignoring duplicate ERROR state with same message: ${newState.message}")
+                    return
+                }
+            } else {
+                // For states without data (IDLE, LISTENING, etc.), ignore if same type
+                Log.d(TAG, "Ignoring duplicate state change: ${oldState.javaClass.simpleName}")
+                return
+            }
+        }
+        
         Log.d(TAG, "Voice state transition: ${oldState.javaClass.simpleName} -> ${newState.javaClass.simpleName}")
         
         // If transitioning to PROCESSING state, log details about speech recognition
@@ -638,6 +659,14 @@ class VoiceManager private constructor() {
         // If transitioning from PROCESSING to RESPONDING, log success
         if (oldState is VoiceState.PROCESSING && newState is VoiceState.RESPONDING) {
             Log.i(TAG, "Command processed successfully, generating response")
+            
+            // Pre-acquire audio focus for faster TTS startup
+            try {
+                Log.d(TAG, "🎵 Pre-acquiring audio focus for TTS to reduce stutter")
+                TextToSpeechManager.preAcquireAudioFocus()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error pre-acquiring audio focus", e)
+            }
         }
         
         // If transitioning to ERROR state, log detailed error information

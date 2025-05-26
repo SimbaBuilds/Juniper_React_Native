@@ -96,28 +96,35 @@ object TextToSpeechManager {
      */
     private fun requestAudioFocus(): Boolean {
         return try {
+            // Skip if we already have audio focus
+            if (audioFocusRequest != null) {
+                Log.d(TAG, "🎵 Audio focus already acquired, skipping request")
+                return true
+            }
+            
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val audioAttributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setUsage(AudioAttributes.USAGE_ASSISTANT)  // Changed from USAGE_MEDIA to USAGE_ASSISTANT
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                     .build()
                 
-                audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+                audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)  // Changed from MAY_DUCK to TRANSIENT
                     .setAudioAttributes(audioAttributes)
-                    .setAcceptsDelayedFocusGain(true)
+                    .setAcceptsDelayedFocusGain(false)  // Changed to false for immediate focus
+                    .setWillPauseWhenDucked(false)
                     .build()
                 
                 val result = audioManager?.requestAudioFocus(audioFocusRequest!!)
-                Log.d(TAG, "Audio focus request result: $result")
+                Log.d(TAG, "🎵 Audio focus request result: $result")
                 result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
             } else {
                 @Suppress("DEPRECATION")
                 val result = audioManager?.requestAudioFocus(
                     null,
                     AudioManager.STREAM_MUSIC,
-                    AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
+                    AudioManager.AUDIOFOCUS_GAIN_TRANSIENT  // Changed from MAY_DUCK to TRANSIENT
                 )
-                Log.d(TAG, "Audio focus request result (legacy): $result")
+                Log.d(TAG, "🎵 Audio focus request result (legacy): $result")
                 result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
             }
         } catch (e: Exception) {
@@ -133,15 +140,24 @@ object TextToSpeechManager {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && audioFocusRequest != null) {
                 audioManager?.abandonAudioFocusRequest(audioFocusRequest!!)
-                Log.d(TAG, "Audio focus released")
+                audioFocusRequest = null  // Clear the reference
+                Log.d(TAG, "🎵 Audio focus released")
             } else {
                 @Suppress("DEPRECATION")
                 audioManager?.abandonAudioFocus(null)
-                Log.d(TAG, "Audio focus released (legacy)")
+                Log.d(TAG, "🎵 Audio focus released (legacy)")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error releasing audio focus", e)
         }
+    }
+
+    /**
+     * Pre-acquire audio focus to reduce TTS startup latency
+     */
+    fun preAcquireAudioFocus(): Boolean {
+        Log.d(TAG, "🎵 Pre-acquiring audio focus for faster TTS startup")
+        return requestAudioFocus()
     }
 
     /**
@@ -152,7 +168,8 @@ object TextToSpeechManager {
      * @param onComplete Optional callback for when speech completes
      */
     fun speak(text: String, queueMode: Int = TextToSpeech.QUEUE_FLUSH, onComplete: (() -> Unit)? = null) {
-        Log.d(TAG, "speak() called with text: '$text', queueMode: $queueMode")
+        val startTime = System.currentTimeMillis()
+        Log.d(TAG, "🎵 TTS TIMING: speak() called at $startTime with text: '$text', queueMode: $queueMode")
         Log.d(TAG, "TTS state - isInitialized: $isInitialized, textToSpeech: ${textToSpeech != null}")
         
         if (!isInitialized || textToSpeech == null) {
@@ -163,14 +180,19 @@ object TextToSpeechManager {
 
         try {
             // Check current TTS state
-            Log.d(TAG, "Current TTS speaking state: ${textToSpeech?.isSpeaking}")
+            val preCheckTime = System.currentTimeMillis()
+            Log.d(TAG, "🎵 TTS TIMING: Pre-check at ${preCheckTime - startTime}ms - Current TTS speaking state: ${textToSpeech?.isSpeaking}")
             
-            // Request audio focus before speaking
-            val audioFocusGranted = requestAudioFocus()
-            Log.d(TAG, "Audio focus granted: $audioFocusGranted")
-            if (!audioFocusGranted) {
-                Log.w(TAG, "Audio focus not granted, but proceeding with TTS")
+            // Request audio focus before speaking (skip if already acquired)
+            val audioFocusStartTime = System.currentTimeMillis()
+            val audioFocusGranted = if (audioFocusRequest != null) {
+                Log.d(TAG, "🎵 TTS TIMING: Audio focus already acquired, skipping request")
+                true
+            } else {
+                requestAudioFocus()
             }
+            val audioFocusEndTime = System.currentTimeMillis()
+            Log.d(TAG, "🎵 TTS TIMING: Audio focus handling took ${audioFocusEndTime - audioFocusStartTime}ms - granted: $audioFocusGranted")
             
             val utteranceId = UUID.randomUUID().toString()
             Log.d(TAG, "Generated utterance ID: $utteranceId")
@@ -181,13 +203,15 @@ object TextToSpeechManager {
                 textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                     override fun onStart(id: String?) {
                         if (id == utteranceId) {
-                            Log.d(TAG, "Speech started for utterance: $id")
+                            val actualStartTime = System.currentTimeMillis()
+                            Log.d(TAG, "🎵 TTS TIMING: Speech ACTUALLY started for utterance: $id at ${actualStartTime - startTime}ms from speak() call")
                         }
                     }
 
                     override fun onDone(id: String?) {
                         if (id == utteranceId) {
-                            Log.d(TAG, "Speech completed for utterance: $id")
+                            val doneTime = System.currentTimeMillis()
+                            Log.d(TAG, "🎵 TTS TIMING: Speech completed for utterance: $id at ${doneTime - startTime}ms from speak() call")
                             releaseAudioFocus()
                             onComplete.invoke()
                         }
@@ -195,7 +219,8 @@ object TextToSpeechManager {
 
                     override fun onError(id: String?) {
                         if (id == utteranceId) {
-                            Log.e(TAG, "Speech error for utterance: $id")
+                            val errorTime = System.currentTimeMillis()
+                            Log.e(TAG, "🎵 TTS TIMING: Speech error for utterance: $id at ${errorTime - startTime}ms from speak() call")
                             releaseAudioFocus()
                             onComplete.invoke()
                         }
@@ -206,15 +231,18 @@ object TextToSpeechManager {
             }
 
             // Speak the text
-            Log.d(TAG, "Calling textToSpeech.speak() with text: '$text'")
+            val speakCallTime = System.currentTimeMillis()
+            Log.d(TAG, "🎵 TTS TIMING: Calling textToSpeech.speak() at ${speakCallTime - startTime}ms with text: '$text'")
             val result = textToSpeech?.speak(text, queueMode, null, utteranceId)
-            Log.d(TAG, "textToSpeech.speak() returned: $result")
+            val speakReturnTime = System.currentTimeMillis()
+            Log.d(TAG, "🎵 TTS TIMING: textToSpeech.speak() returned at ${speakReturnTime - startTime}ms (took ${speakReturnTime - speakCallTime}ms): $result")
             
             when (result) {
                 TextToSpeech.SUCCESS -> {
                     Log.i(TAG, "TTS speak() call successful")
                     // Check if it's actually speaking now
-                    Log.d(TAG, "TTS speaking state after speak() call: ${textToSpeech?.isSpeaking}")
+                    val postCheckTime = System.currentTimeMillis()
+                    Log.d(TAG, "🎵 TTS TIMING: Post-check at ${postCheckTime - startTime}ms - TTS speaking state after speak() call: ${textToSpeech?.isSpeaking}")
                 }
                 TextToSpeech.ERROR -> {
                     Log.e(TAG, "TTS speak() call failed with ERROR")
@@ -228,7 +256,8 @@ object TextToSpeechManager {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Exception in speak() method", e)
+            val errorTime = System.currentTimeMillis()
+            Log.e(TAG, "🎵 TTS TIMING: Exception in speak() method at ${errorTime - startTime}ms", e)
             releaseAudioFocus()
             onComplete?.invoke()
         }
