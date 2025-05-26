@@ -140,14 +140,6 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         };
     }, [voiceState]);
 
-    // Periodically sync state with native module (every 30 seconds)
-    useEffect(() => {
-        if (!isInitialized) return;
-
-        const interval = setInterval(syncState, 30000);
-        return () => clearInterval(interval);
-    }, [isInitialized, syncState]);
-
     const setEnabled = async (enabled: boolean) => {
         try {
             console.log('🔄 Setting wake word enabled:', enabled);
