@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import com.anonymous.MobileJarvisNative.utils.Constants
+import android.os.Handler
+import android.os.Looper
 
 /**
  * Bridge module for exposing Voice functionality to React Native
@@ -25,6 +27,11 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
 
     init {
         voiceManager.initialize(reactContext)
+        
+        // Set up API callback for processing text
+        voiceManager.setReactNativeApiCallback { text, onResult ->
+            processTextWithReactNative(text, onResult)
+        }
     }
 
     override fun getName(): String {
@@ -231,6 +238,92 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         } catch (e: Exception) {
             Log.e(TAG, "Error speaking response", e)
             promise.reject("ERR_TTS", e.message, e)
+        }
+    }
+
+    /**
+     * Process text using React Native API with authentication (called from native code)
+     */
+    @ReactMethod
+    fun processTextFromNative(text: String, promise: Promise) {
+        Log.d(TAG, "processTextFromNative called with: $text")
+        try {
+            // Emit event to React Native to process the text
+            val params = Arguments.createMap()
+            params.putString("text", text)
+            params.putString("requestId", System.currentTimeMillis().toString())
+            params.putDouble("timestamp", System.currentTimeMillis().toDouble())
+            
+            reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit("processTextFromNative", params)
+                
+            Log.d(TAG, "Sent processTextFromNative event to React Native")
+            promise.resolve(true)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in processTextFromNative", e)
+            promise.reject("PROCESS_TEXT_ERROR", e.message, e)
+        }
+    }
+    
+    /**
+     * Process text using React Native API with authentication
+     */
+    private fun processTextWithReactNative(text: String, onResult: (String) -> Unit) {
+        Log.d(TAG, "Processing text with React Native API: $text")
+        
+        try {
+            // Store the callback for later use
+            val requestId = System.currentTimeMillis().toString()
+            pendingApiCallbacks[requestId] = onResult
+            
+            // Emit event to React Native
+            val params = Arguments.createMap()
+            params.putString("text", text)
+            params.putString("requestId", requestId)
+            params.putDouble("timestamp", System.currentTimeMillis().toDouble())
+            
+            reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit("processTextFromNative", params)
+                
+            Log.d(TAG, "Sent processTextFromNative event to React Native with requestId: $requestId")
+            
+            // Set timeout
+            Handler(Looper.getMainLooper()).postDelayed({
+                pendingApiCallbacks.remove(requestId)?.let { callback ->
+                    Log.w(TAG, "Timeout for request: $requestId")
+                    callback("I'm sorry, there was a timeout processing your request. Please try again.")
+                }
+            }, 30000)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in processTextWithReactNative", e)
+            onResult("Error processing request: ${e.message}")
+        }
+    }
+    
+    // Store pending callbacks
+    private val pendingApiCallbacks = mutableMapOf<String, (String) -> Unit>()
+    
+    /**
+     * Handle API response from React Native
+     */
+    @ReactMethod
+    fun handleNativeApiResponse(requestId: String, response: String, promise: Promise) {
+        Log.d(TAG, "handleNativeApiResponse called for request: $requestId")
+        try {
+            pendingApiCallbacks.remove(requestId)?.let { callback ->
+                callback(response)
+                promise.resolve(true)
+            } ?: run {
+                Log.w(TAG, "No pending callback found for request ID: $requestId")
+                promise.resolve(false)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error handling native API response", e)
+            promise.reject("HANDLE_RESPONSE_ERROR", e.message, e)
         }
     }
 } 

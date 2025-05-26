@@ -8,15 +8,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.MediaType.Companion.toMediaType
 import java.io.File
-import java.util.concurrent.TimeUnit
-import com.anonymous.MobileJarvisNative.network.ApiClient
 import com.anonymous.MobileJarvisNative.voice.DeepgramClient
 import android.speech.tts.TextToSpeech
+import com.facebook.react.modules.core.DeviceEventManagerModule
+import com.anonymous.MobileJarvisNative.utils.Constants
+import android.os.Handler
+import android.os.Looper
 
 /**
  * Interface for voice processing strategy
@@ -87,26 +85,31 @@ interface VoiceProcessor {
      * Called when no speech is detected after the wake word
      */
     fun onNoSpeechDetected()
+    
+    /**
+     * Set API processing callback
+     */
+    fun setApiCallback(callback: (text: String, onResult: (String) -> Unit) -> Unit)
 }
 
 /**
  * Modular implementation of VoiceProcessor
- * Uses composable cloud services (Whisper, Mistral, ElevenLabs) for each step of processing
+ * Uses callback to VoiceModule for API calls with proper authentication
  */
 class ModularVoiceProcessor(private val context: Context) : VoiceProcessor {
     private val TAG = "ModularVoiceProcessor"
-    private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build()
     
     private var isActive = false
     private var isSpeaking = false
     private val cacheDir = File(context.cacheDir, "tts_cache")
     
-    // API client for server communication
-    private val apiClient = ApiClient()
+    // Callback for API processing
+    private var apiCallback: ((String, (String) -> Unit) -> Unit)? = null
+    
+    override fun setApiCallback(callback: (text: String, onResult: (String) -> Unit) -> Unit) {
+        this.apiCallback = callback
+        Log.d(TAG, "API callback set for React Native communication")
+    }
     
     override fun initialize() {
         Log.i(TAG, "Initializing modular voice processor")
@@ -137,31 +140,18 @@ class ModularVoiceProcessor(private val context: Context) : VoiceProcessor {
     }
     
     override fun processText(text: String, onResult: (String) -> Unit) {
-        Log.i(TAG, "Processing text with modular processor: $text")
+        Log.i(TAG, "Processing text with React Native API: $text")
         try {
-            // Process with API server
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    Log.d(TAG, "About to make API request for text: '$text'")
-                    
-                    // Make API request using ApiClient
-                    val response = apiClient.sendTextRequestSync(text)
-                    
-                    Log.i(TAG, "API response received: '$response'")
-                    
-                    // Return to main thread
-                    withContext(Dispatchers.Main) {
-                        onResult(response)
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error in API request", e)
-                    withContext(Dispatchers.Main) {
-                        onResult("Error processing your request: ${e.message}")
-                    }
-                }
+            // Call the API callback directly
+            apiCallback?.invoke(text, onResult) ?: run {
+                Log.e(TAG, "No API callback set")
+                onResult("Error: API callback not configured")
             }
+            
+            Log.d(TAG, "Sent text processing request to React Native")
+            
         } catch (e: Exception) {
-            Log.e(TAG, "Error processing text with modular processor", e)
+            Log.e(TAG, "Error sending text to React Native", e)
             onResult("Error processing your request: ${e.message}")
         }
     }
@@ -179,15 +169,21 @@ class ModularVoiceProcessor(private val context: Context) : VoiceProcessor {
                     if (recognizedText.isNotEmpty()) {
                         Log.i(TAG, "Whisper STT result: \"$recognizedText\"")
                         
-                        // Now process the recognized text with the LLM
-                        processText(recognizedText, onResult)
+                        // Now process the recognized text with React Native
+                        withContext(Dispatchers.Main) {
+                            processText(recognizedText, onResult)
+                        }
                     } else {
                         Log.w(TAG, "Empty result from Whisper STT")
-                        onResult("I couldn't understand what you said. Please try again.")
+                        withContext(Dispatchers.Main) {
+                            onResult("I couldn't understand what you said. Please try again.")
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error in STT processing coroutine", e)
-                    onResult("Error processing your speech: ${e.message}")
+                    withContext(Dispatchers.Main) {
+                        onResult("Error processing your speech: ${e.message}")
+                    }
                 }
             }
         } catch (e: Exception) {

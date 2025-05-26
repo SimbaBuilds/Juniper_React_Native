@@ -36,7 +36,7 @@ const DebugApiTest: React.FC = () => {
       });
     } catch (error) {
       console.error('Error checking auth status:', error);
-      setAuthStatus({ error: error.message });
+      setAuthStatus({ error: error as Error });
     }
   };
 
@@ -46,7 +46,7 @@ const DebugApiTest: React.FC = () => {
       const response = await sendMessage('Hello, this is a test message', []);
       setTestResult(`✅ Success: ${JSON.stringify(response, null, 2)}`);
     } catch (error) {
-      setTestResult(`❌ Error: ${error.message}\n\nFull error: ${JSON.stringify(error, null, 2)}`);
+      setTestResult(`❌ Error: ${error as Error}\n\nFull error: ${JSON.stringify(error, null, 2)}`);
     }
   };
 

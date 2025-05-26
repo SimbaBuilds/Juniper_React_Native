@@ -46,6 +46,7 @@ export interface ChatResponse {
  */
 class ServerApiService {
   private config: ServerApiConfig;
+  private requestQueue: Promise<any> = Promise.resolve();
 
   constructor(config?: Partial<ServerApiConfig>) {
     this.config = {
@@ -91,48 +92,59 @@ class ServerApiService {
     preferences?: ChatRequest['preferences'],
     featureSettings?: FeatureSettings
   ): Promise<ChatResponse> {
-    console.log(`Sending chat request to ${this.config.apiEndpoint}`);
-    
-    try {
-      // Part 1: JSON payload with metadata
-      const jsonData: ChatRequest = {
-        message,
-        timestamp: Date.now(),
-        history,
-        preferences: preferences || {
-          voice: 'male',
-          response_type: 'concise'
-        },
-        featureSettings
-      };
+    // Queue requests to prevent concurrent auth issues
+    return this.requestQueue = this.requestQueue.then(async () => {
+      console.log(`Sending chat request to ${this.config.apiEndpoint}`);
+      console.log('📱 Android: Using request queuing to prevent auth conflicts');
+      
+      try {
+        // Add a delay to ensure previous operations are complete (longer for Android)
+        await new Promise(resolve => setTimeout(resolve, 150));
+        
+        const jsonData: ChatRequest = {
+          message,
+          timestamp: Date.now(),
+          history,
+          preferences: preferences || {
+            voice: 'male',
+            response_type: 'concise'
+          },
+          featureSettings
+        };
 
-      // Create FormData and append JSON data
-      const formData = new FormData();
-      formData.append('json_data', JSON.stringify(jsonData));
+        // Create FormData and append JSON data
+        const formData = new FormData();
+        formData.append('json_data', JSON.stringify(jsonData));
 
-      console.log('Request payload:', JSON.stringify(jsonData));
+        console.log('Request payload:', JSON.stringify(jsonData));
+        console.log('📱 Android: Making queued API request...');
 
-      // Start both the API call and polling in parallel
-      const [apiResponse] = await Promise.all([
-        api.post(this.config.apiEndpoint, formData, {
-          headers: { 
-            'Content-Type': 'multipart/form-data'
-          }
-        }).catch((error: unknown) => {
-          console.error('API request error:', error);
-          throw error;
-        })
-      ]);
+        // Start both the API call and polling in parallel
+        const [apiResponse] = await Promise.all([
+          api.post(this.config.apiEndpoint, formData, {
+            headers: { 
+              'Content-Type': 'multipart/form-data'
+            },
+            timeout: 30000 // 30 second timeout for Android
+          }).catch((error: unknown) => {
+            console.error('API request error:', error);
+            console.error('📱 Android: API request failed in queue');
+            throw error;
+          })
+        ]);
 
-      console.log('Response:\n', apiResponse);
+        console.log('Response:\n', apiResponse);
 
-      const data: ChatResponse = apiResponse.data;
-      console.log('Server response:', data);
-      return data;
-    } catch (error) {
-      console.error('Error sending chat request:', error);
-      throw error;
-    }
+        const data: ChatResponse = apiResponse.data;
+        console.log('Server response:', data);
+        console.log('📱 Android: Queued request completed successfully');
+        return data;
+      } catch (error) {
+        console.error('Error sending chat request:', error);
+        console.error('📱 Android: Queued request failed');
+        throw error;
+      }
+    });
   }
 }
 

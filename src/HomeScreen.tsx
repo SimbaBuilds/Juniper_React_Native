@@ -32,7 +32,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.settingsSection}>
           <WakeWordToggle />
           <WakeWordStatus />
-          <DebugApiTest />
         </View>
         
 
@@ -44,16 +43,9 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         
         <View style={styles.infoSection}>
           <Text style={styles.infoText}>
-            This app uses wake word detection to listen for "Jarvis" in the background.
+            This app uses wake word detection to listen in the background.
             When detected, the app will activate voice recognition automatically.
           </Text>
-          {Platform.OS === 'android' && (
-            <Text style={styles.infoText}>
-              Note: On Android, a service runs in the background with a notification while
-              wake word detection is active. Your wake word preference will be remembered
-              between app sessions.
-            </Text>
-          )}
         </View>
       </ScrollView>
     </SafeAreaView>

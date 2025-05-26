@@ -77,6 +77,9 @@ class VoiceManager private constructor() {
     private lateinit var whisperClient: WhisperClient
     private lateinit var deepgramClient: DeepgramClient
 
+    // New API callback
+    private var reactNativeApiCallback: ((String, (String) -> Unit) -> Unit)? = null
+
     companion object {
         @Volatile
         private var instance: VoiceManager? = null
@@ -160,6 +163,11 @@ class VoiceManager private constructor() {
             // Create ModularVoiceProcessor
             voiceProcessor = ModularVoiceProcessor(context)
             
+            // Set API callback for React Native communication
+            voiceProcessor.setApiCallback { text, onResult ->
+                processTextWithReactNative(text, onResult)
+            }
+            
             // Initialize the processor
             voiceProcessor.initialize()
             
@@ -172,6 +180,17 @@ class VoiceManager private constructor() {
         } catch (e: Exception) {
             Log.e(TAG, "Error initializing voice processor", e)
             return false
+        }
+    }
+    
+    /**
+     * Process text with React Native (to be called by VoiceModule)
+     */
+    private fun processTextWithReactNative(text: String, onResult: (String) -> Unit) {
+        Log.d(TAG, "Processing text with React Native: $text")
+        reactNativeApiCallback?.invoke(text, onResult) ?: run {
+            Log.e(TAG, "No React Native API callback set")
+            onResult("Error: React Native API not available")
         }
     }
     
@@ -969,6 +988,14 @@ class VoiceManager private constructor() {
             Log.e(TAG, "Error processing test phrase: ${e.message}", e)
             return false
         }
+    }
+    
+    /**
+     * Set React Native API callback
+     */
+    fun setReactNativeApiCallback(callback: (String, (String) -> Unit) -> Unit) {
+        this.reactNativeApiCallback = callback
+        Log.d(TAG, "React Native API callback set")
     }
     
     /**
