@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+- when complete, run npx tsc --noEmit then run npx expo start

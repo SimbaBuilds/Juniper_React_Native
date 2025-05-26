@@ -33,20 +33,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.title}>Voice Assistant</Text>
             <Text style={styles.subtitle}>Say "Jarvis" to activate</Text>
           </View>
-          
-          {/* Clear chat button - only shown when there are messages */}
-          {chatHistory.length > 0 && (
-            <TouchableOpacity 
-              style={styles.clearButton}
-              onPress={clearChatHistory}
-              activeOpacity={0.7}
-              accessibilityLabel="Clear conversation"
-              accessibilityHint="Clears all messages from the conversation"
-            >
-              <Ionicons name="trash-outline" size={20} color="#B0B0B0" />
-              <Text style={styles.clearButtonText}>Clear</Text>
-            </TouchableOpacity>
-          )}
         </View>
         
         <View style={styles.settingsSection}>
