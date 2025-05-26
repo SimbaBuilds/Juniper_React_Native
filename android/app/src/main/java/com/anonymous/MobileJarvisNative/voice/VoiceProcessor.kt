@@ -15,6 +15,8 @@ import okhttp3.MediaType.Companion.toMediaType
 import java.io.File
 import java.util.concurrent.TimeUnit
 import com.anonymous.MobileJarvisNative.network.ApiClient
+import com.anonymous.MobileJarvisNative.voice.DeepgramClient
+import android.speech.tts.TextToSpeech
 
 /**
  * Interface for voice processing strategy
@@ -55,7 +57,7 @@ interface VoiceProcessor {
      * @param text Text to speak
      * @param onComplete Callback for when speech is complete
      */
-    fun speak(text: String, onComplete: () -> Unit = {})
+    fun speak(text: String, onComplete: () -> Unit)
     
     /**
      * Stop any ongoing processing or speech
@@ -109,7 +111,14 @@ class ModularVoiceProcessor(private val context: Context) : VoiceProcessor {
     override fun initialize() {
         Log.i(TAG, "Initializing modular voice processor")
         try {
-            TextToSpeechManager.initialize(context)
+            // Initialize TextToSpeechManager with callback to ensure it's ready
+            TextToSpeechManager.initialize(context) { isInitialized ->
+                if (isInitialized) {
+                    Log.i(TAG, "TextToSpeechManager initialized successfully")
+                } else {
+                    Log.e(TAG, "Failed to initialize TextToSpeechManager")
+                }
+            }
             cacheDir.mkdirs()
         } catch (e: Exception) {
             Log.e(TAG, "Error initializing modular processor", e)
@@ -190,6 +199,13 @@ class ModularVoiceProcessor(private val context: Context) : VoiceProcessor {
     override fun speak(text: String, onComplete: () -> Unit) {
         Log.i(TAG, "Speaking with TTS: $text")
         try {
+            // Check if TextToSpeechManager is ready
+            if (!isTextToSpeechReady()) {
+                Log.w(TAG, "Local TTS not ready, attempting to use Deepgram as fallback")
+                useDeepgramTTS(text, onComplete)
+                return
+            }
+            
             // Use system TTS
             isSpeaking = true
             TextToSpeechManager.speak(text) {
@@ -197,9 +213,41 @@ class ModularVoiceProcessor(private val context: Context) : VoiceProcessor {
                 onComplete()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error speaking with TTS", e)
+            Log.e(TAG, "Error speaking with local TTS, trying Deepgram fallback", e)
             isSpeaking = false
-            onComplete()
+            useDeepgramTTS(text, onComplete)
+        }
+    }
+    
+    /**
+     * Check if TextToSpeech is ready to use
+     */
+    private fun isTextToSpeechReady(): Boolean {
+        return TextToSpeechManager.isInitialized()
+    }
+    
+    /**
+     * Use Deepgram TTS as fallback
+     */
+    private fun useDeepgramTTS(text: String, onComplete: () -> Unit) {
+        Log.i(TAG, "Using Deepgram TTS as fallback")
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                isSpeaking = true
+                val deepgramClient = DeepgramClient(context)
+                deepgramClient.initialize()
+                deepgramClient.speak(text)
+                
+                // Wait a bit for the audio to start playing, then call onComplete
+                // Note: Deepgram handles its own completion callback internally
+                kotlinx.coroutines.delay(1000) // Give it time to start
+                isSpeaking = false
+                onComplete()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error with Deepgram TTS fallback", e)
+                isSpeaking = false
+                onComplete()
+            }
         }
     }
     

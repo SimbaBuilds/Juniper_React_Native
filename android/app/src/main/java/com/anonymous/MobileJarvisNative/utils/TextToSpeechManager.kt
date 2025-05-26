@@ -120,6 +120,13 @@ object TextToSpeechManager {
     }
 
     /**
+     * Check if TextToSpeech is initialized and ready to use
+     */
+    fun isInitialized(): Boolean {
+        return isInitialized && textToSpeech != null
+    }
+
+    /**
      * Stop any ongoing speech
      */
     fun stop() {
