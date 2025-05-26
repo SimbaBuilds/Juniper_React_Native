@@ -7,4 +7,5 @@ Description: Use these rules when we are debugging a feature
 
 - Find 3 possible causes, and dont implement changes yet.
 - Add logs, clear logcat, and start logcat again in this terminal
+- After implementing changes run cd android && ./gradlew compileDebugKotlin
 - Do not create a summary markdown or README unless asked

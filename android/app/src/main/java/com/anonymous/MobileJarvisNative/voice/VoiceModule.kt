@@ -18,6 +18,9 @@ import com.anonymous.MobileJarvisNative.utils.Constants
 import android.os.Handler
 import android.os.Looper
 import com.anonymous.MobileJarvisNative.utils.TextToSpeechManager
+import android.media.AudioManager
+import com.anonymous.MobileJarvisNative.utils.PermissionUtils
+import java.util.UUID
 
 /**
  * Bridge module for exposing Voice functionality to React Native
@@ -30,9 +33,46 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
     init {
         voiceManager.initialize(reactContext)
         
-        // Set up API callback for processing text
+        // Set up API callback for processing text using the new direct method
         voiceManager.setReactNativeApiCallback { text, onResult ->
-            processTextWithReactNative(text, onResult)
+            Log.d(TAG, "🔵 VOICE_MODULE: API callback triggered, calling processTextFromNative")
+            
+            // Generate a requestId that will be used to match the response
+            val requestId = UUID.randomUUID().toString()
+            
+            // Store the callback for when the response comes back via handleApiResponse
+            pendingApiCallbacks[requestId] = onResult
+            
+            Log.d(TAG, "🔵 VOICE_MODULE: Stored callback for requestId: $requestId")
+            
+            // Emit the event directly (same as processTextFromNative method)
+            try {
+                val params = Arguments.createMap().apply {
+                    putString("text", text)
+                    putString("requestId", requestId)
+                }
+                
+                Log.i(TAG, "🔵 VOICE_MODULE: About to emit processTextFromNative event")
+                Log.i(TAG, "🔵 VOICE_MODULE: Event data - text: '$text', requestId: '$requestId'")
+                
+                reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                    .emit("processTextFromNative", params)
+                
+                Log.d(TAG, "🔵 VOICE_MODULE: ✅ Successfully sent processTextFromNative event")
+                
+                // Set timeout for the request
+                Handler(Looper.getMainLooper()).postDelayed({
+                    pendingApiCallbacks.remove(requestId)?.let { callback ->
+                        Log.w(TAG, "🔵 VOICE_MODULE: Timeout for request: $requestId")
+                        callback("I'm sorry, there was a timeout processing your request. Please try again.")
+                    }
+                }, 30000)
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "🔵 VOICE_MODULE: ❌ Error emitting processTextFromNative event", e)
+                pendingApiCallbacks.remove(requestId)
+                onResult("Error: ${e.message}")
+            }
         }
     }
 
@@ -172,7 +212,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
     }
 
     /**
-     * Speak a response using TTS (Deepgram first, then system TTS fallback)
+     * Speak a response using TTS (simplified - choose one system and stick with it)
      */
     @ReactMethod
     fun speakResponse(text: String, promise: Promise) {
@@ -184,151 +224,22 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                     Log.i(TAG, "Setting voice state to SPEAKING")
                     voiceManager.updateState(VoiceManager.VoiceState.SPEAKING)
                     
-                    var speechSuccessful = false
-                    
-                    // Try Deepgram TTS first
-                    try {
-                        Log.i(TAG, "Attempting Deepgram TTS...")
-                        val deepgramClient = DeepgramClient(reactContext)
-                        deepgramClient.initialize()
-                        deepgramClient.speak(text)
-                        speechSuccessful = true
-                        Log.i(TAG, "Deepgram TTS successful")
-                    } catch (deepgramError: Exception) {
-                        Log.w(TAG, "Deepgram TTS failed: ${deepgramError.message}, falling back to system TTS")
-                        Log.w(TAG, "Deepgram error details: ${deepgramError.javaClass.simpleName}")
-                        
-                        // Fall back to system TTS - this is the critical section that wasn't being reached
-                        Log.i(TAG, "Starting system TTS fallback...")
-                        
-                        try {
-                            // Check if TextToSpeechManager is already initialized
-                            if (TextToSpeechManager.isInitialized()) {
-                                Log.i(TAG, "TextToSpeechManager already initialized, using directly")
-                                
-                                // Use a simple callback approach instead of suspendable coroutine
-                                var ttsCompleted = false
-                                TextToSpeechManager.speak(text) {
-                                    Log.i(TAG, "System TTS completed successfully")
-                                    ttsCompleted = true
-                                    speechSuccessful = true
-                                }
-                                
-                                // Wait a moment to see if TTS started successfully
-                                kotlinx.coroutines.delay(100)
-                                
-                                if (TextToSpeechManager.isSpeaking()) {
-                                    Log.i(TAG, "System TTS is now speaking")
-                                    speechSuccessful = true
-                                } else {
-                                    Log.e(TAG, "System TTS failed to start speaking")
-                                    speechSuccessful = false
-                                }
-                            } else {
-                                Log.i(TAG, "TextToSpeechManager not initialized, initializing now...")
-                                
-                                // Initialize TextToSpeechManager with callback
-                                var initCompleted = false
-                                var initSuccess = false
-                                
-                                TextToSpeechManager.initialize(reactContext) { isInitialized ->
-                                    Log.i(TAG, "TextToSpeechManager initialization completed: $isInitialized")
-                                    initCompleted = true
-                                    initSuccess = isInitialized
-                                    
-                                    if (isInitialized) {
-                                        Log.i(TAG, "Starting TTS after successful initialization")
-                                        TextToSpeechManager.speak(text) {
-                                            Log.i(TAG, "System TTS completed after initialization")
-                                            speechSuccessful = true
-                                        }
-                                    } else {
-                                        Log.e(TAG, "TextToSpeechManager initialization failed")
-                                        speechSuccessful = false
-                                    }
-                                }
-                                
-                                // Wait for initialization to complete (with timeout)
-                                var waitTime = 0
-                                while (!initCompleted && waitTime < 3000) {
-                                    kotlinx.coroutines.delay(100)
-                                    waitTime += 100
-                                }
-                                
-                                if (!initCompleted) {
-                                    Log.e(TAG, "TextToSpeechManager initialization timed out")
-                                    speechSuccessful = false
-                                } else if (initSuccess) {
-                                    // Give TTS a moment to start
-                                    kotlinx.coroutines.delay(200)
-                                    if (TextToSpeechManager.isSpeaking()) {
-                                        Log.i(TAG, "System TTS is speaking after initialization")
-                                        speechSuccessful = true
-                                    } else {
-                                        Log.w(TAG, "System TTS not speaking after initialization, but considering successful")
-                                        speechSuccessful = true // Consider it successful if init worked
-                                    }
-                                }
-                            }
-                        } catch (systemTtsError: Exception) {
-                            Log.e(TAG, "System TTS also failed: ${systemTtsError.message}", systemTtsError)
-                            speechSuccessful = false
-                        }
-                    }
+                    // Use System TTS as primary choice - simpler and more reliable
+                    val speechSuccessful = speakWithSystemTTS(text)
                     
                     Log.i(TAG, "TTS process completed. Success: $speechSuccessful")
                     
                     if (speechSuccessful) {
-                        Log.i(TAG, "Speech completed successfully, transitioning to LISTENING")
-                        
-                        // Wait for TTS to actually complete before transitioning
-                        var waitTime = 0
-                        while (TextToSpeechManager.isSpeaking() && waitTime < 10000) {
-                            kotlinx.coroutines.delay(500)
-                            waitTime += 500
-                            Log.d(TAG, "Waiting for TTS to complete... ($waitTime ms)")
-                        }
-                        
-                        Log.i(TAG, "TTS playback finished, transitioning to LISTENING state")
-                        
-                        // Transition to LISTENING state
-                        voiceManager.updateState(VoiceManager.VoiceState.LISTENING)
-                        
-                        // Add delay before starting listening
-                        kotlinx.coroutines.delay(500)
-                        
-                        Log.i(TAG, "AUTO-RESTART: Starting listening after speech")
-                        try {
-                            voiceManager.startListening()
-                            Log.i(TAG, "AUTO-RESTART: Successfully started listening")
-                        } catch (startError: Exception) {
-                            Log.e(TAG, "AUTO-RESTART: Failed to start listening", startError)
-                            // Try one more time
-                            kotlinx.coroutines.delay(500)
-                            try {
-                                Log.i(TAG, "AUTO-RESTART: Retrying start listening")
-                                voiceManager.startListening()
-                                Log.i(TAG, "AUTO-RESTART: Successfully started listening on retry")
-                            } catch (retryError: Exception) {
-                                Log.e(TAG, "AUTO-RESTART: Failed to start listening on retry", retryError)
-                                Log.i(TAG, "Setting voice state to IDLE after failed restarts")
-                                voiceManager.updateState(VoiceManager.VoiceState.IDLE)
-                            }
-                        }
+                        Log.i(TAG, "TTS started successfully, waiting for completion")
                     } else {
-                        Log.e(TAG, "All TTS methods failed")
+                        Log.e(TAG, "TTS failed to start")
                         voiceManager.updateState(VoiceManager.VoiceState.IDLE)
                     }
                     
                     promise.resolve(speechSuccessful)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Unexpected error in speakResponse coroutine", e)
-                    try {
-                        Log.i(TAG, "Setting voice state to IDLE after unexpected error")
-                        voiceManager.updateState(VoiceManager.VoiceState.IDLE)
-                    } catch (stateError: Exception) {
-                        Log.e(TAG, "Failed to update state after error", stateError)
-                    }
+                    Log.e(TAG, "Unexpected error in speakResponse", e)
+                    voiceManager.updateState(VoiceManager.VoiceState.IDLE)
                     promise.reject("ERR_TTS", e.message, e)
                 }
             }
@@ -337,90 +248,83 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
             promise.reject("ERR_TTS", e.message, e)
         }
     }
-
-    /**
-     * Process text using React Native API with authentication (called from native code)
-     */
-    @ReactMethod
-    fun processTextFromNative(text: String, promise: Promise) {
-        Log.d(TAG, "processTextFromNative called with: $text")
-        try {
-            // Emit event to React Native to process the text
-            val params = Arguments.createMap()
-            params.putString("text", text)
-            params.putString("requestId", System.currentTimeMillis().toString())
-            params.putDouble("timestamp", System.currentTimeMillis().toDouble())
-            
-            reactContext
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-                .emit("processTextFromNative", params)
-                
-            Log.d(TAG, "Sent processTextFromNative event to React Native")
-            promise.resolve(true)
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "Error in processTextFromNative", e)
-            promise.reject("PROCESS_TEXT_ERROR", e.message, e)
-        }
-    }
     
     /**
-     * Process text using React Native API with authentication
+     * Speak using system TTS
      */
-    private fun processTextWithReactNative(text: String, onResult: (String) -> Unit) {
-        Log.d(TAG, "Processing text with React Native API: $text")
-        
-        try {
-            // Store the callback for later use
-            val requestId = System.currentTimeMillis().toString()
-            pendingApiCallbacks[requestId] = onResult
+    private suspend fun speakWithSystemTTS(text: String): Boolean {
+        return try {
+            Log.i(TAG, "Speaking with System TTS: $text")
             
-            // Emit event to React Native
-            val params = Arguments.createMap()
-            params.putString("text", text)
-            params.putString("requestId", requestId)
-            params.putDouble("timestamp", System.currentTimeMillis().toDouble())
-            
-            reactContext
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-                .emit("processTextFromNative", params)
+            TextToSpeechManager.speak(text) {
+                Log.i(TAG, "System TTS completed")
                 
-            Log.d(TAG, "Sent processTextFromNative event to React Native with requestId: $requestId")
-            
-            // Set timeout
-            Handler(Looper.getMainLooper()).postDelayed({
-                pendingApiCallbacks.remove(requestId)?.let { callback ->
-                    Log.w(TAG, "Timeout for request: $requestId")
-                    callback("I'm sorry, there was a timeout processing your request. Please try again.")
+                // Auto-restart listening after speech completion
+                coroutineScope.launch {
+                    try {
+                        kotlinx.coroutines.delay(500) // Brief pause
+                        Log.i(TAG, "AUTO-RESTART: Starting listening after TTS completion")
+                        voiceManager.startListening()
+                        Log.i(TAG, "AUTO-RESTART: Successfully started listening")
+                    } catch (startError: Exception) {
+                        Log.e(TAG, "AUTO-RESTART: Failed to start listening", startError)
+                        voiceManager.updateState(VoiceManager.VoiceState.IDLE)
+                    }
                 }
-            }, 30000)
+            }
             
+            // Wait a moment to check if TTS started
+            kotlinx.coroutines.delay(200)
+            val speechStarted = TextToSpeechManager.isSpeaking()
+            
+            if (speechStarted) {
+                Log.i(TAG, "System TTS started successfully")
+                true
+            } else {
+                Log.w(TAG, "System TTS may not have started, but considering successful")
+                true // Consider successful if no error was thrown
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in processTextWithReactNative", e)
-            onResult("Error processing request: ${e.message}")
+            Log.e(TAG, "Error with System TTS: ${e.message}", e)
+            false
         }
     }
-    
-    // Store pending callbacks
-    private val pendingApiCallbacks = mutableMapOf<String, (String) -> Unit>()
-    
+
     /**
      * Handle API response from React Native
      */
     @ReactMethod
-    fun handleNativeApiResponse(requestId: String, response: String, promise: Promise) {
-        Log.d(TAG, "handleNativeApiResponse called for request: $requestId")
+    fun handleApiResponse(requestId: String, response: String, promise: Promise) {
+        Log.d(TAG, "🟢 NATIVE: handleApiResponse called")
+        Log.i(TAG, "🟢 NATIVE: RequestId: $requestId")
+        Log.i(TAG, "🟢 NATIVE: Response length: ${response.length}")
+        Log.i(TAG, "🟢 NATIVE: Response preview: ${response.take(100)}...")
+        
         try {
+            // First, handle the pending callback if it exists
             pendingApiCallbacks.remove(requestId)?.let { callback ->
+                Log.i(TAG, "🟢 NATIVE: Found pending callback for requestId: $requestId")
                 callback(response)
+                Log.i(TAG, "🟢 NATIVE: ✅ Callback executed successfully")
                 promise.resolve(true)
             } ?: run {
-                Log.w(TAG, "No pending callback found for request ID: $requestId")
-                promise.resolve(false)
+                Log.w(TAG, "🟢 NATIVE: No pending callback found for requestId: $requestId")
+                // Still speak the response even if no callback found
+                coroutineScope.launch {
+                    try {
+                        Log.i(TAG, "🟢 NATIVE: Speaking response via TTS anyway")
+                        val speechResult = speakWithSystemTTS(response)
+                        Log.i(TAG, "🟢 NATIVE: TTS completed with result: $speechResult")
+                        promise.resolve(speechResult)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "🟢 NATIVE: ❌ Error in handleApiResponse TTS", e)
+                        promise.reject("API_RESPONSE_ERROR", "Failed to speak response: ${e.message}", e)
+                    }
+                }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error handling native API response", e)
-            promise.reject("HANDLE_RESPONSE_ERROR", e.message, e)
+            Log.e(TAG, "🟢 NATIVE: ❌ Error in handleApiResponse", e)
+            promise.reject("API_RESPONSE_ERROR", "Failed to handle API response: ${e.message}", e)
         }
     }
 
@@ -485,6 +389,58 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         } catch (e: Exception) {
             Log.e(TAG, "Error in testTTS", e)
             promise.reject("ERR_TEST_TTS", e.message, e)
+        }
+    }
+
+    /**
+     * Check audio settings and permissions
+     */
+    private fun checkAudioSettings(): Boolean {
+        val hasAudioPermission = PermissionUtils.hasAudioPermission(reactContext)
+        if (!hasAudioPermission) {
+            Log.w(TAG, "Audio permission not granted")
+            return false
+        }
+
+        // Check if audio focus can be acquired
+        val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+        if (!audioManager.hasAudioFocus()) {
+            Log.w(TAG, "Cannot acquire audio focus")
+            return false
+        }
+
+        return true
+    }
+
+    // Store pending callbacks
+    private val pendingApiCallbacks = mutableMapOf<String, (String) -> Unit>()
+
+    /**
+     * Process text using React Native API with authentication (called from React Native)
+     */
+    @ReactMethod
+    fun processTextFromNative(text: String, promise: Promise) {
+        Log.d(TAG, "🔵 NATIVE: processTextFromNative called with: $text")
+        try {
+            val requestId = UUID.randomUUID().toString()
+            Log.i(TAG, "🔵 NATIVE: Generated requestId: $requestId")
+            
+            val params = Arguments.createMap().apply {
+                putString("text", text)
+                putString("requestId", requestId)
+            }
+            
+            Log.i(TAG, "🔵 NATIVE: About to emit processTextFromNative event to React Native")
+            Log.i(TAG, "🔵 NATIVE: Event data - text: '$text', requestId: '$requestId'")
+            
+            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit("processTextFromNative", params)
+            
+            Log.d(TAG, "🔵 NATIVE: ✅ Successfully sent processTextFromNative event to React Native")
+            promise.resolve(true)
+        } catch (e: Exception) {
+            Log.e(TAG, "🔵 NATIVE: ❌ Error in processTextFromNative", e)
+            promise.reject("PROCESS_TEXT_ERROR", "Failed to process text: ${e.message}", e)
         }
     }
 } 

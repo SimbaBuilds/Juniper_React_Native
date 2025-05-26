@@ -293,20 +293,21 @@ export class VoiceService {
     private async handleProcessTextFromNative(data: any): Promise<void> {
         try {
             const { text, requestId } = data;
-            console.log(`🔄 Processing text from native: "${text}" (requestId: ${requestId})`);
+
+            
             
             // Emit an event that VoiceContext can listen to
             DeviceEventEmitter.emit('processTextRequest', { text, requestId });
             
+            
         } catch (error) {
-            console.error('❌ Error processing text from native:', error);
+            console.error('🟡 VOICE_SERVICE: ❌ Error processing text from native:', error);
             
             // Send error response back to native
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
             try {
-                await VoiceModule.handleNativeApiResponse(data.requestId, `Error: ${errorMessage}`);
+                await VoiceModule.handleApiResponse(data.requestId, `Error: ${errorMessage}`);
             } catch (responseError) {
-                console.error('❌ Error sending error response to native:', responseError);
             }
         }
     }

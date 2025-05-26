@@ -5,6 +5,7 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.util.Log
 import com.anonymous.MobileJarvisNative.ConfigManager
+import com.anonymous.MobileJarvisNative.utils.AudioManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Client for Deepgram API for text-to-speech conversion
+ * Now uses centralized AudioManager for audio focus management
  */
 class DeepgramClient(private val context: Context) {
     private val TAG = "DeepgramClient"
@@ -26,6 +28,8 @@ class DeepgramClient(private val context: Context) {
     private lateinit var okHttpClient: OkHttpClient
     private lateinit var configManager: ConfigManager
     private var mediaPlayer: MediaPlayer? = null
+    private var centralAudioManager: com.anonymous.MobileJarvisNative.utils.AudioManager? = null
+    private var currentRequestId: String? = null
     
     /**
      * Initialize the Deepgram client
@@ -47,6 +51,9 @@ class DeepgramClient(private val context: Context) {
             // Initialize media player
             mediaPlayer = MediaPlayer()
             
+            // Initialize centralized AudioManager
+            centralAudioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+            
             isInitialized = true
             Log.i(TAG, "Deepgram client initialized successfully")
         } catch (e: Exception) {
@@ -56,9 +63,71 @@ class DeepgramClient(private val context: Context) {
     }
     
     /**
+     * Request audio focus through centralized manager
+     */
+    private fun requestAudioFocus(): Boolean {
+        return try {
+            val requestId = "deepgram_${UUID.randomUUID()}"
+            currentRequestId = requestId
+            
+            val success = centralAudioManager?.requestAudioFocus(
+                requestType = AudioManager.AudioRequestType.TTS,
+                requestId = requestId,
+                onFocusGained = {
+                    Log.d(TAG, "🎵 Deepgram audio focus gained")
+                },
+                onFocusLost = {
+                    Log.d(TAG, "🎵 Deepgram audio focus lost - stopping playback")
+                    stopPlayback()
+                },
+                onFocusDucked = {
+                    Log.d(TAG, "🎵 Deepgram audio focus ducked - continuing at lower volume")
+                }
+            ) ?: false
+            
+            Log.d(TAG, "🎵 Deepgram audio focus request result: $success")
+            success
+        } catch (e: Exception) {
+            Log.e(TAG, "Error requesting audio focus", e)
+            false
+        }
+    }
+    
+    /**
+     * Release audio focus through centralized manager
+     */
+    private fun releaseAudioFocus() {
+        try {
+            currentRequestId?.let { requestId ->
+                centralAudioManager?.releaseAudioFocus(requestId)
+                Log.d(TAG, "🎵 Deepgram audio focus released")
+            }
+            currentRequestId = null
+        } catch (e: Exception) {
+            Log.e(TAG, "Error releasing audio focus", e)
+        }
+    }
+    
+    /**
+     * Stop media player playback
+     */
+    private fun stopPlayback() {
+        try {
+            mediaPlayer?.apply {
+                if (isPlaying) {
+                    stop()
+                    Log.d(TAG, "Deepgram playback stopped")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error stopping Deepgram playback", e)
+        }
+    }
+    
+    /**
      * Convert text to speech and play the audio
      */
-    suspend fun speak(text: String) = withContext(Dispatchers.IO) {
+    suspend fun speak(text: String) {
         if (!isInitialized) {
             Log.e(TAG, "Deepgram client not initialized")
             throw IllegalStateException("Deepgram client not initialized")
@@ -67,10 +136,17 @@ class DeepgramClient(private val context: Context) {
         Log.d(TAG, "Converting text to speech: '$text'")
         
         try {
+            // Request audio focus before starting
+            val audioFocusGranted = requestAudioFocus()
+            if (!audioFocusGranted) {
+                Log.w(TAG, "🎵 Audio focus not granted - proceeding anyway")
+            }
+            
             // Get Deepgram API key from config
             val apiKey = configManager.getDeepgramApiKey()
             if (apiKey.isBlank()) {
                 Log.e(TAG, "Deepgram API key not found in config")
+                releaseAudioFocus()
                 throw IllegalStateException("Deepgram API key not found")
             }
             
@@ -110,6 +186,7 @@ class DeepgramClient(private val context: Context) {
                     Log.e(TAG, "Could not parse error response: ${e.message}")
                 }
                 
+                releaseAudioFocus()
                 throw IOException("Deepgram API error: $errorCode")
             }
             
@@ -133,21 +210,29 @@ class DeepgramClient(private val context: Context) {
                         setAudioAttributes(
                             AudioAttributes.Builder()
                                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                                .setUsage(AudioAttributes.USAGE_MEDIA)
+                                .setUsage(AudioAttributes.USAGE_ASSISTANT)
                                 .build()
                         )
                         setDataSource(tempFile.absolutePath)
                         setOnPreparedListener { it.start() }
                         setOnCompletionListener {
-                            // Delete the temp file after playback
+                            // Delete the temp file after playback and release audio focus
                             tempFile.delete()
+                            releaseAudioFocus()
                             Log.d(TAG, "TTS audio playback completed and file deleted")
+                        }
+                        setOnErrorListener { _, what, extra ->
+                            Log.e(TAG, "MediaPlayer error: what=$what, extra=$extra")
+                            tempFile.delete()
+                            releaseAudioFocus()
+                            true
                         }
                         prepareAsync()
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error playing TTS audio: ${e.message}", e)
                     tempFile.delete()
+                    releaseAudioFocus()
                     throw e
                 }
             }
@@ -155,6 +240,7 @@ class DeepgramClient(private val context: Context) {
             Log.i(TAG, "TTS request successful and playback started")
         } catch (e: Exception) {
             Log.e(TAG, "Error in TTS process: ${e.message}", e)
+            releaseAudioFocus()
             throw e
         }
     }
@@ -163,9 +249,15 @@ class DeepgramClient(private val context: Context) {
      * Release resources
      */
     fun release() {
-        mediaPlayer?.release()
-        mediaPlayer = null
-        isInitialized = false
-        Log.d(TAG, "Deepgram client resources released")
+        try {
+            stopPlayback()
+            mediaPlayer?.release()
+            mediaPlayer = null
+            releaseAudioFocus()
+            isInitialized = false
+            Log.d(TAG, "Deepgram client resources released")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error releasing Deepgram client resources", e)
+        }
     }
 } 
