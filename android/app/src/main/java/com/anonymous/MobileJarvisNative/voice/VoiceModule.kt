@@ -301,6 +301,18 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         Log.i(TAG, "🟢 NATIVE: Response preview: ${response.take(100)}...")
         
         try {
+            // Emit the response back to React Native for UI display
+            Log.d(TAG, "🟢 NATIVE: Emitting VoiceResponseUpdate event to React Native")
+            val responseParams = Arguments.createMap().apply {
+                putString("response", response)
+                putDouble("timestamp", System.currentTimeMillis().toDouble())
+            }
+            
+            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit("VoiceResponseUpdate", responseParams)
+            
+            Log.d(TAG, "🟢 NATIVE: ✅ VoiceResponseUpdate event emitted successfully")
+            
             // First, handle the pending callback if it exists
             pendingApiCallbacks.remove(requestId)?.let { callback ->
                 Log.i(TAG, "🟢 NATIVE: Found pending callback for requestId: $requestId")

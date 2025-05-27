@@ -284,16 +284,31 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           </ExpandableSettingsToggle>
         </View>
 
+        <View style={[styles.infoSection, { marginBottom: 20 }]}>
+          <Text style={styles.infoText}>
+            To add a feature, just ask your assistant e.g. "Hey Jarvis, connect with Notion so you can access and edit my project notes".
+          </Text>
+        </View>
+
         {/* Voice Settings Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Voice & AI Settings</Text>
+
+          <SettingsTextInput
+            label="General Instructions"
+            value={settings.voice.generalInstructions}
+            onChangeText={(generalInstructions) => updateVoiceSettings({ generalInstructions })}
+            placeholder="Enter instructions for the AI assistant..."
+            description="Custom instructions to guide the AI's behavior and responses"
+            multiline={true}
+          />
 
           <ExpandableSettingsToggle
             label="Deepgram Voice"
             value={settings.voice.deepgramEnabled}
             onValueChange={(deepgramEnabled) => updateVoiceSettings({ deepgramEnabled })}
             description="Enhanced voice recognition with Deepgram"
-            hasSubSettings={false}
+            hasSubSettings={true}
           />
 
           <SettingsDropdown
@@ -308,46 +323,9 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             ]}
             description="Select the language model to use for AI responses"
           />
-
-          <SettingsTextInput
-            label="General Instructions"
-            value={settings.voice.generalInstructions}
-            onChangeText={(generalInstructions) => updateVoiceSettings({ generalInstructions })}
-            placeholder="Enter instructions for the AI assistant..."
-            description="Custom instructions to guide the AI's behavior and responses"
-            multiline={true}
-          />
-        </View>
-
-        {/* Other Features */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Other Features</Text>
-
-          {/* Groceries */}
-          <ExpandableSettingsToggle
-            label="Groceries Functionality"
-            value={settings.groceries.enabled}
-            onValueChange={(enabled) => updateGroceriesSettings({ enabled })}
-            description="Grocery list management and shopping assistance"
-            hasSubSettings={false}
-          />
-
-          {/* Alarm Clock */}
-          <ExpandableSettingsToggle
-            label="Alarm Clock"
-            value={settings.alarmClock.enabled}
-            onValueChange={(enabled) => updateAlarmClockSettings({ enabled })}
-            description="Voice-controlled alarm and reminder system"
-            hasSubSettings={false}
-          />
         </View>
         
-        <View style={styles.infoSection}>
-          <Text style={styles.infoText}>
-            Configure your assistant's features and capabilities. Each feature can be enabled or disabled 
-            individually to customize your experience.
-          </Text>
-        </View>
+
 
         <View style={styles.accountSection}>
           <Text style={styles.accountTitle}>Account</Text>

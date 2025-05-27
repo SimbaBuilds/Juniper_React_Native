@@ -7,6 +7,7 @@ import { VoiceStatusIndicator } from './VoiceStatusIndicator';
 import { VoiceState } from '../types/voice';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeModules } from 'react-native';
+import { ConversationHistory } from './ConversationHistory';
 
 const { VoiceModule } = NativeModules;
 
@@ -32,6 +33,9 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     interruptSpeech,
     clearChatHistory
   } = useVoice();
+
+  // State for conversation history modal
+  const [showConversationHistory, setShowConversationHistory] = React.useState(false);
 
   // When a speech result is received, call the callback
   React.useEffect(() => {
@@ -68,19 +72,31 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       <View style={styles.header}>
         <VoiceStatusIndicator />
         
-        {/* Clear chat button - only shown when there are messages */}
-        {chatHistory.length > 0 && (
+        <View style={styles.headerActions}>
+          {/* Conversation history button */}
           <TouchableOpacity 
-            style={styles.clearButton}
-            onPress={clearChatHistory}
+            style={styles.historyButton}
+            onPress={() => setShowConversationHistory(true)}
             activeOpacity={0.7}
-            accessibilityLabel="Clear chat history"
-            accessibilityHint="Clears all messages from the conversation"
+            accessibilityLabel="View conversation history"
+            accessibilityHint="Opens a list of your recent conversations"
           >
-            <Ionicons name="trash-outline" size={20} color="#888888" />
-            <Text style={styles.clearButtonText}>Clear</Text>
+            <Ionicons name="time-outline" size={20} color="#888888" />
           </TouchableOpacity>
-        )}
+
+          {/* Clear chat button - only shown when there are messages */}
+          {chatHistory.length > 0 && (
+            <TouchableOpacity 
+              style={styles.clearButton}
+              onPress={clearChatHistory}
+              activeOpacity={0.7}
+              accessibilityLabel="Clear chat history"
+              accessibilityHint="Clears all messages from the conversation"
+            >
+              <Text style={styles.clearButtonText}>Clear</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       
       {chatHistory.length > 0 ? (
@@ -121,6 +137,12 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       <View style={styles.buttonContainer}>
         <VoiceButton />
       </View>
+
+      {/* Conversation History Modal */}
+      <ConversationHistory
+        visible={showConversationHistory}
+        onClose={() => setShowConversationHistory(false)}
+      />
     </View>
   );
 };
@@ -137,6 +159,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 16,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  historyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 8,
+    borderRadius: 16,
+    backgroundColor: 'rgba(136, 136, 136, 0.1)',
+  },
+  historyButtonText: {
+    display: 'none',
+  },
   clearButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -144,6 +181,7 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 16,
     backgroundColor: 'rgba(136, 136, 136, 0.1)',
+    marginLeft: 8,
   },
   clearButtonText: {
     color: '#888888',

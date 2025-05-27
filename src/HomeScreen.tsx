@@ -48,8 +48,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         
         <View style={styles.infoSection}>
           <Text style={styles.infoText}>
-            This app uses wake word detection to listen in the background.
-            When detected, the app will activate voice recognition automatically.
+            Keep wake word detection on to use this app without touching your phone.
           </Text>
         </View>
       </View>

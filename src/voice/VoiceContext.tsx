@@ -6,6 +6,7 @@ import { useVoiceState as useVoiceStateHook } from './hooks/useVoiceState';
 import { useFeatureSettings } from '../settings/useFeatureSettings';
 import { supabase } from '../supabase/supabase';
 import { DeviceEventEmitter, EmitterSubscription } from 'react-native';
+import { conversationService } from '../services/conversationService';
 
 // Create context with default values
 const VoiceContext = createContext<VoiceContextValue>({
@@ -125,27 +126,50 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           timestamp: Date.now()
         };
         
-        // Update chat history and get the updated history
-        let updatedHistory: ChatMessage[] = [];
+        // Get current chat history and create updated history
         setChatHistory(prev => {
-          updatedHistory = [...prev, newMessage];
+          const updatedHistory = [...prev, newMessage];
+          
+          // Send to API with updated history in a separate async operation
+          // We need to do this outside of the setState callback
+          setTimeout(async () => {
+            try {
+              console.log('🟠 VOICE_CONTEXT: Feature settings:', featureSettings);
+              console.log('🟠 VOICE_CONTEXT: Sending message with history length:', updatedHistory.length);
+              
+              const response = await sendMessage(text, updatedHistory, featureSettings);
+              
+              console.log('🟠 VOICE_CONTEXT: Received API response:', response.response.substring(0, 100) + '...');
+              
+              // Send response back to native
+              await voiceService.handleApiResponse(requestId, response.response);
+              
+            } catch (error) {
+              console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
+              console.error('🟠 VOICE_CONTEXT: Error details:', {
+                name: error instanceof Error ? error.name : 'Unknown',
+                message: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined
+              });
+              
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+              
+              // Send error response back to native
+              try {
+                console.log('🟠 VOICE_CONTEXT: Sending error response back to native...');
+                await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
+                console.log('🟠 VOICE_CONTEXT: ✅ Error response sent to native');
+              } catch (responseError) {
+                console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
+              }
+            }
+          }, 0);
+          
           return updatedHistory;
         });
         
-        // Send to API with updated history
-        console.log('🟠 VOICE_CONTEXT: Feature settings:', featureSettings);
-        const response = await sendMessage(text, updatedHistory, featureSettings);
-        
-        // Send response back to native
-        await voiceService.handleApiResponse(requestId, response.response);
-        
       } catch (error) {
-        console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
-        console.error('🟠 VOICE_CONTEXT: Error details:', {
-          name: error instanceof Error ? error.name : 'Unknown',
-          message: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined
-        });
+        console.error('🟠 VOICE_CONTEXT: ❌ Error in processTextFromNative:', error);
         
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         
@@ -204,10 +228,25 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   }, []);
 
   // Clear chat history
-  const clearChatHistory = useCallback(() => {
+  const clearChatHistory = useCallback(async () => {
     console.log('🗑️ Clearing chat history');
+    
+    // Save conversation to Supabase before clearing if there are messages
+    if (chatHistory.length > 0) {
+      try {
+        console.log('💾 Saving conversation before clearing...');
+        const conversationId = await conversationService.saveConversation(chatHistory);
+        if (conversationId) {
+          console.log('✅ Conversation saved with ID:', conversationId);
+        }
+      } catch (error) {
+        console.error('❌ Error saving conversation:', error);
+        // Continue with clearing even if save fails
+      }
+    }
+    
     setChatHistory([]);
-  }, []);
+  }, [chatHistory]);
 
   // Interrupt speech - delegate to hook
   const interruptSpeech = useCallback(async () => {
