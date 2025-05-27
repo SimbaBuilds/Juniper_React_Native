@@ -24,6 +24,9 @@ export function SettingsDropdown<T extends string>({
   const selectedOption = options.find(option => option.value === value);
 
   const handleSelect = (selectedValue: T) => {
+    console.log('🔽 DROPDOWN: Value selected:', selectedValue);
+    console.log('🔽 DROPDOWN: Current value:', value);
+    console.log('🔽 DROPDOWN: Calling onValueChange...');
     onValueChange(selectedValue);
     setIsOpen(false);
   };

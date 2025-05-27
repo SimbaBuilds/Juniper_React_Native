@@ -50,14 +50,6 @@ export interface VoiceSettings {
   generalInstructions: string;
 }
 
-export interface GroceriesSettings {
-  enabled: boolean;
-}
-
-export interface AlarmClockSettings {
-  enabled: boolean;
-}
-
 export interface FeatureSettings {
   tickers: TickersSettings;
   news: NewsSettings;
@@ -65,8 +57,6 @@ export interface FeatureSettings {
   tellMeThings: TellMeThingsSettings;
   projectUnderstanding: ProjectUnderstandingSettings;
   voice: VoiceSettings;
-  groceries: GroceriesSettings;
-  alarmClock: AlarmClockSettings;
 }
 
 // Default settings
@@ -103,11 +93,5 @@ export const defaultFeatureSettings: FeatureSettings = {
     deepgramEnabled: false,
     baseLanguageModel: 'gpt-4o',
     generalInstructions: '',
-  },
-  groceries: {
-    enabled: false,
-  },
-  alarmClock: {
-    enabled: false,
-  },
+  }
 }; 

@@ -7,8 +7,6 @@ import api from './api';
 function toSnakeCase(str: string): string {
   // Special case for 'tellMeThings' -> 'tell_me_things'
   if (str === 'tellMeThings') return 'tell_me_things';
-  // Special case for 'alarmClock' -> 'alarm_clock'
-  if (str === 'alarmClock') return 'alarm_clock';
   // Special case for 'projectUnderstanding' -> 'project_understanding'
   if (str === 'projectUnderstanding') return 'project_understanding';
   
@@ -38,6 +36,39 @@ function transformToSnakeCase(obj: any): any {
   }
   
   return obj;
+}
+
+/**
+ * Prepare feature settings for API call by removing categories and capping array lengths
+ */
+function prepareFeatureSettingsForApi(featureSettings: FeatureSettings): FeatureSettings {
+  const prepared = { ...featureSettings };
+  
+  // Remove categories from news settings (backend will fetch from database)
+  if (prepared.news) {
+    prepared.news = {
+      ...prepared.news,
+      categories: [] // Remove categories - backend will fetch from DB
+    };
+  }
+  
+  // Cap tickers array to 20 items
+  if (prepared.tickers?.tickers) {
+    prepared.tickers = {
+      ...prepared.tickers,
+      tickers: prepared.tickers.tickers.slice(0, 20)
+    };
+  }
+  
+  // Cap trigger phrases to 5 items
+  if (prepared.tellMeThings?.triggerPhrases) {
+    prepared.tellMeThings = {
+      ...prepared.tellMeThings,
+      triggerPhrases: prepared.tellMeThings.triggerPhrases.slice(0, 5)
+    };
+  }
+  
+  return prepared;
 }
 
 // Default server configuration
@@ -145,8 +176,25 @@ class ServerApiService {
         console.log('🔴 SERVER_API: Adding delay for Android stability...');
         await new Promise(resolve => setTimeout(resolve, 150));
         
-        // Transform feature settings to snake_case
-        const transformedFeatureSettings = featureSettings ? transformToSnakeCase(featureSettings) : undefined;
+        // Prepare and transform feature settings
+        let transformedFeatureSettings;
+        if (featureSettings) {
+          console.log('🔴 SERVER_API: Original settings:', {
+            tickersCount: featureSettings.tickers?.tickers?.length || 0,
+            triggerPhrasesCount: featureSettings.tellMeThings?.triggerPhrases?.length || 0,
+            categoriesCount: featureSettings.news?.categories?.length || 0
+          });
+          
+          const preparedSettings = prepareFeatureSettingsForApi(featureSettings);
+          transformedFeatureSettings = transformToSnakeCase(preparedSettings);
+          
+          console.log('🔴 SERVER_API: Prepared settings:', {
+            tickersCount: preparedSettings.tickers?.tickers?.length || 0,
+            triggerPhrasesCount: preparedSettings.tellMeThings?.triggerPhrases?.length || 0,
+            categoriesCount: preparedSettings.news?.categories?.length || 0
+          });
+          console.log('🔴 SERVER_API: Prepared settings (removed categories, capped arrays)');
+        }
         
         // Extract baseLanguageModel from voice settings and include it in preferences
         const defaultPreferences: ChatRequest['preferences'] = {
@@ -155,15 +203,13 @@ class ServerApiService {
         };
         
         // Add model from voice settings if available
-        console.log('🔴 SERVER_API: Received featureSettings:', featureSettings);
-        console.log('🔴 SERVER_API: Voice settings:', featureSettings?.voice);
-        console.log('🔴 SERVER_API: Base language model:', featureSettings?.voice?.baseLanguageModel);
+        console.log('🔴 SERVER_API: Model from settings:', featureSettings?.voice?.baseLanguageModel);
         
         if (featureSettings?.voice?.baseLanguageModel) {
           defaultPreferences.model = featureSettings.voice.baseLanguageModel;
-          console.log(`🔴 SERVER_API: Using model from settings: ${featureSettings.voice.baseLanguageModel}`);
+          console.log(`🔴 SERVER_API: Using model: ${featureSettings.voice.baseLanguageModel}`);
         } else {
-          console.log('🔴 SERVER_API: No baseLanguageModel found in featureSettings, using default');
+          console.log('🔴 SERVER_API: No baseLanguageModel found, using default');
         }
         
         const jsonData: ChatRequest = {

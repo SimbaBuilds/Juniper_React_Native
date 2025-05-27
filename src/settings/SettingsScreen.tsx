@@ -46,8 +46,6 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
     updateTellMeThingsSettings,
     updateProjectUnderstandingSettings,
     updateVoiceSettings,
-    updateGroceriesSettings,
-    updateAlarmClockSettings,
   } = useFeatureSettings();
 
   const { signOut, user } = useAuth();
@@ -297,7 +295,13 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           <SettingsTextInput
             label="General Instructions"
             value={settings.voice.generalInstructions}
-            onChangeText={(generalInstructions) => updateVoiceSettings({ generalInstructions })}
+            onChangeText={async (generalInstructions) => {
+              try {
+                await updateVoiceSettings({ generalInstructions });
+              } catch (error) {
+                console.error('Error updating voice settings:', error);
+              }
+            }}
             placeholder="Enter instructions for the AI assistant..."
             description="Custom instructions to guide the AI's behavior and responses"
             multiline={true}
@@ -306,7 +310,13 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           <ExpandableSettingsToggle
             label="Deepgram Voice"
             value={settings.voice.deepgramEnabled}
-            onValueChange={(deepgramEnabled) => updateVoiceSettings({ deepgramEnabled })}
+            onValueChange={async (deepgramEnabled) => {
+              try {
+                await updateVoiceSettings({ deepgramEnabled });
+              } catch (error) {
+                console.error('Error updating voice settings:', error);
+              }
+            }}
             description="Enhanced voice recognition with Deepgram"
             hasSubSettings={true}
           />
@@ -314,10 +324,18 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           <SettingsDropdown
             label="Base Language Model"
             value={settings.voice.baseLanguageModel}
-            onValueChange={(baseLanguageModel) => updateVoiceSettings({ baseLanguageModel })}
+            onValueChange={async (baseLanguageModel) => {
+              try {
+                console.log('🎯 SETTINGS_SCREEN: Updating base language model to:', baseLanguageModel);
+                await updateVoiceSettings({ baseLanguageModel });
+                console.log('🎯 SETTINGS_SCREEN: ✅ Base language model updated successfully');
+              } catch (error) {
+                console.error('🎯 SETTINGS_SCREEN: ❌ Error updating base language model:', error);
+              }
+            }}
             options={[
               { label: 'gpt-4o', value: 'gpt-4o' as const },
-              { label: 'gpt-4o Mini', value: 'gpt-4o-mini' as const },
+              { label: 'gpt-4o-mini', value: 'gpt-4o-mini' as const },
               { label: 'grok-3', value: 'grok-3' as const },
               { label: 'grok-3.5', value: 'grok-3.5' as const },
             ]}

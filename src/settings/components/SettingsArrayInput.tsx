@@ -33,6 +33,9 @@ export const SettingsArrayInput: React.FC<SettingsArrayInputProps> = ({
     onValuesChange(newValues);
   };
 
+  const isAtLimit = values.length >= maxItems;
+  const isNearLimit = values.length >= maxItems - 2;
+
   const renderItem = ({ item, index }: { item: string; index: number }) => (
     <View style={styles.item}>
       <Text style={styles.itemText}>{item}</Text>
@@ -44,27 +47,36 @@ export const SettingsArrayInput: React.FC<SettingsArrayInputProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.label}>{label}</Text>
+      </View>
       {description && <Text style={styles.description}>{description}</Text>}
       
       <View style={styles.inputContainer}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, isAtLimit && styles.inputDisabled]}
           value={inputValue}
           onChangeText={setInputValue}
-          placeholder={placeholder}
-          placeholderTextColor="#666666"
+          placeholder={isAtLimit ? `Maximum ${maxItems} items reached` : placeholder}
+          placeholderTextColor={isAtLimit ? "#E74C3C" : "#666666"}
           onSubmitEditing={addItem}
           returnKeyType="done"
+          editable={!isAtLimit}
         />
         <TouchableOpacity 
           onPress={addItem} 
-          style={[styles.addButton, (!inputValue.trim() || values.length >= maxItems) && styles.addButtonDisabled]}
-          disabled={!inputValue.trim() || values.length >= maxItems}
+          style={[styles.addButton, (!inputValue.trim() || isAtLimit) && styles.addButtonDisabled]}
+          disabled={!inputValue.trim() || isAtLimit}
         >
           <Ionicons name="add" size={20} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
+
+      {isAtLimit && (
+        <Text style={styles.limitWarning}>
+          Maximum limit reached. Remove an item to add a new one.
+        </Text>
+      )}
 
       {values.length > 0 && (
         <FlatList
@@ -72,7 +84,9 @@ export const SettingsArrayInput: React.FC<SettingsArrayInputProps> = ({
           renderItem={renderItem}
           keyExtractor={(item, index) => `${item}-${index}`}
           style={styles.list}
-          scrollEnabled={false}
+          scrollEnabled={true}
+          showsVerticalScrollIndicator={true}
+          nestedScrollEnabled={true}
         />
       )}
 
@@ -90,11 +104,24 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   label: {
     fontSize: 16,
     fontWeight: '500',
     color: '#FFFFFF',
-    marginBottom: 4,
+  },
+  counter: {
+    fontSize: 14,
+    color: '#B0B0B0',
+    fontWeight: '500',
+  },
+  counterAtLimit: {
+    color: '#E74C3C',
   },
   description: {
     fontSize: 14,
@@ -117,6 +144,11 @@ const styles = StyleSheet.create({
     borderColor: '#3A3A3A',
     marginRight: 8,
   },
+  inputDisabled: {
+    backgroundColor: '#1A1A1A',
+    borderColor: '#E74C3C',
+    color: '#B0B0B0',
+  },
   addButton: {
     backgroundColor: '#4A90E2',
     borderRadius: 6,
@@ -126,6 +158,18 @@ const styles = StyleSheet.create({
   },
   addButtonDisabled: {
     backgroundColor: '#666666',
+  },
+  limitWarning: {
+    color: '#E74C3C',
+    fontSize: 12,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginBottom: 8,
+    backgroundColor: '#2A1A1A',
+    padding: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E74C3C',
   },
   list: {
     maxHeight: 200,

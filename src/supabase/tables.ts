@@ -256,54 +256,6 @@ export type UserProfile = {
   ] as const;
   export type IntegrationField = (typeof integrationFields)[number];
   
-  export type GroceryList = {
-    id: string;
-    user_id: string;
-    name: string;
-    is_active: boolean;
-    created_at: Date;
-  };
-  
-  export const groceryListFields = [
-    'id', 'user_id', 'name', 'is_active', 'created_at'
-  ] as const;
-  export type GroceryListField = (typeof groceryListFields)[number];
-  
-  export type GroceryItem = {
-    id: string;
-    list_id: string;
-    item_name: string;
-    quantity?: string;
-    category?: string;
-    is_completed: boolean;
-    priority: number;
-    added_by_voice: boolean;
-    created_at: Date;
-  };
-  
-  export const groceryItemFields = [
-    'id', 'list_id', 'item_name', 'quantity', 'category',
-    'is_completed', 'priority', 'added_by_voice', 'created_at'
-  ] as const;
-  export type GroceryItemField = (typeof groceryItemFields)[number];
-  
-  export type Alarm = {
-    id: string;
-    user_id: string;
-    title: string;
-    alarm_time: Date;
-    repeat_pattern?: string;
-    is_active: boolean;
-    snooze_count: number;
-    created_at: Date;
-  };
-  
-  export const alarmFields = [
-    'id', 'user_id', 'title', 'alarm_time', 'repeat_pattern',
-    'is_active', 'snooze_count', 'created_at'
-  ] as const;
-  export type AlarmField = (typeof alarmFields)[number];
-  
   export type TransportationPreference = {
     id: string;
     user_id: string;

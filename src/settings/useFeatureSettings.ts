@@ -68,15 +68,7 @@ export const useFeatureSettings = () => {
         voice: {
           ...defaultFeatureSettings.voice,
           ...parsedSettings.voice,
-        },
-        groceries: {
-          ...defaultFeatureSettings.groceries,
-          ...parsedSettings.groceries,
-        },
-        alarmClock: {
-          ...defaultFeatureSettings.alarmClock,
-          ...parsedSettings.alarmClock,
-        },
+        }
       };
       setSettings(mergedSettings);
     } catch (error) {
@@ -90,10 +82,13 @@ export const useFeatureSettings = () => {
   // Save settings to storage
   const saveSettings = useCallback(async (newSettings: FeatureSettings) => {
     try {
+      console.log('💾 SETTINGS: Saving settings to AsyncStorage...');
       await AsyncStorage.setItem(FEATURE_SETTINGS_KEY, JSON.stringify(newSettings));
+      console.log('💾 SETTINGS: Settings saved to AsyncStorage, updating local state...');
       setSettings(newSettings);
+      console.log('💾 SETTINGS: Local state updated with new voice model:', newSettings.voice.baseLanguageModel);
     } catch (error) {
-      console.error('Error saving feature settings:', error);
+      console.error('💾 SETTINGS: Error saving feature settings:', error);
     }
   }, []);
 
@@ -114,7 +109,7 @@ export const useFeatureSettings = () => {
       }
     }
     
-    saveSettings(newSettings);
+    await saveSettings(newSettings);
   }, [settings, saveSettings]);
 
   const updateNewsSettings = useCallback(async (updates: Partial<FeatureSettings['news']>) => {
@@ -133,61 +128,78 @@ export const useFeatureSettings = () => {
       }
     }
     
-    saveSettings(newSettings);
+    await saveSettings(newSettings);
   }, [settings, saveSettings]);
 
-  const updateCalendarSettings = useCallback((updates: Partial<FeatureSettings['calendar']>) => {
+  const updateCalendarSettings = useCallback(async (updates: Partial<FeatureSettings['calendar']>) => {
     const newSettings = {
       ...settings,
       calendar: { ...settings.calendar, ...updates },
     };
-    saveSettings(newSettings);
+    await saveSettings(newSettings);
   }, [settings, saveSettings]);
 
-  const updateTellMeThingsSettings = useCallback((updates: Partial<FeatureSettings['tellMeThings']>) => {
+  const updateTellMeThingsSettings = useCallback(async (updates: Partial<FeatureSettings['tellMeThings']>) => {
     const newSettings = {
       ...settings,
       tellMeThings: { ...settings.tellMeThings, ...updates },
     };
-    saveSettings(newSettings);
+    await saveSettings(newSettings);
   }, [settings, saveSettings]);
 
-  const updateProjectUnderstandingSettings = useCallback((updates: Partial<FeatureSettings['projectUnderstanding']>) => {
+  const updateProjectUnderstandingSettings = useCallback(async (updates: Partial<FeatureSettings['projectUnderstanding']>) => {
     const newSettings = {
       ...settings,
       projectUnderstanding: { ...settings.projectUnderstanding, ...updates },
     };
-    saveSettings(newSettings);
+    await saveSettings(newSettings);
   }, [settings, saveSettings]);
 
-  const updateVoiceSettings = useCallback((updates: Partial<FeatureSettings['voice']>) => {
+  const updateVoiceSettings = useCallback(async (updates: Partial<FeatureSettings['voice']>) => {
+    console.log('🔧 SETTINGS: updateVoiceSettings called with:', updates);
+    console.log('🔧 SETTINGS: Current voice settings:', settings.voice);
+    
     const newSettings = {
       ...settings,
       voice: { ...settings.voice, ...updates },
     };
-    saveSettings(newSettings);
-  }, [settings, saveSettings]);
-
-  const updateGroceriesSettings = useCallback((updates: Partial<FeatureSettings['groceries']>) => {
-    const newSettings = {
-      ...settings,
-      groceries: { ...settings.groceries, ...updates },
-    };
-    saveSettings(newSettings);
-  }, [settings, saveSettings]);
-
-  const updateAlarmClockSettings = useCallback((updates: Partial<FeatureSettings['alarmClock']>) => {
-    const newSettings = {
-      ...settings,
-      alarmClock: { ...settings.alarmClock, ...updates },
-    };
-    saveSettings(newSettings);
+    
+    console.log('🔧 SETTINGS: New voice settings:', newSettings.voice);
+    console.log('🔧 SETTINGS: Saving settings to storage...');
+    
+    await saveSettings(newSettings);
+    console.log('🔧 SETTINGS: ✅ Settings saved successfully');
   }, [settings, saveSettings]);
 
   // Reset to defaults
-  const resetToDefaults = useCallback(() => {
-    saveSettings(defaultFeatureSettings);
+  const resetToDefaults = useCallback(async () => {
+    await saveSettings(defaultFeatureSettings);
   }, [saveSettings]);
+
+  // Debug function to check what's in AsyncStorage
+  const debugAsyncStorage = useCallback(async () => {
+    try {
+      const storedSettings = await AsyncStorage.getItem(FEATURE_SETTINGS_KEY);
+      console.log('🔍 DEBUG: Raw AsyncStorage data:', storedSettings);
+      if (storedSettings) {
+        const parsed = JSON.parse(storedSettings);
+        console.log('🔍 DEBUG: Parsed settings:', parsed);
+        console.log('🔍 DEBUG: Voice settings in storage:', parsed.voice);
+        console.log('🔍 DEBUG: Base language model in storage:', parsed.voice?.baseLanguageModel);
+      } else {
+        console.log('🔍 DEBUG: No settings found in AsyncStorage');
+      }
+    } catch (error) {
+      console.error('🔍 DEBUG: Error reading AsyncStorage:', error);
+    }
+  }, []);
+
+  // Force reload settings from AsyncStorage
+  const forceReloadSettings = useCallback(async () => {
+    console.log('🔄 FORCE_RELOAD: Reloading settings from AsyncStorage...');
+    await loadSettings();
+    console.log('🔄 FORCE_RELOAD: Settings reloaded');
+  }, [loadSettings]);
 
   // Load settings on mount
   useEffect(() => {
@@ -203,9 +215,9 @@ export const useFeatureSettings = () => {
     updateTellMeThingsSettings,
     updateProjectUnderstandingSettings,
     updateVoiceSettings,
-    updateGroceriesSettings,
-    updateAlarmClockSettings,
     resetToDefaults,
     saveSettings,
+    debugAsyncStorage,
+    forceReloadSettings,
   };
 }; 

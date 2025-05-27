@@ -56,7 +56,29 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const isError = voiceStateFromHook.isError;
   
   // Feature settings hook
-  const { settings: featureSettings, loading: settingsLoading } = useFeatureSettings();
+  const { 
+    settings: featureSettings, 
+    loading: settingsLoading, 
+    forceReloadSettings,
+    debugAsyncStorage 
+  } = useFeatureSettings();
+  
+  // Create a ref to always have the latest settings
+  const latestSettingsRef = useRef(featureSettings);
+  
+  // Update the ref whenever settings change
+  useEffect(() => {
+    latestSettingsRef.current = featureSettings;
+    console.log('🔄 VOICE_CONTEXT: Settings updated, new model:', featureSettings?.voice?.baseLanguageModel);
+    console.log('🔄 VOICE_CONTEXT: Full voice settings:', featureSettings?.voice);
+    console.log('🔄 VOICE_CONTEXT: Settings loading state:', settingsLoading);
+  }, [featureSettings]);
+  
+  // Log specifically when baseLanguageModel changes
+  useEffect(() => {
+    console.log('🎯 VOICE_CONTEXT: Base language model changed to:', featureSettings?.voice?.baseLanguageModel);
+    console.log('🎯 VOICE_CONTEXT: Ref updated with model:', latestSettingsRef.current?.voice?.baseLanguageModel);
+  }, [featureSettings?.voice?.baseLanguageModel]);
   
   // Only manage UI-specific state that doesn't exist in native layer
   const [isWakeWordEnabled, setWakeWordEnabled] = useState<boolean>(false);
@@ -134,10 +156,20 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           // We need to do this outside of the setState callback
           setTimeout(async () => {
             try {
-              console.log('🟠 VOICE_CONTEXT: Settings loading state:', settingsLoading);
-              console.log('🟠 VOICE_CONTEXT: Feature settings:', featureSettings);
-              console.log('🟠 VOICE_CONTEXT: Voice settings:', featureSettings?.voice);
-              console.log('🟠 VOICE_CONTEXT: Base language model:', featureSettings?.voice?.baseLanguageModel);
+              // Force reload settings to ensure we have the latest
+              console.log('🔄 VOICE_CONTEXT: Force reloading settings before API call...');
+              await forceReloadSettings();
+              
+              // Debug what's in AsyncStorage
+              await debugAsyncStorage();
+              
+              // Get the latest settings from the ref to avoid stale closure
+              const currentSettings = latestSettingsRef.current;
+              
+              console.log('🟠 VOICE_CONTEXT: Settings loading:', settingsLoading, 'Model:', currentSettings?.voice?.baseLanguageModel);
+              console.log('🟠 VOICE_CONTEXT: Closure settings model:', featureSettings?.voice?.baseLanguageModel);
+              console.log('🟠 VOICE_CONTEXT: Ref settings model:', currentSettings?.voice?.baseLanguageModel);
+              console.log('🟠 VOICE_CONTEXT: Are they the same?', featureSettings?.voice?.baseLanguageModel === currentSettings?.voice?.baseLanguageModel);
               console.log('🟠 VOICE_CONTEXT: Sending message with history length:', updatedHistory.length);
               
               // Wait for settings to load if they're still loading
@@ -150,7 +182,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
                 }
               }
               
-              const response = await sendMessage(text, updatedHistory, featureSettings);
+              const response = await sendMessage(text, updatedHistory, currentSettings);
               
               console.log('🟠 VOICE_CONTEXT: Received API response:', response.response.substring(0, 100) + '...');
               
@@ -205,7 +237,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       subscriptions.forEach(sub => sub.remove());
       listenersSetupRef.current = false;
     };
-  }, [sendMessage, chatHistory, featureSettings, settingsLoading, voiceService]);
+  }, [sendMessage, chatHistory, settingsLoading, voiceService]);
 
   // Start listening - delegate to hook
   const startListening = useCallback(async () => {
