@@ -37,6 +37,17 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   // State for conversation history modal
   const [showConversationHistory, setShowConversationHistory] = React.useState(false);
 
+  // Handle opening conversation history and loading data
+  const handleOpenConversationHistory = () => {
+    console.log('📚 Opening conversation history...');
+    setShowConversationHistory(true);
+  };
+
+  // Handle conversation history opened callback
+  const handleConversationHistoryOpened = () => {
+    console.log('📚 Conversation history opened and loading...');
+  };
+
   // When a speech result is received, call the callback
   React.useEffect(() => {
     if (transcript && onSpeechResult) {
@@ -76,7 +87,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           {/* Conversation history button */}
           <TouchableOpacity 
             style={styles.historyButton}
-            onPress={() => setShowConversationHistory(true)}
+            onPress={handleOpenConversationHistory}
             activeOpacity={0.7}
             accessibilityLabel="View conversation history"
             accessibilityHint="Opens a list of your recent conversations"
@@ -90,10 +101,10 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
               style={styles.clearButton}
               onPress={clearChatHistory}
               activeOpacity={0.7}
-              accessibilityLabel="Clear chat history"
-              accessibilityHint="Clears all messages from the conversation"
+              accessibilityLabel="New chat"
+              accessibilityHint="Start a new chat"
             >
-              <Text style={styles.clearButtonText}>Clear</Text>
+              <Text style={styles.clearButtonText}>New</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -142,6 +153,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       <ConversationHistory
         visible={showConversationHistory}
         onClose={() => setShowConversationHistory(false)}
+        onOpen={handleConversationHistoryOpened}
       />
     </View>
   );

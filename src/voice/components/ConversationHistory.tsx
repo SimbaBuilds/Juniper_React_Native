@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { conversationService, ConversationSummary } from '../../services/conversationService';
@@ -16,6 +17,7 @@ import { ChatMessage } from '../VoiceContext';
 interface ConversationHistoryProps {
   visible: boolean;
   onClose: () => void;
+  onOpen?: () => void;
 }
 
 interface ExpandedConversation extends ConversationSummary {
@@ -27,17 +29,22 @@ interface ExpandedConversation extends ConversationSummary {
 export const ConversationHistory: React.FC<ConversationHistoryProps> = ({
   visible,
   onClose,
+  onOpen,
 }) => {
   const [conversations, setConversations] = useState<ExpandedConversation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
-  // Load conversation summaries on mount
+  // Load conversation summaries when explicitly requested
   useEffect(() => {
-    if (visible) {
+    if (visible && !hasLoaded) {
       loadConversations();
+      if (onOpen) {
+        onOpen();
+      }
     }
-  }, [visible]);
+  }, [visible, hasLoaded, onOpen]);
 
   const loadConversations = async () => {
     setIsLoading(true);
@@ -50,12 +57,19 @@ export const ConversationHistory: React.FC<ConversationHistoryProps> = ({
         isExpanded: false,
         isLoading: false,
       })));
+      setHasLoaded(true);
     } catch (err) {
       console.error('Error loading conversations:', err);
       setError('Failed to load conversation history');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const refreshConversations = async () => {
+    console.log('🔄 Refreshing conversation history...');
+    setHasLoaded(false); // Reset loaded state to force reload
+    await loadConversations();
   };
 
   const toggleConversation = async (conversationId: string) => {
@@ -144,16 +158,6 @@ export const ConversationHistory: React.FC<ConversationHistoryProps> = ({
     });
   };
 
-  const renderMessage = ({ item }: { item: ChatMessage }) => (
-    <View style={[
-      styles.messageBubble,
-      item.role === 'user' ? styles.userMessage : styles.assistantMessage
-    ]}>
-      <Text style={styles.messageText}>{item.content}</Text>
-      <Text style={styles.messageTime}>{formatMessageTime(item.timestamp)}</Text>
-    </View>
-  );
-
   const renderConversation = ({ item }: { item: ExpandedConversation }) => (
     <View style={styles.conversationItem}>
       <TouchableOpacity
@@ -198,13 +202,25 @@ export const ConversationHistory: React.FC<ConversationHistoryProps> = ({
               <Text style={styles.loadingText}>Loading messages...</Text>
             </View>
           ) : item.messages ? (
-            <FlatList
-              data={item.messages}
-              renderItem={renderMessage}
-              keyExtractor={(message, index) => `${item.id}-message-${index}`}
+            <ScrollView
               style={styles.messagesList}
-              showsVerticalScrollIndicator={false}
-            />
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}
+              contentContainerStyle={styles.messagesContent}
+            >
+              {item.messages.map((message, index) => (
+                <View
+                  key={`${item.id}-message-${index}`}
+                  style={[
+                    styles.messageBubble,
+                    message.role === 'user' ? styles.userMessage : styles.assistantMessage
+                  ]}
+                >
+                  <Text style={styles.messageText}>{message.content}</Text>
+                  <Text style={styles.messageTime}>{formatMessageTime(message.timestamp)}</Text>
+                </View>
+              ))}
+            </ScrollView>
           ) : (
             <Text style={styles.noMessagesText}>No messages found</Text>
           )}
@@ -223,13 +239,29 @@ export const ConversationHistory: React.FC<ConversationHistoryProps> = ({
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Conversation History</Text>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onClose}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="close" size={24} color="#888888" />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            {hasLoaded && (
+              <TouchableOpacity
+                style={styles.refreshButton}
+                onPress={refreshConversations}
+                activeOpacity={0.7}
+                disabled={isLoading}
+              >
+                <Ionicons 
+                  name="refresh" 
+                  size={20} 
+                  color={isLoading ? "#666666" : "#888888"} 
+                />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={onClose}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="close" size={24} color="#888888" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {isLoading ? (
@@ -265,6 +297,8 @@ export const ConversationHistory: React.FC<ConversationHistoryProps> = ({
             style={styles.conversationsList}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.conversationsContent}
+            nestedScrollEnabled={true}
+            keyboardShouldPersistTaps="handled"
           />
         )}
       </View>
@@ -290,6 +324,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   closeButton: {
     padding: 4,
@@ -386,7 +424,8 @@ const styles = StyleSheet.create({
   messagesContainer: {
     borderTopWidth: 1,
     borderTopColor: '#333333',
-    maxHeight: 300,
+    height: 300,
+    flex: 0,
   },
   loadingContainer: {
     flexDirection: 'row',
@@ -395,8 +434,12 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   messagesList: {
+    flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  messagesContent: {
+    paddingBottom: 8,
   },
   messageBubble: {
     padding: 12,
@@ -429,5 +472,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     padding: 20,
+  },
+  refreshButton: {
+    padding: 4,
+    marginRight: 8,
   },
 }); 
