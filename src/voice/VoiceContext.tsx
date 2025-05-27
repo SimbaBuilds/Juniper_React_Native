@@ -56,7 +56,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const isError = voiceStateFromHook.isError;
   
   // Feature settings hook
-  const { settings: featureSettings } = useFeatureSettings();
+  const { settings: featureSettings, loading: settingsLoading } = useFeatureSettings();
   
   // Only manage UI-specific state that doesn't exist in native layer
   const [isWakeWordEnabled, setWakeWordEnabled] = useState<boolean>(false);
@@ -134,8 +134,21 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           // We need to do this outside of the setState callback
           setTimeout(async () => {
             try {
+              console.log('🟠 VOICE_CONTEXT: Settings loading state:', settingsLoading);
               console.log('🟠 VOICE_CONTEXT: Feature settings:', featureSettings);
+              console.log('🟠 VOICE_CONTEXT: Voice settings:', featureSettings?.voice);
+              console.log('🟠 VOICE_CONTEXT: Base language model:', featureSettings?.voice?.baseLanguageModel);
               console.log('🟠 VOICE_CONTEXT: Sending message with history length:', updatedHistory.length);
+              
+              // Wait for settings to load if they're still loading
+              if (settingsLoading) {
+                console.log('🟠 VOICE_CONTEXT: Settings still loading, waiting...');
+                // Wait a bit and check again
+                await new Promise(resolve => setTimeout(resolve, 500));
+                if (settingsLoading) {
+                  console.log('🟠 VOICE_CONTEXT: Settings still loading after wait, proceeding with current settings');
+                }
+              }
               
               const response = await sendMessage(text, updatedHistory, featureSettings);
               
@@ -192,7 +205,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       subscriptions.forEach(sub => sub.remove());
       listenersSetupRef.current = false;
     };
-  }, [sendMessage, chatHistory, featureSettings, voiceService]);
+  }, [sendMessage, chatHistory, featureSettings, settingsLoading, voiceService]);
 
   // Start listening - delegate to hook
   const startListening = useCallback(async () => {

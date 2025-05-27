@@ -316,10 +316,10 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             value={settings.voice.baseLanguageModel}
             onValueChange={(baseLanguageModel) => updateVoiceSettings({ baseLanguageModel })}
             options={[
-              { label: 'GPT-4o', value: 'gpt-4o' as const },
-              { label: 'GPT-4o Mini', value: 'gpt-4o-mini' as const },
-              { label: 'Grok 3', value: 'Grok 3' as const },
-              { label: 'Grok 3.5', value: 'Grok 3.5' as const },
+              { label: 'gpt-4o', value: 'gpt-4o' as const },
+              { label: 'gpt-4o Mini', value: 'gpt-4o-mini' as const },
+              { label: 'grok-3', value: 'grok-3' as const },
+              { label: 'grok-3.5', value: 'grok-3.5' as const },
             ]}
             description="Select the language model to use for AI responses"
           />

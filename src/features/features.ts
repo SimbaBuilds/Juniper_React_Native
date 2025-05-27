@@ -46,7 +46,7 @@ export interface ProjectUnderstandingSettings {
 
 export interface VoiceSettings {
   deepgramEnabled: boolean;
-  baseLanguageModel: 'gpt-4o' | 'gpt-4o-mini' | 'Grok 3' | 'Grok 3.5';
+  baseLanguageModel: 'gpt-4o' | 'gpt-4o-mini' | 'grok-3' | 'grok-3.5';
   generalInstructions: string;
 }
 

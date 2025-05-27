@@ -69,6 +69,7 @@ export interface ChatRequest {
   preferences?: {
     voice?: string;
     response_type?: string;
+    model?: string; // Language model to use (e.g., 'gpt-4o', 'gpt-4o-mini', 'grok-3', 'grok-3.5')
     [key: string]: any;
   };
   feature_settings?: any; // Using any since we transform it to snake_case
@@ -147,6 +148,24 @@ class ServerApiService {
         // Transform feature settings to snake_case
         const transformedFeatureSettings = featureSettings ? transformToSnakeCase(featureSettings) : undefined;
         
+        // Extract baseLanguageModel from voice settings and include it in preferences
+        const defaultPreferences: ChatRequest['preferences'] = {
+          voice: 'male',
+          response_type: 'concise'
+        };
+        
+        // Add model from voice settings if available
+        console.log('🔴 SERVER_API: Received featureSettings:', featureSettings);
+        console.log('🔴 SERVER_API: Voice settings:', featureSettings?.voice);
+        console.log('🔴 SERVER_API: Base language model:', featureSettings?.voice?.baseLanguageModel);
+        
+        if (featureSettings?.voice?.baseLanguageModel) {
+          defaultPreferences.model = featureSettings.voice.baseLanguageModel;
+          console.log(`🔴 SERVER_API: Using model from settings: ${featureSettings.voice.baseLanguageModel}`);
+        } else {
+          console.log('🔴 SERVER_API: No baseLanguageModel found in featureSettings, using default');
+        }
+        
         const jsonData: ChatRequest = {
           message,
           timestamp: Date.now(),
@@ -156,9 +175,9 @@ class ServerApiService {
             timestamp: msg.timestamp,
             type: 'text'  // Always set type to 'text' for now
           })),
-          preferences: preferences || {
-            voice: 'male',
-            response_type: 'concise'
+          preferences: {
+            ...defaultPreferences,
+            ...preferences // Allow override of defaults with passed preferences
           },
           feature_settings: transformedFeatureSettings // Use snake_case key
         };
