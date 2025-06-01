@@ -15,7 +15,6 @@ export const HomeScreen: React.FC = () => {
         <View style={styles.header}>
           <View style={styles.titleContainer}>
             <Text style={styles.title}>Voice Assistant</Text>
-            <Text style={styles.subtitle}>Say "Jarvis" to activate</Text>
           </View>
         </View>
         
@@ -30,11 +29,11 @@ export const HomeScreen: React.FC = () => {
           </View>
         </VoiceErrorBoundary>
         
-        <View style={styles.infoSection}>
+        {/* <View style={styles.infoSection}>
           <Text style={styles.infoText}>
-            Say the wake word or send text message to activate your assistant.
+            You can continue the conversation with text message or saying wake word.
           </Text>
-        </View>
+        </View> */}
       </View>
     </SafeAreaView>
   );

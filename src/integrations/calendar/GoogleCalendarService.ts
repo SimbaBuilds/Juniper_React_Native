@@ -505,37 +505,14 @@ export class GoogleCalendarService {
   }
 
   private async exchangeCodeForToken(code: string): Promise<any> {
-    console.log('🔄 Making token exchange request...');
-    
+    // Construct the request body using proper URLSearchParams formatting
     const requestBody = new URLSearchParams();
     requestBody.append('client_id', GOOGLE_CONFIG.CLIENT_ID!);
     requestBody.append('code', code);
     requestBody.append('grant_type', 'authorization_code');
     requestBody.append('redirect_uri', GOOGLE_CONFIG.REDIRECT_URI);
     
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: requestBody.toString(),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Token exchange failed:', response.status, response.statusText);
-      
-      try {
-        const errorJson = JSON.parse(errorText);
-        throw new Error(`Token exchange failed: ${errorJson.error} - ${errorJson.error_description || response.statusText}`);
-      } catch (parseError) {
-        throw new Error(`Token exchange failed: ${response.status} ${response.statusText}`);
-      }
-    }
-
-    const tokenData = await response.json();
-    console.log('✅ Token exchange successful');
-    return tokenData;
+    return this.makeTokenRequest(requestBody, 'token exchange');
   }
 
   private async refreshAccessToken(): Promise<void> {
@@ -544,56 +521,14 @@ export class GoogleCalendarService {
     }
 
     try {
-      console.log('🔄 Refreshing access token...');
+      // Construct the request body using proper URLSearchParams formatting
+      const requestBody = new URLSearchParams();
+      requestBody.append('client_id', GOOGLE_CONFIG.CLIENT_ID!);
+      requestBody.append('refresh_token', this.authData.refreshToken);
+      requestBody.append('grant_type', 'refresh_token');
       
-      const response = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          client_id: GOOGLE_CONFIG.CLIENT_ID!,
-          refresh_token: this.authData.refreshToken,
-          grant_type: 'refresh_token',
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorData;
-        
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          throw new Error(`Token refresh failed: ${response.status} ${response.statusText}`);
-        }
-
-        console.error('❌ Token refresh error:', errorData);
-
-        // Handle specific error cases according to 2024 best practices
-        if (errorData.error === 'invalid_grant') {
-          // Refresh token has expired, been revoked, or is invalid
-          console.warn('🔒 Refresh token invalid - clearing auth data and requiring re-authentication');
-          await this.signOut();
-          this.notifyAuthCallbacks(); // Notify UI components
-          throw new Error('Your session has expired. Please sign in again to continue accessing Google Calendar.');
-        }
-
-        if (errorData.error === 'invalid_client') {
-          console.error('🔒 OAuth client configuration error');
-          throw new Error('Authentication configuration error. Please contact support.');
-        }
-
-        if (errorData.error === 'unauthorized_client') {
-          console.error('🔒 Client not authorized for refresh token grant');
-          throw new Error('Application authorization error. Please contact support.');
-        }
-
-        // Generic error fallback
-        throw new Error(`Token refresh failed: ${errorData.error} - ${errorData.error_description || 'Unknown error'}`);
-      }
-
-      const tokenData = await response.json();
+      // Use centralized token request method
+      const tokenData = await this.makeTokenRequest(requestBody, 'token refresh');
       
       // Update access token
       this.authData.accessToken = tokenData.access_token;
@@ -619,6 +554,11 @@ export class GoogleCalendarService {
       
       // If this is our custom error about expired session, don't wrap it
       if (error instanceof Error && error.message.includes('Your session has expired')) {
+        throw error;
+      }
+      
+      // If this is about unsupported grant type, provide specific guidance
+      if (error instanceof Error && error.message.includes('unsupported_grant_type')) {
         throw error;
       }
       
@@ -777,6 +717,157 @@ export class GoogleCalendarService {
     } catch (error) {
       console.error('❌ Error loading integration from Supabase:', error);
       // Don't throw here - we can still function with local storage or require re-auth
+    }
+  }
+
+  /**
+   * Validate OAuth 2.0 request parameters (2024 best practice)
+   * This helps catch configuration issues before making API calls
+   */
+  private validateOAuthConfig(): void {
+    if (!GOOGLE_CONFIG.CLIENT_ID) {
+      throw new Error('Google OAuth client ID is not configured. Please check your environment configuration.');
+    }
+    
+    if (!GOOGLE_CONFIG.CLIENT_ID.includes('.apps.googleusercontent.com')) {
+      console.warn('⚠️ Client ID format may be incorrect. Expected format: *.apps.googleusercontent.com');
+    }
+    
+    if (!GOOGLE_CONFIG.REDIRECT_URI) {
+      throw new Error('Google OAuth redirect URI is not configured. Please check your environment configuration.');
+    }
+    
+    console.log('✅ OAuth configuration validated:', {
+      client_id_configured: !!GOOGLE_CONFIG.CLIENT_ID,
+      redirect_uri_configured: !!GOOGLE_CONFIG.REDIRECT_URI,
+      scopes_configured: !!GOOGLE_CONFIG.SCOPES
+    });
+  }
+
+  /**
+   * Enhanced token request with better debugging (2024 best practice)
+   */
+  private async makeTokenRequest(requestBody: URLSearchParams, operation: string): Promise<any> {
+    // Validate configuration before making request
+    this.validateOAuthConfig();
+    
+    console.log(`🔄 Making ${operation} request...`);
+    console.log('📤 Request details:', {
+      endpoint: 'https://oauth2.googleapis.com/token',
+      method: 'POST',
+      content_type: 'application/x-www-form-urlencoded',
+      body_params: Object.fromEntries(requestBody.entries())
+    });
+    
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+        'User-Agent': 'MobileJarvisNative/1.0', // 2024 best practice: identify your app
+      },
+      body: requestBody.toString(),
+    });
+
+    const responseText = await response.text();
+    
+    console.log(`📥 ${operation} response:`, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+      body_length: responseText.length
+    });
+
+    if (!response.ok) {
+      console.error(`❌ ${operation} failed:`, {
+        status: response.status,
+        statusText: response.statusText,
+        response_body: responseText
+      });
+      
+      let errorData;
+      try {
+        errorData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('❌ Failed to parse error response as JSON:', parseError);
+        throw new Error(`${operation} failed: ${response.status} ${response.statusText} - ${responseText}`);
+      }
+
+      // Enhanced error handling for 2024 OAuth 2.0 specifications
+      this.handleOAuthError(errorData, operation, requestBody);
+    }
+
+    let tokenData;
+    try {
+      tokenData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('❌ Failed to parse success response as JSON:', parseError);
+      throw new Error(`${operation} returned invalid JSON response`);
+    }
+
+    console.log(`✅ ${operation} successful:`, {
+      access_token_exists: !!tokenData.access_token,
+      refresh_token_exists: !!tokenData.refresh_token,
+      expires_in: tokenData.expires_in,
+      token_type: tokenData.token_type,
+      scope: tokenData.scope
+    });
+    
+    return tokenData;
+  }
+
+  /**
+   * Centralized OAuth error handling (2024 best practice)
+   */
+  private handleOAuthError(errorData: any, operation: string, requestBody: URLSearchParams): never {
+    console.error(`❌ OAuth error in ${operation}:`, errorData);
+
+    // Standard OAuth 2.0 error codes with 2024 best practice handling
+    switch (errorData.error) {
+      case 'invalid_grant':
+        if (operation.includes('refresh')) {
+          console.warn('🔒 Refresh token invalid - clearing auth data');
+          // Don't await here as we're in an error path
+          this.signOut().catch(console.error);
+          this.notifyAuthCallbacks();
+          throw new Error('Your session has expired. Please sign in again to continue accessing Google Calendar.');
+        } else {
+          throw new Error('Authorization code has expired or is invalid. Please try signing in again.');
+        }
+
+      case 'invalid_client':
+        console.error('🔒 OAuth client configuration error - check client ID and secrets');
+        throw new Error('Authentication configuration error. Please contact support.');
+
+      case 'unauthorized_client':
+        console.error('🔒 Client not authorized for this grant type');
+        throw new Error('Application authorization error. Please contact support.');
+
+      case 'unsupported_grant_type':
+        console.error('🔒 Unsupported grant type error - request formatting issue detected');
+        console.error('📋 Debug info:', {
+          operation,
+          requestBodyString: requestBody.toString(),
+          requestBodyEntries: Object.fromEntries(requestBody.entries()),
+          endpoint: 'https://oauth2.googleapis.com/token'
+        });
+        throw new Error('Authentication request format error. Please try signing in again.');
+
+      case 'invalid_request':
+        console.error('🔒 Invalid request - malformed or missing parameters');
+        console.error('📋 Request details:', Object.fromEntries(requestBody.entries()));
+        throw new Error('Authentication request error. Please try signing in again.');
+
+      case 'access_denied':
+        throw new Error('Access was denied. Please grant the necessary permissions to use Google Calendar.');
+
+      case 'server_error':
+      case 'temporarily_unavailable':
+        throw new Error('Google authentication service is temporarily unavailable. Please try again later.');
+
+      default:
+        console.error('🔒 Unknown OAuth error:', errorData);
+        throw new Error(`${operation} failed: ${errorData.error} - ${errorData.error_description || 'Unknown error'}`);
     }
   }
 } 
