@@ -23,6 +23,7 @@ export interface VoiceContextState {
   isSpeaking: boolean;
   isError: boolean;
   chatHistory: { role: 'user' | 'assistant'; content: string; timestamp: number }[];
+  inputMode: 'voice' | 'text';
 }
 
 /**

@@ -8,6 +8,7 @@ import { VoiceState } from '../types/voice';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeModules } from 'react-native';
 import { ConversationHistory } from './ConversationHistory';
+import { TextChatInput } from './TextChatInput';
 
 const { VoiceModule } = NativeModules;
 
@@ -29,9 +30,11 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     voiceState,
     isError,
     chatHistory,
+    inputMode,
     setTranscript,
     interruptSpeech,
-    clearChatHistory
+    clearChatHistory,
+    sendTextMessage
   } = useVoice();
 
   // State for conversation history modal
@@ -84,6 +87,16 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         <VoiceStatusIndicator />
         
         <View style={styles.headerActions}>
+          {/* Input mode indicator */}
+          <View style={styles.modeIndicator}>
+            <Ionicons 
+              name={inputMode === 'voice' ? 'mic' : 'chatbubble'} 
+              size={16} 
+              color="#888888" 
+            />
+            <Text style={styles.modeText}>{inputMode === 'voice' ? 'Voice' : 'Text'}</Text>
+          </View>
+
           {/* Conversation history button */}
           <TouchableOpacity 
             style={styles.historyButton}
@@ -127,7 +140,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         />
       ) : (
         <View style={styles.emptyChatContainer}>
-          <Text style={styles.emptyChatText}>Say "Jarvis" to activate the assistant</Text>
+          <Text style={styles.emptyChatText}>Say "Jarvis" or type a message to start</Text>
         </View>
       )}
       
@@ -144,10 +157,13 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           <Text style={styles.interruptButtonText}>Tap to Interrupt</Text>
         </TouchableOpacity>
       )}
-      
-      <View style={styles.buttonContainer}>
-        {/* <VoiceButton /> */}
-      </View>
+
+      {/* Text input at the bottom */}
+      <TextChatInput 
+        onSendMessage={sendTextMessage}
+        disabled={isListening || isSpeaking}
+        placeholder="Type a message..."
+      />
 
       {/* Conversation History Modal */}
       <ConversationHistory
@@ -163,17 +179,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-    padding: 16,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  modeIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: 'rgba(136, 136, 136, 0.1)',
+    marginRight: 8,
+  },
+  modeText: {
+    color: '#888888',
+    fontSize: 12,
+    marginLeft: 4,
   },
   historyButton: {
     flexDirection: 'row',
@@ -202,7 +233,7 @@ const styles = StyleSheet.create({
   },
   chatList: {
     flex: 1,
-    marginVertical: 16,
+    paddingHorizontal: 16,
   },
   chatBubble: {
     padding: 12,
@@ -233,10 +264,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'right',
   },
-  buttonContainer: {
-    alignItems: 'center',
-    padding: 20,
-  },
   emptyChatContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -256,6 +283,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 25,
     marginBottom: 20,
+    marginHorizontal: 16,
     alignSelf: 'center',
     elevation: 4,
     shadowColor: '#000',

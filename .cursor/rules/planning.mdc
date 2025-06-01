@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+- when creating an implementation plan, do not write any real code, only pseudo code 
+- when you are done save the plan to a markdown file and put it in /dev_mds

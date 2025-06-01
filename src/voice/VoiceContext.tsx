@@ -20,6 +20,7 @@ const VoiceContext = createContext<VoiceContextValue>({
   isListening: false,
   isSpeaking: false,
   isError: false,
+  inputMode: 'voice',
   setVoiceState: () => {},
   setWakeWordEnabled: () => {},
   setError: () => {},
@@ -31,6 +32,10 @@ const VoiceContext = createContext<VoiceContextValue>({
   interruptSpeech: async () => false,
   clearChatHistory: () => {},
   refreshSettings: async () => {},
+  sendTextMessage: async () => {},
+  voiceSettings: {},
+  settingsLoading: false,
+  updateVoiceSettings: async () => {},
 });
 
 interface VoiceProviderProps {
@@ -81,6 +86,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const [transcript, setTranscript] = useState<string>('');
   const [response, setResponse] = useState<string>('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
   
   // Voice service instance
   const voiceService = useMemo(() => VoiceService.getInstance(), []);
@@ -179,6 +185,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       try {
         console.log(`🟡 VOICE_SERVICE: Adding user message to chat history`);
         
+        // Switch to voice mode when processing voice input
+        setInputMode('voice');
+        
         // Create new message
         const newMessage: ChatMessage = {
           role: 'user',
@@ -195,15 +204,10 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             try {
               console.log('🔄 VOICE_CONTEXT: Sending message with current settings');
               
-              // Create FeatureSettings structure for sendMessage
-              const featureSettingsForApi = {
-                voice: voiceSettings
-              };
-              
-              const response = await sendMessage(text, updatedHistory, featureSettingsForApi);
+              const response = await sendMessage(text, updatedHistory);
               console.log('🟠 VOICE_CONTEXT: Received API response');
               
-              // Send response back to native
+              // Send response back to native for TTS (only in voice mode)
               await voiceService.handleApiResponse(requestId, response.response);
               
             } catch (error) {
@@ -328,6 +332,73 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
   }, [voiceStateFromHook]);
   
+  // Send text message using existing API infrastructure
+  const sendTextMessage = useCallback(async (text: string) => {
+    if (!text.trim()) {
+      console.log('📝 TEXT_INPUT: Empty message, ignoring');
+      return;
+    }
+
+    try {
+      console.log('📝 TEXT_INPUT: Processing text message:', text);
+      
+      // Switch to text mode when user sends a text message
+      setInputMode('text');
+      
+      // Create new user message
+      const newMessage: ChatMessage = {
+        role: 'user',
+        content: text.trim(),
+        timestamp: Date.now()
+      };
+      
+      // Add user message to chat history
+      setChatHistory(prev => {
+        const updatedHistory = [...prev, newMessage];
+        
+        // Send to API with updated history in a separate async operation
+        setTimeout(async () => {
+          try {
+            console.log('📝 TEXT_INPUT: Sending message to API');
+            
+            const response = await sendMessage(text.trim(), updatedHistory);
+            console.log('📝 TEXT_INPUT: Received API response');
+            
+            // Add assistant response to chat history
+            const assistantMessage: ChatMessage = {
+              role: 'assistant',
+              content: response.response,
+              timestamp: Date.now()
+            };
+            
+            setChatHistory(prevHistory => [...prevHistory, assistantMessage]);
+            
+            // Note: No TTS playback because we're in text mode
+            console.log('📝 TEXT_INPUT: Response added to chat (no TTS in text mode)');
+            
+          } catch (error) {
+            console.error('📝 TEXT_INPUT: ❌ Error processing text message:', error);
+            
+            // Add error message to chat history
+            const errorMessage: ChatMessage = {
+              role: 'assistant',
+              content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              timestamp: Date.now()
+            };
+            
+            setChatHistory(prevHistory => [...prevHistory, errorMessage]);
+          }
+        }, 0);
+        
+        return updatedHistory;
+      });
+      
+    } catch (error) {
+      console.error('📝 TEXT_INPUT: ❌ Error in sendTextMessage:', error);
+      throw error;
+    }
+  }, [sendMessage, voiceSettings]);
+
   // Context value - now purely bridging to native state
   const value: VoiceContextValue = {
     // Native state (single source of truth)
@@ -342,6 +413,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     transcript,
     response,
     chatHistory,
+    inputMode,
     
     // Voice settings
     voiceSettings,
@@ -360,6 +432,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     interruptSpeech,
     clearChatHistory,
     refreshSettings,
+    sendTextMessage,
   };
   
   return <VoiceContext.Provider value={value}>{children}</VoiceContext.Provider>;

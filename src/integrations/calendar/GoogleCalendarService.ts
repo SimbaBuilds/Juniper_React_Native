@@ -353,6 +353,7 @@ export class GoogleCalendarService {
 
   /**
    * Get upcoming events (next 5 events)
+   * Includes enhanced error handling for 2024 best practices
    */
   async getUpcomingEvents(maxResults: number = 5): Promise<CalendarEvent[]> {
     try {
@@ -360,16 +361,80 @@ export class GoogleCalendarService {
       const response = await this.getEvents('primary', timeMin, undefined, maxResults);
       return response.items || [];
     } catch (error) {
-      console.error('Error fetching upcoming events:', error);
+      console.error('❌ Error fetching upcoming events:', error);
+      
+      // Check if this is an authentication error
+      if (error instanceof Error) {
+        if (error.message.includes('Not authenticated') || 
+            error.message.includes('Your session has expired')) {
+          // Re-throw authentication errors as-is for UI to handle
+          throw error;
+        }
+        
+        if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+          throw new Error('Authentication expired. Please sign in again to access your calendar.');
+        }
+        
+        if (error.message.includes('403') || error.message.includes('Forbidden')) {
+          throw new Error('Access denied. Please check your Google Calendar permissions.');
+        }
+        
+        if (error.message.includes('404')) {
+          throw new Error('Calendar not found. Please check your Google Calendar settings.');
+        }
+      }
+      
+      // For other errors, provide a generic user-friendly message
+      console.warn('⚠️ Returning empty events array due to error');
       return [];
     }
   }
 
   /**
+   * Revoke access token with Google (2024 security best practice)
+   * This should be called before clearing local tokens
+   */
+  private async revokeTokens(): Promise<void> {
+    if (!this.authData?.accessToken) {
+      console.log('No access token to revoke');
+      return;
+    }
+
+    try {
+      console.log('🔒 Revoking access token with Google...');
+      
+      const response = await fetch('https://oauth2.googleapis.com/revoke', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          token: this.authData.accessToken,
+        }),
+      });
+
+      if (response.ok) {
+        console.log('✅ Token revoked successfully with Google');
+      } else {
+        // Don't throw error here - we still want to clear local data
+        // Token might already be expired/invalid
+        console.warn('⚠️ Token revocation failed with Google, but continuing with local cleanup');
+      }
+    } catch (error) {
+      // Don't throw error here - we still want to clear local data
+      console.warn('⚠️ Error during token revocation:', error);
+    }
+  }
+
+  /**
    * Sign out and clear stored credentials
+   * Includes proper token revocation following 2024 best practices
    */
   async signOut(): Promise<void> {
     try {
+      // First revoke tokens with Google
+      await this.revokeTokens();
+      
       // Deactivate integration in Supabase
       await this.deactivateIntegrationInSupabase();
       
@@ -377,10 +442,21 @@ export class GoogleCalendarService {
       this.authData = null;
       await AsyncStorage.removeItem('google_calendar_auth');
       
-      console.log('Google Calendar signed out');
+      console.log('✅ Google Calendar signed out completely');
       this.notifyAuthCallbacks();
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('❌ Error during sign out:', error);
+      
+      // Even if there are errors, clear local data to prevent stuck state
+      this.authData = null;
+      try {
+        await AsyncStorage.removeItem('google_calendar_auth');
+      } catch (storageError) {
+        console.error('❌ Error clearing local storage:', storageError);
+      }
+      
+      this.notifyAuthCallbacks();
+      throw error;
     }
   }
 
@@ -467,35 +543,93 @@ export class GoogleCalendarService {
       throw new Error('No refresh token available');
     }
 
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        client_id: GOOGLE_CONFIG.CLIENT_ID!,
-        refresh_token: this.authData.refreshToken,
-        grant_type: 'refresh_token',
-      }),
-    });
+    try {
+      console.log('🔄 Refreshing access token...');
+      
+      const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: GOOGLE_CONFIG.CLIENT_ID!,
+          refresh_token: this.authData.refreshToken,
+          grant_type: 'refresh_token',
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`Token refresh failed: ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          throw new Error(`Token refresh failed: ${response.status} ${response.statusText}`);
+        }
+
+        console.error('❌ Token refresh error:', errorData);
+
+        // Handle specific error cases according to 2024 best practices
+        if (errorData.error === 'invalid_grant') {
+          // Refresh token has expired, been revoked, or is invalid
+          console.warn('🔒 Refresh token invalid - clearing auth data and requiring re-authentication');
+          await this.signOut();
+          this.notifyAuthCallbacks(); // Notify UI components
+          throw new Error('Your session has expired. Please sign in again to continue accessing Google Calendar.');
+        }
+
+        if (errorData.error === 'invalid_client') {
+          console.error('🔒 OAuth client configuration error');
+          throw new Error('Authentication configuration error. Please contact support.');
+        }
+
+        if (errorData.error === 'unauthorized_client') {
+          console.error('🔒 Client not authorized for refresh token grant');
+          throw new Error('Application authorization error. Please contact support.');
+        }
+
+        // Generic error fallback
+        throw new Error(`Token refresh failed: ${errorData.error} - ${errorData.error_description || 'Unknown error'}`);
+      }
+
+      const tokenData = await response.json();
+      
+      // Update access token
+      this.authData.accessToken = tokenData.access_token;
+      this.authData.expiresAt = Date.now() + (tokenData.expires_in * 1000);
+
+      // Handle refresh token rotation (2024 security best practice)
+      // Google may provide a new refresh token for enhanced security
+      if (tokenData.refresh_token) {
+        console.log('🔄 Refresh token rotated for enhanced security');
+        this.authData.refreshToken = tokenData.refresh_token;
+      }
+
+      // Save updated tokens locally
+      await this.saveAuthData();
+      
+      // Update tokens in Supabase
+      await this.updateTokensInSupabase(tokenData);
+      
+      console.log('✅ Access token refreshed successfully');
+      console.log(`🕐 New token expires at: ${new Date(this.authData.expiresAt).toISOString()}`);
+    } catch (error) {
+      console.error('❌ Token refresh failed:', error);
+      
+      // If this is our custom error about expired session, don't wrap it
+      if (error instanceof Error && error.message.includes('Your session has expired')) {
+        throw error;
+      }
+      
+      // For other errors, provide a user-friendly message
+      throw new Error(`Failed to refresh authentication. Please try signing in again.`);
     }
-
-    const tokenData = await response.json();
-    this.authData.accessToken = tokenData.access_token;
-    this.authData.expiresAt = Date.now() + (tokenData.expires_in * 1000);
-
-    // Save updated tokens locally
-    await this.saveAuthData();
-    
-    // Update tokens in Supabase
-    await this.updateTokensInSupabase(tokenData);
   }
 
   /**
    * Update the access token in Supabase after refresh
+   * Supports refresh token rotation for enhanced security (2024 best practice)
    */
   private async updateTokensInSupabase(tokenData: any): Promise<void> {
     try {
@@ -507,13 +641,22 @@ export class GoogleCalendarService {
       }
 
       const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+      
+      // Prepare update data - always include access token and expiry
+      const updateData: any = {
+        access_token: tokenData.access_token,
+        expires_at: expiresAt.toISOString(),
+      };
+
+      // Include refresh token if it was rotated (2024 security enhancement)
+      if (tokenData.refresh_token) {
+        updateData.refresh_token = tokenData.refresh_token;
+        console.log('💾 Saving rotated refresh token to Supabase');
+      }
 
       const { error } = await supabase
         .from('google_calendar_integrations')
-        .update({ 
-          access_token: tokenData.access_token,
-          expires_at: expiresAt.toISOString(),
-        })
+        .update(updateData)
         .eq('user_id', user.id)
         .eq('is_active', true);
 
@@ -522,20 +665,42 @@ export class GoogleCalendarService {
       }
 
       console.log('✅ Google Calendar tokens updated in Supabase');
+      if (tokenData.refresh_token) {
+        console.log('🔄 Refresh token rotation completed');
+      }
     } catch (error) {
       console.error('❌ Error updating tokens in Supabase:', error);
       // Don't throw here - we still want the local refresh to succeed
+      // But log the error for debugging
+      console.warn('⚠️ Token refresh succeeded locally but failed to sync with Supabase');
     }
   }
 
   private async ensureValidToken(): Promise<void> {
     if (!this.authData) {
-      throw new Error('Not authenticated');
+      throw new Error('Not authenticated. Please sign in to access Google Calendar.');
     }
 
-    // Check if token is expired (with 5 minute buffer)
-    if (Date.now() >= (this.authData.expiresAt - 300000)) {
-      await this.refreshAccessToken();
+    // Check if token is expired (with 5 minute buffer for network latency)
+    const bufferTime = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const isTokenExpired = Date.now() >= (this.authData.expiresAt - bufferTime);
+    
+    if (isTokenExpired) {
+      console.log('🔄 Access token expired, attempting refresh...');
+      try {
+        await this.refreshAccessToken();
+      } catch (error) {
+        console.error('❌ Failed to refresh token:', error);
+        
+        // If refresh failed due to invalid/expired refresh token, 
+        // the refreshAccessToken method will have already cleared auth data
+        // and thrown a user-friendly error message
+        throw error;
+      }
+    } else {
+      // Token is still valid, log remaining time for debugging
+      const remainingMinutes = Math.floor((this.authData.expiresAt - Date.now()) / (1000 * 60));
+      console.log(`✅ Access token valid for ${remainingMinutes} more minutes`);
     }
   }
 
