@@ -2,11 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, ActivityIndicator, Platform, TouchableOpacity, Alert } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import * as Notifications from 'expo-notifications';
-import * as MediaLibrary from 'expo-media-library';
-import * as Device from 'expo-device';
-import * as Location from 'expo-location';
-import { Audio } from 'expo-av';
 
 import { WakeWordToggle } from '../wakeword/components/WakeWordToggle';
 import { WakeWordStatus } from '../wakeword/components/WakeWordStatus';
@@ -15,16 +10,20 @@ import { useFeatureSettings } from './useFeatureSettings';
 import { useAuth } from '../auth/AuthContext';
 import { SettingsToggle } from './components/SettingsToggle';
 import { ExpandableSettingsToggle } from './components/ExpandableSettingsToggle';
-import { SettingsArrayInput } from './components/SettingsArrayInput';
 import { SettingsDropdown } from './components/SettingsDropdown';
 import { SettingsTextInput } from './components/SettingsTextInput';
-import { NewsCategoryManager } from '../features/news/NewsCategoryManager';
-import { GoogleCalendarManager } from '../features/calendar/GoogleCalendarManager';
-import { MODEL_DISPLAY_NAMES, VoiceSettings } from '../features/features';
+import { MODEL_DISPLAY_NAMES } from '../features/features';
 
 type RootStackParamList = {
+  MainTabs: undefined;
   Home: undefined;
   Settings: undefined;
+  Integrations: undefined;
+  Automations: undefined;
+  Memories: undefined;
+  Login: undefined;
+  SignUp: undefined;
+  PhoneSignUp: undefined;
 };
 
 type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Settings'>;
@@ -46,11 +45,6 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const {
     settings,
     loading: settingsLoading,
-    updateTickersSettings,
-    updateNewsSettings,
-    updateCalendarSettings,
-    updateTellMeThingsSettings,
-    updateProjectUnderstandingSettings,
     updateVoiceSettings,
   } = useFeatureSettings();
 
@@ -101,6 +95,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Wake Word</Text>
+          <View style={styles.wakeWordExplanation}>
+            <Text style={styles.explanationText}>
+              The wake word is the word you will use to activate and speak to your assistant.
+              You do not have to have the app open to activate your assistant.
+            </Text>
+          </View>
           <WakeWordToggle />
           <WakeWordStatus />
         </View>
@@ -140,159 +140,6 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           )}
         </View>
-        
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Features</Text>
-
-          <ExpandableSettingsToggle
-            label="Tickers"
-            value={settings.tickers.enabled}
-            onValueChange={(enabled) => updateTickersSettings({ enabled })}
-            description="Track your investments and favorite names"
-            hasSubSettings={true}
-          >
-            <SettingsArrayInput
-              label="Ticker Symbols"
-              values={settings.tickers.tickers}
-              onValuesChange={async (tickers) => {
-                try {
-                  await updateTickersSettings({ tickers });
-                } catch (error) {
-                  console.error('Error updating tickers:', error);
-                  // Could show a toast notification here if needed
-                }
-              }}
-              placeholder="Add ticker symbol (e.g., AAPL, MSFT)..."
-              description="Stock symbols to track in your tickers"
-              maxItems={20}
-            />
-          </ExpandableSettingsToggle>
-
-          <ExpandableSettingsToggle
-            label="News"
-            value={settings.news.enabled}
-            onValueChange={(enabled) => updateNewsSettings({ enabled })}
-            description="Get news updates from your favorite sources"
-            hasSubSettings={true}
-          >
-            <SettingsToggle
-              label="XAI LiveSearch API"
-              value={settings.news.xaiLiveSearchEnabled}
-              onValueChange={(xaiLiveSearchEnabled) => updateNewsSettings({ xaiLiveSearchEnabled })}
-              description="Use XAI LiveSearch for real-time news"
-            />
-
-            <SettingsToggle
-              label="X/Twitter Search"
-              value={settings.news.twitterSearchEnabled}
-              onValueChange={(twitterSearchEnabled) => updateNewsSettings({ twitterSearchEnabled })}
-              description="Search X/Twitter (free tier, 100 requests/month)"
-            />
-
-            <NewsCategoryManager
-              categories={settings.news.categories}
-              onCategoriesChange={async (categories) => {
-                try {
-                  await updateNewsSettings({ categories });
-                } catch (error) {
-                  console.error('Error updating news categories:', error);
-                  // Could show a toast notification here if needed
-                }
-              }}
-              description="Organize your news sources by category with detailed information"
-            />
-          </ExpandableSettingsToggle>
-
-          <ExpandableSettingsToggle
-            label="Calendar"
-            value={settings.calendar.enabled}
-            onValueChange={(enabled) => updateCalendarSettings({ enabled })}
-            description="Calendar integration and event management"
-            hasSubSettings={true}
-          >
-            <GoogleCalendarManager />
-          </ExpandableSettingsToggle>
-
-          <ExpandableSettingsToggle
-            label="Tell Me The Things"
-            value={settings.tellMeThings.enabled}
-            onValueChange={(enabled) => updateTellMeThingsSettings({ enabled })}
-            description="Daily briefing with tickers, news, calendar, and more"
-            hasSubSettings={true}
-          >
-            <SettingsArrayInput
-              label="Trigger Phrases"
-              values={settings.tellMeThings.triggerPhrases}
-              onValuesChange={(triggerPhrases) => updateTellMeThingsSettings({ triggerPhrases })}
-              placeholder="Add trigger phrase..."
-              description="Phrases that activate your daily briefing"
-              maxItems={5}
-            />
-
-            <SettingsToggle
-              label="Include Tickers"
-              value={settings.tellMeThings.includeTickers}
-              onValueChange={(includeTickers) => updateTellMeThingsSettings({ includeTickers })}
-              description="Include tickers updates in briefing"
-            />
-
-            <SettingsToggle
-              label="Include News"
-              value={settings.tellMeThings.includeNews}
-              onValueChange={(includeNews) => updateTellMeThingsSettings({ includeNews })}
-              description="Include news updates in briefing"
-            />
-
-            <SettingsToggle
-              label="Include Calendar"
-              value={settings.tellMeThings.includeCalendar}
-              onValueChange={(includeCalendar) => updateTellMeThingsSettings({ includeCalendar })}
-              description="Include today's calendar in briefing"
-            />
-          </ExpandableSettingsToggle>
-
-          <ExpandableSettingsToggle
-            label="Project Understanding"
-            value={settings.projectUnderstanding.enabled}
-            onValueChange={(enabled) => updateProjectUnderstandingSettings({ enabled })}
-            description="AI note-taking and project management"
-            hasSubSettings={true}
-          >
-            <SettingsToggle
-              label="Google Keep"
-              value={settings.projectUnderstanding.googleKeepEnabled}
-              onValueChange={(googleKeepEnabled) => updateProjectUnderstandingSettings({ googleKeepEnabled })}
-              description="Save notes to Google Keep"
-            />
-
-            <SettingsToggle
-              label="iCloud Notes"
-              value={settings.projectUnderstanding.icloudNotesEnabled}
-              onValueChange={(icloudNotesEnabled) => updateProjectUnderstandingSettings({ icloudNotesEnabled })}
-              description="Save notes to iCloud Notes app"
-            />
-
-            <SettingsToggle
-              label="Google Docs"
-              value={settings.projectUnderstanding.googleDocsEnabled}
-              onValueChange={(googleDocsEnabled) => updateProjectUnderstandingSettings({ googleDocsEnabled })}
-              description="Save notes to Google Docs (default to most recent)"
-            />
-
-            <SettingsToggle
-              label="Email to Self"
-              value={settings.projectUnderstanding.emailToSelfEnabled}
-              onValueChange={(emailToSelfEnabled) => updateProjectUnderstandingSettings({ emailToSelfEnabled })}
-              description="Email notes to yourself"
-            />
-          </ExpandableSettingsToggle>
-        </View>
-
-        <View style={[styles.infoSection, { marginBottom: 20 }]}>
-          <Text style={styles.infoText}>
-            To add a feature, just ask your assistant e.g. "Hey Jarvis, connect with Notion so you can access and edit my project notes".
-          </Text>
-        </View>
 
         {/* Voice Settings Section */}
         <View style={styles.section}>
@@ -328,7 +175,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           />
 
           <SettingsDropdown
-            label="Base Language Model"
+            label="Base Chat Model"
             value={settings.voice.baseLanguageModel}
             onValueChange={async (baseLanguageModel) => {
               try {
@@ -345,11 +192,9 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               { label: MODEL_DISPLAY_NAMES['gpt-4o'], value: 'gpt-4o' as const },
               { label: MODEL_DISPLAY_NAMES['claude-3-5-sonnet-20241022'], value: 'claude-3-5-sonnet-20241022' as const },
             ]}
-            description="Select the language model to use for AI responses"
+            description="Select the language model to use for chat."
           />
         </View>
-        
-
 
         <View style={styles.accountSection}>
           <Text style={styles.accountTitle}>Account</Text>
@@ -412,6 +257,17 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 16,
   },
+  wakeWordExplanation: {
+    backgroundColor: '#1E1E1E',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  explanationText: {
+    color: '#B0B0B0',
+    fontSize: 14,
+    lineHeight: 20,
+  },
   permissionItem: {
     marginBottom: 16,
   },
@@ -430,16 +286,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 14,
     fontWeight: '500',
-  },
-  infoSection: {
-    backgroundColor: '#1E1E1E',
-    padding: 16,
-    borderRadius: 8,
-  },
-  infoText: {
-    color: '#B0B0B0',
-    fontSize: 14,
-    lineHeight: 20,
   },
   accountSection: {
     backgroundColor: '#1E1E1E',

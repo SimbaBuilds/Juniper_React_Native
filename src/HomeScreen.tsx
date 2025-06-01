@@ -1,28 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Platform, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { WakeWordStatus } from './wakeword/components/WakeWordStatus';
 import { WakeWordToggle } from './wakeword/components/WakeWordToggle';
 import { VoiceAssistant } from './voice/components/VoiceAssistant';
 import { VoiceErrorBoundary } from './voice/ErrorBoundary/VoiceErrorBoundary';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useVoice } from './voice/VoiceContext';
-import { Ionicons } from '@expo/vector-icons';
-import DebugApiTest from './api/DebugApiTest';
 
-
-
-type RootStackParamList = {
-  Home: undefined;
-  Settings: undefined;
-};
-
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
-
-type Props = {
-  navigation: HomeScreenNavigationProp;
-};
-
-export const HomeScreen: React.FC<Props> = ({ navigation }) => {
+export const HomeScreen: React.FC = () => {
   const { chatHistory, clearChatHistory } = useVoice();
   
   return (
