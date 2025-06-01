@@ -91,28 +91,17 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
       // Save to database if user is authenticated
       if (user?.id) {
         try {
-          // Get current settings from database or create new ones
-          const currentDbSettings = await DatabaseService.getSettings(user.id);
-          
-          const updatedVoiceSettings = {
-            ...currentDbSettings?.voice_settings,
-            ...Object.keys(updates).reduce((acc, key) => {
-              // Convert camelCase to snake_case for database
-              const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-              acc[dbKey] = updates[key];
-              return acc;
-            }, {} as any)
-          };
+          // Convert camelCase keys to snake_case for database
+          const dbUpdates = Object.keys(updates).reduce((acc, key) => {
+            const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+            acc[dbKey] = updates[key];
+            return acc;
+          }, {} as any);
 
-          const settingsData = {
-            voice_settings: updatedVoiceSettings,
-            feature_settings: currentDbSettings?.feature_settings || {}
-          };
-
-          await DatabaseService.updateSettings(user.id, settingsData);
-          console.log('✅ SETTINGS: Voice settings saved to database');
+          await DatabaseService.updateVoiceSettings(user.id, dbUpdates);
+          console.log('✅ SETTINGS: Voice settings saved to user_profiles table');
         } catch (dbError) {
-          console.error('❌ SETTINGS: Error saving to database:', dbError);
+          console.error('❌ SETTINGS: Error saving to user_profiles table:', dbError);
           // Don't show error to user since local settings still work
         }
       }

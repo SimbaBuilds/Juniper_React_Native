@@ -32,7 +32,7 @@ export const HomeScreen: React.FC = () => {
         
         <View style={styles.infoSection}>
           <Text style={styles.infoText}>
-            Keep wake word detection on to use this app without touching your phone.
+            Say the wake word to activate your assistant.
           </Text>
         </View>
       </View>

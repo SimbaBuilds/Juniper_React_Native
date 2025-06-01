@@ -70,37 +70,73 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   // Create a ref to always have the latest settings
   const latestSettingsRef = useRef(featureSettings);
   
+  // Track if we've already loaded initial settings to prevent infinite loops
+  const initialSettingsLoaded = useRef(false);
+  
   // Load voice settings from database on mount
   useEffect(() => {
+    console.log('🔍 VOICE_CONTEXT: useEffect triggered - user?.id:', user?.id, 'initialSettingsLoaded:', initialSettingsLoaded.current);
+    
     const loadVoiceSettingsFromDatabase = async () => {
-      if (!user?.id) return;
+      if (!user?.id || initialSettingsLoaded.current) {
+        console.log('🔍 VOICE_CONTEXT: Skipping load - no user or already loaded');
+        return;
+      }
       
       try {
-        console.log('🔄 VOICE_CONTEXT: Loading voice settings from database...');
-        const dbSettings = await DatabaseService.getSettings(user.id);
+        console.log('🔄 VOICE_CONTEXT: Loading voice settings from user_profiles...');
+        const voiceSettings = await DatabaseService.getVoiceSettings(user.id);
         
-        if (dbSettings?.voice_settings) {
-          console.log('🔄 VOICE_CONTEXT: Found voice settings in database:', dbSettings.voice_settings);
+        if (voiceSettings) {
+          console.log('🔄 VOICE_CONTEXT: Found voice settings in user_profiles:', voiceSettings);
           
-          // Update local settings with database values
-          await updateVoiceSettings({
-            deepgramEnabled: dbSettings.voice_settings.deepgram_enabled,
-            baseLanguageModel: dbSettings.voice_settings.base_language_model,
-            generalInstructions: dbSettings.voice_settings.general_instructions
-          });
+          // Check if the settings are different before updating to prevent unnecessary cycles
+          const currentVoice = featureSettings.voice;
+          const settingsChanged = (
+            currentVoice.deepgramEnabled !== voiceSettings.deepgram_enabled ||
+            currentVoice.baseLanguageModel !== voiceSettings.base_language_model ||
+            currentVoice.generalInstructions !== voiceSettings.general_instructions
+          );
           
-          console.log('🔄 VOICE_CONTEXT: Updated local voice settings from database');
+          console.log('🔍 VOICE_CONTEXT: Current voice settings:', currentVoice);
+          console.log('🔍 VOICE_CONTEXT: DB voice settings:', voiceSettings);
+          console.log('🔍 VOICE_CONTEXT: Settings changed?', settingsChanged);
+          
+          if (settingsChanged) {
+            console.log('🔄 VOICE_CONTEXT: Settings differ, updating local settings...');
+            // Update local settings with database values
+            await updateVoiceSettings({
+              deepgramEnabled: voiceSettings.deepgram_enabled,
+              baseLanguageModel: voiceSettings.base_language_model,
+              generalInstructions: voiceSettings.general_instructions
+            });
+            console.log('🔄 VOICE_CONTEXT: Updated local voice settings from user_profiles');
+          } else {
+            console.log('🔄 VOICE_CONTEXT: Settings are already in sync, no update needed');
+          }
+          
+          initialSettingsLoaded.current = true;
         } else {
-          console.log('🔄 VOICE_CONTEXT: No voice settings found in database, using local settings');
+          console.log('🔄 VOICE_CONTEXT: No voice settings found in user_profiles, using local settings');
+          initialSettingsLoaded.current = true;
         }
       } catch (error) {
-        console.error('🔄 VOICE_CONTEXT: Error loading voice settings from database:', error);
+        console.error('🔄 VOICE_CONTEXT: Error loading voice settings from user_profiles:', error);
         console.log('🔄 VOICE_CONTEXT: Falling back to local settings');
+        initialSettingsLoaded.current = true;
       }
     };
 
-    loadVoiceSettingsFromDatabase();
-  }, [user?.id, updateVoiceSettings]);
+    // Add a small delay to ensure settings are loaded first
+    const timeoutId = setTimeout(loadVoiceSettingsFromDatabase, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [user?.id]); // Removed updateVoiceSettings from dependency array to prevent infinite loop
+
+  // Reset flag when user changes
+  useEffect(() => {
+    initialSettingsLoaded.current = false;
+  }, [user?.id]);
   
   // Update the ref whenever settings change
   useEffect(() => {
@@ -215,7 +251,19 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
                 }
               }
               
-              const response = await sendMessage(text, updatedHistory, currentSettings);
+              // CRITICAL: Validate voice settings sync before API call
+              console.log('🔍 VOICE_CONTEXT: Validating voice settings sync before API call...');
+              const settingsValidated = await validateVoiceSettingsSync(currentSettings);
+              
+              if (!settingsValidated) {
+                throw new Error('Voice settings validation failed');
+              }
+              
+              // Get the most up-to-date settings after validation
+              const finalSettings = latestSettingsRef.current;
+              console.log('🔍 VOICE_CONTEXT: Final settings for API call:', finalSettings?.voice);
+              
+              const response = await sendMessage(text, updatedHistory, finalSettings);
               
               console.log('🟠 VOICE_CONTEXT: Received API response:', response.response.substring(0, 100) + '...');
               
@@ -352,6 +400,51 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       return false;
     }
   }, [voiceStateFromHook]);
+  
+  // Helper function to validate voice settings match between UI and database
+  const validateVoiceSettingsSync = async (currentSettings: any): Promise<boolean> => {
+    if (!user?.id) return true; // Skip validation if no user
+    
+    try {
+      const dbVoiceSettings = await DatabaseService.getVoiceSettings(user.id);
+      if (!dbVoiceSettings) {
+        console.log('🔍 VOICE_CONTEXT: No database voice settings found, proceeding with local settings');
+        return true;
+      }
+      
+      // Check if critical settings match
+      const settingsMatch = (
+        currentSettings.voice.deepgramEnabled === dbVoiceSettings.deepgram_enabled &&
+        currentSettings.voice.baseLanguageModel === dbVoiceSettings.base_language_model &&
+        currentSettings.voice.generalInstructions === dbVoiceSettings.general_instructions
+      );
+      
+      if (!settingsMatch) {
+        console.warn('🔍 VOICE_CONTEXT: Voice settings mismatch detected!');
+        console.warn('🔍 VOICE_CONTEXT: UI settings:', currentSettings.voice);
+        console.warn('🔍 VOICE_CONTEXT: DB settings:', dbVoiceSettings);
+        
+        // Update local settings to match database
+        await updateVoiceSettings({
+          deepgramEnabled: dbVoiceSettings.deepgram_enabled,
+          baseLanguageModel: dbVoiceSettings.base_language_model,
+          generalInstructions: dbVoiceSettings.general_instructions
+        });
+        
+        console.log('🔍 VOICE_CONTEXT: Local settings updated to match database');
+        
+        // Wait a moment for settings to propagate
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } else {
+        console.log('🔍 VOICE_CONTEXT: Voice settings are in sync');
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('🔍 VOICE_CONTEXT: Error validating voice settings sync:', error);
+      return true; // Proceed anyway to avoid blocking functionality
+    }
+  };
   
   // Context value - now purely bridging to native state
   const value: VoiceContextValue = {

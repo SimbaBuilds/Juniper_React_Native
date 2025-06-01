@@ -16,12 +16,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Database service functions
 export const DatabaseService = {
-  // Settings
-  async getSettings(userId: string) {
+  // User Profile (now contains voice settings)
+  async getUserProfile(userId: string) {
     const { data, error } = await supabase
-      .from('settings')
+      .from('user_profiles')
       .select('*')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .single()
     
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
@@ -31,12 +31,12 @@ export const DatabaseService = {
     return data
   },
 
-  async updateSettings(userId: string, settings: any) {
+  async updateUserProfile(userId: string, updates: any) {
     const { data, error } = await supabase
-      .from('settings')
+      .from('user_profiles')
       .upsert({
-        user_id: userId,
-        ...settings,
+        id: userId,
+        ...updates,
         updated_at: new Date().toISOString()
       })
       .select()
@@ -44,6 +44,37 @@ export const DatabaseService = {
     
     if (error) throw error
     return data
+  },
+
+  // Voice settings helpers (now part of user_profiles)
+  async getVoiceSettings(userId: string) {
+    const profile = await this.getUserProfile(userId)
+    if (!profile) return null
+    
+    return {
+      deepgram_enabled: profile.deepgram_enabled,
+      base_language_model: profile.base_language_model,
+      general_instructions: profile.general_instructions
+    }
+  },
+
+  async updateVoiceSettings(userId: string, voiceSettings: {
+    deepgram_enabled?: boolean;
+    base_language_model?: string;
+    general_instructions?: string;
+  }) {
+    return await this.updateUserProfile(userId, voiceSettings)
+  },
+
+  // Legacy methods for backward compatibility (deprecated)
+  async getSettings(userId: string) {
+    console.warn('getSettings is deprecated, use getUserProfile instead')
+    return await this.getUserProfile(userId)
+  },
+
+  async updateSettings(userId: string, settings: any) {
+    console.warn('updateSettings is deprecated, use updateUserProfile instead')
+    return await this.updateUserProfile(userId, settings)
   },
 
   // Memories

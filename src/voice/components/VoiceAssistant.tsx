@@ -146,7 +146,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       )}
       
       <View style={styles.buttonContainer}>
-        <VoiceButton />
+        {/* <VoiceButton /> */}
       </View>
 
       {/* Conversation History Modal */}
