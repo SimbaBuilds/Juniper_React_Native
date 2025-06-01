@@ -32,18 +32,54 @@ export const DatabaseService = {
   },
 
   async updateUserProfile(userId: string, updates: any) {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .upsert({
+    // First check if profile exists
+    const existingProfile = await this.getUserProfile(userId);
+    
+    if (!existingProfile) {
+      // If profile doesn't exist, create it with complete defaults first
+      const defaultProfile = {
         id: userId,
+        display_name: updates.display_name || null,
+        deepgram_enabled: updates.deepgram_enabled ?? false,
+        base_language_model: updates.base_language_model || 'claude-3-5-sonnet-20241022',
+        general_instructions: updates.general_instructions || 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
+        assistant_name: updates.assistant_name || 'Jarvis',
+        wake_word: updates.wake_word || 'Hey Jarvis',
+        timezone: updates.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        preferences: updates.preferences || {},
+        updated_at: new Date().toISOString()
+      };
+      
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .insert(defaultProfile)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } else {
+      // Profile exists, do a regular update
+      const updateData = {
         ...updates,
         updated_at: new Date().toISOString()
-      })
-      .select()
-      .single()
-    
-    if (error) throw error
-    return data
+      };
+      
+      // Ensure general_instructions is never set to null or empty
+      if ('general_instructions' in updateData && (!updateData.general_instructions || updateData.general_instructions.trim() === '')) {
+        updateData.general_instructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+      }
+      
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update(updateData)
+        .eq('id', userId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    }
   },
 
   // Voice settings helpers (now part of user_profiles)
@@ -63,7 +99,54 @@ export const DatabaseService = {
     base_language_model?: string;
     general_instructions?: string;
   }) {
-    return await this.updateUserProfile(userId, voiceSettings)
+    // First, ensure the user profile exists with all required fields
+    let profile = await this.getUserProfile(userId);
+    
+    if (!profile) {
+      // Create a complete profile with defaults if it doesn't exist
+      const defaultProfile = {
+        id: userId,
+        display_name: null,
+        deepgram_enabled: false,
+        base_language_model: 'claude-3-5-sonnet-20241022',
+        general_instructions: 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
+        assistant_name: 'Jarvis',
+        wake_word: 'Hey Jarvis',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        preferences: {},
+        updated_at: new Date().toISOString()
+      };
+      
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .insert(defaultProfile)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      profile = data;
+    }
+    
+    // Now safely update with the voice settings, ensuring general_instructions is never null
+    const updates = {
+      ...voiceSettings,
+      updated_at: new Date().toISOString()
+    };
+    
+    // Ensure general_instructions always has a value
+    if ('general_instructions' in updates && (!updates.general_instructions || updates.general_instructions.trim() === '')) {
+      updates.general_instructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+    }
+    
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
   },
 
   // Legacy methods for backward compatibility (deprecated)
@@ -151,6 +234,28 @@ export const DatabaseService = {
     
     if (error) throw error
     return data || []
+  },
+
+  // Utility method to fix any existing profiles with null general_instructions
+  async fixNullGeneralInstructions() {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update({
+          general_instructions: 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
+          updated_at: new Date().toISOString()
+        })
+        .is('general_instructions', null)
+        .select();
+      
+      if (error) throw error;
+      
+      console.log('✅ Fixed null general_instructions for profiles:', data?.length || 0);
+      return data;
+    } catch (error) {
+      console.error('❌ Error fixing null general_instructions:', error);
+      throw error;
+    }
   },
 }
         

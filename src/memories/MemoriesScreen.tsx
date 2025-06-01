@@ -8,7 +8,7 @@ interface Memory {
   id: string;
   content: string;
   date: string;
-  tags?: string[];
+  tags: string[];
   title?: string;
   category?: string;
 }
@@ -26,6 +26,14 @@ export const MemoriesScreen: React.FC = () => {
     tags: ''
   });
   const [saving, setSaving] = useState(false);
+
+  // Helper function to ensure memories have proper tags arrays
+  const ensureMemoryTags = (memories: any[]): Memory[] => {
+    return memories.map(memory => ({
+      ...memory,
+      tags: Array.isArray(memory.tags) ? memory.tags : []
+    }));
+  };
 
   // Load memories from database
   useEffect(() => {
@@ -45,7 +53,7 @@ export const MemoriesScreen: React.FC = () => {
           title: memory.title,
           category: memory.category,
           date: new Date(memory.created_at).toISOString().split('T')[0],
-          tags: memory.tags || []
+          tags: Array.isArray(memory.tags) ? memory.tags : []
         }));
 
         // Add default memories if none exist
@@ -70,9 +78,9 @@ export const MemoriesScreen: React.FC = () => {
               tags: ['news', 'tech', 'preferences'],
             },
           ];
-          setMemories(defaultMemories);
+          setMemories(ensureMemoryTags(defaultMemories));
         } else {
-          setMemories(formattedMemories);
+          setMemories(ensureMemoryTags(formattedMemories));
         }
       } catch (err) {
         console.error('Error loading memories:', err);
@@ -115,10 +123,10 @@ export const MemoriesScreen: React.FC = () => {
         title: savedMemory.title,
         category: savedMemory.category,
         date: new Date(savedMemory.created_at).toISOString().split('T')[0],
-        tags: savedMemory.tags || []
+        tags: Array.isArray(savedMemory.tags) ? savedMemory.tags : []
       };
 
-      setMemories(prev => [formattedMemory, ...prev]);
+      setMemories(prev => ensureMemoryTags([formattedMemory, ...prev]));
       
       // Reset form
       setNewMemory({ title: '', content: '', category: '', tags: '' });
@@ -230,9 +238,9 @@ export const MemoriesScreen: React.FC = () => {
                     <View style={styles.memoryContent}>
                       <Text style={styles.memoryText}>{memory.content}</Text>
                     </View>
-                    {memory.tags && memory.tags.length > 0 && (
+                    {memory.tags && Array.isArray(memory.tags) && memory.tags.length > 0 && (
                       <View style={styles.tagsContainer}>
-                        {memory.tags.map((tag, index) => (
+                        {(memory.tags || []).map((tag, index) => (
                           <View key={index} style={styles.tag}>
                             <Text style={styles.tagText}>{tag}</Text>
                           </View>

@@ -1,19 +1,34 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, ActivityIndicator, Platform, TouchableOpacity, Alert } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { WakeWordToggle } from '../wakeword/components/WakeWordToggle';
 import { WakeWordStatus } from '../wakeword/components/WakeWordStatus';
 import { usePermissions } from './usePermissions';
-import { useFeatureSettings } from './useFeatureSettings';
 import { useAuth } from '../auth/AuthContext';
 import { DatabaseService } from '../supabase/supabase';
+import { useVoice } from '../voice/VoiceContext';
 import { SettingsToggle } from './components/SettingsToggle';
 import { ExpandableSettingsToggle } from './components/ExpandableSettingsToggle';
 import { SettingsDropdown } from './components/SettingsDropdown';
 import { SettingsTextInput } from './components/SettingsTextInput';
-import { MODEL_DISPLAY_NAMES } from '../features/features';
+
+// Voice Settings interface
+export interface VoiceSettings {
+  deepgramEnabled: boolean;
+  baseLanguageModel: 'grok-3' | 'grok-3.5' | 'gpt-4o' | 'claude-3-5-sonnet-20241022';
+  generalInstructions: string;
+}
+
+// Model display mapping for UI
+const MODEL_DISPLAY_NAMES = {
+  'grok-3': 'Grok 3',
+  'grok-3.5': 'Grok 3.5', 
+  'gpt-4o': 'GPT 4o',
+  'claude-3-5-sonnet-20241022': 'Claude Sonnet 3.5'
+} as const;
 
 type RootStackParamList = {
   MainTabs: undefined;
@@ -33,6 +48,18 @@ type Props = {
   navigation: SettingsScreenNavigationProp;
 };
 
+// Helper to get display name for a model value
+const getModelDisplayName = (modelValue: VoiceSettings['baseLanguageModel']): string => {
+  return MODEL_DISPLAY_NAMES[modelValue] || modelValue;
+};
+
+// Helper to get model value from display name
+const getModelValueFromDisplayName = (displayName: string): VoiceSettings['baseLanguageModel'] | undefined => {
+  const entries = Object.entries(MODEL_DISPLAY_NAMES) as [VoiceSettings['baseLanguageModel'], string][];
+  const found = entries.find(([_, display]) => display === displayName);
+  return found?.[0];
+};
+
 export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const {
     permissions,
@@ -43,17 +70,109 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
     hasBatteryOptimizationExemption,
   } = usePermissions();
 
-  const {
-    settings,
-    loading: settingsLoading,
-    updateVoiceSettings,
-  } = useFeatureSettings();
-
   const { signOut, user } = useAuth();
+  const { 
+    refreshSettings, 
+    voiceSettings: settings, 
+    settingsLoading, 
+    updateVoiceSettings: updateSettings 
+  } = useVoice();
 
-  const loading = permissionsLoading || settingsLoading;
+  // Add logging for what we receive from VoiceContext
+  console.log('🖥️ SETTINGS_SCREEN: Received settings from VoiceContext:', settings);
+  console.log('🖥️ SETTINGS_SCREEN: Settings loading state:', settingsLoading);
+
+  // Use ref to avoid dependency cycles
+  const refreshSettingsRef = useRef(refreshSettings);
+  refreshSettingsRef.current = refreshSettings;
 
   const [savingToDatabase, setSavingToDatabase] = useState(false);
+  const [loadingFromDatabase, setLoadingFromDatabase] = useState(false);
+  
+  // Include database loading in overall loading state
+  const loading = permissionsLoading || settingsLoading || loadingFromDatabase;
+
+  // Local state for general instructions to avoid database updates on every character
+  const [localGeneralInstructions, setLocalGeneralInstructions] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  console.log('🖥️ SETTINGS_SCREEN: Current localGeneralInstructions state:', localGeneralInstructions);
+  console.log('🖥️ SETTINGS_SCREEN: Has unsaved changes:', hasUnsavedChanges);
+
+  // Initialize and sync local state when settings load or change
+  useEffect(() => {
+    console.log('🖥️ SETTINGS_SCREEN: useEffect triggered for settings.generalInstructions:', settings.generalInstructions);
+    
+    const defaultInstructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+    const currentInstructions = settings.generalInstructions || defaultInstructions;
+    
+    console.log('🖥️ SETTINGS_SCREEN: Setting localGeneralInstructions to:', currentInstructions);
+    setLocalGeneralInstructions(currentInstructions);
+    setHasUnsavedChanges(false);
+    
+    console.log('🖥️ SETTINGS_SCREEN: useEffect completed, localGeneralInstructions should now be:', currentInstructions);
+  }, [settings.generalInstructions]);
+
+  // Refresh settings from database every time user navigates to Settings
+  useFocusEffect(
+    React.useCallback(() => {
+      const refreshSettingsFromDatabase = async () => {
+        if (!user?.id) return;
+        
+        setLoadingFromDatabase(true);
+        
+        try {
+          console.log('🔄 SETTINGS: Refreshing settings from database on focus...');
+          await refreshSettingsRef.current();
+          console.log('✅ SETTINGS: Settings refreshed successfully');
+        } catch (error) {
+          console.error('❌ SETTINGS: Error refreshing settings from database:', error);
+        } finally {
+          setLoadingFromDatabase(false);
+        }
+      };
+
+      refreshSettingsFromDatabase();
+    }, [user?.id])
+  );
+
+  // Fix any existing null general_instructions when user loads settings
+  useEffect(() => {
+    const fixNullInstructions = async () => {
+      if (user?.id) {
+        try {
+          await DatabaseService.fixNullGeneralInstructions();
+        } catch (error) {
+          console.error('Error fixing null general instructions:', error);
+          // Don't show error to user, this is a background fix
+        }
+      }
+    };
+
+    fixNullInstructions();
+  }, [user?.id]);
+
+  // Handle local text changes (no database update)
+  const handleGeneralInstructionsChange = (text: string) => {
+    setLocalGeneralInstructions(text);
+    const defaultInstructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+    const currentSaved = settings.generalInstructions || defaultInstructions;
+    setHasUnsavedChanges(text !== currentSaved);
+  };
+
+  // Save general instructions to database
+  const saveGeneralInstructions = async () => {
+    try {
+      setSavingToDatabase(true);
+      await handleVoiceSettingsUpdate({ generalInstructions: localGeneralInstructions });
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error('Error saving general instructions:', error);
+      Alert.alert('Error', 'Failed to save instructions. Please try again.');
+    } finally {
+      setSavingToDatabase(false);
+    }
+  };
 
   const handleLogout = async () => {
     Alert.alert(
@@ -86,7 +205,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
       setSavingToDatabase(true);
       
       // Update local settings first for immediate UI response
-      await updateVoiceSettings(updates);
+      await updateSettings(updates);
       
       // Save to database if user is authenticated
       if (user?.id) {
@@ -94,7 +213,14 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           // Convert camelCase keys to snake_case for database
           const dbUpdates = Object.keys(updates).reduce((acc, key) => {
             const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-            acc[dbKey] = updates[key];
+            let value = updates[key];
+            
+            // Ensure general_instructions always has a default value
+            if (dbKey === 'general_instructions' && (!value || value.trim() === '')) {
+              value = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+            }
+            
+            acc[dbKey] = value;
             return acc;
           }, {} as any);
 
@@ -114,10 +240,17 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   if (loading) {
+    const getLoadingMessage = () => {
+      if (loadingFromDatabase) return 'Loading settings from database...';
+      if (settingsLoading) return 'Loading local settings...';
+      if (permissionsLoading) return 'Checking permissions...';
+      return 'Loading settings...';
+    };
+
     return (
       <View style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size="large" color="#FFFFFF" />
-        <Text style={styles.loadingText}>Loading settings...</Text>
+        <Text style={styles.loadingText}>{getLoadingMessage()}</Text>
       </View>
     );
   }
@@ -187,20 +320,40 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Voice & AI Settings</Text>
 
-          <SettingsTextInput
-            label="General Instructions"
-            value={settings.voice.generalInstructions}
-            onChangeText={async (generalInstructions) => {
-              await handleVoiceSettingsUpdate({ generalInstructions });
-            }}
-            placeholder="Enter instructions for the AI assistant..."
-            description="Custom instructions to guide the AI's behavior and responses"
-            multiline={true}
-          />
+          <View style={styles.instructionsContainer}>
+            <SettingsTextInput
+              label="General Instructions"
+              value={localGeneralInstructions}
+              onChangeText={handleGeneralInstructionsChange}
+              placeholder="Enter instructions for the AI assistant..."
+              description="Custom instructions to guide the AI's behavior and responses"
+              multiline={true}
+            />
+            
+            {hasUnsavedChanges && (
+              <View style={styles.unsavedChangesContainer}>
+                <Text style={styles.unsavedChangesText}>You have unsaved changes</Text>
+                <TouchableOpacity
+                  style={[styles.saveButton, savingToDatabase && styles.saveButtonDisabled]}
+                  onPress={saveGeneralInstructions}
+                  disabled={savingToDatabase}
+                >
+                  {savingToDatabase ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Ionicons name="save-outline" size={16} color="#FFFFFF" />
+                  )}
+                  <Text style={styles.saveButtonText}>
+                    {savingToDatabase ? 'Saving...' : 'Save'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
 
           <ExpandableSettingsToggle
             label="Deepgram Voice"
-            value={settings.voice.deepgramEnabled}
+            value={settings.deepgramEnabled}
             onValueChange={async (deepgramEnabled) => {
               await handleVoiceSettingsUpdate({ deepgramEnabled });
             }}
@@ -210,9 +363,9 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
           <SettingsDropdown
             label="Language Model"
-            value={settings.voice.baseLanguageModel}
+            value={settings.baseLanguageModel}
             options={Object.entries(MODEL_DISPLAY_NAMES).map(([value, label]) => ({
-              label,
+              label: label as string,
               value: value as any,
             }))}
             onValueChange={async (baseLanguageModel) => {
@@ -362,6 +515,34 @@ const styles = StyleSheet.create({
   savingText: {
     color: '#4A90E2',
     fontSize: 14,
+    marginLeft: 8,
+  },
+  instructionsContainer: {
+    marginBottom: 24,
+  },
+  unsavedChangesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  unsavedChangesText: {
+    color: '#B0B0B0',
+    fontSize: 14,
+  },
+  saveButton: {
+    backgroundColor: '#4A90E2',
+    padding: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#333333',
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
     marginLeft: 8,
   },
 }); 

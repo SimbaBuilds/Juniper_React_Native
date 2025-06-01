@@ -1,6 +1,5 @@
 import { ChatMessage } from '../voice/VoiceContext';
 import SettingsService from '../app-config/AppConfigService';
-import { FeatureSettings } from '../features/features';
 import api from './api';
 
 // Helper function to convert camelCase to snake_case
@@ -111,7 +110,6 @@ class ServerApiService {
     message: string,
     history: ChatMessage[],
     preferences?: ChatRequest['preferences'],
-    featureSettings?: FeatureSettings  // Keep for local model extraction but don't send to API
   ): Promise<ChatResponse> {
     // Queue requests to prevent concurrent auth issues
     return this.requestQueue = this.requestQueue.then(async () => {
@@ -129,16 +127,7 @@ class ServerApiService {
           response_type: 'concise'
         };
         
-        // Add model from voice settings if available
-        console.log('🔴 SERVER_API: Model from settings:', featureSettings?.voice?.baseLanguageModel);
-        
-        if (featureSettings?.voice?.baseLanguageModel) {
-          defaultPreferences.model = featureSettings.voice.baseLanguageModel;
-          console.log(`🔴 SERVER_API: Using model: ${featureSettings.voice.baseLanguageModel}`);
-        } else {
-          console.log('🔴 SERVER_API: No baseLanguageModel found, using default');
-        }
-        
+
         const jsonData: ChatRequest = {
           message,
           timestamp: Date.now(),

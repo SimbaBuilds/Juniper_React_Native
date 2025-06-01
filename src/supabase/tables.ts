@@ -62,6 +62,7 @@ export type UserProfile = {
     category?: string;
     title: string;
     content: string;
+    tags: string[];
     importance_score: number;
     embedding?: number[];
     decay_factor: number;
