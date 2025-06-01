@@ -13,63 +13,10 @@ function toSnakeCase(str: string): string {
   return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 }
 
-// Helper function to transform object keys to snake_case recursively
-function transformToSnakeCase(obj: any): any {
-  if (Array.isArray(obj)) {
-    return obj.map(transformToSnakeCase);
-  }
-  
-  if (obj !== null && typeof obj === 'object') {
-    return Object.keys(obj).reduce((acc, key) => {
-      const snakeKey = toSnakeCase(key);
-      const value = obj[key];
-      
-      // Special handling for feature settings
-      if (key === 'featureSettings') {
-        acc['feature_settings'] = transformToSnakeCase(value);
-      } else {
-        acc[snakeKey] = transformToSnakeCase(value);
-      }
-      
-      return acc;
-    }, {} as any);
-  }
-  
-  return obj;
-}
 
 /**
  * Prepare feature settings for API call by removing categories and capping array lengths
  */
-function prepareFeatureSettingsForApi(featureSettings: FeatureSettings): FeatureSettings {
-  const prepared = { ...featureSettings };
-  
-  // Remove categories from news settings (backend will fetch from database)
-  if (prepared.news) {
-    prepared.news = {
-      ...prepared.news,
-      categories: [] // Remove categories - backend will fetch from DB
-    };
-  }
-  
-  // Cap tickers array to 20 items
-  if (prepared.tickers?.tickers) {
-    prepared.tickers = {
-      ...prepared.tickers,
-      tickers: prepared.tickers.tickers.slice(0, 20)
-    };
-  }
-  
-  // Cap trigger phrases to 5 items
-  if (prepared.tellMeThings?.triggerPhrases) {
-    prepared.tellMeThings = {
-      ...prepared.tellMeThings,
-      triggerPhrases: prepared.tellMeThings.triggerPhrases.slice(0, 5)
-    };
-  }
-  
-  return prepared;
-}
 
 // Default server configuration
 const DEFAULT_SERVER_CONFIG = {
@@ -103,7 +50,7 @@ export interface ChatRequest {
     model?: string; // Language model to use (e.g., 'grok-3', 'grok-3.5', 'gpt-4o', 'claude-3-5-sonnet-20241022')
     [key: string]: any;
   };
-  feature_settings?: any; // Using any since we transform it to snake_case
+  // feature_settings removed - backend will fetch from database
 }
 
 /**
@@ -164,7 +111,7 @@ class ServerApiService {
     message: string,
     history: ChatMessage[],
     preferences?: ChatRequest['preferences'],
-    featureSettings?: FeatureSettings
+    featureSettings?: FeatureSettings  // Keep for local model extraction but don't send to API
   ): Promise<ChatResponse> {
     // Queue requests to prevent concurrent auth issues
     return this.requestQueue = this.requestQueue.then(async () => {
@@ -175,26 +122,6 @@ class ServerApiService {
         // Add a delay to ensure previous operations are complete (longer for Android)
         console.log('🔴 SERVER_API: Adding delay for Android stability...');
         await new Promise(resolve => setTimeout(resolve, 150));
-        
-        // Prepare and transform feature settings
-        let transformedFeatureSettings;
-        if (featureSettings) {
-          console.log('🔴 SERVER_API: Original settings:', {
-            tickersCount: featureSettings.tickers?.tickers?.length || 0,
-            triggerPhrasesCount: featureSettings.tellMeThings?.triggerPhrases?.length || 0,
-            categoriesCount: featureSettings.news?.categories?.length || 0
-          });
-          
-          const preparedSettings = prepareFeatureSettingsForApi(featureSettings);
-          transformedFeatureSettings = transformToSnakeCase(preparedSettings);
-          
-          console.log('🔴 SERVER_API: Prepared settings:', {
-            tickersCount: preparedSettings.tickers?.tickers?.length || 0,
-            triggerPhrasesCount: preparedSettings.tellMeThings?.triggerPhrases?.length || 0,
-            categoriesCount: preparedSettings.news?.categories?.length || 0
-          });
-          console.log('🔴 SERVER_API: Prepared settings (removed categories, capped arrays)');
-        }
         
         // Extract baseLanguageModel from voice settings and include it in preferences
         const defaultPreferences: ChatRequest['preferences'] = {
@@ -224,8 +151,8 @@ class ServerApiService {
           preferences: {
             ...defaultPreferences,
             ...preferences // Allow override of defaults with passed preferences
-          },
-          feature_settings: transformedFeatureSettings // Use snake_case key
+          }
+          // feature_settings removed - backend will fetch from database
         };
 
         history.forEach((message, index) => {

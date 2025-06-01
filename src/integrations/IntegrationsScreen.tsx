@@ -1,7 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GoogleCalendarManager } from './calendar/GoogleCalendarManager';
+import { DatabaseService } from '../supabase/supabase';
+import { useAuth } from '../auth/AuthContext';
 
 interface Integration {
   id: string;
@@ -13,43 +15,123 @@ interface Integration {
 }
 
 export const IntegrationsScreen: React.FC = () => {
-  const integrations: Integration[] = [
-    {
-      id: 'google-calendar',
-      name: 'Google Calendar',
-      connected: false, // This will be determined by GoogleCalendarManager
-      icon: 'calendar-outline',
-    },
-    {
-      id: 'outlook-calendar',
-      name: 'Outlook Calendar',
-      connected: false,
-      icon: 'calendar-outline',
-    },
-    {
-      id: 'gmail',
-      name: 'Gmail',
-      connected: false,
-      icon: 'mail-outline',
-    },
-    {
-      id: 'outlook-email',
-      name: 'Outlook Email',
-      connected: false,
-      icon: 'mail-outline',
-    },
-    {
-      id: 'notion',
-      name: 'Notion',
-      connected: false,
-      icon: 'document-text-outline',
-    },
-  ];
+  const { user } = useAuth();
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load integrations from database
+  useEffect(() => {
+    const loadIntegrations = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const dbIntegrations = await DatabaseService.getIntegrations(user.id);
+        
+        // Convert database integrations to UI format
+        const formattedIntegrations: Integration[] = dbIntegrations.map((integration: any) => ({
+          id: integration.id,
+          name: integration.integration_type,
+          credentials: integration.configuration?.credentials || 'Not configured',
+          automations: integration.configuration?.automations || [],
+          connected: integration.is_active,
+          icon: getIconForIntegrationType(integration.integration_type)
+        }));
+
+        // Add default integrations if none exist
+        if (formattedIntegrations.length === 0) {
+          const defaultIntegrations: Integration[] = [
+            {
+              id: 'gmail',
+              name: 'Gmail',
+              credentials: 'Not configured',
+              automations: [],
+              connected: false,
+              icon: 'mail',
+            },
+            {
+              id: 'outlook-email',
+              name: 'Outlook Email',
+              credentials: 'Not configured',
+              automations: [],
+              connected: false,
+              icon: 'mail-outline',
+            },
+            {
+              id: 'outlook-calendar',
+              name: 'Outlook Calendar',
+              credentials: 'Not configured',
+              automations: [],
+              connected: false,
+              icon: 'calendar-outline',
+            },
+            {
+              id: 'notion',
+              name: 'Notion',
+              credentials: 'Not configured',
+              automations: [],
+              connected: false,
+              icon: 'document-text',
+            },
+          ];
+          setIntegrations(defaultIntegrations);
+        } else {
+          setIntegrations(formattedIntegrations);
+        }
+      } catch (err) {
+        console.error('Error loading integrations:', err);
+        setError('Failed to load integrations');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadIntegrations();
+  }, [user?.id]);
+
+  const getIconForIntegrationType = (type: string): keyof typeof Ionicons.glyphMap => {
+    switch (type.toLowerCase()) {
+      case 'gmail':
+      case 'email':
+        return 'mail';
+      case 'outlook':
+        return 'mail-outline';
+      case 'calendar':
+        return 'calendar';
+      case 'notion':
+        return 'document-text';
+      default:
+        return 'link';
+    }
+  };
 
   const handleConnectPlaceholder = (integrationName: string) => {
-    // Placeholder - not implemented yet
-    console.log(`Connect ${integrationName} - not implemented yet`);
+    console.log(`Connect ${integrationName} placeholder`);
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4A90E2" />
+          <Text style={styles.loadingText}>Loading integrations...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -62,27 +144,20 @@ export const IntegrationsScreen: React.FC = () => {
           <Text style={styles.instructionsTitle}>How to Add Integrations</Text>
           <Text style={styles.instructionsText}>
             To add an integration, simply ask your assistant:{'\n'}
-            "Connect with my Tesla so I can tell it when to pick up my mother."
+            "Connect with my Tesla so I can tell it when to pick up my daughter."
             {'\n\n'}
             Your assistant will make the connection or scope out integration time and cost.
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Built-in Integrations</Text>
-          
-          {/* Google Calendar - Special handling with existing manager */}
-          <View style={styles.integrationCard}>
-            <View style={styles.integrationHeader}>
-              <View style={styles.integrationTitleRow}>
-                <Ionicons name="calendar-outline" size={24} color="#4A90E2" />
-                <Text style={styles.integrationName}>Google Calendar</Text>
-              </View>
-            </View>
-            <GoogleCalendarManager />
-          </View>
+          <Text style={styles.sectionTitle}>Google Calendar</Text>
+          <GoogleCalendarManager />
+        </View>
 
-          {/* Other integrations */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Available Integrations</Text>
+          
           {integrations.filter(integration => integration.id !== 'google-calendar').map((integration) => (
             <View key={integration.id} style={styles.integrationCard}>
               <View style={styles.integrationHeader}>
@@ -227,5 +302,27 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '500',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '500',
+    marginTop: 12,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: '#F44336',
+    fontSize: 18,
+    fontWeight: '500',
+    marginTop: 12,
   },
 }); 

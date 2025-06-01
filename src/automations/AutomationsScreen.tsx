@@ -1,6 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { DatabaseService } from '../supabase/supabase';
+import { useAuth } from '../auth/AuthContext';
 
 interface Automation {
   id: string;
@@ -10,26 +12,87 @@ interface Automation {
 }
 
 export const AutomationsScreen: React.FC = () => {
-  const automations: Automation[] = [
-    {
-      id: '1',
-      name: 'Add Starship missions to calendar',
-      integrations: ['Google Calendar', 'SpaceX API'],
-      enabled: true,
-    },
-    {
-      id: '2',
-      name: 'Daily stock briefing',
-      integrations: ['Finance API'],
-      enabled: true,
-    },
-    {
-      id: '3',
-      name: 'Weather-based reminders',
-      integrations: ['Weather API', 'Push Notifications'],
-      enabled: false,
-    },
-  ];
+  const { user } = useAuth();
+  const [automations, setAutomations] = useState<Automation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load automations from database
+  useEffect(() => {
+    const loadAutomations = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const dbAutomations = await DatabaseService.getAutomations(user.id);
+        
+        // Convert database automations to UI format
+        const formattedAutomations: Automation[] = dbAutomations.map((automation: any) => ({
+          id: automation.id,
+          name: automation.name,
+          integrations: automation.actions?.integrations || [],
+          enabled: automation.is_active,
+        }));
+
+        // Add default automations if none exist
+        if (formattedAutomations.length === 0) {
+          const defaultAutomations: Automation[] = [
+            {
+              id: '1',
+              name: 'Add Starship missions to calendar',
+              integrations: ['Google Calendar', 'SpaceX API'],
+              enabled: true,
+            },
+            {
+              id: '2',
+              name: 'Daily stock briefing',
+              integrations: ['Finance API'],
+              enabled: true,
+            },
+            {
+              id: '3',
+              name: 'Weather-based reminders',
+              integrations: ['Weather API', 'Push Notifications'],
+              enabled: false,
+            },
+          ];
+          setAutomations(defaultAutomations);
+        } else {
+          setAutomations(formattedAutomations);
+        }
+      } catch (err) {
+        console.error('Error loading automations:', err);
+        setError('Failed to load automations');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAutomations();
+  }, [user?.id]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4A90E2" />
+          <Text style={styles.loadingText}>Loading automations...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -255,5 +318,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#B0B0B0',
     lineHeight: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginTop: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginTop: 16,
   },
 }); 

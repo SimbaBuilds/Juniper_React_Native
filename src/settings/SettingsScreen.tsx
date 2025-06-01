@@ -8,6 +8,7 @@ import { WakeWordStatus } from '../wakeword/components/WakeWordStatus';
 import { usePermissions } from './usePermissions';
 import { useFeatureSettings } from './useFeatureSettings';
 import { useAuth } from '../auth/AuthContext';
+import { DatabaseService } from '../supabase/supabase';
 import { SettingsToggle } from './components/SettingsToggle';
 import { ExpandableSettingsToggle } from './components/ExpandableSettingsToggle';
 import { SettingsDropdown } from './components/SettingsDropdown';
@@ -52,6 +53,8 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
   const loading = permissionsLoading || settingsLoading;
 
+  const [savingToDatabase, setSavingToDatabase] = useState(false);
+
   const handleLogout = async () => {
     Alert.alert(
       'Logout',
@@ -77,6 +80,50 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
     );
   };
 
+  // Enhanced voice settings update function that saves to both local and database
+  const handleVoiceSettingsUpdate = async (updates: any) => {
+    try {
+      setSavingToDatabase(true);
+      
+      // Update local settings first for immediate UI response
+      await updateVoiceSettings(updates);
+      
+      // Save to database if user is authenticated
+      if (user?.id) {
+        try {
+          // Get current settings from database or create new ones
+          const currentDbSettings = await DatabaseService.getSettings(user.id);
+          
+          const updatedVoiceSettings = {
+            ...currentDbSettings?.voice_settings,
+            ...Object.keys(updates).reduce((acc, key) => {
+              // Convert camelCase to snake_case for database
+              const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+              acc[dbKey] = updates[key];
+              return acc;
+            }, {} as any)
+          };
+
+          const settingsData = {
+            voice_settings: updatedVoiceSettings,
+            feature_settings: currentDbSettings?.feature_settings || {}
+          };
+
+          await DatabaseService.updateSettings(user.id, settingsData);
+          console.log('✅ SETTINGS: Voice settings saved to database');
+        } catch (dbError) {
+          console.error('❌ SETTINGS: Error saving to database:', dbError);
+          // Don't show error to user since local settings still work
+        }
+      }
+    } catch (error) {
+      console.error('Error updating voice settings:', error);
+      Alert.alert('Error', 'Failed to update settings');
+    } finally {
+      setSavingToDatabase(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
@@ -91,6 +138,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>Settings</Text>
+          {savingToDatabase && (
+            <View style={styles.savingIndicator}>
+              <ActivityIndicator size="small" color="#4A90E2" />
+              <Text style={styles.savingText}>Saving...</Text>
+            </View>
+          )}
         </View>
         
         <View style={styles.section}>
@@ -111,14 +164,14 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.permissionItem}>
             <Text style={styles.permissionTitle}>Microphone Access</Text>
             <Text style={styles.permissionStatus}>
-              Status: {hasMicrophonePermission ? '✅ Granted' : '❌ Not Granted'}
+              Status: {hasMicrophonePermission ? '✅ Granted' : '❌ Denied'}
             </Text>
             {!hasMicrophonePermission && (
               <Text 
                 style={styles.permissionButton}
                 onPress={requestMicrophone}
               >
-                Grant Microphone Permission
+                Request Permission
               </Text>
             )}
           </View>
@@ -149,11 +202,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             label="General Instructions"
             value={settings.voice.generalInstructions}
             onChangeText={async (generalInstructions) => {
-              try {
-                await updateVoiceSettings({ generalInstructions });
-              } catch (error) {
-                console.error('Error updating voice settings:', error);
-              }
+              await handleVoiceSettingsUpdate({ generalInstructions });
             }}
             placeholder="Enter instructions for the AI assistant..."
             description="Custom instructions to guide the AI's behavior and responses"
@@ -164,35 +213,23 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             label="Deepgram Voice"
             value={settings.voice.deepgramEnabled}
             onValueChange={async (deepgramEnabled) => {
-              try {
-                await updateVoiceSettings({ deepgramEnabled });
-              } catch (error) {
-                console.error('Error updating voice settings:', error);
-              }
+              await handleVoiceSettingsUpdate({ deepgramEnabled });
             }}
             description="Enhanced voice recognition with Deepgram"
             hasSubSettings={true}
           />
 
           <SettingsDropdown
-            label="Base Chat Model"
+            label="Language Model"
             value={settings.voice.baseLanguageModel}
+            options={Object.entries(MODEL_DISPLAY_NAMES).map(([value, label]) => ({
+              label,
+              value: value as any,
+            }))}
             onValueChange={async (baseLanguageModel) => {
-              try {
-                console.log('🎯 SETTINGS_SCREEN: Updating base language model to:', baseLanguageModel);
-                await updateVoiceSettings({ baseLanguageModel });
-                console.log('🎯 SETTINGS_SCREEN: ✅ Base language model updated successfully');
-              } catch (error) {
-                console.error('🎯 SETTINGS_SCREEN: ❌ Error updating base language model:', error);
-              }
+              await handleVoiceSettingsUpdate({ baseLanguageModel });
             }}
-            options={[
-              { label: MODEL_DISPLAY_NAMES['grok-3'], value: 'grok-3' as const },
-              { label: MODEL_DISPLAY_NAMES['grok-3.5'], value: 'grok-3.5' as const },
-              { label: MODEL_DISPLAY_NAMES['gpt-4o'], value: 'gpt-4o' as const },
-              { label: MODEL_DISPLAY_NAMES['claude-3-5-sonnet-20241022'], value: 'claude-3-5-sonnet-20241022' as const },
-            ]}
-            description="Select the language model to use for chat."
+            description="Choose the AI model for processing your requests"
           />
         </View>
 
@@ -328,5 +365,14 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 14,
     color: '#FFFFFF',
+  },
+  savingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  savingText: {
+    color: '#4A90E2',
+    fontSize: 14,
+    marginLeft: 8,
   },
 }); 

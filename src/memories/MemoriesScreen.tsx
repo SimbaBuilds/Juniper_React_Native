@@ -1,53 +1,137 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { DatabaseService } from '../supabase/supabase';
+import { useAuth } from '../auth/AuthContext';
 
 interface Memory {
   id: string;
   content: string;
   date: string;
   tags?: string[];
+  title?: string;
+  category?: string;
 }
 
 export const MemoriesScreen: React.FC = () => {
-  const memories: Memory[] = [
-    {
-      id: '1',
-      content: 'Favorite coffee shop is Blue Bottle Coffee on Market Street - they make excellent cortados',
-      date: '2024-05-30',
-      tags: ['coffee', 'location', 'preferences'],
-    },
-    {
-      id: '2',
-      content: 'Meeting with design team every Tuesday at 2 PM in conference room B',
-      date: '2024-05-29',
-      tags: ['meetings', 'schedule', 'work'],
-    },
-    {
-      id: '3',
-      content: 'Preferred news sources: TechCrunch, The Verge, Hacker News for tech updates',
-      date: '2024-05-28',
-      tags: ['news', 'tech', 'preferences'],
-    },
-    {
-      id: '4',
-      content: 'Tesla Model Y is in parking spot #15 at the office building',
-      date: '2024-05-27',
-      tags: ['car', 'location', 'parking'],
-    },
-    {
-      id: '5',
-      content: 'Sister\'s birthday is October 15th - always sends flowers from local florist',
-      date: '2024-05-25',
-      tags: ['family', 'birthday', 'personal'],
-    },
-    {
-      id: '6',
-      content: 'Workout schedule: Monday, Wednesday, Friday at 7 AM at the gym',
-      date: '2024-05-20',
-      tags: ['fitness', 'schedule', 'health'],
-    },
-  ];
+  const { user } = useAuth();
+  const [memories, setMemories] = useState<Memory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newMemory, setNewMemory] = useState({
+    title: '',
+    content: '',
+    category: '',
+    tags: ''
+  });
+  const [saving, setSaving] = useState(false);
+
+  // Load memories from database
+  useEffect(() => {
+    const loadMemories = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const dbMemories = await DatabaseService.getMemories(user.id);
+        
+        // Convert database memories to UI format
+        const formattedMemories: Memory[] = dbMemories.map((memory: any) => ({
+          id: memory.id,
+          content: memory.content,
+          title: memory.title,
+          category: memory.category,
+          date: new Date(memory.created_at).toISOString().split('T')[0],
+          tags: memory.tags || []
+        }));
+
+        // Add default memories if none exist
+        if (formattedMemories.length === 0) {
+          const defaultMemories: Memory[] = [
+            {
+              id: '1',
+              content: 'Favorite coffee shop is Blue Bottle Coffee on Market Street - they make excellent cortados',
+              date: '2024-05-30',
+              tags: ['coffee', 'location', 'preferences'],
+            },
+            {
+              id: '2',
+              content: 'Meeting with design team every Tuesday at 2 PM in conference room B',
+              date: '2024-05-29',
+              tags: ['meetings', 'schedule', 'work'],
+            },
+            {
+              id: '3',
+              content: 'Preferred news sources: TechCrunch, The Verge, Hacker News for tech updates',
+              date: '2024-05-28',
+              tags: ['news', 'tech', 'preferences'],
+            },
+          ];
+          setMemories(defaultMemories);
+        } else {
+          setMemories(formattedMemories);
+        }
+      } catch (err) {
+        console.error('Error loading memories:', err);
+        setError('Failed to load memories');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMemories();
+  }, [user?.id]);
+
+  const handleAddMemory = async () => {
+    if (!user?.id || !newMemory.content.trim()) {
+      Alert.alert('Error', 'Please enter memory content');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      
+      const memoryData = {
+        title: newMemory.title.trim() || null,
+        content: newMemory.content.trim(),
+        category: newMemory.category.trim() || null,
+        memory_type: 'user_created',
+        importance_score: 5,
+        decay_factor: 1.0,
+        auto_committed: false,
+        tags: newMemory.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0),
+        last_accessed: new Date().toISOString()
+      };
+
+      const savedMemory = await DatabaseService.createMemory(user.id, memoryData);
+      
+      // Add to local state
+      const formattedMemory: Memory = {
+        id: savedMemory.id,
+        content: savedMemory.content,
+        title: savedMemory.title,
+        category: savedMemory.category,
+        date: new Date(savedMemory.created_at).toISOString().split('T')[0],
+        tags: savedMemory.tags || []
+      };
+
+      setMemories(prev => [formattedMemory, ...prev]);
+      
+      // Reset form
+      setNewMemory({ title: '', content: '', category: '', tags: '' });
+      setShowAddModal(false);
+      
+      Alert.alert('Success', 'Memory saved successfully');
+    } catch (err) {
+      console.error('Error saving memory:', err);
+      Alert.alert('Error', 'Failed to save memory');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr);
@@ -78,20 +162,48 @@ export const MemoriesScreen: React.FC = () => {
     new Date(groupedMemories[b][0].date).getTime() - new Date(groupedMemories[a][0].date).getTime()
   );
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4A90E2" />
+          <Text style={styles.loadingText}>Loading memories...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>Memories</Text>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => setShowAddModal(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="add" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.instructionsSection}>
           <Text style={styles.instructionsTitle}>How to Add Memories</Text>
           <Text style={styles.instructionsText}>
-            Or add a memory by telling your assistant:{'\n'}
+            Add a memory by telling your assistant:{'\n'}
             "Remember my favorite news sources for future reference."
             {'\n\n'}
-            Your assistant will automatically save important information for easy retrieval later.
+            Or use the + button to manually add a memory.
           </Text>
         </View>
 
@@ -103,7 +215,7 @@ export const MemoriesScreen: React.FC = () => {
               <Ionicons name="bulb-outline" size={48} color="#666666" />
               <Text style={styles.emptyStateText}>No memories saved yet</Text>
               <Text style={styles.emptyStateSubtext}>
-                Tell your assistant something to remember and it will appear here
+                Tell your assistant something to remember or tap the + button
               </Text>
             </View>
           ) : (
@@ -112,6 +224,9 @@ export const MemoriesScreen: React.FC = () => {
                 <Text style={styles.dateHeader}>{date}</Text>
                 {groupedMemories[date].map((memory) => (
                   <View key={memory.id} style={styles.memoryCard}>
+                    {memory.title && (
+                      <Text style={styles.memoryTitle}>{memory.title}</Text>
+                    )}
                     <View style={styles.memoryContent}>
                       <Text style={styles.memoryText}>{memory.content}</Text>
                     </View>
@@ -160,6 +275,85 @@ export const MemoriesScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* Add Memory Modal */}
+      <Modal
+        visible={showAddModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              onPress={() => setShowAddModal(false)}
+              style={styles.modalCloseButton}
+            >
+              <Text style={styles.modalCloseText}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Add Memory</Text>
+            <TouchableOpacity
+              onPress={handleAddMemory}
+              style={[styles.modalSaveButton, saving && styles.modalSaveButtonDisabled]}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.modalSaveText}>Save</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Title (Optional)</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newMemory.title}
+                onChangeText={(text) => setNewMemory(prev => ({ ...prev, title: text }))}
+                placeholder="Enter a title for this memory"
+                placeholderTextColor="#666666"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Content *</Text>
+              <TextInput
+                style={[styles.textInput, styles.textArea]}
+                value={newMemory.content}
+                onChangeText={(text) => setNewMemory(prev => ({ ...prev, content: text }))}
+                placeholder="What would you like to remember?"
+                placeholderTextColor="#666666"
+                multiline
+                numberOfLines={4}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Category (Optional)</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newMemory.category}
+                onChangeText={(text) => setNewMemory(prev => ({ ...prev, category: text }))}
+                placeholder="e.g., personal, work, preferences"
+                placeholderTextColor="#666666"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Tags (Optional)</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newMemory.tags}
+                onChangeText={(text) => setNewMemory(prev => ({ ...prev, tags: text }))}
+                placeholder="Separate tags with commas"
+                placeholderTextColor="#666666"
+              />
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -173,12 +367,23 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 24,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+  addButton: {
+    backgroundColor: '#4A90E2',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   instructionsSection: {
     backgroundColor: '#1E1E1E',
@@ -223,6 +428,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
+  },
+  memoryTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    marginBottom: 8,
   },
   memoryContent: {
     marginBottom: 12,
@@ -276,5 +487,90 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     marginLeft: 12,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginTop: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginTop: 16,
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3A3A3A',
+  },
+  modalCloseButton: {
+    padding: 8,
+  },
+  modalCloseText: {
+    color: '#4A90E2',
+    fontSize: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#FFFFFF',
+  },
+  modalSaveButton: {
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  modalSaveButtonDisabled: {
+    opacity: 0.5,
+  },
+  modalSaveText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  modalContent: {
+    flex: 1,
+    padding: 16,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  textInput: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
   },
 }); 

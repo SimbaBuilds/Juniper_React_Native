@@ -44,6 +44,7 @@ export interface ProjectUnderstandingSettings {
   emailToSelfEnabled: boolean;
 }
 
+// Voice Settings - kept local for immediate UI responsiveness
 export interface VoiceSettings {
   deepgramEnabled: boolean;
   baseLanguageModel: 'grok-3' | 'grok-3.5' | 'gpt-4o' | 'claude-3-5-sonnet-20241022';
@@ -70,45 +71,13 @@ export const getModelValueFromDisplayName = (displayName: string): VoiceSettings
   return found?.[0];
 };
 
+// Simplified FeatureSettings for local use - other settings now managed in database
 export interface FeatureSettings {
-  tickers: TickersSettings;
-  news: NewsSettings;
-  calendar: CalendarSettings;
-  tellMeThings: TellMeThingsSettings;
-  projectUnderstanding: ProjectUnderstandingSettings;
   voice: VoiceSettings;
 }
 
-// Default settings
+// Default voice settings
 export const defaultFeatureSettings: FeatureSettings = {
-  tickers: {
-    enabled: false,
-    tickers: ['SPX'],
-  },
-  news: {
-    enabled: false,
-    xaiLiveSearchEnabled: false,
-    twitterSearchEnabled: false,
-    categories: [],
-  },
-  calendar: {
-    enabled: false,
-    refreshToken: ''
-  },
-  tellMeThings: {
-    enabled: false,
-    triggerPhrases: ['tell me the things', 'do the thing', 'morning'],
-    includeTickers: true,
-    includeNews: true,
-    includeCalendar: true,
-  },
-  projectUnderstanding: {
-    enabled: false,
-    googleKeepEnabled: false,
-    icloudNotesEnabled: false,
-    googleDocsEnabled: true,
-    emailToSelfEnabled: false,
-  },
   voice: {
     deepgramEnabled: false,
     baseLanguageModel: 'claude-3-5-sonnet-20241022',

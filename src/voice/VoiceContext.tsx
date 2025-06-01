@@ -4,7 +4,8 @@ import VoiceService from './VoiceService';
 import { useServerApi } from '../api/useServerApi';
 import { useVoiceState as useVoiceStateHook } from './hooks/useVoiceState';
 import { useFeatureSettings } from '../settings/useFeatureSettings';
-import { supabase } from '../supabase/supabase';
+import { DatabaseService, supabase } from '../supabase/supabase';
+import { useAuth } from '../auth/AuthContext';
 import { DeviceEventEmitter, EmitterSubscription } from 'react-native';
 import { conversationService } from '../services/conversationService';
 
@@ -55,16 +56,51 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const isSpeaking = voiceStateFromHook.isSpeaking;
   const isError = voiceStateFromHook.isError;
   
-  // Feature settings hook
+  // Auth context for user ID
+  const { user } = useAuth();
+  
+  // Feature settings hook (for local storage fallback)
   const { 
     settings: featureSettings, 
     loading: settingsLoading, 
-    forceReloadSettings,
-    debugAsyncStorage 
+    updateVoiceSettings,
+    loadSettings
   } = useFeatureSettings();
   
   // Create a ref to always have the latest settings
   const latestSettingsRef = useRef(featureSettings);
+  
+  // Load voice settings from database on mount
+  useEffect(() => {
+    const loadVoiceSettingsFromDatabase = async () => {
+      if (!user?.id) return;
+      
+      try {
+        console.log('🔄 VOICE_CONTEXT: Loading voice settings from database...');
+        const dbSettings = await DatabaseService.getSettings(user.id);
+        
+        if (dbSettings?.voice_settings) {
+          console.log('🔄 VOICE_CONTEXT: Found voice settings in database:', dbSettings.voice_settings);
+          
+          // Update local settings with database values
+          await updateVoiceSettings({
+            deepgramEnabled: dbSettings.voice_settings.deepgram_enabled,
+            baseLanguageModel: dbSettings.voice_settings.base_language_model,
+            generalInstructions: dbSettings.voice_settings.general_instructions
+          });
+          
+          console.log('🔄 VOICE_CONTEXT: Updated local voice settings from database');
+        } else {
+          console.log('🔄 VOICE_CONTEXT: No voice settings found in database, using local settings');
+        }
+      } catch (error) {
+        console.error('🔄 VOICE_CONTEXT: Error loading voice settings from database:', error);
+        console.log('🔄 VOICE_CONTEXT: Falling back to local settings');
+      }
+    };
+
+    loadVoiceSettingsFromDatabase();
+  }, [user?.id, updateVoiceSettings]);
   
   // Update the ref whenever settings change
   useEffect(() => {
@@ -158,10 +194,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             try {
               // Force reload settings to ensure we have the latest
               console.log('🔄 VOICE_CONTEXT: Force reloading settings before API call...');
-              await forceReloadSettings();
-              
-              // Debug what's in AsyncStorage
-              await debugAsyncStorage();
+              await loadSettings();
               
               // Get the latest settings from the ref to avoid stale closure
               const currentSettings = latestSettingsRef.current;
