@@ -6,6 +6,6 @@ alwaysApply: false
 Description: Use these rules when we are debugging a feature
 
 - Find 3 possible causes, and dont implement changes yet.
-- Add logs, clear logcat, and start logcat again in this terminal
-- After implementing changes run cd android && ./gradlew compileDebugKotlin
+- Add logs, clear logcat, and start logcat again in the terminal that you are currently in so that logs are automatically included in context 
+- After implementing changes run cd android && ./gradlew compileDebugKotlin in the current terminal so that logs are automatically added to context
 - Do not create a summary markdown or README unless asked

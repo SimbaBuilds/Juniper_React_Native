@@ -10,12 +10,9 @@ export class UserProfileService {
       const defaultProfile: Omit<UserProfile, 'created_at' | 'updated_at'> = {
         id: userId,
         display_name: displayName,
-        voice_settings: {
-          voice: 'default',
-          speed: 1.0,
-          pitch: 1.0,
-          volume: 0.8
-        },
+        deepgram_enabled: false,
+        base_language_model: 'grok-3',
+        general_instructions: 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
         assistant_name: 'Jarvis',
         wake_word: 'Hey Jarvis',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',

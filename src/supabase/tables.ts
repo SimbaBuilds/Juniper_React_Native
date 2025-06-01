@@ -1,18 +1,20 @@
 export type UserProfile = {
     id: string;
     display_name?: string;
-    voice_settings: Record<string, any>;
+    deepgram_enabled: boolean;
+    base_language_model: string;
+    general_instructions: string;
     assistant_name: string;
     wake_word: string;
     timezone: string;
     preferences: Record<string, any>;
     created_at: Date;
-    updated_at?: Date;
+    updated_at: Date;
   };
   
   export const userProfileFields = [
-    'id', 'display_name', 'voice_settings', 'assistant_name', 'wake_word', 
-    'timezone', 'preferences', 'created_at', 'updated_at'
+    'id', 'display_name', 'deepgram_enabled', 'base_language_model', 'general_instructions',
+    'assistant_name', 'wake_word', 'timezone', 'preferences', 'created_at', 'updated_at'
   ] as const;
   export type UserProfileField = (typeof userProfileFields)[number];
   
@@ -60,6 +62,7 @@ export type UserProfile = {
     category?: string;
     title: string;
     content: string;
+    tags: string[];
     importance_score: number;
     embedding?: number[];
     decay_factor: number;
@@ -304,3 +307,4 @@ export type UserProfile = {
     'scope', 'is_active', 'last_sync', 'created_at', 'updated_at'
   ] as const;
   export type GoogleCalendarIntegrationField = (typeof googleCalendarIntegrationFields)[number];
+

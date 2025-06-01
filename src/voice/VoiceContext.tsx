@@ -3,8 +3,9 @@ import { VoiceState, VoiceContextValue } from './types/voice';
 import VoiceService from './VoiceService';
 import { useServerApi } from '../api/useServerApi';
 import { useVoiceState as useVoiceStateHook } from './hooks/useVoiceState';
-import { useFeatureSettings } from '../settings/useFeatureSettings';
-import { supabase } from '../supabase/supabase';
+import { useVoiceSettings } from './hooks/useVoiceSettings';
+import { DatabaseService, supabase } from '../supabase/supabase';
+import { useAuth } from '../auth/AuthContext';
 import { DeviceEventEmitter, EmitterSubscription } from 'react-native';
 import { conversationService } from '../services/conversationService';
 
@@ -29,6 +30,7 @@ const VoiceContext = createContext<VoiceContextValue>({
   resetState: () => {},
   interruptSpeech: async () => false,
   clearChatHistory: () => {},
+  refreshSettings: async () => {},
 });
 
 interface VoiceProviderProps {
@@ -55,30 +57,23 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const isSpeaking = voiceStateFromHook.isSpeaking;
   const isError = voiceStateFromHook.isError;
   
-  // Feature settings hook
+  // Auth context for user ID
+  const { user } = useAuth();
+  
+  // Voice settings hook
   const { 
-    settings: featureSettings, 
+    settings: voiceSettings, 
     loading: settingsLoading, 
-    forceReloadSettings,
-    debugAsyncStorage 
-  } = useFeatureSettings();
+    updateSettings,
+    loadSettings
+  } = useVoiceSettings();
   
-  // Create a ref to always have the latest settings
-  const latestSettingsRef = useRef(featureSettings);
+  // Use ref to avoid dependency cycles
+  const updateSettingsRef = useRef(updateSettings);
+  updateSettingsRef.current = updateSettings;
   
-  // Update the ref whenever settings change
-  useEffect(() => {
-    latestSettingsRef.current = featureSettings;
-    console.log('🔄 VOICE_CONTEXT: Settings updated, new model:', featureSettings?.voice?.baseLanguageModel);
-    console.log('🔄 VOICE_CONTEXT: Full voice settings:', featureSettings?.voice);
-    console.log('🔄 VOICE_CONTEXT: Settings loading state:', settingsLoading);
-  }, [featureSettings]);
-  
-  // Log specifically when baseLanguageModel changes
-  useEffect(() => {
-    console.log('🎯 VOICE_CONTEXT: Base language model changed to:', featureSettings?.voice?.baseLanguageModel);
-    console.log('🎯 VOICE_CONTEXT: Ref updated with model:', latestSettingsRef.current?.voice?.baseLanguageModel);
-  }, [featureSettings?.voice?.baseLanguageModel]);
+  const loadSettingsRef = useRef(loadSettings);
+  loadSettingsRef.current = loadSettings;
   
   // Only manage UI-specific state that doesn't exist in native layer
   const [isWakeWordEnabled, setWakeWordEnabled] = useState<boolean>(false);
@@ -95,6 +90,49 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
 
   // Server API hook
   const { sendMessage } = useServerApi();
+
+  // Simple settings refresh function
+  const refreshSettings = useCallback(async () => {
+    if (!user?.id) {
+      console.log('🔄 VOICE_CONTEXT: No user ID, skipping settings refresh');
+      return;
+    }
+
+    try {
+      console.log('🔄 VOICE_CONTEXT: Refreshing settings from database...');
+      
+      // First, ensure we have the latest local settings
+      await loadSettingsRef.current();
+      
+      // Get voice settings from database
+      const voiceSettings = await DatabaseService.getVoiceSettings(user.id);
+      
+      if (voiceSettings) {
+        console.log('🔄 VOICE_CONTEXT: Found voice settings:', voiceSettings);
+        
+        // Update local settings with database values
+        const generalInstructions = voiceSettings.general_instructions || 
+          'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+        
+        const updates = {
+          deepgramEnabled: voiceSettings.deepgram_enabled,
+          baseLanguageModel: voiceSettings.base_language_model,
+          generalInstructions: generalInstructions
+        };
+        
+        console.log('🔄 VOICE_CONTEXT: Updating with:', updates);
+        console.log('🔄 VOICE_CONTEXT: Current settings before update:', voiceSettings);
+        
+        await updateSettingsRef.current(updates);
+        
+        console.log('✅ VOICE_CONTEXT: Settings updated successfully');
+      } else {
+        console.log('🔄 VOICE_CONTEXT: No voice settings found in database');
+      }
+    } catch (error) {
+      console.error('❌ VOICE_CONTEXT: Error refreshing settings:', error);
+    }
+  }, [user?.id]);
 
   // Set up event listeners once
   useEffect(() => {
@@ -134,7 +172,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     });
     subscriptions.push(errorSub);
     
-    // Listen for text processing requests from native (THE MISSING PIECE!)
+    // Listen for text processing requests from native
     const processTextSub = DeviceEventEmitter.addListener('processTextFromNative', async (event) => {
       const { text, requestId } = event;
 
@@ -153,57 +191,29 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           const updatedHistory = [...prev, newMessage];
           
           // Send to API with updated history in a separate async operation
-          // We need to do this outside of the setState callback
           setTimeout(async () => {
             try {
-              // Force reload settings to ensure we have the latest
-              console.log('🔄 VOICE_CONTEXT: Force reloading settings before API call...');
-              await forceReloadSettings();
+              console.log('🔄 VOICE_CONTEXT: Sending message with current settings');
               
-              // Debug what's in AsyncStorage
-              await debugAsyncStorage();
+              // Create FeatureSettings structure for sendMessage
+              const featureSettingsForApi = {
+                voice: voiceSettings
+              };
               
-              // Get the latest settings from the ref to avoid stale closure
-              const currentSettings = latestSettingsRef.current;
-              
-              console.log('🟠 VOICE_CONTEXT: Settings loading:', settingsLoading, 'Model:', currentSettings?.voice?.baseLanguageModel);
-              console.log('🟠 VOICE_CONTEXT: Closure settings model:', featureSettings?.voice?.baseLanguageModel);
-              console.log('🟠 VOICE_CONTEXT: Ref settings model:', currentSettings?.voice?.baseLanguageModel);
-              console.log('🟠 VOICE_CONTEXT: Are they the same?', featureSettings?.voice?.baseLanguageModel === currentSettings?.voice?.baseLanguageModel);
-              console.log('🟠 VOICE_CONTEXT: Sending message with history length:', updatedHistory.length);
-              
-              // Wait for settings to load if they're still loading
-              if (settingsLoading) {
-                console.log('🟠 VOICE_CONTEXT: Settings still loading, waiting...');
-                // Wait a bit and check again
-                await new Promise(resolve => setTimeout(resolve, 500));
-                if (settingsLoading) {
-                  console.log('🟠 VOICE_CONTEXT: Settings still loading after wait, proceeding with current settings');
-                }
-              }
-              
-              const response = await sendMessage(text, updatedHistory, currentSettings);
-              
-              console.log('🟠 VOICE_CONTEXT: Received API response:', response.response.substring(0, 100) + '...');
+              const response = await sendMessage(text, updatedHistory, featureSettingsForApi);
+              console.log('🟠 VOICE_CONTEXT: Received API response');
               
               // Send response back to native
               await voiceService.handleApiResponse(requestId, response.response);
               
             } catch (error) {
               console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
-              console.error('🟠 VOICE_CONTEXT: Error details:', {
-                name: error instanceof Error ? error.name : 'Unknown',
-                message: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : undefined
-              });
               
               const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
               
               // Send error response back to native
               try {
-                console.log('🟠 VOICE_CONTEXT: Sending error response back to native...');
                 await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
-                console.log('🟠 VOICE_CONTEXT: ✅ Error response sent to native');
               } catch (responseError) {
                 console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
               }
@@ -220,9 +230,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         
         // Send error response back to native
         try {
-          console.log('🟠 VOICE_CONTEXT: Sending error response back to native...');
           await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
-          console.log('🟠 VOICE_CONTEXT: ✅ Error response sent to native');
         } catch (responseError) {
           console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
         }
@@ -237,7 +245,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       subscriptions.forEach(sub => sub.remove());
       listenersSetupRef.current = false;
     };
-  }, [sendMessage, chatHistory, settingsLoading, voiceService]);
+  }, [sendMessage, voiceSettings, voiceService]);
 
   // Start listening - delegate to hook
   const startListening = useCallback(async () => {
@@ -335,6 +343,11 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     response,
     chatHistory,
     
+    // Voice settings
+    voiceSettings,
+    settingsLoading,
+    updateVoiceSettings: updateSettingsRef.current,
+    
     // Actions (delegate to native)
     setVoiceState: () => {}, // No-op - state managed by native layer
     setWakeWordEnabled,
@@ -346,6 +359,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     resetState,
     interruptSpeech,
     clearChatHistory,
+    refreshSettings,
   };
   
   return <VoiceContext.Provider value={value}>{children}</VoiceContext.Provider>;

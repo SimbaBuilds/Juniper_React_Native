@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Linking } from 'react-native';
 import { VoiceProvider } from './src/voice/VoiceContext';
 import { WakeWordProvider } from './src/wakeword/WakeWordContext';
 import WakeWordService from './src/wakeword/WakeWordService';
-import { GoogleCalendarService } from './src/features/calendar/GoogleCalendarService';
+import { GoogleCalendarService } from './src/integrations/calendar/GoogleCalendarService';
 import { HomeScreen } from './src/HomeScreen';
 import { SettingsScreen } from './src/settings/SettingsScreen';
+import { IntegrationsScreen } from './src/integrations/IntegrationsScreen';
+import { AutomationsScreen } from './src/automations/AutomationsScreen';
+import { MemoriesScreen } from './src/memories/MemoriesScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from './src/supabase/supabase';
@@ -17,14 +21,27 @@ import PhoneSignUpPage from './src/auth/PhoneSignUpPage';
 import { AuthProvider } from './src/auth/AuthContext';
 
 type RootStackParamList = {
+  MainTabs: undefined;
   Home: undefined;
   Settings: undefined;
+  Integrations: undefined;
+  Automations: undefined;
+  Memories: undefined;
   Login: undefined;
   SignUp: undefined;
   PhoneSignUp: undefined;
 };
 
+type TabParamList = {
+  Home: undefined;
+  Integrations: undefined;
+  Automations: undefined;
+  Memories: undefined;
+  Settings: undefined;
+};
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<TabParamList>();
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -198,42 +215,15 @@ export default function App() {
           <WakeWordProvider>
             <Stack.Navigator
               screenOptions={{
-                headerStyle: {
-                  backgroundColor: '#f5f5f5',
-                },
-                headerTintColor: '#333',
-                headerTitleStyle: {
-                  fontWeight: 'bold',
-                },
+                headerShown: false,
               }}
-              initialRouteName={session ? "Home" : "Login"}
+              initialRouteName={session ? "MainTabs" : "Login"}
             >
               {session ? (
-                <>
-                  <Stack.Screen 
-                    name="Home" 
-                    component={HomeScreen} 
-                    options={({ navigation }) => ({
-                      title: 'Jarvis',
-                      headerRight: () => (
-                        <Ionicons 
-                          name="settings-outline" 
-                          size={24} 
-                          color="#333"
-                          style={{ marginRight: 16 }}
-                          onPress={() => navigation.navigate('Settings')}
-                        />
-                      ),
-                    })}
-                  />
-                  <Stack.Screen 
-                    name="Settings" 
-                    component={SettingsScreen}
-                    options={{
-                      title: 'Settings',
-                    }}
-                  />
-                </>
+                <Stack.Screen 
+                  name="MainTabs" 
+                  component={MainTabNavigator}
+                />
               ) : (
                 <>
                   <Stack.Screen 
@@ -241,7 +231,6 @@ export default function App() {
                     component={LoginPage}
                     options={{
                       title: 'Sign In',
-                      headerShown: false,
                     }}
                   />
                   <Stack.Screen 
@@ -249,7 +238,6 @@ export default function App() {
                     component={SignUpPage}
                     options={{
                       title: 'Create Account',
-                      headerShown: false,
                     }}
                   />
                   <Stack.Screen 
@@ -257,7 +245,6 @@ export default function App() {
                     component={PhoneSignUpPage}
                     options={{
                       title: 'Phone Sign Up',
-                      headerShown: false,
                     }}
                   />
                 </>
@@ -267,5 +254,82 @@ export default function App() {
         </VoiceProvider>
       </AuthProvider>
     </NavigationContainer>
+  );
+}
+
+function MainTabNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Integrations') {
+            iconName = focused ? 'link' : 'link-outline';
+          } else if (route.name === 'Automations') {
+            iconName = focused ? 'cog' : 'cog-outline';
+          } else if (route.name === 'Memories') {
+            iconName = focused ? 'bookmark' : 'bookmark-outline';
+          } else if (route.name === 'Settings') {
+            iconName = focused ? 'settings' : 'settings-outline';
+          } else {
+            iconName = 'help-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#4A90E2',
+        tabBarInactiveTintColor: '#B0B0B0',
+        tabBarStyle: {
+          backgroundColor: '#1E1E1E',
+          borderTopColor: '#3A3A3A',
+        },
+        headerStyle: {
+          backgroundColor: '#121212',
+        },
+        headerTintColor: '#FFFFFF',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      })}
+    >
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen}
+        options={{
+          title: 'Voice Assistant',
+        }}
+      />
+      <Tab.Screen 
+        name="Integrations" 
+        component={IntegrationsScreen}
+        options={{
+          title: 'Integrations',
+        }}
+      />
+      <Tab.Screen 
+        name="Automations" 
+        component={AutomationsScreen}
+        options={{
+          title: 'Automations',
+        }}
+      />
+      <Tab.Screen 
+        name="Memories" 
+        component={MemoriesScreen}
+        options={{
+          title: 'Memories',
+        }}
+      />
+      <Tab.Screen 
+        name="Settings" 
+        component={SettingsScreen}
+        options={{
+          title: 'Settings',
+        }}
+      />
+    </Tab.Navigator>
   );
 }

@@ -1,30 +1,63 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, ActivityIndicator, Platform, TouchableOpacity, Alert } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { WakeWordToggle } from '../wakeword/components/WakeWordToggle';
 import { WakeWordStatus } from '../wakeword/components/WakeWordStatus';
 import { usePermissions } from './usePermissions';
-import { useFeatureSettings } from './useFeatureSettings';
 import { useAuth } from '../auth/AuthContext';
+import { DatabaseService } from '../supabase/supabase';
+import { useVoice } from '../voice/VoiceContext';
 import { SettingsToggle } from './components/SettingsToggle';
 import { ExpandableSettingsToggle } from './components/ExpandableSettingsToggle';
-import { SettingsArrayInput } from './components/SettingsArrayInput';
 import { SettingsDropdown } from './components/SettingsDropdown';
 import { SettingsTextInput } from './components/SettingsTextInput';
-import { NewsCategoryManager } from '../features/news/NewsCategoryManager';
-import { GoogleCalendarManager } from '../features/calendar/GoogleCalendarManager';
+
+// Voice Settings interface
+export interface VoiceSettings {
+  deepgramEnabled: boolean;
+  baseLanguageModel: 'grok-3' | 'grok-3.5' | 'gpt-4o' | 'claude-3-5-sonnet-20241022';
+  generalInstructions: string;
+}
+
+// Model display mapping for UI
+const MODEL_DISPLAY_NAMES = {
+  'grok-3': 'Grok 3',
+  'grok-3.5': 'Grok 3.5', 
+  'gpt-4o': 'GPT 4o',
+  'claude-3-5-sonnet-20241022': 'Claude Sonnet 3.5'
+} as const;
 
 type RootStackParamList = {
+  MainTabs: undefined;
   Home: undefined;
   Settings: undefined;
+  Integrations: undefined;
+  Automations: undefined;
+  Memories: undefined;
+  Login: undefined;
+  SignUp: undefined;
+  PhoneSignUp: undefined;
 };
 
 type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Settings'>;
 
 type Props = {
   navigation: SettingsScreenNavigationProp;
+};
+
+// Helper to get display name for a model value
+const getModelDisplayName = (modelValue: VoiceSettings['baseLanguageModel']): string => {
+  return MODEL_DISPLAY_NAMES[modelValue] || modelValue;
+};
+
+// Helper to get model value from display name
+const getModelValueFromDisplayName = (displayName: string): VoiceSettings['baseLanguageModel'] | undefined => {
+  const entries = Object.entries(MODEL_DISPLAY_NAMES) as [VoiceSettings['baseLanguageModel'], string][];
+  const found = entries.find(([_, display]) => display === displayName);
+  return found?.[0];
 };
 
 export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
@@ -37,20 +70,109 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
     hasBatteryOptimizationExemption,
   } = usePermissions();
 
-  const {
-    settings,
-    loading: settingsLoading,
-    updateTickersSettings,
-    updateNewsSettings,
-    updateCalendarSettings,
-    updateTellMeThingsSettings,
-    updateProjectUnderstandingSettings,
-    updateVoiceSettings,
-  } = useFeatureSettings();
-
   const { signOut, user } = useAuth();
+  const { 
+    refreshSettings, 
+    voiceSettings: settings, 
+    settingsLoading, 
+    updateVoiceSettings: updateSettings 
+  } = useVoice();
 
-  const loading = permissionsLoading || settingsLoading;
+  // Add logging for what we receive from VoiceContext
+  console.log('🖥️ SETTINGS_SCREEN: Received settings from VoiceContext:', settings);
+  console.log('🖥️ SETTINGS_SCREEN: Settings loading state:', settingsLoading);
+
+  // Use ref to avoid dependency cycles
+  const refreshSettingsRef = useRef(refreshSettings);
+  refreshSettingsRef.current = refreshSettings;
+
+  const [savingToDatabase, setSavingToDatabase] = useState(false);
+  const [loadingFromDatabase, setLoadingFromDatabase] = useState(false);
+  
+  // Include database loading in overall loading state
+  const loading = permissionsLoading || settingsLoading || loadingFromDatabase;
+
+  // Local state for general instructions to avoid database updates on every character
+  const [localGeneralInstructions, setLocalGeneralInstructions] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  console.log('🖥️ SETTINGS_SCREEN: Current localGeneralInstructions state:', localGeneralInstructions);
+  console.log('🖥️ SETTINGS_SCREEN: Has unsaved changes:', hasUnsavedChanges);
+
+  // Initialize and sync local state when settings load or change
+  useEffect(() => {
+    console.log('🖥️ SETTINGS_SCREEN: useEffect triggered for settings.generalInstructions:', settings.generalInstructions);
+    
+    const defaultInstructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+    const currentInstructions = settings.generalInstructions || defaultInstructions;
+    
+    console.log('🖥️ SETTINGS_SCREEN: Setting localGeneralInstructions to:', currentInstructions);
+    setLocalGeneralInstructions(currentInstructions);
+    setHasUnsavedChanges(false);
+    
+    console.log('🖥️ SETTINGS_SCREEN: useEffect completed, localGeneralInstructions should now be:', currentInstructions);
+  }, [settings.generalInstructions]);
+
+  // Refresh settings from database every time user navigates to Settings
+  useFocusEffect(
+    React.useCallback(() => {
+      const refreshSettingsFromDatabase = async () => {
+        if (!user?.id) return;
+        
+        setLoadingFromDatabase(true);
+        
+        try {
+          console.log('🔄 SETTINGS: Refreshing settings from database on focus...');
+          await refreshSettingsRef.current();
+          console.log('✅ SETTINGS: Settings refreshed successfully');
+        } catch (error) {
+          console.error('❌ SETTINGS: Error refreshing settings from database:', error);
+        } finally {
+          setLoadingFromDatabase(false);
+        }
+      };
+
+      refreshSettingsFromDatabase();
+    }, [user?.id])
+  );
+
+  // Fix any existing null general_instructions when user loads settings
+  useEffect(() => {
+    const fixNullInstructions = async () => {
+      if (user?.id) {
+        try {
+          await DatabaseService.fixNullGeneralInstructions();
+        } catch (error) {
+          console.error('Error fixing null general instructions:', error);
+          // Don't show error to user, this is a background fix
+        }
+      }
+    };
+
+    fixNullInstructions();
+  }, [user?.id]);
+
+  // Handle local text changes (no database update)
+  const handleGeneralInstructionsChange = (text: string) => {
+    setLocalGeneralInstructions(text);
+    const defaultInstructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+    const currentSaved = settings.generalInstructions || defaultInstructions;
+    setHasUnsavedChanges(text !== currentSaved);
+  };
+
+  // Save general instructions to database
+  const saveGeneralInstructions = async () => {
+    try {
+      setSavingToDatabase(true);
+      await handleVoiceSettingsUpdate({ generalInstructions: localGeneralInstructions });
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error('Error saving general instructions:', error);
+      Alert.alert('Error', 'Failed to save instructions. Please try again.');
+    } finally {
+      setSavingToDatabase(false);
+    }
+  };
 
   const handleLogout = async () => {
     Alert.alert(
@@ -77,11 +199,58 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
     );
   };
 
+  // Enhanced voice settings update function that saves to both local and database
+  const handleVoiceSettingsUpdate = async (updates: any) => {
+    try {
+      setSavingToDatabase(true);
+      
+      // Update local settings first for immediate UI response
+      await updateSettings(updates);
+      
+      // Save to database if user is authenticated
+      if (user?.id) {
+        try {
+          // Convert camelCase keys to snake_case for database
+          const dbUpdates = Object.keys(updates).reduce((acc, key) => {
+            const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+            let value = updates[key];
+            
+            // Ensure general_instructions always has a default value
+            if (dbKey === 'general_instructions' && (!value || value.trim() === '')) {
+              value = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+            }
+            
+            acc[dbKey] = value;
+            return acc;
+          }, {} as any);
+
+          await DatabaseService.updateVoiceSettings(user.id, dbUpdates);
+          console.log('✅ SETTINGS: Voice settings saved to user_profiles table');
+        } catch (dbError) {
+          console.error('❌ SETTINGS: Error saving to user_profiles table:', dbError);
+          // Don't show error to user since local settings still work
+        }
+      }
+    } catch (error) {
+      console.error('Error updating voice settings:', error);
+      Alert.alert('Error', 'Failed to update settings');
+    } finally {
+      setSavingToDatabase(false);
+    }
+  };
+
   if (loading) {
+    const getLoadingMessage = () => {
+      if (loadingFromDatabase) return 'Loading settings from database...';
+      if (settingsLoading) return 'Loading local settings...';
+      if (permissionsLoading) return 'Checking permissions...';
+      return 'Loading settings...';
+    };
+
     return (
       <View style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size="large" color="#FFFFFF" />
-        <Text style={styles.loadingText}>Loading settings...</Text>
+        <Text style={styles.loadingText}>{getLoadingMessage()}</Text>
       </View>
     );
   }
@@ -91,10 +260,22 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>Settings</Text>
+          {savingToDatabase && (
+            <View style={styles.savingIndicator}>
+              <ActivityIndicator size="small" color="#4A90E2" />
+              <Text style={styles.savingText}>Saving...</Text>
+            </View>
+          )}
         </View>
         
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Wake Word</Text>
+          <View style={styles.wakeWordExplanation}>
+            <Text style={styles.explanationText}>
+              The wake word is the word you will use to activate and speak to your assistant.
+              You do not have to have the app open to activate your assistant.
+            </Text>
+          </View>
           <WakeWordToggle />
           <WakeWordStatus />
         </View>
@@ -105,14 +286,14 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.permissionItem}>
             <Text style={styles.permissionTitle}>Microphone Access</Text>
             <Text style={styles.permissionStatus}>
-              Status: {hasMicrophonePermission ? '✅ Granted' : '❌ Not Granted'}
+              Status: {hasMicrophonePermission ? '✅ Granted' : '❌ Denied'}
             </Text>
             {!hasMicrophonePermission && (
               <Text 
                 style={styles.permissionButton}
                 onPress={requestMicrophone}
               >
-                Grant Microphone Permission
+                Request Permission
               </Text>
             )}
           </View>
@@ -134,216 +315,65 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           )}
         </View>
-        
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Features</Text>
-
-          <ExpandableSettingsToggle
-            label="Tickers"
-            value={settings.tickers.enabled}
-            onValueChange={(enabled) => updateTickersSettings({ enabled })}
-            description="Track your investments and favorite names"
-            hasSubSettings={true}
-          >
-            <SettingsArrayInput
-              label="Ticker Symbols"
-              values={settings.tickers.tickers}
-              onValuesChange={async (tickers) => {
-                try {
-                  await updateTickersSettings({ tickers });
-                } catch (error) {
-                  console.error('Error updating tickers:', error);
-                  // Could show a toast notification here if needed
-                }
-              }}
-              placeholder="Add ticker symbol (e.g., AAPL, MSFT)..."
-              description="Stock symbols to track in your tickers"
-              maxItems={20}
-            />
-          </ExpandableSettingsToggle>
-
-          <ExpandableSettingsToggle
-            label="News"
-            value={settings.news.enabled}
-            onValueChange={(enabled) => updateNewsSettings({ enabled })}
-            description="Get news updates from your favorite sources"
-            hasSubSettings={true}
-          >
-            <SettingsToggle
-              label="XAI LiveSearch API"
-              value={settings.news.xaiLiveSearchEnabled}
-              onValueChange={(xaiLiveSearchEnabled) => updateNewsSettings({ xaiLiveSearchEnabled })}
-              description="Use XAI LiveSearch for real-time news"
-            />
-
-            <SettingsToggle
-              label="X/Twitter Search"
-              value={settings.news.twitterSearchEnabled}
-              onValueChange={(twitterSearchEnabled) => updateNewsSettings({ twitterSearchEnabled })}
-              description="Search X/Twitter (free tier, 100 requests/month)"
-            />
-
-            <NewsCategoryManager
-              categories={settings.news.categories}
-              onCategoriesChange={async (categories) => {
-                try {
-                  await updateNewsSettings({ categories });
-                } catch (error) {
-                  console.error('Error updating news categories:', error);
-                  // Could show a toast notification here if needed
-                }
-              }}
-              description="Organize your news sources by category with detailed information"
-            />
-          </ExpandableSettingsToggle>
-
-          <ExpandableSettingsToggle
-            label="Calendar"
-            value={settings.calendar.enabled}
-            onValueChange={(enabled) => updateCalendarSettings({ enabled })}
-            description="Calendar integration and event management"
-            hasSubSettings={true}
-          >
-            <GoogleCalendarManager />
-          </ExpandableSettingsToggle>
-
-          <ExpandableSettingsToggle
-            label="Tell Me The Things"
-            value={settings.tellMeThings.enabled}
-            onValueChange={(enabled) => updateTellMeThingsSettings({ enabled })}
-            description="Daily briefing with tickers, news, calendar, and more"
-            hasSubSettings={true}
-          >
-            <SettingsArrayInput
-              label="Trigger Phrases"
-              values={settings.tellMeThings.triggerPhrases}
-              onValuesChange={(triggerPhrases) => updateTellMeThingsSettings({ triggerPhrases })}
-              placeholder="Add trigger phrase..."
-              description="Phrases that activate your daily briefing"
-              maxItems={5}
-            />
-
-            <SettingsToggle
-              label="Include Tickers"
-              value={settings.tellMeThings.includeTickers}
-              onValueChange={(includeTickers) => updateTellMeThingsSettings({ includeTickers })}
-              description="Include tickers updates in briefing"
-            />
-
-            <SettingsToggle
-              label="Include News"
-              value={settings.tellMeThings.includeNews}
-              onValueChange={(includeNews) => updateTellMeThingsSettings({ includeNews })}
-              description="Include news updates in briefing"
-            />
-
-            <SettingsToggle
-              label="Include Calendar"
-              value={settings.tellMeThings.includeCalendar}
-              onValueChange={(includeCalendar) => updateTellMeThingsSettings({ includeCalendar })}
-              description="Include today's calendar in briefing"
-            />
-          </ExpandableSettingsToggle>
-
-          <ExpandableSettingsToggle
-            label="Project Understanding"
-            value={settings.projectUnderstanding.enabled}
-            onValueChange={(enabled) => updateProjectUnderstandingSettings({ enabled })}
-            description="AI note-taking and project management"
-            hasSubSettings={true}
-          >
-            <SettingsToggle
-              label="Google Keep"
-              value={settings.projectUnderstanding.googleKeepEnabled}
-              onValueChange={(googleKeepEnabled) => updateProjectUnderstandingSettings({ googleKeepEnabled })}
-              description="Save notes to Google Keep"
-            />
-
-            <SettingsToggle
-              label="iCloud Notes"
-              value={settings.projectUnderstanding.icloudNotesEnabled}
-              onValueChange={(icloudNotesEnabled) => updateProjectUnderstandingSettings({ icloudNotesEnabled })}
-              description="Save notes to iCloud Notes app"
-            />
-
-            <SettingsToggle
-              label="Google Docs"
-              value={settings.projectUnderstanding.googleDocsEnabled}
-              onValueChange={(googleDocsEnabled) => updateProjectUnderstandingSettings({ googleDocsEnabled })}
-              description="Save notes to Google Docs (default to most recent)"
-            />
-
-            <SettingsToggle
-              label="Email to Self"
-              value={settings.projectUnderstanding.emailToSelfEnabled}
-              onValueChange={(emailToSelfEnabled) => updateProjectUnderstandingSettings({ emailToSelfEnabled })}
-              description="Email notes to yourself"
-            />
-          </ExpandableSettingsToggle>
-        </View>
-
-        <View style={[styles.infoSection, { marginBottom: 20 }]}>
-          <Text style={styles.infoText}>
-            To add a feature, just ask your assistant e.g. "Hey Jarvis, connect with Notion so you can access and edit my project notes".
-          </Text>
-        </View>
 
         {/* Voice Settings Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Voice & AI Settings</Text>
 
-          <SettingsTextInput
-            label="General Instructions"
-            value={settings.voice.generalInstructions}
-            onChangeText={async (generalInstructions) => {
-              try {
-                await updateVoiceSettings({ generalInstructions });
-              } catch (error) {
-                console.error('Error updating voice settings:', error);
-              }
-            }}
-            placeholder="Enter instructions for the AI assistant..."
-            description="Custom instructions to guide the AI's behavior and responses"
-            multiline={true}
-          />
+          <View style={styles.instructionsContainer}>
+            <SettingsTextInput
+              label="General Instructions"
+              value={localGeneralInstructions}
+              onChangeText={handleGeneralInstructionsChange}
+              placeholder="Enter instructions for the AI assistant..."
+              description="Custom instructions to guide the AI's behavior and responses"
+              multiline={true}
+            />
+            
+            {hasUnsavedChanges && (
+              <View style={styles.unsavedChangesContainer}>
+                <Text style={styles.unsavedChangesText}>You have unsaved changes</Text>
+                <TouchableOpacity
+                  style={[styles.saveButton, savingToDatabase && styles.saveButtonDisabled]}
+                  onPress={saveGeneralInstructions}
+                  disabled={savingToDatabase}
+                >
+                  {savingToDatabase ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Ionicons name="save-outline" size={16} color="#FFFFFF" />
+                  )}
+                  <Text style={styles.saveButtonText}>
+                    {savingToDatabase ? 'Saving...' : 'Save'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
 
           <ExpandableSettingsToggle
             label="Deepgram Voice"
-            value={settings.voice.deepgramEnabled}
+            value={settings.deepgramEnabled}
             onValueChange={async (deepgramEnabled) => {
-              try {
-                await updateVoiceSettings({ deepgramEnabled });
-              } catch (error) {
-                console.error('Error updating voice settings:', error);
-              }
+              await handleVoiceSettingsUpdate({ deepgramEnabled });
             }}
             description="Enhanced voice recognition with Deepgram"
             hasSubSettings={true}
           />
 
           <SettingsDropdown
-            label="Base Language Model"
-            value={settings.voice.baseLanguageModel}
+            label="Language Model"
+            value={settings.baseLanguageModel}
+            options={Object.entries(MODEL_DISPLAY_NAMES).map(([value, label]) => ({
+              label: label as string,
+              value: value as any,
+            }))}
             onValueChange={async (baseLanguageModel) => {
-              try {
-                console.log('🎯 SETTINGS_SCREEN: Updating base language model to:', baseLanguageModel);
-                await updateVoiceSettings({ baseLanguageModel });
-                console.log('🎯 SETTINGS_SCREEN: ✅ Base language model updated successfully');
-              } catch (error) {
-                console.error('🎯 SETTINGS_SCREEN: ❌ Error updating base language model:', error);
-              }
+              await handleVoiceSettingsUpdate({ baseLanguageModel });
             }}
-            options={[
-              { label: 'gpt-4o', value: 'gpt-4o' as const },
-              { label: 'gpt-4o-mini', value: 'gpt-4o-mini' as const },
-              { label: 'grok-3', value: 'grok-3' as const },
-              { label: 'grok-3.5', value: 'grok-3.5' as const },
-            ]}
-            description="Select the language model to use for AI responses"
+            description="Choose the AI model for processing your requests"
           />
         </View>
-        
-
 
         <View style={styles.accountSection}>
           <Text style={styles.accountTitle}>Account</Text>
@@ -406,6 +436,17 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 16,
   },
+  wakeWordExplanation: {
+    backgroundColor: '#1E1E1E',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  explanationText: {
+    color: '#B0B0B0',
+    fontSize: 14,
+    lineHeight: 20,
+  },
   permissionItem: {
     marginBottom: 16,
   },
@@ -424,16 +465,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 14,
     fontWeight: '500',
-  },
-  infoSection: {
-    backgroundColor: '#1E1E1E',
-    padding: 16,
-    borderRadius: 8,
-  },
-  infoText: {
-    color: '#B0B0B0',
-    fontSize: 14,
-    lineHeight: 20,
   },
   accountSection: {
     backgroundColor: '#1E1E1E',
@@ -476,5 +507,42 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 14,
     color: '#FFFFFF',
+  },
+  savingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  savingText: {
+    color: '#4A90E2',
+    fontSize: 14,
+    marginLeft: 8,
+  },
+  instructionsContainer: {
+    marginBottom: 24,
+  },
+  unsavedChangesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  unsavedChangesText: {
+    color: '#B0B0B0',
+    fontSize: 14,
+  },
+  saveButton: {
+    backgroundColor: '#4A90E2',
+    padding: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#333333',
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 8,
   },
 }); 
