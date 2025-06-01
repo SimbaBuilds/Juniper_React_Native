@@ -100,7 +100,7 @@ export interface ChatRequest {
   preferences?: {
     voice?: string;
     response_type?: string;
-    model?: string; // Language model to use (e.g., 'gpt-4o', 'gpt-4o-mini', 'grok-3', 'grok-3.5')
+    model?: string; // Language model to use (e.g., 'grok-3', 'grok-3.5', 'gpt-4o', 'claude-3-5-sonnet-20241022')
     [key: string]: any;
   };
   feature_settings?: any; // Using any since we transform it to snake_case

@@ -5,5 +5,5 @@ alwaysApply: false
 ---
 Description: Use these rules when we are debugging a feature
 
-- Run npm run android at the end of each attempted fix
+- Run npm run android at the end of each attempted fix -- run in the terminal you are currently in so that logs are automatically added to context
 - Do not create a summary markdown or README unless asked

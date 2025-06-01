@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, ActivityIndicator, Platform, TouchableOpacity, Alert } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
+import * as MediaLibrary from 'expo-media-library';
+import * as Device from 'expo-device';
+import * as Location from 'expo-location';
+import { Audio } from 'expo-av';
 
 import { WakeWordToggle } from '../wakeword/components/WakeWordToggle';
 import { WakeWordStatus } from '../wakeword/components/WakeWordStatus';
@@ -15,6 +20,7 @@ import { SettingsDropdown } from './components/SettingsDropdown';
 import { SettingsTextInput } from './components/SettingsTextInput';
 import { NewsCategoryManager } from '../features/news/NewsCategoryManager';
 import { GoogleCalendarManager } from '../features/calendar/GoogleCalendarManager';
+import { MODEL_DISPLAY_NAMES, VoiceSettings } from '../features/features';
 
 type RootStackParamList = {
   Home: undefined;
@@ -334,10 +340,10 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               }
             }}
             options={[
-              { label: 'gpt-4o', value: 'gpt-4o' as const },
-              { label: 'gpt-4o-mini', value: 'gpt-4o-mini' as const },
-              { label: 'grok-3', value: 'grok-3' as const },
-              { label: 'grok-3.5', value: 'grok-3.5' as const },
+              { label: MODEL_DISPLAY_NAMES['grok-3'], value: 'grok-3' as const },
+              { label: MODEL_DISPLAY_NAMES['grok-3.5'], value: 'grok-3.5' as const },
+              { label: MODEL_DISPLAY_NAMES['gpt-4o'], value: 'gpt-4o' as const },
+              { label: MODEL_DISPLAY_NAMES['claude-3-5-sonnet-20241022'], value: 'claude-3-5-sonnet-20241022' as const },
             ]}
             description="Select the language model to use for AI responses"
           />
