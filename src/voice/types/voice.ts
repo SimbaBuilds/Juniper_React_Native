@@ -41,6 +41,7 @@ export interface VoiceContextActions {
   interruptSpeech: () => Promise<boolean>;
   clearChatHistory: () => void;
   refreshSettings: () => Promise<void>;
+  sendTextMessage: (text: string) => Promise<void>;
   
   // Voice settings
   voiceSettings: any;
