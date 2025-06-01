@@ -208,10 +208,10 @@ export const MemoriesScreen: React.FC = () => {
         <View style={styles.instructionsSection}>
           <Text style={styles.instructionsTitle}>How to Add Memories</Text>
           <Text style={styles.instructionsText}>
-            Add a memory by telling your assistant:{'\n'}
-            "Remember my favorite news sources for future reference."
+            Add a memory by telling your assistant e.g.{'\n'}
+            "Remember these news sources for future reference."
             {'\n\n'}
-            Or use the + button to manually add a memory.
+            Or use the + button to manually add a memory.  Tags help the assistant retrieve the memory better..
           </Text>
         </View>
 
