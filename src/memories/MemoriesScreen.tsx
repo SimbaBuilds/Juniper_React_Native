@@ -10,7 +10,6 @@ interface Memory {
   date: string;
   tags: string[];
   title?: string;
-  category?: string;
 }
 
 export const MemoriesScreen: React.FC = () => {
@@ -22,7 +21,6 @@ export const MemoriesScreen: React.FC = () => {
   const [newMemory, setNewMemory] = useState({
     title: '',
     content: '',
-    category: '',
     tags: ''
   });
   const [saving, setSaving] = useState(false);
@@ -51,7 +49,6 @@ export const MemoriesScreen: React.FC = () => {
           id: memory.id,
           content: memory.content,
           title: memory.title,
-          category: memory.category,
           date: new Date(memory.created_at).toISOString().split('T')[0],
           tags: Array.isArray(memory.tags) ? memory.tags : []
         }));
@@ -105,7 +102,6 @@ export const MemoriesScreen: React.FC = () => {
       const memoryData = {
         title: newMemory.title.trim() || null,
         content: newMemory.content.trim(),
-        category: newMemory.category.trim() || null,
         memory_type: 'user_created',
         importance_score: 5,
         decay_factor: 1.0,
@@ -121,7 +117,6 @@ export const MemoriesScreen: React.FC = () => {
         id: savedMemory.id,
         content: savedMemory.content,
         title: savedMemory.title,
-        category: savedMemory.category,
         date: new Date(savedMemory.created_at).toISOString().split('T')[0],
         tags: Array.isArray(savedMemory.tags) ? savedMemory.tags : []
       };
@@ -129,7 +124,7 @@ export const MemoriesScreen: React.FC = () => {
       setMemories(prev => ensureMemoryTags([formattedMemory, ...prev]));
       
       // Reset form
-      setNewMemory({ title: '', content: '', category: '', tags: '' });
+      setNewMemory({ title: '', content: '', tags: '' });
       setShowAddModal(false);
       
       Alert.alert('Success', 'Memory saved successfully');
@@ -254,114 +249,74 @@ export const MemoriesScreen: React.FC = () => {
           )}
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Memory Categories</Text>
-          
-          <View style={styles.categoryCard}>
-            <Ionicons name="person-outline" size={20} color="#4A90E2" />
-            <Text style={styles.categoryText}>Personal Preferences</Text>
-          </View>
+        {/* Add Memory Modal */}
+        <Modal
+          visible={showAddModal}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setShowAddModal(false)}
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity
+                onPress={() => setShowAddModal(false)}
+                style={styles.modalCloseButton}
+              >
+                <Text style={styles.modalCloseText}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Add Memory</Text>
+              <TouchableOpacity
+                onPress={handleAddMemory}
+                style={[styles.modalSaveButton, saving && styles.modalSaveButtonDisabled]}
+                disabled={saving}
+              >
+                {saving ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.modalSaveText}>Save</Text>
+                )}
+              </TouchableOpacity>
+            </View>
 
-          <View style={styles.categoryCard}>
-            <Ionicons name="briefcase-outline" size={20} color="#4A90E2" />
-            <Text style={styles.categoryText}>Work & Schedule</Text>
-          </View>
+            <ScrollView style={styles.modalContent}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Title (Optional)</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={newMemory.title}
+                  onChangeText={(text) => setNewMemory(prev => ({ ...prev, title: text }))}
+                  placeholder="Enter a title for this memory"
+                  placeholderTextColor="#666666"
+                />
+              </View>
 
-          <View style={styles.categoryCard}>
-            <Ionicons name="location-outline" size={20} color="#4A90E2" />
-            <Text style={styles.categoryText}>Places & Locations</Text>
-          </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Content *</Text>
+                <TextInput
+                  style={[styles.textInput, styles.textArea]}
+                  value={newMemory.content}
+                  onChangeText={(text) => setNewMemory(prev => ({ ...prev, content: text }))}
+                  placeholder="What would you like to remember?"
+                  placeholderTextColor="#666666"
+                  multiline
+                  numberOfLines={4}
+                />
+              </View>
 
-          <View style={styles.categoryCard}>
-            <Ionicons name="people-outline" size={20} color="#4A90E2" />
-            <Text style={styles.categoryText}>Family & Friends</Text>
-          </View>
-
-          <View style={styles.categoryCard}>
-            <Ionicons name="settings-outline" size={20} color="#4A90E2" />
-            <Text style={styles.categoryText}>Habits & Routines</Text>
-          </View>
-        </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Tags (Optional)</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={newMemory.tags}
+                  onChangeText={(text) => setNewMemory(prev => ({ ...prev, tags: text }))}
+                  placeholder="Separate tags with commas"
+                  placeholderTextColor="#666666"
+                />
+              </View>
+            </ScrollView>
+          </SafeAreaView>
+        </Modal>
       </ScrollView>
-
-      {/* Add Memory Modal */}
-      <Modal
-        visible={showAddModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowAddModal(false)}
-      >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity
-              onPress={() => setShowAddModal(false)}
-              style={styles.modalCloseButton}
-            >
-              <Text style={styles.modalCloseText}>Cancel</Text>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Add Memory</Text>
-            <TouchableOpacity
-              onPress={handleAddMemory}
-              style={[styles.modalSaveButton, saving && styles.modalSaveButtonDisabled]}
-              disabled={saving}
-            >
-              {saving ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text style={styles.modalSaveText}>Save</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.modalContent}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Title (Optional)</Text>
-              <TextInput
-                style={styles.textInput}
-                value={newMemory.title}
-                onChangeText={(text) => setNewMemory(prev => ({ ...prev, title: text }))}
-                placeholder="Enter a title for this memory"
-                placeholderTextColor="#666666"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Content *</Text>
-              <TextInput
-                style={[styles.textInput, styles.textArea]}
-                value={newMemory.content}
-                onChangeText={(text) => setNewMemory(prev => ({ ...prev, content: text }))}
-                placeholder="What would you like to remember?"
-                placeholderTextColor="#666666"
-                multiline
-                numberOfLines={4}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Category (Optional)</Text>
-              <TextInput
-                style={styles.textInput}
-                value={newMemory.category}
-                onChangeText={(text) => setNewMemory(prev => ({ ...prev, category: text }))}
-                placeholder="e.g., personal, work, preferences"
-                placeholderTextColor="#666666"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Tags (Optional)</Text>
-              <TextInput
-                style={styles.textInput}
-                value={newMemory.tags}
-                onChangeText={(text) => setNewMemory(prev => ({ ...prev, tags: text }))}
-                placeholder="Separate tags with commas"
-                placeholderTextColor="#666666"
-              />
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -482,19 +437,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#B0B0B0',
     textAlign: 'center',
-  },
-  categoryCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1E1E1E',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 8,
-  },
-  categoryText: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    marginLeft: 12,
   },
   loadingContainer: {
     flex: 1,
