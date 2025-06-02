@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+- Assume the database structure matches the expected schema.
+- Do not write any migration scripts for existing records -- assume existing table is empty

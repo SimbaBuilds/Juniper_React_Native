@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GoogleCalendarManager } from './calendar/GoogleCalendarManager';
+import { OutlookCalendarManager } from './calendar/OutlookCalendarManager';
+import { GmailManager } from './email/GmailManager';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
 
@@ -45,28 +47,12 @@ export const IntegrationsScreen: React.FC = () => {
         if (formattedIntegrations.length === 0) {
           const defaultIntegrations: Integration[] = [
             {
-              id: 'gmail',
-              name: 'Gmail',
-              credentials: 'Not configured',
-              automations: [],
-              connected: false,
-              icon: 'mail',
-            },
-            {
               id: 'outlook-email',
               name: 'Outlook Email',
               credentials: 'Not configured',
               automations: [],
               connected: false,
               icon: 'mail-outline',
-            },
-            {
-              id: 'outlook-calendar',
-              name: 'Outlook Calendar',
-              credentials: 'Not configured',
-              automations: [],
-              connected: false,
-              icon: 'calendar-outline',
             },
             {
               id: 'notion',
@@ -156,9 +142,19 @@ export const IntegrationsScreen: React.FC = () => {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Outlook Calendar</Text>
+          <OutlookCalendarManager />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Gmail</Text>
+          <GmailManager />
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Available Integrations</Text>
           
-          {integrations.filter(integration => integration.id !== 'google-calendar').map((integration) => (
+          {integrations.map((integration) => (
             <View key={integration.id} style={styles.integrationCard}>
               <View style={styles.integrationHeader}>
                 <View style={styles.integrationTitleRow}>

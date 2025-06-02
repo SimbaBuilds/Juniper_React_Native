@@ -123,7 +123,13 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         const updates = {
           deepgramEnabled: voiceSettings.deepgram_enabled,
           baseLanguageModel: voiceSettings.base_language_model,
-          generalInstructions: generalInstructions
+          generalInstructions: generalInstructions,
+          // XAI LiveSearch settings
+          xaiLiveSearchEnabled: voiceSettings.xai_live_search_enabled ?? false,
+          xaiLiveSearchSources: voiceSettings.xai_live_search_sources ?? [],
+          xaiLiveSearchCountry: voiceSettings.xai_live_search_country ?? 'US',
+          xaiLiveSearchXHandles: voiceSettings.xai_live_search_x_handles ?? [],
+          xaiLiveSearchSafeSearch: voiceSettings.xai_live_search_safe_search ?? true,
         };
         
         console.log('🔄 VOICE_CONTEXT: Updating with:', updates);

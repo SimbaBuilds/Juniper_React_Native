@@ -47,6 +47,12 @@ export const DatabaseService = {
         wake_word: updates.wake_word || 'Hey Jarvis',
         timezone: updates.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         preferences: updates.preferences || {},
+        // XAI LiveSearch defaults
+        xai_live_search_enabled: updates.xai_live_search_enabled ?? false,
+        xai_live_search_sources: updates.xai_live_search_sources ?? [],
+        xai_live_search_country: updates.xai_live_search_country ?? 'US',
+        xai_live_search_x_handles: updates.xai_live_search_x_handles ?? [],
+        xai_live_search_safe_search: updates.xai_live_search_safe_search ?? true,
         updated_at: new Date().toISOString()
       };
       
@@ -90,7 +96,13 @@ export const DatabaseService = {
     return {
       deepgram_enabled: profile.deepgram_enabled,
       base_language_model: profile.base_language_model,
-      general_instructions: profile.general_instructions
+      general_instructions: profile.general_instructions,
+      // XAI LiveSearch settings
+      xai_live_search_enabled: profile.xai_live_search_enabled,
+      xai_live_search_sources: profile.xai_live_search_sources,
+      xai_live_search_country: profile.xai_live_search_country,
+      xai_live_search_x_handles: profile.xai_live_search_x_handles,
+      xai_live_search_safe_search: profile.xai_live_search_safe_search,
     }
   },
 
@@ -114,6 +126,12 @@ export const DatabaseService = {
         wake_word: 'Hey Jarvis',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         preferences: {},
+        // XAI LiveSearch defaults
+        xai_live_search_enabled: false,
+        xai_live_search_sources: [],
+        xai_live_search_country: 'US',
+        xai_live_search_x_handles: [],
+        xai_live_search_safe_search: true,
         updated_at: new Date().toISOString()
       };
       

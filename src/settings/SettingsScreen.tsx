@@ -14,12 +14,19 @@ import { SettingsToggle } from './components/SettingsToggle';
 import { ExpandableSettingsToggle } from './components/ExpandableSettingsToggle';
 import { SettingsDropdown } from './components/SettingsDropdown';
 import { SettingsTextInput } from './components/SettingsTextInput';
+import { SettingsArrayInput } from './components/SettingsArrayInput';
 
 // Voice Settings interface
 export interface VoiceSettings {
   deepgramEnabled: boolean;
   baseLanguageModel: 'grok-3' | 'grok-3.5' | 'gpt-4o' | 'claude-3-5-sonnet-20241022';
   generalInstructions: string;
+  // XAI LiveSearch settings
+  xaiLiveSearchEnabled: boolean;
+  xaiLiveSearchSources: string[];
+  xaiLiveSearchCountry: string;
+  xaiLiveSearchXHandles: string[];
+  xaiLiveSearchSafeSearch: boolean;
 }
 
 // Model display mapping for UI
@@ -241,7 +248,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
   if (loading) {
     const getLoadingMessage = () => {
-      if (loadingFromDatabase) return 'Loading settings from database...';
+      if (loadingFromDatabase) return 'Loading settings...';
       if (settingsLoading) return 'Loading local settings...';
       if (permissionsLoading) return 'Checking permissions...';
       return 'Loading settings...';
@@ -357,12 +364,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             onValueChange={async (deepgramEnabled) => {
               await handleVoiceSettingsUpdate({ deepgramEnabled });
             }}
-            description="Enhanced voice recognition with Deepgram"
+            description="Determine how your assistant sounds."
             hasSubSettings={true}
           />
 
           <SettingsDropdown
-            label="Language Model"
+            label="Model Selection"
             value={settings.baseLanguageModel}
             options={Object.entries(MODEL_DISPLAY_NAMES).map(([value, label]) => ({
               label: label as string,
@@ -371,8 +378,74 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             onValueChange={async (baseLanguageModel) => {
               await handleVoiceSettingsUpdate({ baseLanguageModel });
             }}
-            description="Choose the AI model for processing your requests"
+            description="These models are used for chat only and satisfy different style/personality preferences; other models are used for complex backend tasks."
           />
+
+          <ExpandableSettingsToggle
+            label="XAI LiveSearch"
+            value={settings.xaiLiveSearchEnabled || false}
+            onValueChange={async (xaiLiveSearchEnabled) => {
+              await handleVoiceSettingsUpdate({ xaiLiveSearchEnabled });
+            }}
+            description="Make XAI LiveSearch the default search tool.  If toggled off, your assistant will default to a traditional web search engine."
+            hasSubSettings={true}
+          >
+            <View style={styles.sourcesContainer}>
+              <Text style={styles.sourcesLabel}>Search Sources</Text>
+              <Text style={styles.sourcesDescription}>
+                Select which data sources to include in search. Defaults to web and Twitter/X if none selected.
+              </Text>
+              {[
+                { key: 'web', label: 'Web', description: 'Search general websites' },
+                { key: 'x', label: 'Twitter/X', description: 'Search X posts and content' },
+                { key: 'news', label: 'News', description: 'Search news sources' },
+                { key: 'rss', label: 'RSS Feeds', description: 'Search RSS feed content' },
+              ].map((source) => (
+                <SettingsToggle
+                  key={source.key}
+                  label={source.label}
+                  value={(settings.xaiLiveSearchSources || []).includes(source.key)}
+                  onValueChange={async (enabled) => {
+                    const currentSources = settings.xaiLiveSearchSources || [];
+                    const newSources = enabled
+                      ? [...currentSources.filter((s: string) => s !== source.key), source.key]
+                      : currentSources.filter((s: string) => s !== source.key);
+                    await handleVoiceSettingsUpdate({ xaiLiveSearchSources: newSources });
+                  }}
+                  description={source.description}
+                />
+              ))}
+            </View>
+
+            <SettingsTextInput
+              label="Country Code"
+              value={settings.xaiLiveSearchCountry || ''}
+              onChangeText={async (xaiLiveSearchCountry: string) => {
+                await handleVoiceSettingsUpdate({ xaiLiveSearchCountry });
+              }}
+              placeholder="US"
+              description="ISO alpha-2 country code (e.g., US, GB, DE) for regional search focus. Defaults to all regions if none selected."
+            />
+
+            <SettingsArrayInput
+              label="X Handles"
+              values={settings.xaiLiveSearchXHandles || []}
+              onValuesChange={async (xaiLiveSearchXHandles: string[]) => {
+                await handleVoiceSettingsUpdate({ xaiLiveSearchXHandles });
+              }}
+              placeholder="Enter X handle (without @)"
+              description="Specify X handles to search posts from. Enter handles without the @ symbol (e.g., 'stephencurry30')."
+            />
+
+            <SettingsToggle
+              label="Safe Search"
+              value={settings.xaiLiveSearchSafeSearch !== false}
+              onValueChange={async (xaiLiveSearchSafeSearch) => {
+                await handleVoiceSettingsUpdate({ xaiLiveSearchSafeSearch });
+              }}
+              description="Enable safe search filtering for web and news sources. Enabled by default to filter explicit content."
+            />
+          </ExpandableSettingsToggle>
         </View>
 
         <View style={styles.accountSection}>
@@ -544,5 +617,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     marginLeft: 8,
+  },
+  sourcesContainer: {
+    marginBottom: 24,
+  },
+  sourcesLabel: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  sourcesDescription: {
+    color: '#B0B0B0',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 16,
   },
 }); 

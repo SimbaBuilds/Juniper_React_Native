@@ -1,6 +1,0 @@
----
-description: 
-globs: 
-alwaysApply: false
----
-Assume the database structure matches the expected schema.

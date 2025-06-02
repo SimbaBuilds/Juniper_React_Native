@@ -8,13 +8,22 @@ export type UserProfile = {
     wake_word: string;
     timezone: string;
     preferences: Record<string, any>;
+    // XAI LiveSearch settings
+    xai_live_search_enabled?: boolean;
+    xai_live_search_sources?: string[];
+    xai_live_search_country?: string;
+    xai_live_search_x_handles?: string[];
+    xai_live_search_safe_search?: boolean;
     created_at: Date;
     updated_at: Date;
   };
   
   export const userProfileFields = [
     'id', 'display_name', 'deepgram_enabled', 'base_language_model', 'general_instructions',
-    'assistant_name', 'wake_word', 'timezone', 'preferences', 'created_at', 'updated_at'
+    'assistant_name', 'wake_word', 'timezone', 'preferences', 
+    'xai_live_search_enabled', 'xai_live_search_sources', 'xai_live_search_country', 
+    'xai_live_search_x_handles', 'xai_live_search_safe_search',
+    'created_at', 'updated_at'
   ] as const;
   export type UserProfileField = (typeof userProfileFields)[number];
   
@@ -79,114 +88,8 @@ export type UserProfile = {
     'source_conversation_id', 'last_accessed', 'created_at', 'updated_at'
   ] as const;
   export type MemoryField = (typeof memoryFields)[number];
+
   
-  export type NewsCategory = {
-    id: string;
-    user_id: string;
-    name: string;
-    created_at: Date;
-  };
-  
-  export const newsCategoryFields = [
-    'id', 'user_id', 'name', 'created_at'
-  ] as const;
-  export type NewsCategoryField = (typeof newsCategoryFields)[number];
-  
-  export type NewsSource = {
-    id: string;
-    user_id: string;
-    category_id: string;
-    name: string;
-    affiliation?: string;
-    medium?: string;
-    created_at: Date;
-  };
-  
-  export const newsSourceFields = [
-    'id', 'user_id', 'category_id', 'name', 'affiliation', 
-    'medium', 'created_at'
-  ] as const;
-  export type NewsSourceField = (typeof newsSourceFields)[number];
-  
-  
-  export type PortfolioAccount = {
-    id: string;
-    user_id: string;
-    account_name: string;
-    account_type: string;
-    provider?: string;
-    api_credentials?: Record<string, any>;
-    is_active: boolean;
-    last_sync?: Date;
-    created_at: Date;
-  };
-  
-  export const portfolioAccountFields = [
-    'id', 'user_id', 'account_name', 'account_type', 'provider',
-    'api_credentials', 'is_active', 'last_sync', 'created_at'
-  ] as const;
-  export type PortfolioAccountField = (typeof portfolioAccountFields)[number];
-  
-  export type Ticker = {
-    id: string;
-    user_id: string;
-    account_id?: string;
-    symbol: string;
-    quantity?: number;
-    average_cost?: number;
-    current_price?: number;
-    market_value?: number;
-    last_updated: Date;
-  };
-  
-  export const TickerFields = [
-    'id', 'user_id', 'account_id', 'symbol', 'quantity', 'average_cost',
-    'current_price', 'market_value', 'last_updated'
-  ] as const;
-  export type TickerField = (typeof TickerFields)[number];
-  
-  export type CalendarEvent = {
-    id: string;
-    user_id: string;
-    title: string;
-    description?: string;
-    start_time: Date;
-    end_time?: Date;
-    all_day: boolean;
-    location?: string;
-    attendees: string[];
-    event_type: string;
-    source: string;
-    reminder_settings: Record<string, any>;
-    created_at: Date;
-    updated_at: Date;
-  };
-  
-  export const calendarEventFields = [
-    'id', 'user_id', 'title', 'description', 'start_time', 'end_time',
-    'all_day', 'location', 'attendees', 'event_type', 'source',
-    'reminder_settings', 'created_at', 'updated_at'
-  ] as const;
-  export type CalendarEventField = (typeof calendarEventFields)[number];
-  
-  export type Note = {
-    id: string;
-    user_id: string;
-    title?: string;
-    content: string;
-    note_type: string;
-    tags: string[];
-    external_sync?: Record<string, any>;
-    project_context?: string;
-    created_at: Date;
-    updated_at: Date;
-  };
-  
-  export const noteFields = [
-    'id', 'user_id', 'title', 'content', 'note_type', 'tags',
-    'external_sync', 'project_context', 'created_at', 'updated_at'
-  ] as const;
-  export type NoteField = (typeof noteFields)[number];
   
   export type UserHabit = {
     id: string;
@@ -226,22 +129,6 @@ export type UserProfile = {
   ] as const;
   export type AutomationField = (typeof automationFields)[number];
   
-  export type VoiceRecording = {
-    id: string;
-    user_id: string;
-    message_id?: string;
-    file_path: string;
-    duration_seconds?: number;
-    transcription?: string;
-    confidence_score?: number;
-    created_at: Date;
-  };
-  
-  export const voiceRecordingFields = [
-    'id', 'user_id', 'message_id', 'file_path', 'duration_seconds',
-    'transcription', 'confidence_score', 'created_at'
-  ] as const;
-  export type VoiceRecordingField = (typeof voiceRecordingFields)[number];
   
   export type Integration = {
     id: string;
@@ -258,36 +145,8 @@ export type UserProfile = {
     'is_active', 'last_used', 'created_at'
   ] as const;
   export type IntegrationField = (typeof integrationFields)[number];
+
   
-  export type TransportationPreference = {
-    id: string;
-    user_id: string;
-    transport_type: string;
-    preferences: Record<string, any>;
-    created_at: Date;
-  };
-  
-  export const transportationPreferenceFields = [
-    'id', 'user_id', 'transport_type', 'preferences', 'created_at'
-  ] as const;
-  export type TransportationPreferenceField = (typeof transportationPreferenceFields)[number];
-  
-  export type DailyBriefingConfig = {
-    id: string;
-    user_id: string;
-    trigger_phrases: string[];
-    enabled_sections: Record<string, boolean>;
-    section_order: string[];
-    custom_sections: Record<string, any>;
-    created_at: Date;
-    updated_at: Date;
-  };
-  
-  export const dailyBriefingConfigFields = [
-    'id', 'user_id', 'trigger_phrases', 'enabled_sections',
-    'section_order', 'custom_sections', 'created_at', 'updated_at'
-  ] as const;
-  export type DailyBriefingConfigField = (typeof dailyBriefingConfigFields)[number];
 
   export type GoogleCalendarIntegration = {
     id: string;
@@ -307,4 +166,89 @@ export type UserProfile = {
     'scope', 'is_active', 'last_sync', 'created_at', 'updated_at'
   ] as const;
   export type GoogleCalendarIntegrationField = (typeof googleCalendarIntegrationFields)[number];
+
+  export type OutlookCalendarIntegration = {
+    id: string;
+    user_id: string;
+    access_token: string;
+    refresh_token: string;
+    expires_at: Date;
+    scope: string;
+    is_active: boolean;
+    last_sync?: Date;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const outlookCalendarIntegrationFields = [
+    'id', 'user_id', 'access_token', 'refresh_token', 'expires_at',
+    'scope', 'is_active', 'last_sync', 'created_at', 'updated_at'
+  ] as const;
+  export type OutlookCalendarIntegrationField = (typeof outlookCalendarIntegrationFields)[number];
+
+  export type GmailIntegration = {
+    id: string;
+    user_id: string;
+    access_token: string;
+    refresh_token: string;
+    expires_at: Date;
+    scope: string;
+    is_active: boolean;
+    email_address: string;
+    last_sync?: Date;
+    sync_settings: Record<string, any>;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const gmailIntegrationFields = [
+    'id', 'user_id', 'access_token', 'refresh_token', 'expires_at',
+    'scope', 'is_active', 'email_address', 'last_sync', 'sync_settings',
+    'created_at', 'updated_at'
+  ] as const;
+  export type GmailIntegrationField = (typeof gmailIntegrationFields)[number];
+
+  export type OutlookEmailIntegration = {
+    id: string;
+    user_id: string;
+    access_token: string;
+    refresh_token: string;
+    expires_at: Date;
+    scope: string;
+    is_active: boolean;
+    email_address: string;
+    last_sync?: Date;
+    sync_settings: Record<string, any>;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const outlookEmailIntegrationFields = [
+    'id', 'user_id', 'access_token', 'refresh_token', 'expires_at',
+    'scope', 'is_active', 'email_address', 'last_sync', 'sync_settings',
+    'created_at', 'updated_at'
+  ] as const;
+  export type OutlookEmailIntegrationField = (typeof outlookEmailIntegrationFields)[number];
+
+  export type NotionIntegration = {
+    id: string;
+    user_id: string;
+    access_token: string;
+    bot_id: string;
+    workspace_name: string;
+    workspace_id: string;
+    is_active: boolean;
+    permissions: string[];
+    last_sync?: Date;
+    sync_settings: Record<string, any>;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const notionIntegrationFields = [
+    'id', 'user_id', 'access_token', 'bot_id', 'workspace_name',
+    'workspace_id', 'is_active', 'permissions', 'last_sync', 'sync_settings',
+    'created_at', 'updated_at'
+  ] as const;
+  export type NotionIntegrationField = (typeof notionIntegrationFields)[number];
 

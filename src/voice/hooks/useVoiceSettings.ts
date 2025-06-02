@@ -6,8 +6,14 @@ const VOICE_SETTINGS_KEY = 'voice_settings';
 
 const defaultVoiceSettings: VoiceSettings = {
   deepgramEnabled: false,
-  baseLanguageModel: 'claude-3-5-sonnet-20241022',
+  baseLanguageModel: 'grok-3',
   generalInstructions: 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
+  // XAI LiveSearch settings
+  xaiLiveSearchEnabled: false,
+  xaiLiveSearchSources: ["web", "x"],
+  xaiLiveSearchCountry: 'US',
+  xaiLiveSearchXHandles: [],
+  xaiLiveSearchSafeSearch: true,
 };
 
 export const useVoiceSettings = () => {
