@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { GoogleCalendarManager } from './calendar/GoogleCalendarManager';
 import { OutlookCalendarManager } from './calendar/OutlookCalendarManager';
 import { GmailManager } from './email/GmailManager';
+import { OutlookEmailManager } from './email/OutlookEmailManager';
+import { NotionManager } from './notion/NotionManager';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
 
@@ -16,11 +18,42 @@ interface Integration {
   icon: keyof typeof Ionicons.glyphMap;
 }
 
+interface ExpandableSection {
+  id: string;
+  title: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  expanded: boolean;
+  integrations: string[];
+}
+
 export const IntegrationsScreen: React.FC = () => {
   const { user } = useAuth();
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sections, setSections] = useState<ExpandableSection[]>([
+    {
+      id: 'google',
+      title: 'Google Services',
+      icon: 'logo-google',
+      expanded: false,
+      integrations: ['google-calendar', 'gmail']
+    },
+    {
+      id: 'microsoft',
+      title: 'Microsoft Services',
+      icon: 'logo-microsoft',
+      expanded: false,
+      integrations: ['outlook-calendar', 'outlook-email']
+    },
+    {
+      id: 'notion',
+      title: 'Notion',
+      icon: 'document-text-outline',
+      expanded: false,
+      integrations: ['notion']
+    }
+  ]);
 
   // Load integrations from database
   useEffect(() => {
@@ -94,8 +127,96 @@ export const IntegrationsScreen: React.FC = () => {
     }
   };
 
+  const toggleSection = (sectionId: string) => {
+    setSections(prev => prev.map(section => 
+      section.id === sectionId 
+        ? { ...section, expanded: !section.expanded }
+        : section
+    ));
+  };
+
   const handleConnectPlaceholder = (integrationName: string) => {
     console.log(`Connect ${integrationName} placeholder`);
+  };
+
+  const renderGoogleServices = () => (
+    <View style={styles.servicesContainer}>
+      <View style={styles.serviceSection}>
+        <Text style={styles.serviceTitle}>Google Calendar</Text>
+        <GoogleCalendarManager />
+      </View>
+      
+      <View style={styles.serviceSection}>
+        <Text style={styles.serviceTitle}>Gmail</Text>
+        <GmailManager />
+      </View>
+      
+      <View style={styles.unifiedConnectSection}>
+        <Text style={styles.unifiedTitle}>Connect All Google Services</Text>
+        <Text style={styles.unifiedDescription}>
+          Connect to Google Calendar, Gmail, and Drive with a single authentication flow.
+          Grants read/write for calendar, read/draft/send for email, and read-only for drive.
+        </Text>
+        <TouchableOpacity
+          style={styles.unifiedConnectButton}
+          onPress={() => console.log('Connect Google Services')}
+        >
+          <Ionicons name="logo-google" size={20} color="#FFFFFF" />
+          <Text style={styles.unifiedConnectText}>Connect Google</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderMicrosoftServices = () => (
+    <View style={styles.servicesContainer}>
+      <View style={styles.serviceSection}>
+        <Text style={styles.serviceTitle}>Outlook Calendar</Text>
+        <OutlookCalendarManager />
+      </View>
+      
+      <View style={styles.serviceSection}>
+        <Text style={styles.serviceTitle}>Outlook Email</Text>
+        <OutlookEmailManager />
+      </View>
+      
+      <View style={styles.unifiedConnectSection}>
+        <Text style={styles.unifiedTitle}>Connect All Microsoft Services</Text>
+        <Text style={styles.unifiedDescription}>
+          Connect to Outlook Calendar, Outlook Email, and OneDrive with a single authentication flow.
+          Grants read/write for calendar, read/draft/send for email, and read-only for drive.
+        </Text>
+        <TouchableOpacity
+          style={styles.unifiedConnectButton}
+          onPress={() => console.log('Connect Microsoft Services')}
+        >
+          <Ionicons name="logo-microsoft" size={20} color="#FFFFFF" />
+          <Text style={styles.unifiedConnectText}>Connect Microsoft</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderNotionServices = () => (
+    <View style={styles.servicesContainer}>
+      <View style={styles.serviceSection}>
+        <Text style={styles.serviceTitle}>Notion Tasks</Text>
+        <NotionManager />
+      </View>
+    </View>
+  );
+
+  const renderSectionContent = (sectionId: string) => {
+    switch (sectionId) {
+      case 'google':
+        return renderGoogleServices();
+      case 'microsoft':
+        return renderMicrosoftServices();
+      case 'notion':
+        return renderNotionServices();
+      default:
+        return null;
+    }
   };
 
   if (loading) {
@@ -136,23 +257,33 @@ export const IntegrationsScreen: React.FC = () => {
           </Text>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Google Calendar</Text>
-          <GoogleCalendarManager />
-        </View>
+        {sections.map((section) => (
+          <View key={section.id} style={styles.expandableSection}>
+            <TouchableOpacity 
+              style={styles.sectionHeader}
+              onPress={() => toggleSection(section.id)}
+            >
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name={section.icon} size={24} color="#4A90E2" />
+                <Text style={styles.sectionTitle}>{section.title}</Text>
+              </View>
+              <Ionicons 
+                name={section.expanded ? 'chevron-up' : 'chevron-down'} 
+                size={20} 
+                color="#B0B0B0" 
+              />
+            </TouchableOpacity>
+            
+            {section.expanded && (
+              <View style={styles.sectionContent}>
+                {renderSectionContent(section.id)}
+              </View>
+            )}
+          </View>
+        ))}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Outlook Calendar</Text>
-          <OutlookCalendarManager />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Gmail</Text>
-          <GmailManager />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Available Integrations</Text>
+          <Text style={styles.sectionTitle}>Legacy Integrations</Text>
           
           {integrations.map((integration) => (
             <View key={integration.id} style={styles.integrationCard}>
@@ -227,14 +358,81 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  section: {
-    marginBottom: 24,
+  expandableSection: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 8,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '500',
     color: '#FFFFFF',
+    marginLeft: 12,
+  },
+  sectionContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  servicesContainer: {
+    gap: 16,
+  },
+  serviceSection: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 8,
+    padding: 16,
+  },
+  serviceTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    marginBottom: 12,
+  },
+  unifiedConnectSection: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#4A90E2',
+  },
+  unifiedTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  unifiedDescription: {
+    fontSize: 14,
+    color: '#B0B0B0',
+    lineHeight: 20,
     marginBottom: 16,
+  },
+  unifiedConnectButton: {
+    backgroundColor: '#4A90E2',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 6,
+    gap: 8,
+  },
+  unifiedConnectText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  section: {
+    marginBottom: 24,
   },
   integrationCard: {
     backgroundColor: '#1E1E1E',
@@ -272,7 +470,7 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
   },
   disconnectedText: {
-    color: '#F44336',
+    color: '#757575', // Changed from red to grey as requested
   },
   integrationDetails: {
     marginBottom: 12,

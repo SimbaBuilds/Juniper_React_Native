@@ -235,20 +235,21 @@ export type UserProfile = {
     user_id: string;
     access_token: string;
     bot_id: string;
-    workspace_name: string;
+    workspace_name?: string;
+    workspace_icon?: string;
     workspace_id: string;
+    owner_info?: Record<string, any>;
+    duplicated_template_id?: string;
     is_active: boolean;
-    permissions: string[];
     last_sync?: Date;
-    sync_settings: Record<string, any>;
     created_at: Date;
     updated_at: Date;
   };
 
   export const notionIntegrationFields = [
     'id', 'user_id', 'access_token', 'bot_id', 'workspace_name',
-    'workspace_id', 'is_active', 'permissions', 'last_sync', 'sync_settings',
-    'created_at', 'updated_at'
+    'workspace_icon', 'workspace_id', 'owner_info', 'duplicated_template_id',
+    'is_active', 'last_sync', 'created_at', 'updated_at'
   ] as const;
   export type NotionIntegrationField = (typeof notionIntegrationFields)[number];
 
