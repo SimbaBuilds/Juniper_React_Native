@@ -123,7 +123,16 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         const updates = {
           deepgramEnabled: voiceSettings.deepgram_enabled,
           baseLanguageModel: voiceSettings.base_language_model,
-          generalInstructions: generalInstructions
+          generalInstructions: generalInstructions,
+          assistantName: voiceSettings.assistant_name || 'Assistant',
+          wakeWord: voiceSettings.wake_word || 'Jarvis',
+          wakeWordDetectionEnabled: voiceSettings.wake_word_detection_enabled ?? false,
+          // XAI LiveSearch settings
+          xaiLiveSearchEnabled: voiceSettings.xai_live_search_enabled ?? false,
+          xaiLiveSearchSources: voiceSettings.xai_live_search_sources ?? [],
+          xaiLiveSearchCountry: voiceSettings.xai_live_search_country ?? 'US',
+          xaiLiveSearchXHandles: voiceSettings.xai_live_search_x_handles ?? [],
+          xaiLiveSearchSafeSearch: voiceSettings.xai_live_search_safe_search ?? true,
         };
         
         console.log('🔄 VOICE_CONTEXT: Updating with:', updates);
@@ -139,6 +148,14 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       console.error('❌ VOICE_CONTEXT: Error refreshing settings:', error);
     }
   }, [user?.id]);
+
+  // Load settings from database when user logs in or changes
+  useEffect(() => {
+    if (user?.id) {
+      console.log('🔄 VOICE_CONTEXT: User logged in, refreshing settings...');
+      refreshSettings();
+    }
+  }, [user?.id, refreshSettings]);
 
   // Set up event listeners once
   useEffect(() => {

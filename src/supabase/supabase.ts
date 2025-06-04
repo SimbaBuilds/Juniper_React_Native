@@ -47,6 +47,12 @@ export const DatabaseService = {
         wake_word: updates.wake_word || 'Hey Jarvis',
         timezone: updates.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         preferences: updates.preferences || {},
+        // XAI LiveSearch defaults
+        xai_live_search_enabled: updates.xai_live_search_enabled ?? false,
+        xai_live_search_sources: updates.xai_live_search_sources ?? [],
+        xai_live_search_country: updates.xai_live_search_country ?? 'US',
+        xai_live_search_x_handles: updates.xai_live_search_x_handles ?? [],
+        xai_live_search_safe_search: updates.xai_live_search_safe_search ?? true,
         updated_at: new Date().toISOString()
       };
       
@@ -90,7 +96,16 @@ export const DatabaseService = {
     return {
       deepgram_enabled: profile.deepgram_enabled,
       base_language_model: profile.base_language_model,
-      general_instructions: profile.general_instructions
+      general_instructions: profile.general_instructions,
+      assistant_name: profile.assistant_name,
+      wake_word: profile.wake_word,
+      wake_word_detection_enabled: profile.wake_word_detection_enabled,
+      // XAI LiveSearch settings
+      xai_live_search_enabled: profile.xai_live_search_enabled,
+      xai_live_search_sources: profile.xai_live_search_sources,
+      xai_live_search_country: profile.xai_live_search_country,
+      xai_live_search_x_handles: profile.xai_live_search_x_handles,
+      xai_live_search_safe_search: profile.xai_live_search_safe_search,
     }
   },
 
@@ -110,10 +125,17 @@ export const DatabaseService = {
         deepgram_enabled: false,
         base_language_model: 'claude-3-5-sonnet-20241022',
         general_instructions: 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
-        assistant_name: 'Jarvis',
-        wake_word: 'Hey Jarvis',
+        assistant_name: 'Assistant',
+        wake_word: 'Jarvis',
+        wake_word_detection_enabled: false,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         preferences: {},
+        // XAI LiveSearch defaults
+        xai_live_search_enabled: false,
+        xai_live_search_sources: [],
+        xai_live_search_country: 'US',
+        xai_live_search_x_handles: [],
+        xai_live_search_safe_search: true,
         updated_at: new Date().toISOString()
       };
       
