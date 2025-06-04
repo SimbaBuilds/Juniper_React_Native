@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Switch, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { useWakeWord } from '../WakeWordContext';
+import { useVoice } from '../../voice/VoiceContext';
 import WakeWordService, { WakeWordEvents } from '../WakeWordService';
 
 export const WakeWordToggle: React.FC = () => {
     const { isEnabled, setEnabled } = useWakeWord();
+    const { voiceSettings, updateVoiceSettings } = useVoice();
     const [detectionAnimation] = useState(new Animated.Value(0));
     const [isDetected, setIsDetected] = useState(false);
 
@@ -39,7 +41,11 @@ export const WakeWordToggle: React.FC = () => {
 
     const handleToggle = async (value: boolean) => {
         try {
-            await setEnabled(value);
+            // Update both the wake word context and the database-backed voice settings
+            await Promise.all([
+                setEnabled(value),
+                updateVoiceSettings({ wakeWordDetectionEnabled: value })
+            ]);
         } catch (error) {
             console.error('Error toggling wake word:', error);
         }
@@ -58,6 +64,9 @@ export const WakeWordToggle: React.FC = () => {
         ],
     };
 
+    // Use the wake word from voice settings if available
+    const currentWakeWord = voiceSettings?.wakeWord || 'Jarvis';
+
     return (
         <View style={styles.container}>
             <View style={styles.row}>
@@ -73,7 +82,7 @@ export const WakeWordToggle: React.FC = () => {
             {isEnabled && (
                 <View style={styles.statusContainer}>
                     <Text style={styles.statusText}>
-                        Listening for "Jarvis"
+                        Listening for "{currentWakeWord}"
                     </Text>
                     {isDetected && (
                         <Animated.View style={[styles.detectionIndicator, detectionIndicatorStyle]}>

@@ -97,6 +97,9 @@ export const DatabaseService = {
       deepgram_enabled: profile.deepgram_enabled,
       base_language_model: profile.base_language_model,
       general_instructions: profile.general_instructions,
+      assistant_name: profile.assistant_name,
+      wake_word: profile.wake_word,
+      wake_word_detection_enabled: profile.wake_word_detection_enabled,
       // XAI LiveSearch settings
       xai_live_search_enabled: profile.xai_live_search_enabled,
       xai_live_search_sources: profile.xai_live_search_sources,
@@ -122,8 +125,9 @@ export const DatabaseService = {
         deepgram_enabled: false,
         base_language_model: 'claude-3-5-sonnet-20241022',
         general_instructions: 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
-        assistant_name: 'Jarvis',
-        wake_word: 'Hey Jarvis',
+        assistant_name: 'Assistant',
+        wake_word: 'Jarvis',
+        wake_word_detection_enabled: false,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         preferences: {},
         // XAI LiveSearch defaults

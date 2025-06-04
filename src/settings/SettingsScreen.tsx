@@ -21,6 +21,9 @@ export interface VoiceSettings {
   deepgramEnabled: boolean;
   baseLanguageModel: 'grok-3' | 'grok-3.5' | 'gpt-4o' | 'claude-3-5-sonnet-20241022';
   generalInstructions: string;
+  assistantName: string;
+  wakeWord: string;
+  wakeWordDetectionEnabled: boolean;
   // XAI LiveSearch settings
   xaiLiveSearchEnabled: boolean;
   xaiLiveSearchSources: string[];
@@ -357,6 +360,26 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             )}
           </View>
+
+          <SettingsTextInput
+            label="Assistant Name"
+            value={settings.assistantName || ''}
+            onChangeText={async (assistantName: string) => {
+              await handleVoiceSettingsUpdate({ assistantName });
+            }}
+            placeholder="Assistant"
+            description="The name of your AI assistant"
+          />
+
+          <SettingsTextInput
+            label="Wake Word"
+            value={settings.wakeWord || ''}
+            onChangeText={async (wakeWord: string) => {
+              await handleVoiceSettingsUpdate({ wakeWord });
+            }}
+            placeholder="Jarvis"
+            description="The word you'll say to activate voice recognition"
+          />
 
           <ExpandableSettingsToggle
             label="Deepgram Voice"

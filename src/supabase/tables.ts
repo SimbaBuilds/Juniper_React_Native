@@ -6,6 +6,7 @@ export type UserProfile = {
     general_instructions: string;
     assistant_name: string;
     wake_word: string;
+    wake_word_detection_enabled: boolean;
     timezone: string;
     preferences: Record<string, any>;
     // XAI LiveSearch settings
@@ -20,7 +21,7 @@ export type UserProfile = {
   
   export const userProfileFields = [
     'id', 'display_name', 'deepgram_enabled', 'base_language_model', 'general_instructions',
-    'assistant_name', 'wake_word', 'timezone', 'preferences', 
+    'assistant_name', 'wake_word', 'wake_word_detection_enabled', 'timezone', 'preferences', 
     'xai_live_search_enabled', 'xai_live_search_sources', 'xai_live_search_country', 
     'xai_live_search_x_handles', 'xai_live_search_safe_search',
     'created_at', 'updated_at'

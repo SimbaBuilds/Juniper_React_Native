@@ -9,7 +9,7 @@ const GOOGLE_CONFIG = {
   CLIENT_ID: Constants.expoConfig?.extra?.GOOGLE_CLIENT_ID, 
   API_KEY: Constants.expoConfig?.extra?.GOOGLE_API_KEY, 
   DISCOVERY_DOC: 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest',
-  SCOPES: 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events',
+  SCOPES: 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/contacts.readonly', 
   // Proper Android OAuth redirect URI format
   get REDIRECT_URI() {
     const clientId = this.CLIENT_ID;
