@@ -8,9 +8,10 @@ const defaultVoiceSettings: VoiceSettings = {
   deepgramEnabled: false,
   baseLanguageModel: 'grok-3',
   generalInstructions: 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
-  assistantName: 'Assistant',
-  wakeWord: 'Jarvis',
+  selectedWakeWord: 'JARVIS',
+  wakeWordSensitivity: 0.3,
   wakeWordDetectionEnabled: false,
+  selectedDeepgramVoice: 'aura-2-arcas-en',
   // XAI LiveSearch settings
   xaiLiveSearchEnabled: false,
   xaiLiveSearchSources: ["web", "x"],

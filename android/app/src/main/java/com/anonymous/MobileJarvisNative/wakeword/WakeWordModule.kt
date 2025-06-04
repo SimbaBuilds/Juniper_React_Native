@@ -313,6 +313,108 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     }
     
     /**
+     * Get available wake words
+     */
+    @ReactMethod
+    fun getAvailableWakeWords(promise: Promise) {
+        try {
+            val wakeWords = Arguments.createArray()
+            WakeWordService.AVAILABLE_WAKE_WORDS.keys.forEach { wakeWord ->
+                wakeWords.pushString(wakeWord)
+            }
+            
+            val result = Arguments.createMap()
+            result.putArray("wakeWords", wakeWords)
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting available wake words: ${e.message}", e)
+            promise.reject("GET_WAKE_WORDS_ERROR", "Failed to get available wake words: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Set the selected wake word
+     */
+    @ReactMethod
+    fun setSelectedWakeWord(wakeWord: String, promise: Promise) {
+        try {
+            if (!WakeWordService.AVAILABLE_WAKE_WORDS.containsKey(wakeWord)) {
+                promise.reject("INVALID_WAKE_WORD", "Wake word '$wakeWord' is not available")
+                return
+            }
+            
+            val prefs = reactApplicationContext.getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
+            prefs.edit().putString("selected_wake_word", wakeWord).apply()
+            
+            val result = Arguments.createMap()
+            result.putBoolean("success", true)
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting wake word: ${e.message}", e)
+            promise.reject("SET_WAKE_WORD_ERROR", "Failed to set wake word: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Get the selected wake word
+     */
+    @ReactMethod
+    fun getSelectedWakeWord(promise: Promise) {
+        try {
+            val prefs = reactApplicationContext.getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
+            val selectedWakeWord = prefs.getString("selected_wake_word", "JARVIS") ?: "JARVIS"
+            
+            val result = Arguments.createMap()
+            result.putString("wakeWord", selectedWakeWord)
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting selected wake word: ${e.message}", e)
+            promise.reject("GET_WAKE_WORD_ERROR", "Failed to get selected wake word: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Set wake word sensitivity
+     */
+    @ReactMethod
+    fun setWakeWordSensitivity(sensitivity: Float, promise: Promise) {
+        try {
+            if (sensitivity < 0.0f || sensitivity > 1.0f) {
+                promise.reject("INVALID_SENSITIVITY", "Sensitivity must be between 0.0 and 1.0")
+                return
+            }
+            
+            val prefs = reactApplicationContext.getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
+            prefs.edit().putFloat("wake_word_sensitivity", sensitivity).apply()
+            
+            val result = Arguments.createMap()
+            result.putBoolean("success", true)
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting wake word sensitivity: ${e.message}", e)
+            promise.reject("SET_SENSITIVITY_ERROR", "Failed to set wake word sensitivity: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Get wake word sensitivity
+     */
+    @ReactMethod
+    fun getWakeWordSensitivity(promise: Promise) {
+        try {
+            val prefs = reactApplicationContext.getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
+            val sensitivity = prefs.getFloat("wake_word_sensitivity", 0.3f)
+            
+            val result = Arguments.createMap()
+            result.putDouble("sensitivity", sensitivity.toDouble())
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting wake word sensitivity: ${e.message}", e)
+            promise.reject("GET_SENSITIVITY_ERROR", "Failed to get wake word sensitivity: ${e.message}", e)
+        }
+    }
+    
+    /**
      * Helper method to send events to JavaScript
      */
     private fun sendEvent(eventName: String, params: WritableMap?) {

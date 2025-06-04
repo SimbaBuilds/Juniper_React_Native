@@ -124,9 +124,11 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           deepgramEnabled: voiceSettings.deepgram_enabled,
           baseLanguageModel: voiceSettings.base_language_model,
           generalInstructions: generalInstructions,
-          assistantName: voiceSettings.assistant_name || 'Assistant',
           wakeWord: voiceSettings.wake_word || 'Jarvis',
+          selectedWakeWord: voiceSettings.selected_wake_word || 'JARVIS',
+          wakeWordSensitivity: voiceSettings.wake_word_sensitivity ?? 0.3,
           wakeWordDetectionEnabled: voiceSettings.wake_word_detection_enabled ?? false,
+          selectedDeepgramVoice: voiceSettings.selected_deepgram_voice || 'aura-2-arcas-en',
           // XAI LiveSearch settings
           xaiLiveSearchEnabled: voiceSettings.xai_live_search_enabled ?? false,
           xaiLiveSearchSources: voiceSettings.xai_live_search_sources ?? [],

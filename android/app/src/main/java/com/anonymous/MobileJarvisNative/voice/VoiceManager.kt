@@ -243,6 +243,14 @@ class VoiceManager private constructor() {
     }
     
     /**
+     * Called when the wake word is detected (simplified version).
+     * Returns true if the wake word detection was processed.
+     */
+    fun onWakeWordDetected(): Boolean {
+        return onWakeWordDetected(System.currentTimeMillis())
+    }
+    
+    /**
      * Initialize Whisper client for speech recognition
      */
     private fun initializeWhisperClient() {

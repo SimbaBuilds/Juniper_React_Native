@@ -31,6 +31,27 @@ class DeepgramClient(private val context: Context) {
     private var centralAudioManager: com.anonymous.MobileJarvisNative.utils.AudioManager? = null
     private var currentRequestId: String? = null
     
+    companion object {
+        // Available Deepgram Aura models based on latest docs
+        val AVAILABLE_VOICES = mapOf(
+            "arcas" to "aura-2-arcas-en",
+            "iris" to "aura-2-iris-en", 
+            "mars" to "aura-2-mars-en",
+            "orpheus" to "aura-2-orpheus-en",
+            "athena" to "aura-2-athena-en",
+            "cordelia" to "aura-2-cordelia-en",
+            "draco" to "aura-2-draco-en",
+            "hermes" to "aura-2-hermes-en",
+            "hyperion" to "aura-2-hyperion-en",
+            "theia" to "aura-2-theia-en",
+            "athena-legacy" to "aura-athena-en",
+            "helios" to "aura-helios-en"
+        )
+        
+        const val DEFAULT_VOICE = "asteria"
+        const val DEFAULT_MODEL = "aura-asteria-en"
+    }
+    
     /**
      * Initialize the Deepgram client
      */
@@ -127,7 +148,7 @@ class DeepgramClient(private val context: Context) {
     /**
      * Convert text to speech and play the audio
      */
-    suspend fun speak(text: String) {
+    suspend fun convertTextToSpeech(text: String) = withContext(Dispatchers.IO) {
         if (!isInitialized) {
             Log.e(TAG, "Deepgram client not initialized")
             throw IllegalStateException("Deepgram client not initialized")
@@ -150,24 +171,27 @@ class DeepgramClient(private val context: Context) {
                 throw IllegalStateException("Deepgram API key not found")
             }
             
-            // Create request JSON
+            // Get selected voice from preferences
+            val prefs = context.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
+            val selectedVoice = prefs.getString("selected_voice", DEFAULT_VOICE) ?: DEFAULT_VOICE
+            val voiceModel = AVAILABLE_VOICES[selectedVoice] ?: DEFAULT_MODEL
+            
+            // Create request JSON using the latest API format
             val requestJson = JSONObject().apply {
                 put("text", text)
-                put("voice", "aura-professional")  // Using a professional voice
-                put("model", "aura-asteria-en")    // High-quality English model
-                put("sample_rate", 24000)          // Higher sample rate for better quality
-                put("encoding", "mp3")             // MP3 encoding for better quality
             }
             
-            // Create request
+            // Create request with model as query parameter (latest API format)
+            val url = "https://api.deepgram.com/v1/speak?model=$voiceModel"
+            
             val request = Request.Builder()
-                .url("https://api.deepgram.com/v1/speak")
+                .url(url)
                 .header("Authorization", "Token $apiKey")
                 .header("Content-Type", "application/json")
                 .post(requestJson.toString().toRequestBody("application/json".toMediaTypeOrNull()))
                 .build()
             
-            Log.d(TAG, "Sending TTS request to Deepgram")
+            Log.d(TAG, "Sending TTS request to Deepgram with model: $voiceModel")
             
             // Execute request
             val response = okHttpClient.newCall(request).execute()
@@ -241,6 +265,65 @@ class DeepgramClient(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Error in TTS process: ${e.message}", e)
             releaseAudioFocus()
+            throw e
+        }
+    }
+    
+    /**
+     * Convert text to speech and return audio data without playing
+     */
+    suspend fun convertTextToSpeechData(text: String, voice: String? = null): ByteArray = withContext(Dispatchers.IO) {
+        if (!isInitialized) {
+            Log.e(TAG, "Deepgram client not initialized")
+            throw IllegalStateException("Deepgram client not initialized")
+        }
+        
+        Log.d(TAG, "Converting text to speech data: '$text' with voice: $voice")
+        
+        try {
+            // Get Deepgram API key from config
+            val apiKey = configManager.getDeepgramApiKey()
+            if (apiKey.isBlank()) {
+                Log.e(TAG, "Deepgram API key not found in config")
+                throw IllegalStateException("Deepgram API key not found")
+            }
+            
+            // Use provided voice or get from preferences
+            val selectedVoice = voice ?: run {
+                val prefs = context.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
+                prefs.getString("selected_voice", DEFAULT_VOICE) ?: DEFAULT_VOICE
+            }
+            val voiceModel = AVAILABLE_VOICES[selectedVoice] ?: DEFAULT_MODEL
+            
+            // Create request JSON
+            val requestJson = JSONObject().apply {
+                put("text", text)
+            }
+            
+            // Create request with model as query parameter
+            val url = "https://api.deepgram.com/v1/speak?model=$voiceModel"
+            
+            val request = Request.Builder()
+                .url(url)
+                .header("Authorization", "Token $apiKey")
+                .header("Content-Type", "application/json")
+                .post(requestJson.toString().toRequestBody("application/json".toMediaTypeOrNull()))
+                .build()
+            
+            Log.d(TAG, "Sending TTS data request to Deepgram with model: $voiceModel")
+            
+            // Execute request
+            val response = okHttpClient.newCall(request).execute()
+            if (!response.isSuccessful) {
+                val errorBody = response.body?.string() ?: "Unknown error"
+                Log.e(TAG, "Error from Deepgram API: ${response.code}, body: $errorBody")
+                throw IOException("Deepgram API error: ${response.code}")
+            }
+            
+            // Return audio bytes
+            return@withContext response.body?.bytes() ?: throw IOException("Empty response from Deepgram")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in TTS data process: ${e.message}", e)
             throw e
         }
     }

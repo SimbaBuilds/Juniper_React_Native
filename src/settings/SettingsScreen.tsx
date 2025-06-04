@@ -15,15 +15,18 @@ import { ExpandableSettingsToggle } from './components/ExpandableSettingsToggle'
 import { SettingsDropdown } from './components/SettingsDropdown';
 import { SettingsTextInput } from './components/SettingsTextInput';
 import { SettingsArrayInput } from './components/SettingsArrayInput';
+import { SettingsSlider } from './components/SettingsSlider';
+import { VoiceSelectionDropdown } from './components/VoiceSelectionDropdown';
 
 // Voice Settings interface
 export interface VoiceSettings {
   deepgramEnabled: boolean;
   baseLanguageModel: 'grok-3' | 'grok-3.5' | 'gpt-4o' | 'claude-3-5-sonnet-20241022';
   generalInstructions: string;
-  assistantName: string;
-  wakeWord: string;
+  selectedWakeWord: string;
+  wakeWordSensitivity: number;
   wakeWordDetectionEnabled: boolean;
+  selectedDeepgramVoice: string;
   // XAI LiveSearch settings
   xaiLiveSearchEnabled: boolean;
   xaiLiveSearchSources: string[];
@@ -31,6 +34,32 @@ export interface VoiceSettings {
   xaiLiveSearchXHandles: string[];
   xaiLiveSearchSafeSearch: boolean;
 }
+
+// Available wake words from Picovoice
+const AVAILABLE_WAKE_WORDS = [
+  { label: 'Bumblebee', value: 'BUMBLEBEE' },
+  { label: 'Grasshopper', value: 'GRASSHOPPER' },
+  { label: 'Jarvis', value: 'JARVIS' },
+  { label: 'Picovoice', value: 'PICOVOICE' },
+  { label: 'Porcupine', value: 'PORCUPINE' },
+  { label: 'Terminator', value: 'TERMINATOR' },
+];
+
+// Available Deepgram Aura voices
+const AVAILABLE_DEEPGRAM_VOICES = [
+  { label: 'Arcas', value: 'aura-2-arcas-en' },
+  { label: 'Iris', value: 'aura-2-iris-en' },
+  { label: 'Mars', value: 'aura-2-mars-en' },
+  { label: 'Orpheus', value: 'aura-2-orpheus-en' },
+  { label: 'Athena', value: 'aura-2-athena-en' },
+  { label: 'Cordelia', value: 'aura-2-cordelia-en' },
+  { label: 'Draco', value: 'aura-2-draco-en' },
+  { label: 'Hermes', value: 'aura-2-hermes-en' },
+  { label: 'Hyperion', value: 'aura-2-hyperion-en' },
+  { label: 'Theia', value: 'aura-2-theia-en' },
+  { label: 'Athena (Legacy)', value: 'aura-athena-en' },
+  { label: 'Helios', value: 'aura-helios-en' },
+];
 
 // Model display mapping for UI
 const MODEL_DISPLAY_NAMES = {
@@ -361,24 +390,27 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             )}
           </View>
 
-          <SettingsTextInput
-            label="Assistant Name"
-            value={settings.assistantName || ''}
-            onChangeText={async (assistantName: string) => {
-              await handleVoiceSettingsUpdate({ assistantName });
+          <SettingsDropdown
+            label="Wake Word"
+            value={settings.selectedWakeWord || 'JARVIS'}
+            options={AVAILABLE_WAKE_WORDS}
+            onValueChange={async (selectedWakeWord) => {
+              await handleVoiceSettingsUpdate({ selectedWakeWord });
             }}
-            placeholder="Assistant"
-            description="The name of your AI assistant"
+            description="The word you'll say to activate voice recognition"
           />
 
-          <SettingsTextInput
-            label="Wake Word"
-            value={settings.wakeWord || ''}
-            onChangeText={async (wakeWord: string) => {
-              await handleVoiceSettingsUpdate({ wakeWord });
+          <SettingsSlider
+            label="Wake Word Sensitivity"
+            value={settings.wakeWordSensitivity || 0.3}
+            onValueChange={async (wakeWordSensitivity) => {
+              await handleVoiceSettingsUpdate({ wakeWordSensitivity });
             }}
-            placeholder="Jarvis"
-            description="The word you'll say to activate voice recognition"
+            minimumValue={0}
+            maximumValue={1}
+            step={0.1}
+            description="The sensitivity level for wake word detection (0 = less sensitive, 1 = more sensitive)"
+            formatValue={(value) => `${Math.round(value * 100)}%`}
           />
 
           <ExpandableSettingsToggle
@@ -389,7 +421,17 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             }}
             description="Determine how your assistant sounds."
             hasSubSettings={true}
-          />
+          >
+            <VoiceSelectionDropdown
+              label="Voice Selection"
+              value={settings.selectedDeepgramVoice || 'aura-2-arcas-en'}
+              options={AVAILABLE_DEEPGRAM_VOICES}
+              onValueChange={async (selectedDeepgramVoice) => {
+                await handleVoiceSettingsUpdate({ selectedDeepgramVoice });
+              }}
+              description="Choose the voice for your assistant's responses. Tap Preview to hear each voice."
+            />
+          </ExpandableSettingsToggle>
 
           <SettingsDropdown
             label="Model Selection"

@@ -15,6 +15,21 @@ interface WakeWordStatusResponse {
   enabled: boolean;
 }
 
+interface WakeWordListResponse {
+  wakeWords: string[];
+  success: boolean;
+}
+
+interface WakeWordSelectionResponse {
+  wakeWord: string;
+  success: boolean;
+}
+
+interface WakeWordSensitivityResponse {
+  sensitivity: number;
+  success: boolean;
+}
+
 // Define the interface for the native module
 interface WakeWordModuleInterface {
   isAvailable(): Promise<WakeWordAvailabilityResponse>;
@@ -22,6 +37,11 @@ interface WakeWordModuleInterface {
   stopDetection(): Promise<WakeWordActionResponse>;
   getStatus(): Promise<WakeWordStatusResponse>;
   setAccessKey(accessKey: string): Promise<WakeWordActionResponse>;
+  getAvailableWakeWords(): Promise<WakeWordListResponse>;
+  setSelectedWakeWord(wakeWord: string): Promise<WakeWordActionResponse>;
+  getSelectedWakeWord(): Promise<WakeWordSelectionResponse>;
+  setWakeWordSensitivity(sensitivity: number): Promise<WakeWordActionResponse>;
+  getWakeWordSensitivity(): Promise<WakeWordSensitivityResponse>;
 }
 
 // Define event names
@@ -51,6 +71,11 @@ const WakeWordModule: WakeWordModuleInterface = nativeWakeWordModule
       stopDetection: async () => ({ success: false, error: 'Platform not supported or module not found' }),
       getStatus: async () => ({ enabled: false }),
       setAccessKey: async () => ({ success: false, error: 'Platform not supported or module not found' }),
+      getAvailableWakeWords: async () => ({ wakeWords: ['JARVIS'], success: true }),
+      setSelectedWakeWord: async () => ({ success: true }),
+      getSelectedWakeWord: async () => ({ wakeWord: 'JARVIS', success: true }),
+      setWakeWordSensitivity: async () => ({ success: true }),
+      getWakeWordSensitivity: async () => ({ sensitivity: 0.3, success: true }),
     };
 
 // Create an event emitter for the module
@@ -342,6 +367,99 @@ class WakeWordService {
       return null;
     }
     return eventEmitter.addListener(eventType, listener);
+  }
+
+  /**
+   * Get available wake words
+   */
+  async getAvailableWakeWords(): Promise<string[]> {
+    try {
+      if (Platform.OS !== 'android') {
+        return ['JARVIS']; // Default for non-Android platforms
+      }
+      
+      const result = await WakeWordModule.getAvailableWakeWords();
+      return result.wakeWords || ['JARVIS'];
+    } catch (error) {
+      console.error('Error getting available wake words:', error);
+      return ['JARVIS'];
+    }
+  }
+
+  /**
+   * Set the selected wake word
+   */
+  async setSelectedWakeWord(wakeWord: string): Promise<boolean> {
+    try {
+      if (Platform.OS !== 'android') {
+        console.warn('Wake word selection is only supported on Android');
+        return false;
+      }
+      
+      const result = await WakeWordModule.setSelectedWakeWord(wakeWord);
+      return result.success;
+    } catch (error) {
+      console.error('Error setting selected wake word:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get the selected wake word
+   */
+  async getSelectedWakeWord(): Promise<string> {
+    try {
+      if (Platform.OS !== 'android') {
+        return 'JARVIS'; // Default for non-Android platforms
+      }
+      
+      const result = await WakeWordModule.getSelectedWakeWord();
+      return result.wakeWord || 'JARVIS';
+    } catch (error) {
+      console.error('Error getting selected wake word:', error);
+      return 'JARVIS';
+    }
+  }
+
+  /**
+   * Set wake word sensitivity
+   */
+  async setWakeWordSensitivity(sensitivity: number): Promise<boolean> {
+    try {
+      if (Platform.OS !== 'android') {
+        console.warn('Wake word sensitivity is only supported on Android');
+        return false;
+      }
+      
+      // Validate sensitivity range
+      if (sensitivity < 0 || sensitivity > 1) {
+        console.error('Sensitivity must be between 0 and 1');
+        return false;
+      }
+      
+      const result = await WakeWordModule.setWakeWordSensitivity(sensitivity);
+      return result.success;
+    } catch (error) {
+      console.error('Error setting wake word sensitivity:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get wake word sensitivity
+   */
+  async getWakeWordSensitivity(): Promise<number> {
+    try {
+      if (Platform.OS !== 'android') {
+        return 0.3; // Default for non-Android platforms
+      }
+      
+      const result = await WakeWordModule.getWakeWordSensitivity();
+      return result.sensitivity || 0.3;
+    } catch (error) {
+      console.error('Error getting wake word sensitivity:', error);
+      return 0.3;
+    }
   }
 }
 

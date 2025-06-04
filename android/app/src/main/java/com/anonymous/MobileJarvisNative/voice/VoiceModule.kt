@@ -21,6 +21,9 @@ import com.anonymous.MobileJarvisNative.utils.TextToSpeechManager
 import android.media.AudioManager
 import com.anonymous.MobileJarvisNative.utils.PermissionUtils
 import java.util.UUID
+import android.content.Context
+import java.io.File
+import kotlinx.coroutines.withContext
 
 /**
  * Bridge module for exposing Voice functionality to React Native
@@ -253,40 +256,21 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
      * Speak using system TTS
      */
     private suspend fun speakWithSystemTTS(text: String): Boolean {
-        return try {
-            Log.i(TAG, "Speaking with System TTS: $text")
-            
-            TextToSpeechManager.speak(text) {
-                Log.i(TAG, "System TTS completed")
-                
-                // Auto-restart listening after speech completion
-                coroutineScope.launch {
-                    try {
-                        kotlinx.coroutines.delay(500) // Brief pause
-                        Log.i(TAG, "AUTO-RESTART: Starting listening after TTS completion")
-                        voiceManager.startListening()
-                        Log.i(TAG, "AUTO-RESTART: Successfully started listening")
-                    } catch (startError: Exception) {
-                        Log.e(TAG, "AUTO-RESTART: Failed to start listening", startError)
-                        voiceManager.updateState(VoiceManager.VoiceState.IDLE)
+        return suspendCancellableCoroutine { continuation ->
+            try {
+                TextToSpeechManager.speak(text) {
+                    // TTS completed, reset to idle state
+                    voiceManager.updateState(VoiceManager.VoiceState.IDLE)
+                    if (continuation.isActive) {
+                        continuation.resume(true)
                     }
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error with system TTS: ${e.message}", e)
+                if (continuation.isActive) {
+                    continuation.resume(false)
+                }
             }
-            
-            // Wait a moment to check if TTS started
-            kotlinx.coroutines.delay(200)
-            val speechStarted = TextToSpeechManager.isSpeaking()
-            
-            if (speechStarted) {
-                Log.i(TAG, "System TTS started successfully")
-                true
-            } else {
-                Log.w(TAG, "System TTS may not have started, but considering successful")
-                true // Consider successful if no error was thrown
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error with System TTS: ${e.message}", e)
-            false
         }
     }
 
@@ -453,6 +437,119 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         } catch (e: Exception) {
             Log.e(TAG, "🔵 NATIVE: ❌ Error in processTextFromNative", e)
             promise.reject("PROCESS_TEXT_ERROR", "Failed to process text: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Get available Deepgram voices
+     */
+    @ReactMethod
+    fun getAvailableDeepgramVoices(promise: Promise) {
+        try {
+            val voices = Arguments.createArray()
+            DeepgramClient.AVAILABLE_VOICES.keys.forEach { voice ->
+                voices.pushString(voice)
+            }
+            
+            val result = Arguments.createMap()
+            result.putArray("voices", voices)
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting available Deepgram voices: ${e.message}", e)
+            promise.reject("GET_VOICES_ERROR", "Failed to get available voices: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Set selected Deepgram voice
+     */
+    @ReactMethod
+    fun setSelectedDeepgramVoice(voice: String, promise: Promise) {
+        try {
+            if (!DeepgramClient.AVAILABLE_VOICES.containsKey(voice)) {
+                promise.reject("INVALID_VOICE", "Voice '$voice' is not available")
+                return
+            }
+            
+            val prefs = reactApplicationContext.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
+            prefs.edit().putString("selected_voice", voice).apply()
+            
+            val result = Arguments.createMap()
+            result.putBoolean("success", true)
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting Deepgram voice: ${e.message}", e)
+            promise.reject("SET_VOICE_ERROR", "Failed to set voice: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Get selected Deepgram voice
+     */
+    @ReactMethod
+    fun getSelectedDeepgramVoice(promise: Promise) {
+        try {
+            val prefs = reactApplicationContext.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
+            val selectedVoice = prefs.getString("selected_voice", DeepgramClient.DEFAULT_VOICE) ?: DeepgramClient.DEFAULT_VOICE
+            
+            val result = Arguments.createMap()
+            result.putString("voice", selectedVoice)
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting selected Deepgram voice: ${e.message}", e)
+            promise.reject("GET_VOICE_ERROR", "Failed to get selected voice: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Preview a Deepgram voice by speaking a sample phrase
+     */
+    @ReactMethod
+    fun previewDeepgramVoice(voice: String, text: String, promise: Promise) {
+        try {
+            if (!DeepgramClient.AVAILABLE_VOICES.containsKey(voice)) {
+                promise.reject("INVALID_VOICE", "Voice '$voice' is not available")
+                return
+            }
+            
+            coroutineScope.launch {
+                try {
+                    val deepgramClient = DeepgramClient(reactApplicationContext)
+                    deepgramClient.initialize()
+                    
+                    // Get audio data for the voice preview
+                    val audioData = deepgramClient.convertTextToSpeechData(text, voice)
+                    
+                    // Save to temporary file and play
+                    val tempFile = File(reactApplicationContext.cacheDir, "voice_preview_${voice}.mp3")
+                    tempFile.writeBytes(audioData)
+                    
+                    // Play the preview
+                    withContext(Dispatchers.Main) {
+                        val mediaPlayer = android.media.MediaPlayer()
+                        mediaPlayer.setDataSource(tempFile.absolutePath)
+                        mediaPlayer.setOnPreparedListener { it.start() }
+                        mediaPlayer.setOnCompletionListener { 
+                            tempFile.delete()
+                            mediaPlayer.release()
+                        }
+                        mediaPlayer.setOnErrorListener { _, _, _ -> 
+                            tempFile.delete()
+                            mediaPlayer.release()
+                            true
+                        }
+                        mediaPlayer.prepareAsync()
+                    }
+                    
+                    promise.resolve(true)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error previewing voice: ${e.message}", e)
+                    promise.reject("PREVIEW_ERROR", "Failed to preview voice: ${e.message}", e)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in preview voice: ${e.message}", e)
+            promise.reject("PREVIEW_ERROR", "Failed to preview voice: ${e.message}", e)
         }
     }
 } 
