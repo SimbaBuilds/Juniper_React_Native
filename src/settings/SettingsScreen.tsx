@@ -48,37 +48,34 @@ const AVAILABLE_WAKE_WORDS = [
 // Available Deepgram Aura voices
 const AVAILABLE_DEEPGRAM_VOICES = [
   // Featured Aura-2 voices (most popular and versatile)
-  { label: 'Thalia (Confident & Energetic)', value: 'aura-2-thalia-en' },
-  { label: 'Andromeda (Casual & Expressive)', value: 'aura-2-andromeda-en' },
-  { label: 'Helena (Caring & Natural)', value: 'aura-2-helena-en' },
-  { label: 'Apollo (Confident & Casual)', value: 'aura-2-apollo-en' },
-  { label: 'Arcas (Natural & Smooth)', value: 'aura-2-arcas-en' },
-  { label: 'Aries (Warm & Energetic)', value: 'aura-2-aries-en' },
-  
+  { label: 'Mars', value: 'aura-2-mars-en' },
+  { label: 'Apollo', value: 'aura-2-apollo-en' },
+  { label: 'Arcas', value: 'aura-2-arcas-en' },
+  { label: 'Aries', value: 'aura-2-aries-en' },
+
+  // Legacy voices for compatibility
+  { label: 'Athena', value: 'aura-athena-en' },
+  { label: 'Helios', value: 'aura-helios-en' },
+
   // Professional voices
-  { label: 'Asteria (Clear & Professional)', value: 'aura-2-asteria-en' },
-  { label: 'Athena (Calm & Professional)', value: 'aura-2-athena-en' },
-  { label: 'Electra (Professional & Engaging)', value: 'aura-2-electra-en' },
-  { label: 'Harmonia (Empathetic & Clear)', value: 'aura-2-harmonia-en' },
-  { label: 'Hera (Smooth & Professional)', value: 'aura-2-hera-en' },
-  { label: 'Hermes (Expressive & Professional)', value: 'aura-2-hermes-en' },
+  { label: 'Asteria', value: 'aura-2-asteria-en' },
+  { label: 'Athenia', value: 'aura-2-athena-en' },
+  { label: 'Hera', value: 'aura-2-hera-en' },
+  { label: 'Hermes', value: 'aura-2-hermes-en' },
+
+   // International accents
+   { label: 'Draco', value: 'aura-2-draco-en' },
+   { label: 'Hyperion', value: 'aura-2-hyperion-en' },
+   { label: 'Pandora', value: 'aura-2-pandora-en' },
   
   // Additional variety
-  { label: 'Iris (Cheerful & Positive)', value: 'aura-2-iris-en' },
-  { label: 'Luna (Friendly & Natural)', value: 'aura-2-luna-en' },
-  { label: 'Mars (Smooth & Patient)', value: 'aura-2-mars-en' },
-  { label: 'Orion (Approachable & Calm)', value: 'aura-2-orion-en' },
-  { label: 'Orpheus (Professional & Clear)', value: 'aura-2-orpheus-en' },
-  { label: 'Zeus (Deep & Trustworthy)', value: 'aura-2-zeus-en' },
+  { label: 'Iris', value: 'aura-2-iris-en' },
+  { label: 'Luna', value: 'aura-2-luna-en' },
+  { label: 'Orion', value: 'aura-2-orion-en' },
+  { label: 'Orpheus', value: 'aura-2-orpheus-en' },
   
-  // International accents
-  { label: 'Draco (British & Warm)', value: 'aura-2-draco-en' },
-  { label: 'Hyperion (Australian & Caring)', value: 'aura-2-hyperion-en' },
-  { label: 'Pandora (British & Melodic)', value: 'aura-2-pandora-en' },
+ 
   
-  // Legacy voices for compatibility
-  { label: 'Athena Legacy (British)', value: 'aura-athena-en' },
-  { label: 'Helios (British Professional)', value: 'aura-helios-en' },
 ];
 
 // Model display mapping for UI
@@ -458,11 +455,11 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           >
             <VoiceSelectionDropdown
               label="Voice Selection"
-              value={settings.selectedDeepgramVoice || 'aura-2-thalia-en'}
+              value={settings.selectedDeepgramVoice || 'aura-2-mars-en'}
               options={AVAILABLE_DEEPGRAM_VOICES}
               onValueChange={async (selectedDeepgramVoice) => {
                 console.log('🎵 DEEPGRAM_SELECTION: Deepgram voice selected in settings screen');
-                console.log('🎵 DEEPGRAM_SELECTION: Previous voice:', settings.selectedDeepgramVoice || 'aura-2-thalia-en');
+                console.log('🎵 DEEPGRAM_SELECTION: Previous voice:', settings.selectedDeepgramVoice || 'aura-2-mars-en');
                 console.log('🎵 DEEPGRAM_SELECTION: New voice:', selectedDeepgramVoice);
                 console.log('🎵 DEEPGRAM_SELECTION: Available voices:', AVAILABLE_DEEPGRAM_VOICES.map(v => v.value));
                 await handleVoiceSettingsUpdate({ selectedDeepgramVoice });

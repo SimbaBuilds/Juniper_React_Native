@@ -17,7 +17,7 @@ export class UserProfileService {
         selected_wake_word: 'JARVIS',
         wake_word_sensitivity: 0.3,
         wake_word_detection_enabled: false,
-        selected_deepgram_voice: 'aura-2-arcas-en',
+        selected_deepgram_voice: 'aura-2-mars-en',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         preferences: {
           theme: 'system',

@@ -318,14 +318,14 @@ export class VoiceService {
     public async getAvailableDeepgramVoices(): Promise<string[]> {
         try {
             if (Platform.OS !== 'android') {
-                return ['aura-2-thalia-en']; // Default for non-Android platforms
+                return ['aura-2-mars-en']; // Default for non-Android platforms
             }
             
             const result = await VoiceModule.getAvailableDeepgramVoices();
-            return result.voices || ['aura-2-thalia-en'];
+            return result.voices || ['aura-2-mars-en'];
         } catch (error) {
             console.error('Error getting available Deepgram voices:', error);
-            return ['aura-2-thalia-en'];
+            return ['aura-2-mars-en'];
         }
     }
 
@@ -365,20 +365,20 @@ export class VoiceService {
         try {
             if (Platform.OS !== 'android') {
                 console.warn('🎵 DEEPGRAM_VOICE: Voice selection only supported on Android, returning default');
-                return 'aura-2-thalia-en'; // Default for non-Android platforms
+                return 'aura-2-mars-en'; // Default for non-Android platforms
             }
             
             console.log('🎵 DEEPGRAM_VOICE: Calling native VoiceModule.getSelectedDeepgramVoice...');
             const result = await VoiceModule.getSelectedDeepgramVoice();
             console.log('🎵 DEEPGRAM_VOICE: Native call result:', result);
             
-            const voice = result.voice || 'aura-2-thalia-en';
+            const voice = result.voice || 'aura-2-mars-en';
             console.log('🎵 DEEPGRAM_VOICE: ✅ Current selected voice:', voice);
             
             return voice;
         } catch (error) {
             console.error('🎵 DEEPGRAM_VOICE: ❌ Error getting selected Deepgram voice:', error);
-            return 'aura-2-thalia-en';
+            return 'aura-2-mars-en';
         }
     }
 
