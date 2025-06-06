@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VoiceSettings } from '../../settings/SettingsScreen';
+import VoiceService from '../VoiceService';
 
 const VOICE_SETTINGS_KEY = 'voice_settings';
 
@@ -48,6 +49,19 @@ export const useVoiceSettings = () => {
       console.log('📱 VOICE_SETTINGS: About to call setSettings with:', mergedSettings);
       setSettings(mergedSettings);
       console.log('📱 VOICE_SETTINGS: setSettings called, state should be updated');
+      
+      // Sync initial settings to native layer
+      try {
+        console.log('📱 VOICE_SETTINGS: Syncing initial settings to native layer...');
+        const voiceService = VoiceService.getInstance();
+        await voiceService.updateVoiceSettings(
+          mergedSettings.deepgramEnabled,
+          mergedSettings.selectedDeepgramVoice
+        );
+        console.log('📱 VOICE_SETTINGS: ✅ Initial settings synced to native layer successfully');
+      } catch (error) {
+        console.error('📱 VOICE_SETTINGS: ❌ Error syncing initial settings to native layer:', error);
+      }
     } catch (error) {
       console.error('📱 VOICE_SETTINGS: Error loading settings:', error);
       setSettings(defaultVoiceSettings);
@@ -82,6 +96,21 @@ export const useVoiceSettings = () => {
     
     console.log('📱 VOICE_SETTINGS: New merged settings:', newSettings);
     await saveSettings(newSettings);
+    
+    // Sync relevant settings to native layer for TTS decision making
+    if ('deepgramEnabled' in updates || 'selectedDeepgramVoice' in updates) {
+      try {
+        console.log('📱 VOICE_SETTINGS: Syncing Deepgram settings to native layer...');
+        const voiceService = VoiceService.getInstance();
+        await voiceService.updateVoiceSettings(
+          updates.deepgramEnabled ?? newSettings.deepgramEnabled,
+          updates.selectedDeepgramVoice ?? newSettings.selectedDeepgramVoice
+        );
+        console.log('📱 VOICE_SETTINGS: ✅ Settings synced to native layer successfully');
+      } catch (error) {
+        console.error('📱 VOICE_SETTINGS: ❌ Error syncing settings to native layer:', error);
+      }
+    }
   }, [settings, saveSettings]);
 
   // Load settings on mount

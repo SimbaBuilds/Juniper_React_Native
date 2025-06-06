@@ -17,6 +17,7 @@ import { SettingsTextInput } from './components/SettingsTextInput';
 import { SettingsArrayInput } from './components/SettingsArrayInput';
 import { SettingsSlider } from './components/SettingsSlider';
 import { VoiceSelectionDropdown } from './components/VoiceSelectionDropdown';
+import WakeWordService from '../wakeword/WakeWordService';
 
 // Voice Settings interface
 export interface VoiceSettings {
@@ -416,10 +417,38 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               console.log('🎯 WAKEWORD_SELECTION: Previous wake word:', settings.selectedWakeWord || 'JARVIS');
               console.log('🎯 WAKEWORD_SELECTION: New wake word:', selectedWakeWord);
               console.log('🎯 WAKEWORD_SELECTION: Available options:', AVAILABLE_WAKE_WORDS.map(w => w.value));
-              await handleVoiceSettingsUpdate({ selectedWakeWord });
+              
+              // Update both the voice settings and the native wake word module
+              await Promise.all([
+                handleVoiceSettingsUpdate({ selectedWakeWord }),
+                (async () => {
+                  try {
+                    const wakeWordService = WakeWordService.getInstance();
+                    const success = await wakeWordService.setSelectedWakeWord(selectedWakeWord);
+                    if (success) {
+                      console.log('🎯 WAKEWORD_SELECTION: ✅ Successfully synced wake word to native module');
+                      
+                      // Restart wake word detection if currently running to apply changes
+                      const isRunning = await wakeWordService.isWakeWordDetectionRunning();
+                      if (isRunning) {
+                        console.log('🔄 Restarting wake word detection to apply new wake word...');
+                        await wakeWordService.stopWakeWordDetection();
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        await wakeWordService.startWakeWordDetection();
+                        console.log('✅ Wake word detection restarted with new wake word');
+                      }
+                    } else {
+                      console.error('🎯 WAKEWORD_SELECTION: ❌ Failed to sync wake word to native module');
+                    }
+                  } catch (error) {
+                    console.error('🎯 WAKEWORD_SELECTION: ❌ Error syncing wake word to native module:', error);
+                  }
+                })()
+              ]);
+              
               console.log('🎯 WAKEWORD_SELECTION: ✅ Wake word setting update completed');
             }}
-            description="The word you'll say to activate voice recognition"
+            description="The word you'll say to activate voice recognition. Changes are applied immediately if wake word detection is active."
           />
 
           <SettingsSlider
@@ -430,13 +459,41 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               console.log('🎚️ WAKEWORD_SENSITIVITY: Previous sensitivity:', settings.wakeWordSensitivity || 0.3);
               console.log('🎚️ WAKEWORD_SENSITIVITY: New sensitivity:', wakeWordSensitivity);
               console.log('🎚️ WAKEWORD_SENSITIVITY: Percentage:', `${Math.round(wakeWordSensitivity * 100)}%`);
-              await handleVoiceSettingsUpdate({ wakeWordSensitivity });
+              
+              // Update both the voice settings and the native wake word module
+              await Promise.all([
+                handleVoiceSettingsUpdate({ wakeWordSensitivity }),
+                (async () => {
+                  try {
+                    const wakeWordService = WakeWordService.getInstance();
+                    const success = await wakeWordService.setWakeWordSensitivity(wakeWordSensitivity);
+                    if (success) {
+                      console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Successfully synced sensitivity to native module');
+                      
+                      // Restart wake word detection if currently running to apply changes
+                      const isRunning = await wakeWordService.isWakeWordDetectionRunning();
+                      if (isRunning) {
+                        console.log('🔄 Restarting wake word detection to apply new sensitivity...');
+                        await wakeWordService.stopWakeWordDetection();
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        await wakeWordService.startWakeWordDetection();
+                        console.log('✅ Wake word detection restarted with new sensitivity');
+                      }
+                    } else {
+                      console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Failed to sync sensitivity to native module');
+                    }
+                  } catch (error) {
+                    console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Error syncing sensitivity to native module:', error);
+                  }
+                })()
+              ]);
+              
               console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Sensitivity setting update completed');
             }}
             minimumValue={0}
             maximumValue={1}
             step={0.1}
-            description="The sensitivity level for wake word detection (0 = less sensitive, 1 = more sensitive)"
+            description="The sensitivity level for wake word detection (0 = less sensitive, 1 = more sensitive). Changes are applied immediately if wake word detection is active."
             formatValue={(value) => `${Math.round(value * 100)}%`}
           />
 

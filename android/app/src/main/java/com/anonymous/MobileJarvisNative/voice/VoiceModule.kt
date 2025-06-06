@@ -216,7 +216,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
     }
 
     /**
-     * Speak a response using TTS (simplified - choose one system and stick with it)
+     * Speak a response using TTS - prioritize Deepgram if enabled, fallback to System TTS
      */
     @ReactMethod
     fun speakResponse(text: String, promise: Promise) {
@@ -228,15 +228,33 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                     Log.i(TAG, "Setting voice state to SPEAKING")
                     voiceManager.updateState(VoiceManager.VoiceState.SPEAKING)
                     
-                    // Use System TTS as primary choice - simpler and more reliable
-                    val speechSuccessful = speakWithSystemTTS(text)
+                    // Check user preferences for Deepgram TTS
+                    val deepgramPrefs = reactContext.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
+                    val deepgramEnabled = deepgramPrefs.getBoolean("deepgram_enabled", false)
+                    
+                    Log.d(TAG, "🎵 DEEPGRAM_TTS: Deepgram enabled setting: $deepgramEnabled")
+                    
+                    var speechSuccessful = false
+                    
+                    if (deepgramEnabled) {
+                        Log.i(TAG, "Deepgram TTS is enabled, attempting Deepgram TTS first")
+                        speechSuccessful = speakWithDeepgram(text)
+                        
+                        if (!speechSuccessful) {
+                            Log.w(TAG, "Deepgram TTS failed, falling back to System TTS")
+                            speechSuccessful = speakWithSystemTTS(text)
+                        }
+                    } else {
+                        Log.i(TAG, "Deepgram TTS is disabled, using System TTS")
+                        speechSuccessful = speakWithSystemTTS(text)
+                    }
                     
                     Log.i(TAG, "TTS process completed. Success: $speechSuccessful")
                     
                     if (speechSuccessful) {
                         Log.i(TAG, "TTS started successfully, waiting for completion")
                     } else {
-                        Log.e(TAG, "TTS failed to start")
+                        Log.e(TAG, "All TTS methods failed")
                         voiceManager.updateState(VoiceManager.VoiceState.IDLE)
                     }
                     
@@ -253,6 +271,44 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         }
     }
     
+    /**
+     * Speak using Deepgram TTS
+     */
+    private suspend fun speakWithDeepgram(text: String): Boolean {
+        return suspendCancellableCoroutine { continuation ->
+            try {
+                Log.d(TAG, "🎵 DEEPGRAM_TTS: Attempting to speak with Deepgram: ${text.take(50)}...")
+                val deepgramClient = DeepgramClient(reactContext)
+                deepgramClient.initialize()
+                
+                coroutineScope.launch {
+                    try {
+                        // Convert text to speech using Deepgram (this includes playing the audio)
+                        deepgramClient.convertTextToSpeech(text)
+                        
+                        // TTS completed, reset to idle state
+                        voiceManager.updateState(VoiceManager.VoiceState.IDLE)
+                        Log.d(TAG, "🎵 DEEPGRAM_TTS: ✅ Deepgram TTS completed successfully")
+                        
+                        if (continuation.isActive) {
+                            continuation.resume(true)
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Error with Deepgram TTS: ${e.message}", e)
+                        if (continuation.isActive) {
+                            continuation.resume(false)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Error initializing Deepgram TTS: ${e.message}", e)
+                if (continuation.isActive) {
+                    continuation.resume(false)
+                }
+            }
+        }
+    }
+
     /**
      * Speak using system TTS
      */
@@ -551,6 +607,43 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         } catch (e: Exception) {
             Log.e(TAG, "Error in preview voice: ${e.message}", e)
             promise.reject("PREVIEW_ERROR", "Failed to preview voice: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Update voice settings from React Native
+     */
+    @ReactMethod
+    fun updateVoiceSettings(
+        deepgramEnabled: Boolean? = null,
+        selectedDeepgramVoice: String? = null,
+        promise: Promise
+    ) {
+        try {
+            Log.d(TAG, "🎵 VOICE_SETTINGS: Updating native voice settings")
+            Log.d(TAG, "🎵 VOICE_SETTINGS: deepgramEnabled: $deepgramEnabled")
+            Log.d(TAG, "🎵 VOICE_SETTINGS: selectedDeepgramVoice: $selectedDeepgramVoice")
+            
+            val deepgramPrefs = reactContext.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
+            val editor = deepgramPrefs.edit()
+            
+            deepgramEnabled?.let { 
+                editor.putBoolean("deepgram_enabled", it)
+                Log.d(TAG, "🎵 VOICE_SETTINGS: Set deepgram_enabled to: $it")
+            }
+            
+            selectedDeepgramVoice?.let { 
+                editor.putString("selected_voice", it) 
+                Log.d(TAG, "🎵 VOICE_SETTINGS: Set selected_voice to: $it")
+            }
+            
+            editor.apply()
+            Log.d(TAG, "🎵 VOICE_SETTINGS: ✅ Native voice settings updated successfully")
+            
+            promise.resolve(true)
+        } catch (e: Exception) {
+            Log.e(TAG, "🎵 VOICE_SETTINGS: ❌ Error updating voice settings: ${e.message}", e)
+            promise.reject("UPDATE_SETTINGS_ERROR", "Failed to update voice settings: ${e.message}", e)
         }
     }
 } 

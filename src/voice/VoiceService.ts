@@ -411,6 +411,36 @@ export class VoiceService {
             return false;
         }
     }
+
+    /**
+     * Update voice settings in native layer
+     */
+    public async updateVoiceSettings(deepgramEnabled?: boolean, selectedDeepgramVoice?: string): Promise<boolean> {
+        console.log('🎵 VOICE_SETTINGS: updateVoiceSettings called');
+        console.log('🎵 VOICE_SETTINGS: deepgramEnabled:', deepgramEnabled);
+        console.log('🎵 VOICE_SETTINGS: selectedDeepgramVoice:', selectedDeepgramVoice);
+        try {
+            if (Platform.OS !== 'android') {
+                console.warn('🎵 VOICE_SETTINGS: Voice settings update only supported on Android, current platform:', Platform.OS);
+                return false;
+            }
+            
+            console.log('🎵 VOICE_SETTINGS: Calling native VoiceModule.updateVoiceSettings...');
+            const result = await VoiceModule.updateVoiceSettings(deepgramEnabled, selectedDeepgramVoice);
+            console.log('🎵 VOICE_SETTINGS: Native call result:', result);
+            
+            if (result) {
+                console.log('🎵 VOICE_SETTINGS: ✅ Voice settings updated successfully');
+            } else {
+                console.error('🎵 VOICE_SETTINGS: ❌ Failed to update voice settings');
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('🎵 VOICE_SETTINGS: ❌ Error updating voice settings:', error);
+            return false;
+        }
+    }
 }
 
 export default VoiceService; 
