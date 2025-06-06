@@ -337,20 +337,28 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
      */
     @ReactMethod
     fun setSelectedWakeWord(wakeWord: String, promise: Promise) {
+        Log.i(TAG, "🎯 WAKEWORD_SELECTION: setSelectedWakeWord called with: '$wakeWord'")
         try {
             if (!WakeWordService.AVAILABLE_WAKE_WORDS.containsKey(wakeWord)) {
+                Log.e(TAG, "🎯 WAKEWORD_SELECTION: ❌ Invalid wake word '$wakeWord'")
+                Log.d(TAG, "🎯 WAKEWORD_SELECTION: Available wake words: ${WakeWordService.AVAILABLE_WAKE_WORDS.keys}")
                 promise.reject("INVALID_WAKE_WORD", "Wake word '$wakeWord' is not available")
                 return
             }
             
             val prefs = reactApplicationContext.getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
+            val previousWakeWord = prefs.getString("selected_wake_word", "JARVIS") ?: "JARVIS"
             prefs.edit().putString("selected_wake_word", wakeWord).apply()
+            
+            Log.i(TAG, "🎯 WAKEWORD_SELECTION: ✅ Wake word changed from '$previousWakeWord' to '$wakeWord'")
+            Log.i(TAG, "🎯 WAKEWORD_SELECTION: Wake word preference saved successfully")
+            Log.d(TAG, "🎯 WAKEWORD_SELECTION: Note: Service restart required for change to take effect")
             
             val result = Arguments.createMap()
             result.putBoolean("success", true)
             promise.resolve(result)
         } catch (e: Exception) {
-            Log.e(TAG, "Error setting wake word: ${e.message}", e)
+            Log.e(TAG, "🎯 WAKEWORD_SELECTION: ❌ Error setting wake word: ${e.message}", e)
             promise.reject("SET_WAKE_WORD_ERROR", "Failed to set wake word: ${e.message}", e)
         }
     }
@@ -360,15 +368,19 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
      */
     @ReactMethod
     fun getSelectedWakeWord(promise: Promise) {
+        Log.d(TAG, "🎯 WAKEWORD_SELECTION: getSelectedWakeWord called")
         try {
             val prefs = reactApplicationContext.getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
             val selectedWakeWord = prefs.getString("selected_wake_word", "JARVIS") ?: "JARVIS"
+            
+            Log.i(TAG, "🎯 WAKEWORD_SELECTION: Current selected wake word: '$selectedWakeWord'")
+            Log.d(TAG, "🎯 WAKEWORD_SELECTION: Default fallback: 'JARVIS'")
             
             val result = Arguments.createMap()
             result.putString("wakeWord", selectedWakeWord)
             promise.resolve(result)
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting selected wake word: ${e.message}", e)
+            Log.e(TAG, "🎯 WAKEWORD_SELECTION: ❌ Error getting selected wake word: ${e.message}", e)
             promise.reject("GET_WAKE_WORD_ERROR", "Failed to get selected wake word: ${e.message}", e)
         }
     }
@@ -378,20 +390,28 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
      */
     @ReactMethod
     fun setWakeWordSensitivity(sensitivity: Float, promise: Promise) {
+        Log.i(TAG, "🎚️ WAKEWORD_SENSITIVITY: setWakeWordSensitivity called with: $sensitivity")
+        Log.i(TAG, "🎚️ WAKEWORD_SENSITIVITY: Sensitivity percentage: ${(sensitivity * 100).toInt()}%")
         try {
             if (sensitivity < 0.0f || sensitivity > 1.0f) {
+                Log.e(TAG, "🎚️ WAKEWORD_SENSITIVITY: ❌ Invalid sensitivity value: $sensitivity (must be 0.0-1.0)")
                 promise.reject("INVALID_SENSITIVITY", "Sensitivity must be between 0.0 and 1.0")
                 return
             }
             
             val prefs = reactApplicationContext.getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
+            val previousSensitivity = prefs.getFloat("wake_word_sensitivity", 0.3f)
             prefs.edit().putFloat("wake_word_sensitivity", sensitivity).apply()
+            
+            Log.i(TAG, "🎚️ WAKEWORD_SENSITIVITY: ✅ Sensitivity changed from $previousSensitivity (${(previousSensitivity * 100).toInt()}%) to $sensitivity (${(sensitivity * 100).toInt()}%)")
+            Log.i(TAG, "🎚️ WAKEWORD_SENSITIVITY: Sensitivity preference saved successfully")
+            Log.d(TAG, "🎚️ WAKEWORD_SENSITIVITY: Note: Service restart required for change to take effect")
             
             val result = Arguments.createMap()
             result.putBoolean("success", true)
             promise.resolve(result)
         } catch (e: Exception) {
-            Log.e(TAG, "Error setting wake word sensitivity: ${e.message}", e)
+            Log.e(TAG, "🎚️ WAKEWORD_SENSITIVITY: ❌ Error setting wake word sensitivity: ${e.message}", e)
             promise.reject("SET_SENSITIVITY_ERROR", "Failed to set wake word sensitivity: ${e.message}", e)
         }
     }
@@ -401,15 +421,19 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
      */
     @ReactMethod
     fun getWakeWordSensitivity(promise: Promise) {
+        Log.d(TAG, "🎚️ WAKEWORD_SENSITIVITY: getWakeWordSensitivity called")
         try {
             val prefs = reactApplicationContext.getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
             val sensitivity = prefs.getFloat("wake_word_sensitivity", 0.3f)
+            
+            Log.i(TAG, "🎚️ WAKEWORD_SENSITIVITY: Current sensitivity: $sensitivity (${(sensitivity * 100).toInt()}%)")
+            Log.d(TAG, "🎚️ WAKEWORD_SENSITIVITY: Default fallback: 0.3 (30%)")
             
             val result = Arguments.createMap()
             result.putDouble("sensitivity", sensitivity.toDouble())
             promise.resolve(result)
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting wake word sensitivity: ${e.message}", e)
+            Log.e(TAG, "🎚️ WAKEWORD_SENSITIVITY: ❌ Error getting wake word sensitivity: ${e.message}", e)
             promise.reject("GET_SENSITIVITY_ERROR", "Failed to get wake word sensitivity: ${e.message}", e)
         }
     }

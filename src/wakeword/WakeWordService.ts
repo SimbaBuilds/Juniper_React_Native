@@ -390,16 +390,26 @@ class WakeWordService {
    * Set the selected wake word
    */
   async setSelectedWakeWord(wakeWord: string): Promise<boolean> {
+    console.log('🎯 WAKEWORD_SELECTION: setSelectedWakeWord called with wake word:', wakeWord);
     try {
       if (Platform.OS !== 'android') {
-        console.warn('Wake word selection is only supported on Android');
+        console.warn('🎯 WAKEWORD_SELECTION: Wake word selection only supported on Android, current platform:', Platform.OS);
         return false;
       }
       
+      console.log('🎯 WAKEWORD_SELECTION: Calling native WakeWordModule.setSelectedWakeWord...');
       const result = await WakeWordModule.setSelectedWakeWord(wakeWord);
+      console.log('🎯 WAKEWORD_SELECTION: Native call result:', result);
+      
+      if (result.success) {
+        console.log('🎯 WAKEWORD_SELECTION: ✅ Successfully set wake word to:', wakeWord);
+      } else {
+        console.error('🎯 WAKEWORD_SELECTION: ❌ Failed to set wake word');
+      }
+      
       return result.success;
     } catch (error) {
-      console.error('Error setting selected wake word:', error);
+      console.error('🎯 WAKEWORD_SELECTION: ❌ Error setting selected wake word:', error);
       return false;
     }
   }
@@ -408,15 +418,23 @@ class WakeWordService {
    * Get the selected wake word
    */
   async getSelectedWakeWord(): Promise<string> {
+    console.log('🎯 WAKEWORD_SELECTION: getSelectedWakeWord called');
     try {
       if (Platform.OS !== 'android') {
+        console.warn('🎯 WAKEWORD_SELECTION: Wake word selection only supported on Android, returning default');
         return 'JARVIS'; // Default for non-Android platforms
       }
       
+      console.log('🎯 WAKEWORD_SELECTION: Calling native WakeWordModule.getSelectedWakeWord...');
       const result = await WakeWordModule.getSelectedWakeWord();
-      return result.wakeWord || 'JARVIS';
+      console.log('🎯 WAKEWORD_SELECTION: Native call result:', result);
+      
+      const wakeWord = result.wakeWord || 'JARVIS';
+      console.log('🎯 WAKEWORD_SELECTION: ✅ Current selected wake word:', wakeWord);
+      
+      return wakeWord;
     } catch (error) {
-      console.error('Error getting selected wake word:', error);
+      console.error('🎯 WAKEWORD_SELECTION: ❌ Error getting selected wake word:', error);
       return 'JARVIS';
     }
   }
@@ -425,22 +443,33 @@ class WakeWordService {
    * Set wake word sensitivity
    */
   async setWakeWordSensitivity(sensitivity: number): Promise<boolean> {
+    console.log('🎚️ WAKEWORD_SENSITIVITY: setWakeWordSensitivity called with sensitivity:', sensitivity);
+    console.log('🎚️ WAKEWORD_SENSITIVITY: Sensitivity percentage:', `${Math.round(sensitivity * 100)}%`);
     try {
       if (Platform.OS !== 'android') {
-        console.warn('Wake word sensitivity is only supported on Android');
+        console.warn('🎚️ WAKEWORD_SENSITIVITY: Wake word sensitivity only supported on Android, current platform:', Platform.OS);
         return false;
       }
       
       // Validate sensitivity range
       if (sensitivity < 0 || sensitivity > 1) {
-        console.error('Sensitivity must be between 0 and 1');
+        console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Invalid sensitivity value:', sensitivity, '(must be 0-1)');
         return false;
       }
       
+      console.log('🎚️ WAKEWORD_SENSITIVITY: Calling native WakeWordModule.setWakeWordSensitivity...');
       const result = await WakeWordModule.setWakeWordSensitivity(sensitivity);
+      console.log('🎚️ WAKEWORD_SENSITIVITY: Native call result:', result);
+      
+      if (result.success) {
+        console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Successfully set sensitivity to:', sensitivity, `(${Math.round(sensitivity * 100)}%)`);
+      } else {
+        console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Failed to set sensitivity');
+      }
+      
       return result.success;
     } catch (error) {
-      console.error('Error setting wake word sensitivity:', error);
+      console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Error setting wake word sensitivity:', error);
       return false;
     }
   }
@@ -449,15 +478,23 @@ class WakeWordService {
    * Get wake word sensitivity
    */
   async getWakeWordSensitivity(): Promise<number> {
+    console.log('🎚️ WAKEWORD_SENSITIVITY: getWakeWordSensitivity called');
     try {
       if (Platform.OS !== 'android') {
+        console.warn('🎚️ WAKEWORD_SENSITIVITY: Wake word sensitivity only supported on Android, returning default');
         return 0.3; // Default for non-Android platforms
       }
       
+      console.log('🎚️ WAKEWORD_SENSITIVITY: Calling native WakeWordModule.getWakeWordSensitivity...');
       const result = await WakeWordModule.getWakeWordSensitivity();
-      return result.sensitivity || 0.3;
+      console.log('🎚️ WAKEWORD_SENSITIVITY: Native call result:', result);
+      
+      const sensitivity = result.sensitivity || 0.3;
+      console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Current sensitivity:', sensitivity, `(${Math.round(sensitivity * 100)}%)`);
+      
+      return sensitivity;
     } catch (error) {
-      console.error('Error getting wake word sensitivity:', error);
+      console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Error getting wake word sensitivity:', error);
       return 0.3;
     }
   }

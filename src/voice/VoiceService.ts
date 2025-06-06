@@ -318,14 +318,14 @@ export class VoiceService {
     public async getAvailableDeepgramVoices(): Promise<string[]> {
         try {
             if (Platform.OS !== 'android') {
-                return ['aura-arcas-en']; // Default for non-Android platforms
+                return ['aura-2-thalia-en']; // Default for non-Android platforms
             }
             
             const result = await VoiceModule.getAvailableDeepgramVoices();
-            return result.voices || ['aura-arcas-en'];
+            return result.voices || ['aura-2-thalia-en'];
         } catch (error) {
             console.error('Error getting available Deepgram voices:', error);
-            return ['aura-arcas-en'];
+            return ['aura-2-thalia-en'];
         }
     }
 
@@ -333,16 +333,26 @@ export class VoiceService {
      * Set the selected Deepgram voice
      */
     public async setSelectedDeepgramVoice(voice: string): Promise<boolean> {
+        console.log('🎵 DEEPGRAM_VOICE: setSelectedDeepgramVoice called with voice:', voice);
         try {
             if (Platform.OS !== 'android') {
-                console.warn('Deepgram voice selection is only supported on Android');
+                console.warn('🎵 DEEPGRAM_VOICE: Voice selection only supported on Android, current platform:', Platform.OS);
                 return false;
             }
             
+            console.log('🎵 DEEPGRAM_VOICE: Calling native VoiceModule.setSelectedDeepgramVoice...');
             const result = await VoiceModule.setSelectedDeepgramVoice(voice);
+            console.log('🎵 DEEPGRAM_VOICE: Native call result:', result);
+            
+            if (result.success) {
+                console.log('🎵 DEEPGRAM_VOICE: ✅ Successfully set Deepgram voice to:', voice);
+            } else {
+                console.error('🎵 DEEPGRAM_VOICE: ❌ Failed to set Deepgram voice');
+            }
+            
             return result.success;
         } catch (error) {
-            console.error('Error setting selected Deepgram voice:', error);
+            console.error('🎵 DEEPGRAM_VOICE: ❌ Error setting selected Deepgram voice:', error);
             return false;
         }
     }
@@ -351,33 +361,53 @@ export class VoiceService {
      * Get the selected Deepgram voice
      */
     public async getSelectedDeepgramVoice(): Promise<string> {
+        console.log('🎵 DEEPGRAM_VOICE: getSelectedDeepgramVoice called');
         try {
             if (Platform.OS !== 'android') {
-                return 'aura-arcas-en'; // Default for non-Android platforms
+                console.warn('🎵 DEEPGRAM_VOICE: Voice selection only supported on Android, returning default');
+                return 'aura-2-thalia-en'; // Default for non-Android platforms
             }
             
+            console.log('🎵 DEEPGRAM_VOICE: Calling native VoiceModule.getSelectedDeepgramVoice...');
             const result = await VoiceModule.getSelectedDeepgramVoice();
-            return result.voice || 'aura-arcas-en';
+            console.log('🎵 DEEPGRAM_VOICE: Native call result:', result);
+            
+            const voice = result.voice || 'aura-2-thalia-en';
+            console.log('🎵 DEEPGRAM_VOICE: ✅ Current selected voice:', voice);
+            
+            return voice;
         } catch (error) {
-            console.error('Error getting selected Deepgram voice:', error);
-            return 'aura-arcas-en';
+            console.error('🎵 DEEPGRAM_VOICE: ❌ Error getting selected Deepgram voice:', error);
+            return 'aura-2-thalia-en';
         }
     }
 
     /**
      * Preview a Deepgram voice with sample text
      */
-    public async previewDeepgramVoice(voice: string, text: string = "Hello, this is a preview of the selected voice."): Promise<boolean> {
+    public async previewDeepgramVoice(voice: string, text: string = "Hi, I'm Assistant. Ask me to do anything, and I'll see what I can do."): Promise<boolean> {
+        console.log('🎵 DEEPGRAM_PREVIEW: previewDeepgramVoice called');
+        console.log('🎵 DEEPGRAM_PREVIEW: Voice:', voice);
+        console.log('🎵 DEEPGRAM_PREVIEW: Text:', text);
         try {
             if (Platform.OS !== 'android') {
-                console.warn('Deepgram voice preview is only supported on Android');
+                console.warn('🎵 DEEPGRAM_PREVIEW: Voice preview only supported on Android, current platform:', Platform.OS);
                 return false;
             }
             
+            console.log('🎵 DEEPGRAM_PREVIEW: Calling native VoiceModule.previewDeepgramVoice...');
             const result = await VoiceModule.previewDeepgramVoice(voice, text);
-            return result.success;
+            console.log('🎵 DEEPGRAM_PREVIEW: Native call result:', result);
+            
+            if (result) {
+                console.log('🎵 DEEPGRAM_PREVIEW: ✅ Voice preview initiated successfully');
+            } else {
+                console.error('🎵 DEEPGRAM_PREVIEW: ❌ Failed to start voice preview');
+            }
+            
+            return result;
         } catch (error) {
-            console.error('Error previewing Deepgram voice:', error);
+            console.error('🎵 DEEPGRAM_PREVIEW: ❌ Error previewing Deepgram voice:', error);
             return false;
         }
     }

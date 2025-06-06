@@ -47,18 +47,38 @@ const AVAILABLE_WAKE_WORDS = [
 
 // Available Deepgram Aura voices
 const AVAILABLE_DEEPGRAM_VOICES = [
-  { label: 'Arcas', value: 'aura-2-arcas-en' },
-  { label: 'Iris', value: 'aura-2-iris-en' },
-  { label: 'Mars', value: 'aura-2-mars-en' },
-  { label: 'Orpheus', value: 'aura-2-orpheus-en' },
-  { label: 'Athena', value: 'aura-2-athena-en' },
-  { label: 'Cordelia', value: 'aura-2-cordelia-en' },
-  { label: 'Draco', value: 'aura-2-draco-en' },
-  { label: 'Hermes', value: 'aura-2-hermes-en' },
-  { label: 'Hyperion', value: 'aura-2-hyperion-en' },
-  { label: 'Theia', value: 'aura-2-theia-en' },
-  { label: 'Athena (Legacy)', value: 'aura-athena-en' },
-  { label: 'Helios', value: 'aura-helios-en' },
+  // Featured Aura-2 voices (most popular and versatile)
+  { label: 'Thalia (Confident & Energetic)', value: 'aura-2-thalia-en' },
+  { label: 'Andromeda (Casual & Expressive)', value: 'aura-2-andromeda-en' },
+  { label: 'Helena (Caring & Natural)', value: 'aura-2-helena-en' },
+  { label: 'Apollo (Confident & Casual)', value: 'aura-2-apollo-en' },
+  { label: 'Arcas (Natural & Smooth)', value: 'aura-2-arcas-en' },
+  { label: 'Aries (Warm & Energetic)', value: 'aura-2-aries-en' },
+  
+  // Professional voices
+  { label: 'Asteria (Clear & Professional)', value: 'aura-2-asteria-en' },
+  { label: 'Athena (Calm & Professional)', value: 'aura-2-athena-en' },
+  { label: 'Electra (Professional & Engaging)', value: 'aura-2-electra-en' },
+  { label: 'Harmonia (Empathetic & Clear)', value: 'aura-2-harmonia-en' },
+  { label: 'Hera (Smooth & Professional)', value: 'aura-2-hera-en' },
+  { label: 'Hermes (Expressive & Professional)', value: 'aura-2-hermes-en' },
+  
+  // Additional variety
+  { label: 'Iris (Cheerful & Positive)', value: 'aura-2-iris-en' },
+  { label: 'Luna (Friendly & Natural)', value: 'aura-2-luna-en' },
+  { label: 'Mars (Smooth & Patient)', value: 'aura-2-mars-en' },
+  { label: 'Orion (Approachable & Calm)', value: 'aura-2-orion-en' },
+  { label: 'Orpheus (Professional & Clear)', value: 'aura-2-orpheus-en' },
+  { label: 'Zeus (Deep & Trustworthy)', value: 'aura-2-zeus-en' },
+  
+  // International accents
+  { label: 'Draco (British & Warm)', value: 'aura-2-draco-en' },
+  { label: 'Hyperion (Australian & Caring)', value: 'aura-2-hyperion-en' },
+  { label: 'Pandora (British & Melodic)', value: 'aura-2-pandora-en' },
+  
+  // Legacy voices for compatibility
+  { label: 'Athena Legacy (British)', value: 'aura-athena-en' },
+  { label: 'Helios (British Professional)', value: 'aura-helios-en' },
 ];
 
 // Model display mapping for UI
@@ -395,7 +415,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             value={settings.selectedWakeWord || 'JARVIS'}
             options={AVAILABLE_WAKE_WORDS}
             onValueChange={async (selectedWakeWord) => {
+              console.log('🎯 WAKEWORD_SELECTION: Wake word changed in settings screen');
+              console.log('🎯 WAKEWORD_SELECTION: Previous wake word:', settings.selectedWakeWord || 'JARVIS');
+              console.log('🎯 WAKEWORD_SELECTION: New wake word:', selectedWakeWord);
+              console.log('🎯 WAKEWORD_SELECTION: Available options:', AVAILABLE_WAKE_WORDS.map(w => w.value));
               await handleVoiceSettingsUpdate({ selectedWakeWord });
+              console.log('🎯 WAKEWORD_SELECTION: ✅ Wake word setting update completed');
             }}
             description="The word you'll say to activate voice recognition"
           />
@@ -404,7 +429,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             label="Wake Word Sensitivity"
             value={settings.wakeWordSensitivity || 0.3}
             onValueChange={async (wakeWordSensitivity) => {
+              console.log('🎚️ WAKEWORD_SENSITIVITY: Sensitivity changed in settings screen');
+              console.log('🎚️ WAKEWORD_SENSITIVITY: Previous sensitivity:', settings.wakeWordSensitivity || 0.3);
+              console.log('🎚️ WAKEWORD_SENSITIVITY: New sensitivity:', wakeWordSensitivity);
+              console.log('🎚️ WAKEWORD_SENSITIVITY: Percentage:', `${Math.round(wakeWordSensitivity * 100)}%`);
               await handleVoiceSettingsUpdate({ wakeWordSensitivity });
+              console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Sensitivity setting update completed');
             }}
             minimumValue={0}
             maximumValue={1}
@@ -417,17 +447,26 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             label="Deepgram Voice"
             value={settings.deepgramEnabled}
             onValueChange={async (deepgramEnabled) => {
+              console.log('🎵 DEEPGRAM_TOGGLE: Deepgram voice toggled in settings screen');
+              console.log('🎵 DEEPGRAM_TOGGLE: Previous enabled state:', settings.deepgramEnabled);
+              console.log('🎵 DEEPGRAM_TOGGLE: New enabled state:', deepgramEnabled);
               await handleVoiceSettingsUpdate({ deepgramEnabled });
+              console.log('🎵 DEEPGRAM_TOGGLE: ✅ Deepgram toggle update completed');
             }}
             description="Determine how your assistant sounds."
             hasSubSettings={true}
           >
             <VoiceSelectionDropdown
               label="Voice Selection"
-              value={settings.selectedDeepgramVoice || 'aura-2-arcas-en'}
+              value={settings.selectedDeepgramVoice || 'aura-2-thalia-en'}
               options={AVAILABLE_DEEPGRAM_VOICES}
               onValueChange={async (selectedDeepgramVoice) => {
+                console.log('🎵 DEEPGRAM_SELECTION: Deepgram voice selected in settings screen');
+                console.log('🎵 DEEPGRAM_SELECTION: Previous voice:', settings.selectedDeepgramVoice || 'aura-2-thalia-en');
+                console.log('🎵 DEEPGRAM_SELECTION: New voice:', selectedDeepgramVoice);
+                console.log('🎵 DEEPGRAM_SELECTION: Available voices:', AVAILABLE_DEEPGRAM_VOICES.map(v => v.value));
                 await handleVoiceSettingsUpdate({ selectedDeepgramVoice });
+                console.log('🎵 DEEPGRAM_SELECTION: ✅ Deepgram voice setting update completed');
               }}
               description="Choose the voice for your assistant's responses. Tap Preview to hear each voice."
             />

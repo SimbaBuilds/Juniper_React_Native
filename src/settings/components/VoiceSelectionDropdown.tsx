@@ -31,28 +31,43 @@ export const VoiceSelectionDropdown: React.FC<VoiceSelectionDropdownProps> = ({
   const selectedOption = options.find(option => option.value === value);
 
   const handleSelect = (selectedValue: string) => {
-    console.log('🔽 VOICE_DROPDOWN: Voice selected:', selectedValue);
+    console.log('🎵 DEEPGRAM_SELECTION: Voice selected in dropdown:', selectedValue);
+    console.log('🎵 DEEPGRAM_SELECTION: Previous value was:', value);
+    console.log('🎵 DEEPGRAM_SELECTION: Available options:', options.map(o => o.value));
     onValueChange(selectedValue);
     setIsOpen(false);
+    console.log('🎵 DEEPGRAM_SELECTION: ✅ Voice selection completed and dropdown closed');
   };
 
   const handlePreview = async (voiceValue: string) => {
+    console.log('🎵 DEEPGRAM_PREVIEW: Starting voice preview for:', voiceValue);
     try {
       setPreviewingVoice(voiceValue);
+      console.log('🎵 DEEPGRAM_PREVIEW: Set previewing voice state to:', voiceValue);
+      
+      // Extract voice name from the options array
+      const selectedOption = options.find(option => option.value === voiceValue);
+      const voiceName = selectedOption?.label.split(' (')[0] || 'Assistant'; // Extract name before parentheses
+      const previewText = `Hi, I'm ${voiceName}.  Let me know what you need, and I'll see what I can do!  Also happy to just chat.`;
       
       const voiceService = VoiceService.getInstance();
+      console.log('🎵 DEEPGRAM_PREVIEW: Got VoiceService instance, calling previewDeepgramVoice...');
       const success = await voiceService.previewDeepgramVoice(
         voiceValue,
-        "Hello! This is a preview of the selected voice. How does it sound?"
+        previewText
       );
       
-      if (!success) {
+      if (success) {
+        console.log('🎵 DEEPGRAM_PREVIEW: ✅ Voice preview completed successfully');
+      } else {
+        console.error('🎵 DEEPGRAM_PREVIEW: ❌ Voice preview failed - no success returned');
         Alert.alert('Preview Failed', 'Unable to preview this voice. Please try again.');
       }
     } catch (error) {
-      console.error('Error previewing voice:', error);
+      console.error('🎵 DEEPGRAM_PREVIEW: ❌ Error previewing voice:', error);
       Alert.alert('Preview Error', 'An error occurred while previewing the voice.');
     } finally {
+      console.log('🎵 DEEPGRAM_PREVIEW: Clearing previewing voice state');
       setPreviewingVoice(null);
     }
   };

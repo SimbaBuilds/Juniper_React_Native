@@ -322,14 +322,20 @@ class WakeWordService : Service() {
             val selectedWakeWord = prefs.getString("selected_wake_word", "JARVIS") ?: "JARVIS"
             val sensitivity = prefs.getFloat("wake_word_sensitivity", 0.3f)
             
+            Log.i(TAG, "🎯 WAKEWORD_SETUP: ======= Wake Word Configuration =======")
+            Log.i(TAG, "🎯 WAKEWORD_SETUP: Selected wake word: '$selectedWakeWord'")
+            Log.i(TAG, "🎯 WAKEWORD_SETUP: Sensitivity level: $sensitivity (${(sensitivity * 100).toInt()}%)")
+            Log.i(TAG, "🎯 WAKEWORD_SETUP: Available wake words: ${AVAILABLE_WAKE_WORDS.keys}")
+            Log.i(TAG, "🎯 WAKEWORD_SETUP: =======================================")
+            
             // Keyword callback
             val porcupineCallback = object : PorcupineManagerCallback {
                 override fun invoke(keywordIndex: Int) {
                     try {
-                        Log.d(TAG, "🎙️ Raw Porcupine callback received for keyword index: $keywordIndex")
+                        Log.i(TAG, "🎯 WAKEWORD_TRIGGER: *** WAKE WORD DETECTED *** keyword index: $keywordIndex")
                         onWakeWordDetected(keywordIndex)
                     } catch (e: Exception) {
-                        Log.e(TAG, "Error in wake word callback: ${e.message}", e)
+                        Log.e(TAG, "🎯 WAKEWORD_TRIGGER: ❌ Error in wake word callback: ${e.message}", e)
                     }
                 }
             }
@@ -337,7 +343,8 @@ class WakeWordService : Service() {
             // Get the selected keyword from available options
             val selectedKeyword = AVAILABLE_WAKE_WORDS[selectedWakeWord] ?: Porcupine.BuiltInKeyword.JARVIS
             val keywords = arrayOf(selectedKeyword)
-            Log.d(TAG, "Setting up with keyword: ${selectedKeyword.name} (sensitivity: $sensitivity)")
+            Log.i(TAG, "🎯 WAKEWORD_SETUP: Mapped '$selectedWakeWord' to Porcupine keyword: ${selectedKeyword.name}")
+            Log.i(TAG, "🎯 WAKEWORD_SETUP: Setting up detection with sensitivity: $sensitivity")
             
             // Sensitivity (0.0-1.0), higher means more sensitive but more false positives
             val sensitivities = floatArrayOf(sensitivity)
@@ -390,10 +397,15 @@ class WakeWordService : Service() {
         
         // Get the configured wake word for display
         val selectedWakeWord = prefs.getString("selected_wake_word", "JARVIS") ?: "JARVIS"
+        val sensitivity = prefs.getFloat("wake_word_sensitivity", 0.3f)
         
-        Log.d(TAG, "-----------------------------------------------------")
-        Log.d(TAG, "🎤 WAKE WORD DETECTED! 🎤 at $timeString (index: $keywordIndex)")
-        Log.d(TAG, "-----------------------------------------------------")
+        Log.i(TAG, "🔥 WAKEWORD_USE: ================================================")
+        Log.i(TAG, "🔥 WAKEWORD_USE: *** WAKE WORD '$selectedWakeWord' ACTIVATED ***")
+        Log.i(TAG, "🔥 WAKEWORD_USE: Time: $timeString")
+        Log.i(TAG, "🔥 WAKEWORD_USE: Keyword Index: $keywordIndex")
+        Log.i(TAG, "🔥 WAKEWORD_USE: Sensitivity: $sensitivity (${(sensitivity * 100).toInt()}%)")
+        Log.i(TAG, "🔥 WAKEWORD_USE: Timestamp: $timestamp")
+        Log.i(TAG, "🔥 WAKEWORD_USE: ================================================")
         
         // Send broadcast to React Native
         try {
@@ -402,18 +414,18 @@ class WakeWordService : Service() {
             intent.putExtra("keywordIndex", keywordIndex)
             intent.putExtra("wakeWord", selectedWakeWord)
             sendBroadcast(intent)
-            Log.d(TAG, "Sent wake word detected broadcast to RN")
+            Log.i(TAG, "🔥 WAKEWORD_USE: ✅ Sent wake word detected broadcast to React Native")
         } catch (e: Exception) {
-            Log.e(TAG, "Error sending wake word broadcast: ${e.message}", e)
+            Log.e(TAG, "🔥 WAKEWORD_USE: ❌ Error sending wake word broadcast: ${e.message}", e)
         }
         
         // Start voice processing
         try {
             val voiceManager = VoiceManager.getInstance()
             voiceManager.onWakeWordDetected()
-            Log.d(TAG, "Notified VoiceManager of wake word detection")
+            Log.i(TAG, "🔥 WAKEWORD_USE: ✅ Notified VoiceManager of wake word detection")
         } catch (e: Exception) {
-            Log.e(TAG, "Error notifying VoiceManager: ${e.message}", e)
+            Log.e(TAG, "🔥 WAKEWORD_USE: ❌ Error notifying VoiceManager: ${e.message}", e)
         }
         
         // Show notification
@@ -424,12 +436,14 @@ class WakeWordService : Service() {
                     "Wake word '$selectedWakeWord' detected at $timeString",
                     Toast.LENGTH_SHORT
                 ).show()
+                Log.i(TAG, "🔥 WAKEWORD_USE: ✅ Displayed detection toast to user")
             } catch (e: Exception) {
-                Log.e(TAG, "Error showing detection toast: ${e.message}", e)
+                Log.e(TAG, "🔥 WAKEWORD_USE: ❌ Error showing detection toast: ${e.message}", e)
             }
         }
         
         // Pause wake word detection to prevent continuous triggers during conversation
+        Log.i(TAG, "🔥 WAKEWORD_USE: Pausing wake word detection to prevent interruption during voice session")
         pauseWakeWordButKeepMicActive()
     }
     
@@ -451,6 +465,9 @@ class WakeWordService : Service() {
     }
     
     private fun createNotification(): Notification {
+        val selectedWakeWord = prefs.getString("selected_wake_word", "JARVIS") ?: "JARVIS"
+        Log.d(TAG, "🎙️ WAKEWORD_NOTIFICATION: Creating notification with wake word: '$selectedWakeWord'")
+        
         val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Wake Word Detection Active")
             .setContentText("Listening for '$selectedWakeWord'")

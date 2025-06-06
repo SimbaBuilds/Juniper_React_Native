@@ -11,7 +11,7 @@ const defaultVoiceSettings: VoiceSettings = {
   selectedWakeWord: 'JARVIS',
   wakeWordSensitivity: 0.3,
   wakeWordDetectionEnabled: false,
-  selectedDeepgramVoice: 'aura-2-arcas-en',
+  selectedDeepgramVoice: 'aura-2-thalia-en',
   // XAI LiveSearch settings
   xaiLiveSearchEnabled: false,
   xaiLiveSearchSources: ["web", "x"],

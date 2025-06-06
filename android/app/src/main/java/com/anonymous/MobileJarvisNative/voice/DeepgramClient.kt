@@ -32,8 +32,64 @@ class DeepgramClient(private val context: Context) {
     private var currentRequestId: String? = null
     
     companion object {
-        // Available Deepgram Aura models based on latest docs
+        // Available Deepgram Aura-2 models based on latest 2024 docs
         val AVAILABLE_VOICES = mapOf(
+            // Aura-2 voices (current generation)
+            "aura-2-arcas-en" to "aura-2-arcas-en",
+            "aura-2-iris-en" to "aura-2-iris-en", 
+            "aura-2-mars-en" to "aura-2-mars-en",
+            "aura-2-orpheus-en" to "aura-2-orpheus-en",
+            "aura-2-athena-en" to "aura-2-athena-en",
+            "aura-2-cordelia-en" to "aura-2-cordelia-en",
+            "aura-2-draco-en" to "aura-2-draco-en",
+            "aura-2-hermes-en" to "aura-2-hermes-en",
+            "aura-2-hyperion-en" to "aura-2-hyperion-en",
+            "aura-2-theia-en" to "aura-2-theia-en",
+            "aura-2-thalia-en" to "aura-2-thalia-en",
+            "aura-2-andromeda-en" to "aura-2-andromeda-en",
+            "aura-2-helena-en" to "aura-2-helena-en",
+            "aura-2-apollo-en" to "aura-2-apollo-en",
+            "aura-2-aries-en" to "aura-2-aries-en",
+            "aura-2-asteria-en" to "aura-2-asteria-en",
+            "aura-2-atlas-en" to "aura-2-atlas-en",
+            "aura-2-aurora-en" to "aura-2-aurora-en",
+            "aura-2-callista-en" to "aura-2-callista-en",
+            "aura-2-cora-en" to "aura-2-cora-en",
+            "aura-2-delia-en" to "aura-2-delia-en",
+            "aura-2-electra-en" to "aura-2-electra-en",
+            "aura-2-harmonia-en" to "aura-2-harmonia-en",
+            "aura-2-hera-en" to "aura-2-hera-en",
+            "aura-2-janus-en" to "aura-2-janus-en",
+            "aura-2-juno-en" to "aura-2-juno-en",
+            "aura-2-jupiter-en" to "aura-2-jupiter-en",
+            "aura-2-luna-en" to "aura-2-luna-en",
+            "aura-2-minerva-en" to "aura-2-minerva-en",
+            "aura-2-neptune-en" to "aura-2-neptune-en",
+            "aura-2-odysseus-en" to "aura-2-odysseus-en",
+            "aura-2-ophelia-en" to "aura-2-ophelia-en",
+            "aura-2-orion-en" to "aura-2-orion-en",
+            "aura-2-pandora-en" to "aura-2-pandora-en",
+            "aura-2-phoebe-en" to "aura-2-phoebe-en",
+            "aura-2-pluto-en" to "aura-2-pluto-en",
+            "aura-2-saturn-en" to "aura-2-saturn-en",
+            "aura-2-selene-en" to "aura-2-selene-en",
+            "aura-2-vesta-en" to "aura-2-vesta-en",
+            "aura-2-zeus-en" to "aura-2-zeus-en",
+            "aura-2-amalthea-en" to "aura-2-amalthea-en",
+            // Legacy Aura-1 voices for compatibility
+            "aura-athena-en" to "aura-athena-en",
+            "aura-helios-en" to "aura-helios-en",
+            "aura-arcas-en" to "aura-arcas-en",
+            "aura-asteria-en" to "aura-asteria-en",
+            "aura-luna-en" to "aura-luna-en",
+            "aura-stella-en" to "aura-stella-en",
+            "aura-hera-en" to "aura-hera-en",
+            "aura-orion-en" to "aura-orion-en",
+            "aura-perseus-en" to "aura-perseus-en",
+            "aura-angus-en" to "aura-angus-en",
+            "aura-orpheus-en" to "aura-orpheus-en",
+            "aura-zeus-en" to "aura-zeus-en",
+            // Short name mappings for backward compatibility
             "arcas" to "aura-2-arcas-en",
             "iris" to "aura-2-iris-en", 
             "mars" to "aura-2-mars-en",
@@ -48,8 +104,8 @@ class DeepgramClient(private val context: Context) {
             "helios" to "aura-helios-en"
         )
         
-        const val DEFAULT_VOICE = "asteria"
-        const val DEFAULT_MODEL = "aura-asteria-en"
+        const val DEFAULT_VOICE = "aura-2-thalia-en"
+        const val DEFAULT_MODEL = "aura-2-thalia-en"
     }
     
     /**
