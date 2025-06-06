@@ -231,22 +231,40 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                     // Check user preferences for Deepgram TTS
                     val deepgramPrefs = reactContext.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
                     val deepgramEnabled = deepgramPrefs.getBoolean("deepgram_enabled", false)
+                    val selectedVoice = deepgramPrefs.getString("selected_voice", "aura-2-mars-en")
                     
-                    Log.d(TAG, "🎵 DEEPGRAM_TTS: Deepgram enabled setting: $deepgramEnabled")
+                    Log.i(TAG, "🎵 TTS_PRIORITY: ========== TTS Decision Logic ==========")
+                    Log.i(TAG, "🎵 TTS_PRIORITY: Text to speak: '${text.take(100)}${if(text.length > 100) "..." else ""}'")
+                    Log.i(TAG, "🎵 TTS_PRIORITY: Deepgram enabled setting: $deepgramEnabled")
+                    Log.i(TAG, "🎵 TTS_PRIORITY: Selected Deepgram voice: $selectedVoice")
+                    Log.i(TAG, "🎵 TTS_PRIORITY: Decision: ${if(deepgramEnabled) "Try Deepgram first, fallback to System" else "Use System TTS directly"}")
+                    Log.i(TAG, "🎵 TTS_PRIORITY: ============================================")
                     
                     var speechSuccessful = false
                     
                     if (deepgramEnabled) {
-                        Log.i(TAG, "Deepgram TTS is enabled, attempting Deepgram TTS first")
+                        Log.i(TAG, "🎵 TTS_PRIORITY: 🚀 Starting Deepgram TTS attempt...")
                         speechSuccessful = speakWithDeepgram(text)
                         
                         if (!speechSuccessful) {
-                            Log.w(TAG, "Deepgram TTS failed, falling back to System TTS")
+                            Log.w(TAG, "🎵 TTS_PRIORITY: ⚠️ Deepgram TTS failed, falling back to System TTS")
                             speechSuccessful = speakWithSystemTTS(text)
+                            if (speechSuccessful) {
+                                Log.i(TAG, "🎵 TTS_PRIORITY: ✅ System TTS fallback successful")
+                            } else {
+                                Log.e(TAG, "🎵 TTS_PRIORITY: ❌ Both Deepgram and System TTS failed")
+                            }
+                        } else {
+                            Log.i(TAG, "🎵 TTS_PRIORITY: ✅ Deepgram TTS successful")
                         }
                     } else {
-                        Log.i(TAG, "Deepgram TTS is disabled, using System TTS")
+                        Log.i(TAG, "🎵 TTS_PRIORITY: 🔊 Using System TTS (Deepgram disabled)")
                         speechSuccessful = speakWithSystemTTS(text)
+                        if (speechSuccessful) {
+                            Log.i(TAG, "🎵 TTS_PRIORITY: ✅ System TTS successful")
+                        } else {
+                            Log.e(TAG, "🎵 TTS_PRIORITY: ❌ System TTS failed")
+                        }
                     }
                     
                     Log.i(TAG, "TTS process completed. Success: $speechSuccessful")
@@ -620,25 +638,27 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         promise: Promise
     ) {
         try {
-            Log.d(TAG, "🎵 VOICE_SETTINGS: Updating native voice settings")
-            Log.d(TAG, "🎵 VOICE_SETTINGS: deepgramEnabled: $deepgramEnabled")
-            Log.d(TAG, "🎵 VOICE_SETTINGS: selectedDeepgramVoice: $selectedDeepgramVoice")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ========== Settings Update ==========")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: Updating native voice settings")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: deepgramEnabled: $deepgramEnabled")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: selectedDeepgramVoice: $selectedDeepgramVoice")
             
             val deepgramPrefs = reactContext.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
             val editor = deepgramPrefs.edit()
             
             deepgramEnabled?.let { 
                 editor.putBoolean("deepgram_enabled", it)
-                Log.d(TAG, "🎵 VOICE_SETTINGS: Set deepgram_enabled to: $it")
+                Log.i(TAG, "🎵 VOICE_SETTINGS: Set deepgram_enabled to: $it")
             }
             
             selectedDeepgramVoice?.let { 
                 editor.putString("selected_voice", it) 
-                Log.d(TAG, "🎵 VOICE_SETTINGS: Set selected_voice to: $it")
+                Log.i(TAG, "🎵 VOICE_SETTINGS: Set selected_voice to: $it")
             }
             
             editor.apply()
-            Log.d(TAG, "🎵 VOICE_SETTINGS: ✅ Native voice settings updated successfully")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ Native voice settings updated successfully")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ================================================")
             
             promise.resolve(true)
         } catch (e: Exception) {

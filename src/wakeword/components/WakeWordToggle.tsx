@@ -82,9 +82,9 @@ export const WakeWordToggle: React.FC = () => {
             
             {isEnabled && (
                 <View style={styles.statusContainer}>
-                    <Text style={styles.statusText}>
+                    {/* <Text style={styles.statusText}>
                         Listening for {selectedWakeWord}
-                    </Text>
+                    </Text> */}
                     {isDetected && (
                         <Animated.View style={[styles.detectionIndicator, detectionIndicatorStyle]}>
                             <Text style={styles.detectionText}>Wake Word Detected!</Text>
