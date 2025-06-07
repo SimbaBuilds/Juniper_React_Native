@@ -2,7 +2,7 @@ import { Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { supabase } from '../../supabase/supabase';
-import type { GmailIntegration } from '../../supabase/tables';
+import type { Integration } from '../../supabase/tables';
 
 // Gmail API configuration
 const GMAIL_CONFIG = {
@@ -435,15 +435,19 @@ export class GmailService {
       const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
       
       await supabase
-        .from('gmail_integrations')
+        .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
+        .eq('integration_type', 'gmail')
         .eq('is_active', true);
 
       const { error } = await supabase
-        .from('gmail_integrations')
+        .from('integrations')
         .insert({
           user_id: user.id,
+          integration_type: 'gmail',
+          type: 'built_in',
+          service_name: 'Gmail',
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
           expires_at: expiresAt.toISOString(),
@@ -451,6 +455,7 @@ export class GmailService {
           is_active: true,
           email_address: emailAddress,
           sync_settings: {},
+          configuration: {},
         });
 
       if (error) {
@@ -473,9 +478,10 @@ export class GmailService {
       }
 
       const { data, error } = await supabase
-        .from('gmail_integrations')
+        .from('integrations')
         .select('*')
         .eq('user_id', user.id)
+        .eq('integration_type', 'gmail')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -531,9 +537,10 @@ export class GmailService {
       }
 
       const { error } = await supabase
-        .from('gmail_integrations')
+        .from('integrations')
         .update(updateData)
         .eq('user_id', user.id)
+        .eq('integration_type', 'gmail')
         .eq('is_active', true);
 
       if (error) {
@@ -556,9 +563,10 @@ export class GmailService {
       }
 
       const { error } = await supabase
-        .from('gmail_integrations')
+        .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
+        .eq('integration_type', 'gmail')
         .eq('is_active', true);
 
       if (error) {

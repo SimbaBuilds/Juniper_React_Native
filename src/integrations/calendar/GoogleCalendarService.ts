@@ -2,7 +2,7 @@ import { Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { supabase } from '../../supabase/supabase';
-import type { GoogleCalendarIntegration } from '../../supabase/tables';
+import type { Integration } from '../../supabase/tables';
 
 // Google Calendar API configuration - TO BE SET BY DEVELOPER
 const GOOGLE_CONFIG = {
@@ -252,21 +252,26 @@ export class GoogleCalendarService {
       
       // First, deactivate any existing integrations for this user
       await supabase
-        .from('google_calendar_integrations')
+        .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
+        .eq('integration_type', 'google_calendar')
         .eq('is_active', true);
 
       // Insert the new integration
       const { error } = await supabase
-        .from('google_calendar_integrations')
+        .from('integrations')
         .insert({
           user_id: user.id,
+          integration_type: 'google_calendar',
+          type: 'built_in',
+          service_name: 'Google Calendar',
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
           expires_at: expiresAt.toISOString(),
           scope: GOOGLE_CONFIG.SCOPES,
           is_active: true,
+          configuration: {},
         });
 
       if (error) {
@@ -473,9 +478,10 @@ export class GoogleCalendarService {
       }
 
       const { error } = await supabase
-        .from('google_calendar_integrations')
+        .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
+        .eq('integration_type', 'google_calendar')
         .eq('is_active', true);
 
       if (error) {
@@ -595,9 +601,10 @@ export class GoogleCalendarService {
       }
 
       const { error } = await supabase
-        .from('google_calendar_integrations')
+        .from('integrations')
         .update(updateData)
         .eq('user_id', user.id)
+        .eq('integration_type', 'google_calendar')
         .eq('is_active', true);
 
       if (error) {
@@ -678,9 +685,10 @@ export class GoogleCalendarService {
       }
 
       const { data, error } = await supabase
-        .from('google_calendar_integrations')
+        .from('integrations')
         .select('*')
         .eq('user_id', user.id)
+        .eq('integration_type', 'google_calendar')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)

@@ -137,122 +137,44 @@ export type UserProfile = {
     id: string;
     user_id: string;
     integration_type: string;
+    type: 'built_in' | 'user_added';
+    service_name: string;
+    notes?: string;
     configuration: Record<string, any>;
     is_active: boolean;
     last_used?: Date;
     created_at: Date;
+    // OAuth fields (for calendar and email integrations)
+    access_token?: string;
+    refresh_token?: string;
+    expires_at?: Date;
+    scope?: string;
+    // Email specific fields
+    email_address?: string;
+    sync_settings?: Record<string, any>;
+    // Notion specific fields
+    bot_id?: string;
+    workspace_name?: string;
+    workspace_icon?: string;
+    workspace_id?: string;
+    owner_info?: Record<string, any>;
+    duplicated_template_id?: string;
+    permissions?: string[];
+    // Common sync fields
+    last_sync?: Date;
+    updated_at?: Date;
   };
   
   export const integrationFields = [
-    'id', 'user_id', 'integration_type', 'configuration',
-    'is_active', 'last_used', 'created_at'
+    'id', 'user_id', 'integration_type', 'type', 'service_name', 'notes',
+    'configuration', 'is_active', 'last_used', 'created_at',
+    'access_token', 'refresh_token', 'expires_at', 'scope',
+    'email_address', 'sync_settings',
+    'bot_id', 'workspace_name', 'workspace_icon', 'workspace_id', 
+    'owner_info', 'duplicated_template_id', 'permissions',
+    'last_sync', 'updated_at'
   ] as const;
   export type IntegrationField = (typeof integrationFields)[number];
 
-  
 
-  export type GoogleCalendarIntegration = {
-    id: string;
-    user_id: string;
-    access_token: string;
-    refresh_token: string;
-    expires_at: Date;
-    scope: string;
-    is_active: boolean;
-    last_sync?: Date;
-    created_at: Date;
-    updated_at: Date;
-  };
-
-  export const googleCalendarIntegrationFields = [
-    'id', 'user_id', 'access_token', 'refresh_token', 'expires_at',
-    'scope', 'is_active', 'last_sync', 'created_at', 'updated_at'
-  ] as const;
-  export type GoogleCalendarIntegrationField = (typeof googleCalendarIntegrationFields)[number];
-
-  export type OutlookCalendarIntegration = {
-    id: string;
-    user_id: string;
-    access_token: string;
-    refresh_token: string;
-    expires_at: Date;
-    scope: string;
-    is_active: boolean;
-    last_sync?: Date;
-    created_at: Date;
-    updated_at: Date;
-  };
-
-  export const outlookCalendarIntegrationFields = [
-    'id', 'user_id', 'access_token', 'refresh_token', 'expires_at',
-    'scope', 'is_active', 'last_sync', 'created_at', 'updated_at'
-  ] as const;
-  export type OutlookCalendarIntegrationField = (typeof outlookCalendarIntegrationFields)[number];
-
-  export type GmailIntegration = {
-    id: string;
-    user_id: string;
-    access_token: string;
-    refresh_token: string;
-    expires_at: Date;
-    scope: string;
-    is_active: boolean;
-    email_address: string;
-    last_sync?: Date;
-    sync_settings: Record<string, any>;
-    created_at: Date;
-    updated_at: Date;
-  };
-
-  export const gmailIntegrationFields = [
-    'id', 'user_id', 'access_token', 'refresh_token', 'expires_at',
-    'scope', 'is_active', 'email_address', 'last_sync', 'sync_settings',
-    'created_at', 'updated_at'
-  ] as const;
-  export type GmailIntegrationField = (typeof gmailIntegrationFields)[number];
-
-  export type OutlookEmailIntegration = {
-    id: string;
-    user_id: string;
-    access_token: string;
-    refresh_token: string;
-    expires_at: Date;
-    scope: string;
-    is_active: boolean;
-    email_address: string;
-    last_sync?: Date;
-    sync_settings: Record<string, any>;
-    created_at: Date;
-    updated_at: Date;
-  };
-
-  export const outlookEmailIntegrationFields = [
-    'id', 'user_id', 'access_token', 'refresh_token', 'expires_at',
-    'scope', 'is_active', 'email_address', 'last_sync', 'sync_settings',
-    'created_at', 'updated_at'
-  ] as const;
-  export type OutlookEmailIntegrationField = (typeof outlookEmailIntegrationFields)[number];
-
-  export type NotionIntegration = {
-    id: string;
-    user_id: string;
-    access_token: string;
-    bot_id: string;
-    workspace_name?: string;
-    workspace_icon?: string;
-    workspace_id: string;
-    owner_info?: Record<string, any>;
-    duplicated_template_id?: string;
-    is_active: boolean;
-    last_sync?: Date;
-    created_at: Date;
-    updated_at: Date;
-  };
-
-  export const notionIntegrationFields = [
-    'id', 'user_id', 'access_token', 'bot_id', 'workspace_name',
-    'workspace_icon', 'workspace_id', 'owner_info', 'duplicated_template_id',
-    'is_active', 'last_sync', 'created_at', 'updated_at'
-  ] as const;
-  export type NotionIntegrationField = (typeof notionIntegrationFields)[number];
 

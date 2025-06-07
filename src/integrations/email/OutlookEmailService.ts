@@ -2,7 +2,7 @@ import { Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { supabase } from '../../supabase/supabase';
-import type { OutlookEmailIntegration } from '../../supabase/tables';
+import type { Integration } from '../../supabase/tables';
 
 // Microsoft Graph API configuration for Outlook Email
 const OUTLOOK_EMAIL_CONFIG = {
@@ -399,15 +399,19 @@ export class OutlookEmailService {
       const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
       
       await supabase
-        .from('outlook_email_integrations')
+        .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
+        .eq('integration_type', 'outlook_email')
         .eq('is_active', true);
 
       const { error } = await supabase
-        .from('outlook_email_integrations')
+        .from('integrations')
         .insert({
           user_id: user.id,
+          integration_type: 'outlook_email',
+          type: 'built_in',
+          service_name: 'Outlook Email',
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
           expires_at: expiresAt.toISOString(),
@@ -415,6 +419,7 @@ export class OutlookEmailService {
           is_active: true,
           email_address: emailAddress,
           sync_settings: {},
+          configuration: {},
         });
 
       if (error) {
@@ -437,9 +442,10 @@ export class OutlookEmailService {
       }
 
       const { data, error } = await supabase
-        .from('outlook_email_integrations')
+        .from('integrations')
         .select('*')
         .eq('user_id', user.id)
+        .eq('integration_type', 'outlook_email')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -495,9 +501,10 @@ export class OutlookEmailService {
       }
 
       const { error } = await supabase
-        .from('outlook_email_integrations')
+        .from('integrations')
         .update(updateData)
         .eq('user_id', user.id)
+        .eq('integration_type', 'outlook_email')
         .eq('is_active', true);
 
       if (error) {
@@ -520,9 +527,10 @@ export class OutlookEmailService {
       }
 
       const { error } = await supabase
-        .from('outlook_email_integrations')
+        .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
+        .eq('integration_type', 'outlook_email')
         .eq('is_active', true);
 
       if (error) {

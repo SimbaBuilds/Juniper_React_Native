@@ -2,7 +2,7 @@ import { Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { supabase } from '../../supabase/supabase';
-import type { NotionIntegration } from '../../supabase/tables';
+import type { Integration } from '../../supabase/tables';
 
 // Notion API configuration
 const NOTION_CONFIG = {
@@ -573,8 +573,11 @@ export class NotionService {
         throw new Error('No authenticated user found');
       }
 
-      const integrationData: Partial<NotionIntegration> = {
+      const integrationData: Partial<Integration> = {
         user_id: user.id,
+        integration_type: 'notion',
+        type: 'built_in',
+        service_name: 'Notion',
         workspace_id: tokenData.workspace_id,
         workspace_name: tokenData.workspace_name,
         workspace_icon: tokenData.workspace_icon,
@@ -583,14 +586,15 @@ export class NotionService {
         owner_info: tokenData.owner,
         duplicated_template_id: tokenData.duplicated_template_id,
         is_active: true,
+        configuration: {},
         created_at: new Date(),
         updated_at: new Date(),
       };
 
       const { error } = await supabase
-        .from('notion_integrations')
+        .from('integrations')
         .upsert(integrationData, {
-          onConflict: 'user_id',
+          onConflict: 'user_id,integration_type',
         });
 
       if (error) {
@@ -617,9 +621,10 @@ export class NotionService {
       }
 
       const { data, error } = await supabase
-        .from('notion_integrations')
+        .from('integrations')
         .select('*')
         .eq('user_id', user.id)
+        .eq('integration_type', 'notion')
         .eq('is_active', true)
         .single();
 
@@ -661,12 +666,13 @@ export class NotionService {
       }
 
       const { error } = await supabase
-        .from('notion_integrations')
+        .from('integrations')
         .update({ 
           is_active: false,
           updated_at: new Date(),
         })
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('integration_type', 'notion');
 
       if (error) {
         console.error('Error deactivating integration:', error);

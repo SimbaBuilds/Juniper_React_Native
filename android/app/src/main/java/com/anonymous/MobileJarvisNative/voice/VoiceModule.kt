@@ -209,6 +209,21 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                 is Boolean -> writableMap.putBoolean(key, value)
                 is Float -> writableMap.putDouble(key, value.toDouble())
                 is Long -> writableMap.putDouble(key, value.toDouble())
+                is List<*> -> {
+                    val array = Arguments.createArray()
+                    value.forEach { item ->
+                        when (item) {
+                            is String -> array.pushString(item)
+                            is Int -> array.pushInt(item)
+                            is Double -> array.pushDouble(item)
+                            is Boolean -> array.pushBoolean(item)
+                            is Float -> array.pushDouble(item.toDouble())
+                            is Long -> array.pushDouble(item.toDouble())
+                            else -> array.pushString(item.toString())
+                        }
+                    }
+                    writableMap.putArray(key, array)
+                }
                 else -> writableMap.putString(key, value.toString())
             }
         }
@@ -244,26 +259,91 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                     
                     if (deepgramEnabled) {
                         Log.i(TAG, "🎵 TTS_PRIORITY: 🚀 Starting Deepgram TTS attempt...")
+                        
+                        // Send notification to React Native that Deepgram is being attempted
+                        val deepgramAttemptParams = Arguments.createMap().apply {
+                            putString("message", "Attempting Deepgram TTS...")
+                            putString("voice", selectedVoice)
+                        }
+                        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                            .emit("DeepgramTTSAttempt", deepgramAttemptParams)
+                        
                         speechSuccessful = speakWithDeepgram(text)
                         
                         if (!speechSuccessful) {
                             Log.w(TAG, "🎵 TTS_PRIORITY: ⚠️ Deepgram TTS failed, falling back to System TTS")
+                            
+                            // Send fallback notification to React Native
+                            val fallbackParams = Arguments.createMap().apply {
+                                putString("message", "Deepgram TTS failed, using system voice as fallback")
+                                putString("reason", "deepgram_failed")
+                                putString("action", "fallback_to_system")
+                            }
+                            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                                .emit("TTSFallback", fallbackParams)
+                            
                             speechSuccessful = speakWithSystemTTS(text)
                             if (speechSuccessful) {
                                 Log.i(TAG, "🎵 TTS_PRIORITY: ✅ System TTS fallback successful")
+                                
+                                // Send success notification for fallback
+                                val fallbackSuccessParams = Arguments.createMap().apply {
+                                    putString("message", "System TTS fallback completed successfully")
+                                    putString("tts_method", "system")
+                                }
+                                reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                                    .emit("TTSSuccess", fallbackSuccessParams)
                             } else {
                                 Log.e(TAG, "🎵 TTS_PRIORITY: ❌ Both Deepgram and System TTS failed")
+                                
+                                // Send total failure notification
+                                val totalFailureParams = Arguments.createMap().apply {
+                                    putString("error", "Both Deepgram and System TTS failed")
+                                    putString("type", "total_failure")
+                                    putBoolean("deepgram_failed", true)
+                                    putBoolean("system_failed", true)
+                                }
+                                reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                                    .emit("TTSError", totalFailureParams)
                             }
                         } else {
                             Log.i(TAG, "🎵 TTS_PRIORITY: ✅ Deepgram TTS successful")
+                            // Deepgram success notification is sent from speakWithDeepgram method
                         }
                     } else {
                         Log.i(TAG, "🎵 TTS_PRIORITY: 🔊 Using System TTS (Deepgram disabled)")
+                        
+                        // Send notification that System TTS is being used by choice
+                        val systemTTSParams = Arguments.createMap().apply {
+                            putString("message", "Using system TTS (Deepgram disabled)")
+                            putString("tts_method", "system")
+                            putString("reason", "deepgram_disabled")
+                        }
+                        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                            .emit("TTSMethodSelected", systemTTSParams)
+                        
                         speechSuccessful = speakWithSystemTTS(text)
                         if (speechSuccessful) {
                             Log.i(TAG, "🎵 TTS_PRIORITY: ✅ System TTS successful")
+                            
+                            // Send success notification for system TTS
+                            val systemSuccessParams = Arguments.createMap().apply {
+                                putString("message", "System TTS completed successfully")
+                                putString("tts_method", "system")
+                            }
+                            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                                .emit("TTSSuccess", systemSuccessParams)
                         } else {
                             Log.e(TAG, "🎵 TTS_PRIORITY: ❌ System TTS failed")
+                            
+                            // Send system TTS failure notification
+                            val systemFailureParams = Arguments.createMap().apply {
+                                putString("error", "System TTS failed")
+                                putString("type", "system_failure")
+                                putBoolean("system_failed", true)
+                            }
+                            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                                .emit("TTSError", systemFailureParams)
                         }
                     }
                     
@@ -289,37 +369,228 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         }
     }
     
+    // Reusable Deepgram client instance to avoid reinitialization
+    private var deepgramClient: DeepgramClient? = null
+    
     /**
-     * Speak using Deepgram TTS
+     * Get or create a shared Deepgram client instance
+     */
+    private fun getDeepgramClient(): DeepgramClient {
+        return deepgramClient ?: run {
+            val client = DeepgramClient(reactContext)
+            client.initialize()
+            deepgramClient = client
+            client
+        }
+    }
+    
+    /**
+     * Speak using Deepgram TTS with enhanced error handling and audio focus management
      */
     private suspend fun speakWithDeepgram(text: String): Boolean {
         return suspendCancellableCoroutine { continuation ->
+            Log.i(TAG, "🎵 DEEPGRAM_TTS: ========== Starting Deepgram TTS ==========")
+            Log.i(TAG, "🎵 DEEPGRAM_TTS: Text: '${text.take(100)}${if(text.length > 100) "..." else ""}'")
+            
             try {
-                Log.d(TAG, "🎵 DEEPGRAM_TTS: Attempting to speak with Deepgram: ${text.take(50)}...")
-                val deepgramClient = DeepgramClient(reactContext)
-                deepgramClient.initialize()
-                
                 coroutineScope.launch {
+                    var success = false
+                    var errorMessage = ""
+                    
                     try {
-                        // Convert text to speech using Deepgram (this includes playing the audio)
-                        deepgramClient.convertTextToSpeech(text)
+                        // Get or create Deepgram client
+                        val client = getDeepgramClient()
+                        Log.d(TAG, "🎵 DEEPGRAM_TTS: Using Deepgram client")
                         
-                        // TTS completed, reset to idle state
-                        voiceManager.updateState(VoiceManager.VoiceState.IDLE)
-                        Log.d(TAG, "🎵 DEEPGRAM_TTS: ✅ Deepgram TTS completed successfully")
+                        // Pre-flight validation
+                        Log.d(TAG, "🎵 DEEPGRAM_TTS: Running pre-flight validation...")
+                        val validation = client.validateConfiguration()
+                        if (!validation.isValid) {
+                            errorMessage = "Pre-flight validation failed: ${validation.issues.joinToString("; ")}"
+                            Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ $errorMessage")
+                            
+                            // Send error notification to React Native
+                            val errorParams = Arguments.createMap().apply {
+                                putString("error", errorMessage)
+                                putString("type", "validation")
+                                putArray("issues", Arguments.createArray().apply {
+                                    validation.issues.forEach { issue -> pushString(issue) }
+                                })
+                            }
+                            
+                            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                                .emit("DeepgramTTSError", errorParams)
+                            
+                            if (continuation.isActive) {
+                                continuation.resume(false)
+                            }
+                            return@launch
+                        }
                         
-                        if (continuation.isActive) {
-                            continuation.resume(true)
+                        Log.d(TAG, "🎵 DEEPGRAM_TTS: ✅ Pre-flight validation passed")
+                        
+                        // Test connectivity
+                        Log.d(TAG, "🎵 DEEPGRAM_TTS: Testing connectivity...")
+                        val connectivityOk = client.testDeepgramConnectivity()
+                        if (!connectivityOk) {
+                            errorMessage = "Deepgram API not accessible"
+                            Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ $errorMessage")
+                            
+                            // Send connectivity error notification
+                            val errorParams = Arguments.createMap().apply {
+                                putString("error", errorMessage)
+                                putString("type", "connectivity")
+                            }
+                            
+                            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                                .emit("DeepgramTTSError", errorParams)
+                            
+                            if (continuation.isActive) {
+                                continuation.resume(false)
+                            }
+                            return@launch
+                        }
+                        
+                        Log.d(TAG, "🎵 DEEPGRAM_TTS: ✅ Connectivity test passed")
+                        
+                        // Test audio system
+                        Log.d(TAG, "🎵 DEEPGRAM_TTS: Testing audio system...")
+                        val audioOk = client.testAudioPlayback()
+                        if (!audioOk) {
+                            errorMessage = "Audio system not ready"
+                            Log.w(TAG, "🎵 DEEPGRAM_TTS: ⚠️ $errorMessage - attempting TTS anyway")
+                            // Continue with TTS attempt even if audio test fails
+                        } else {
+                            Log.d(TAG, "🎵 DEEPGRAM_TTS: ✅ Audio system test passed")
+                        }
+                        
+                        // Attempt the actual TTS conversion and playback
+                        Log.i(TAG, "🎵 DEEPGRAM_TTS: 🚀 Starting TTS conversion and playback...")
+                        client.convertTextToSpeech(text)
+                        
+                        // If we reach here, TTS started successfully
+                        success = true
+                        Log.i(TAG, "🎵 DEEPGRAM_TTS: ✅ Deepgram TTS completed successfully")
+                        
+                        // Send success notification to React Native
+                        val successParams = Arguments.createMap().apply {
+                            putString("message", "Deepgram TTS completed successfully")
+                            putString("voice", reactContext.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
+                                .getString("selected_voice", DeepgramClient.DEFAULT_VOICE))
+                        }
+                        
+                        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                            .emit("DeepgramTTSSuccess", successParams)
+                        
+                    } catch (e: IllegalStateException) {
+                        errorMessage = "Configuration error: ${e.message}"
+                        Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Configuration error", e)
+                        
+                        val errorParams = Arguments.createMap().apply {
+                            putString("error", errorMessage)
+                            putString("type", "configuration")
+                            putString("details", e.message)
+                        }
+                        
+                        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                            .emit("DeepgramTTSError", errorParams)
+                        
+                    } catch (e: java.net.UnknownHostException) {
+                        errorMessage = "Network error: Cannot reach Deepgram servers"
+                        Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Network error", e)
+                        
+                        val errorParams = Arguments.createMap().apply {
+                            putString("error", errorMessage)
+                            putString("type", "network")
+                            putString("details", "DNS resolution failed for api.deepgram.com")
+                        }
+                        
+                        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                            .emit("DeepgramTTSError", errorParams)
+                        
+                    } catch (e: java.net.ConnectException) {
+                        errorMessage = "Network error: Cannot connect to Deepgram API"
+                        Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Connection error", e)
+                        
+                        val errorParams = Arguments.createMap().apply {
+                            putString("error", errorMessage)
+                            putString("type", "network")
+                            putString("details", "Connection refused or timeout")
+                        }
+                        
+                        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                            .emit("DeepgramTTSError", errorParams)
+                        
+                    } catch (e: java.io.IOException) {
+                        if (e.message?.contains("401") == true) {
+                            errorMessage = "Authentication error: Invalid API key"
+                            Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Auth error", e)
+                            
+                            val errorParams = Arguments.createMap().apply {
+                                putString("error", errorMessage)
+                                putString("type", "authentication")
+                                putString("details", "API key is invalid or expired")
+                            }
+                            
+                            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                                .emit("DeepgramTTSError", errorParams)
+                        } else {
+                            errorMessage = "API error: ${e.message}"
+                            Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ API error", e)
+                            
+                            val errorParams = Arguments.createMap().apply {
+                                putString("error", errorMessage)
+                                putString("type", "api")
+                                putString("details", e.message)
+                            }
+                            
+                            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                                .emit("DeepgramTTSError", errorParams)
                         }
                     } catch (e: Exception) {
-                        Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Error with Deepgram TTS: ${e.message}", e)
+                        errorMessage = "Unexpected error: ${e.message}"
+                        Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Unexpected error", e)
+                        
+                        val errorParams = Arguments.createMap().apply {
+                            putString("error", errorMessage)
+                            putString("type", "unexpected")
+                            putString("details", e.message)
+                            putString("stackTrace", e.stackTraceToString())
+                        }
+                        
+                        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                            .emit("DeepgramTTSError", errorParams)
+                    } finally {
+                        // Always update voice state when done (success or failure)
+                        voiceManager.updateState(VoiceManager.VoiceState.IDLE)
+                        
+                        Log.i(TAG, "🎵 DEEPGRAM_TTS: ========== Deepgram TTS Complete ==========")
+                        Log.i(TAG, "🎵 DEEPGRAM_TTS: Success: $success")
+                        if (!success) {
+                            Log.i(TAG, "🎵 DEEPGRAM_TTS: Error: $errorMessage")
+                        }
+                        Log.i(TAG, "🎵 DEEPGRAM_TTS: =======================================")
+                        
                         if (continuation.isActive) {
-                            continuation.resume(false)
+                            continuation.resume(success)
                         }
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Error initializing Deepgram TTS: ${e.message}", e)
+                Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Error in speakWithDeepgram setup: ${e.message}", e)
+                
+                // Send setup error notification
+                val errorParams = Arguments.createMap().apply {
+                    putString("error", "Setup error: ${e.message}")
+                    putString("type", "setup")
+                    putString("details", e.message)
+                }
+                
+                reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                    .emit("DeepgramTTSError", errorParams)
+                
+                voiceManager.updateState(VoiceManager.VoiceState.IDLE)
+                
                 if (continuation.isActive) {
                     continuation.resume(false)
                 }
@@ -629,7 +900,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
     }
 
     /**
-     * Update voice settings from React Native
+     * Update voice settings from React Native with immediate validation
      */
     @ReactMethod
     fun updateVoiceSettings(
@@ -646,24 +917,311 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
             val deepgramPrefs = reactContext.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
             val editor = deepgramPrefs.edit()
             
-            deepgramEnabled?.let { 
-                editor.putBoolean("deepgram_enabled", it)
-                Log.i(TAG, "🎵 VOICE_SETTINGS: Set deepgram_enabled to: $it")
+            // Validate and update deepgram enabled setting
+            deepgramEnabled?.let { enabled ->
+                if (enabled) {
+                    // Validate configuration before enabling
+                    Log.i(TAG, "🎵 VOICE_SETTINGS: Deepgram enabled, validating configuration...")
+                    val deepgramClient = DeepgramClient(reactContext)
+                    deepgramClient.initialize()
+                    val validation = deepgramClient.validateConfiguration()
+                    
+                    if (!validation.isValid) {
+                        val errorMessage = "Cannot enable Deepgram: ${validation.issues.joinToString("; ")}"
+                        Log.e(TAG, "🎵 VOICE_SETTINGS: ❌ Validation failed: $errorMessage")
+                        promise.reject("VALIDATION_ERROR", errorMessage)
+                        return
+                    }
+                    Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ Deepgram configuration validated successfully")
+                }
+                
+                editor.putBoolean("deepgram_enabled", enabled)
+                Log.i(TAG, "🎵 VOICE_SETTINGS: Set deepgram_enabled to: $enabled")
             }
             
-            selectedDeepgramVoice?.let { 
-                editor.putString("selected_voice", it) 
-                Log.i(TAG, "🎵 VOICE_SETTINGS: Set selected_voice to: $it")
+            // Validate and update selected voice
+            selectedDeepgramVoice?.let { voice ->
+                if (!DeepgramClient.AVAILABLE_VOICES.containsKey(voice)) {
+                    val errorMessage = "Invalid voice '$voice'. Available voices: ${DeepgramClient.AVAILABLE_VOICES.keys.joinToString(", ")}"
+                    Log.e(TAG, "🎵 VOICE_SETTINGS: ❌ $errorMessage")
+                    promise.reject("INVALID_VOICE", errorMessage)
+                    return
+                }
+                
+                editor.putString("selected_voice", voice)
+                Log.i(TAG, "🎵 VOICE_SETTINGS: Set selected_voice to: $voice")
             }
             
-            editor.apply()
-            Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ Native voice settings updated successfully")
+            // Apply changes atomically
+            val success = editor.commit() // Use commit() for immediate synchronous write
+            if (!success) {
+                val errorMessage = "Failed to save settings to SharedPreferences"
+                Log.e(TAG, "🎵 VOICE_SETTINGS: ❌ $errorMessage")
+                promise.reject("SAVE_ERROR", errorMessage)
+                return
+            }
+            
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ Native voice settings updated and validated successfully")
             Log.i(TAG, "🎵 VOICE_SETTINGS: ================================================")
             
-            promise.resolve(true)
+            // Return validation status
+            val result = Arguments.createMap().apply {
+                putBoolean("success", true)
+                putString("message", "Settings updated and validated successfully")
+            }
+            promise.resolve(result)
+            
         } catch (e: Exception) {
             Log.e(TAG, "🎵 VOICE_SETTINGS: ❌ Error updating voice settings: ${e.message}", e)
             promise.reject("UPDATE_SETTINGS_ERROR", "Failed to update voice settings: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Validate current Deepgram settings
+     */
+    @ReactMethod
+    fun validateDeepgramSettings(promise: Promise) {
+        try {
+            Log.i(TAG, "🎵 VALIDATION: Validating current Deepgram settings...")
+            
+            val deepgramClient = DeepgramClient(reactContext)
+            deepgramClient.initialize()
+            val validation = deepgramClient.validateConfiguration()
+            
+            val result = Arguments.createMap().apply {
+                putBoolean("isValid", validation.isValid)
+                putBoolean("apiKeyPresent", validation.apiKeyPresent)
+                putBoolean("apiKeyValid", validation.apiKeyValid)
+                putBoolean("networkAvailable", validation.networkAvailable)
+                putBoolean("audioSystemReady", validation.audioSystemReady)
+                putBoolean("voiceConfigValid", validation.voiceConfigValid)
+                
+                val issuesArray = Arguments.createArray()
+                validation.issues.forEach { issue ->
+                    issuesArray.pushString(issue)
+                }
+                putArray("issues", issuesArray)
+            }
+            
+            Log.i(TAG, "🎵 VALIDATION: Validation complete - isValid: ${validation.isValid}")
+            promise.resolve(result)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "🎵 VALIDATION: ❌ Error validating settings: ${e.message}", e)
+            promise.reject("VALIDATION_ERROR", "Failed to validate settings: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Test Deepgram TTS independently for debugging
+     */
+    @ReactMethod
+    fun testDeepgramTTS(text: String, promise: Promise) {
+        Log.i(TAG, "🎵 DEEPGRAM_TEST: Testing Deepgram TTS with text: '${text.take(50)}...'")
+        
+        try {
+            coroutineScope.launch {
+                try {
+                    val deepgramClient = DeepgramClient(reactContext)
+                    deepgramClient.initialize()
+                    
+                    // First validate configuration
+                    val validation = deepgramClient.validateConfiguration()
+                    if (!validation.isValid) {
+                        val errorMessage = "Deepgram configuration invalid: ${validation.issues.joinToString("; ")}"
+                        Log.e(TAG, "🎵 DEEPGRAM_TEST: ❌ $errorMessage")
+                        promise.reject("VALIDATION_ERROR", errorMessage)
+                        return@launch
+                    }
+                    
+                    Log.i(TAG, "🎵 DEEPGRAM_TEST: Configuration validated, attempting TTS...")
+                    
+                    // Test connectivity first
+                    val connectivityOk = deepgramClient.testDeepgramConnectivity()
+                    if (!connectivityOk) {
+                        val errorMessage = "Deepgram API not accessible"
+                        Log.e(TAG, "🎵 DEEPGRAM_TEST: ❌ $errorMessage")
+                        promise.reject("CONNECTIVITY_ERROR", errorMessage)
+                        return@launch
+                    }
+                    
+                    Log.i(TAG, "🎵 DEEPGRAM_TEST: Connectivity confirmed, starting TTS...")
+                    
+                    // Attempt TTS
+                    deepgramClient.convertTextToSpeech(text)
+                    
+                    Log.i(TAG, "🎵 DEEPGRAM_TEST: ✅ Deepgram TTS test completed successfully")
+                    promise.resolve(true)
+                    
+                } catch (e: Exception) {
+                    Log.e(TAG, "🎵 DEEPGRAM_TEST: ❌ Test failed: ${e.message}", e)
+                    promise.reject("TEST_ERROR", "Deepgram TTS test failed: ${e.message}", e)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "🎵 DEEPGRAM_TEST: ❌ Error setting up test: ${e.message}", e)
+            promise.reject("SETUP_ERROR", "Failed to setup Deepgram test: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Run comprehensive diagnostics on Deepgram system
+     */
+    @ReactMethod
+    fun runDeepgramDiagnostics(promise: Promise) {
+        Log.i(TAG, "🎵 DIAGNOSTICS: Running comprehensive Deepgram diagnostics...")
+        
+        try {
+            coroutineScope.launch {
+                try {
+                    val deepgramClient = DeepgramClient(reactContext)
+                    deepgramClient.initialize()
+                    
+                    // Run all diagnostic tests
+                    val configValidation = deepgramClient.validateConfiguration()
+                    val connectivityDiagnostics = deepgramClient.runConnectivityDiagnostics()
+                    val audioDiagnostics = deepgramClient.runAudioDiagnostics()
+                    
+                    // Compile comprehensive results
+                    val results = Arguments.createMap().apply {
+                        // Configuration validation
+                        putMap("configuration", Arguments.createMap().apply {
+                            putBoolean("isValid", configValidation.isValid)
+                            putBoolean("apiKeyPresent", configValidation.apiKeyPresent)
+                            putBoolean("apiKeyValid", configValidation.apiKeyValid)
+                            putBoolean("networkAvailable", configValidation.networkAvailable)
+                            putBoolean("audioSystemReady", configValidation.audioSystemReady)
+                            putBoolean("voiceConfigValid", configValidation.voiceConfigValid)
+                            
+                            val issuesArray = Arguments.createArray()
+                            configValidation.issues.forEach { issue ->
+                                issuesArray.pushString(issue)
+                            }
+                            putArray("issues", issuesArray)
+                        })
+                        
+                        // Connectivity diagnostics
+                        putMap("connectivity", connectivityDiagnostics.toWritableMap())
+                        
+                        // Audio diagnostics
+                        putMap("audio", audioDiagnostics.toWritableMap())
+                        
+                        // Overall summary
+                        putMap("summary", Arguments.createMap().apply {
+                            putBoolean("deepgramReady", configValidation.isValid)
+                            putBoolean("canMakeRequests", connectivityDiagnostics["deepgram_api_accessible"] as? Boolean ?: false)
+                            putBoolean("canPlayAudio", audioDiagnostics["mediaplayer_available"] as? Boolean ?: false)
+                            
+                            val recommendations = Arguments.createArray()
+                            
+                            if (!configValidation.apiKeyPresent) {
+                                recommendations.pushString("Configure Deepgram API key")
+                            }
+                            if (!(connectivityDiagnostics["basic_connectivity"] as? Boolean ?: false)) {
+                                recommendations.pushString("Check internet connection")
+                            }
+                            if (!(audioDiagnostics["mediaplayer_available"] as? Boolean ?: false)) {
+                                recommendations.pushString("Check audio system permissions")
+                            }
+                            if ((audioDiagnostics["music_volume_percentage"] as? Int ?: 100) == 0) {
+                                recommendations.pushString("Increase media volume")
+                            }
+                            
+                            putArray("recommendations", recommendations)
+                        })
+                        
+                        putDouble("timestamp", System.currentTimeMillis().toDouble())
+                    }
+                    
+                    Log.i(TAG, "🎵 DIAGNOSTICS: ✅ Comprehensive diagnostics completed successfully")
+                    promise.resolve(results)
+                    
+                } catch (e: Exception) {
+                    Log.e(TAG, "🎵 DIAGNOSTICS: ❌ Diagnostics failed: ${e.message}", e)
+                    promise.reject("DIAGNOSTICS_ERROR", "Failed to run diagnostics: ${e.message}", e)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "🎵 DIAGNOSTICS: ❌ Error setting up diagnostics: ${e.message}", e)
+            promise.reject("SETUP_ERROR", "Failed to setup diagnostics: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Reset and reinitialize Deepgram client (for troubleshooting)
+     */
+    @ReactMethod
+    fun resetDeepgramClient(promise: Promise) {
+        try {
+            Log.i(TAG, "🎵 RESET: Resetting Deepgram client...")
+            
+            // Release existing client
+            deepgramClient?.release()
+            deepgramClient = null
+            
+            // Create and initialize new client
+            val newClient = DeepgramClient(reactContext)
+            newClient.initialize()
+            deepgramClient = newClient
+            
+            // Validate the new client
+            val validation = newClient.validateConfiguration()
+            
+            val result = Arguments.createMap().apply {
+                putBoolean("success", true)
+                putString("message", "Deepgram client reset successfully")
+                putBoolean("isValid", validation.isValid)
+                
+                if (!validation.isValid) {
+                    val issuesArray = Arguments.createArray()
+                    validation.issues.forEach { issue ->
+                        issuesArray.pushString(issue)
+                    }
+                    putArray("issues", issuesArray)
+                }
+            }
+            
+            Log.i(TAG, "🎵 RESET: ✅ Deepgram client reset completed (valid: ${validation.isValid})")
+            promise.resolve(result)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "🎵 RESET: ❌ Error resetting Deepgram client: ${e.message}", e)
+            promise.reject("RESET_ERROR", "Failed to reset Deepgram client: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Get current TTS status and configuration
+     */
+    @ReactMethod
+    fun getTTSStatus(promise: Promise) {
+        try {
+            val deepgramPrefs = reactContext.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
+            val deepgramEnabled = deepgramPrefs.getBoolean("deepgram_enabled", false)
+            val selectedVoice = deepgramPrefs.getString("selected_voice", DeepgramClient.DEFAULT_VOICE)
+            
+            val result = Arguments.createMap().apply {
+                putBoolean("deepgramEnabled", deepgramEnabled)
+                putString("selectedVoice", selectedVoice)
+                putBoolean("deepgramClientInitialized", deepgramClient != null)
+                putString("currentVoiceState", voiceManager.voiceState.value.toString())
+                
+                // Available voices
+                val voicesArray = Arguments.createArray()
+                DeepgramClient.AVAILABLE_VOICES.keys.forEach { voice ->
+                    voicesArray.pushString(voice)
+                }
+                putArray("availableVoices", voicesArray)
+                
+                putDouble("timestamp", System.currentTimeMillis().toDouble())
+            }
+            
+            promise.resolve(result)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting TTS status: ${e.message}", e)
+            promise.reject("STATUS_ERROR", "Failed to get TTS status: ${e.message}", e)
         }
     }
 } 

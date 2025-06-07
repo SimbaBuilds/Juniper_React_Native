@@ -2,7 +2,7 @@ import { Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { supabase } from '../../supabase/supabase';
-import type { OutlookCalendarIntegration } from '../../supabase/tables';
+import type { Integration } from '../../supabase/tables';
 
 // Microsoft Graph API configuration
 const OUTLOOK_CONFIG = {
@@ -377,20 +377,25 @@ export class OutlookCalendarService {
       const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
       
       await supabase
-        .from('outlook_calendar_integrations')
+        .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
+        .eq('integration_type', 'outlook_calendar')
         .eq('is_active', true);
 
       const { error } = await supabase
-        .from('outlook_calendar_integrations')
+        .from('integrations')
         .insert({
           user_id: user.id,
+          integration_type: 'outlook_calendar',
+          type: 'built_in',
+          service_name: 'Outlook Calendar',
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
           expires_at: expiresAt.toISOString(),
           scope: OUTLOOK_CONFIG.SCOPES,
           is_active: true,
+          configuration: {},
         });
 
       if (error) {
@@ -413,9 +418,10 @@ export class OutlookCalendarService {
       }
 
       const { data, error } = await supabase
-        .from('outlook_calendar_integrations')
+        .from('integrations')
         .select('*')
         .eq('user_id', user.id)
+        .eq('integration_type', 'outlook_calendar')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -471,9 +477,10 @@ export class OutlookCalendarService {
       }
 
       const { error } = await supabase
-        .from('outlook_calendar_integrations')
+        .from('integrations')
         .update(updateData)
         .eq('user_id', user.id)
+        .eq('integration_type', 'outlook_calendar')
         .eq('is_active', true);
 
       if (error) {
@@ -496,9 +503,10 @@ export class OutlookCalendarService {
       }
 
       const { error } = await supabase
-        .from('outlook_calendar_integrations')
+        .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
+        .eq('integration_type', 'outlook_calendar')
         .eq('is_active', true);
 
       if (error) {

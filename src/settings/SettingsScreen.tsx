@@ -510,7 +510,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               await handleVoiceSettingsUpdate({ deepgramEnabled });
               console.log('🎵 DEEPGRAM_TOGGLE: ✅ Deepgram toggle update completed');
             }}
-            description="Determine how your assistant sounds."
+            description="How your assistant sounds; falls back to on device text-to-speech when disabled."
             hasSubSettings={true}
           >
             <VoiceSelectionDropdown
@@ -539,7 +539,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             onValueChange={async (baseLanguageModel) => {
               await handleVoiceSettingsUpdate({ baseLanguageModel });
             }}
-            description="These models are used for chat only and satisfy different style/personality preferences; other models are used for complex backend tasks."
+            description="The model used for chat; other models are used for complex backend tasks."
           />
 
           <ExpandableSettingsToggle
