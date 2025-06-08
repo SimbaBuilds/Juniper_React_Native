@@ -36,40 +36,9 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     // Get voice settings to sync wake word configuration
     const { voiceSettings } = useVoice();
-
-    // Sync wake word settings from voice context to native module
-    const syncWakeWordSettings = useCallback(async () => {
-        try {
-            if (voiceSettings?.selectedWakeWord) {
-                console.log('🔄 Syncing wake word from voice settings to native:', voiceSettings.selectedWakeWord);
-                const success = await wakeWordService.setSelectedWakeWord(voiceSettings.selectedWakeWord);
-                if (success) {
-                    console.log('✅ Wake word synced to native module');
-                } else {
-                    console.error('❌ Failed to sync wake word to native module');
-                }
-            }
-            
-            if (voiceSettings?.wakeWordSensitivity !== undefined) {
-                console.log('🔄 Syncing wake word sensitivity from voice settings to native:', voiceSettings.wakeWordSensitivity);
-                const success = await wakeWordService.setWakeWordSensitivity(voiceSettings.wakeWordSensitivity);
-                if (success) {
-                    console.log('✅ Wake word sensitivity synced to native module');
-                } else {
-                    console.error('❌ Failed to sync wake word sensitivity to native module');
-                }
-            }
-        } catch (error) {
-            console.error('❌ Error syncing wake word settings to native module:', error);
-        }
-    }, [voiceSettings?.selectedWakeWord, voiceSettings?.wakeWordSensitivity, wakeWordService]);
-
-    // Sync voice settings to native module when they change
-    useEffect(() => {
-        if (isInitialized && voiceSettings) {
-            syncWakeWordSettings();
-        }
-    }, [isInitialized, voiceSettings?.selectedWakeWord, voiceSettings?.wakeWordSensitivity, syncWakeWordSettings]);
+    
+    // NOTE: Wake word settings syncing is now handled in useVoiceSettings 
+    // with proper detection restart. Removed duplicate logic here to avoid conflicts.
 
     // Sync state with native module
     const syncState = useCallback(async () => {

@@ -30,9 +30,6 @@ export interface VoiceSettings {
   selectedDeepgramVoice: string;
   // XAI LiveSearch settings
   xaiLiveSearchEnabled: boolean;
-  xaiLiveSearchSources: string[];
-  xaiLiveSearchCountry: string;
-  xaiLiveSearchXHandles: string[];
   xaiLiveSearchSafeSearch: boolean;
 }
 
@@ -137,7 +134,6 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
   // Add logging for what we receive from VoiceContext
   console.log('🖥️ SETTINGS_SCREEN: Received settings from VoiceContext:', settings);
-  console.log('🖥️ SETTINGS_SCREEN: Settings loading state:', settingsLoading);
 
   // Use ref to avoid dependency cycles
   const refreshSettingsRef = useRef(refreshSettings);
@@ -153,21 +149,16 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const [localGeneralInstructions, setLocalGeneralInstructions] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  console.log('🖥️ SETTINGS_SCREEN: Current localGeneralInstructions state:', localGeneralInstructions);
-  console.log('🖥️ SETTINGS_SCREEN: Has unsaved changes:', hasUnsavedChanges);
 
   // Initialize and sync local state when settings load or change
   useEffect(() => {
-    console.log('🖥️ SETTINGS_SCREEN: useEffect triggered for settings.generalInstructions:', settings.generalInstructions);
     
     const defaultInstructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
     const currentInstructions = settings.generalInstructions || defaultInstructions;
     
-    console.log('🖥️ SETTINGS_SCREEN: Setting localGeneralInstructions to:', currentInstructions);
     setLocalGeneralInstructions(currentInstructions);
     setHasUnsavedChanges(false);
     
-    console.log('🖥️ SETTINGS_SCREEN: useEffect completed, localGeneralInstructions should now be:', currentInstructions);
   }, [settings.generalInstructions]);
 
   // Refresh settings from database every time user navigates to Settings
@@ -269,8 +260,13 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         try {
           // Convert camelCase keys to snake_case for database
           const dbUpdates = Object.keys(updates).reduce((acc, key) => {
-            const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+            let dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
             let value = updates[key];
+            
+            // Map selectedWakeWord to wake_word (consolidating duplicate fields)
+            if (key === 'selectedWakeWord') {
+              dbKey = 'wake_word';
+            }
             
             // Ensure general_instructions always has a default value
             if (dbKey === 'general_instructions' && (!value || value.trim() === '')) {
@@ -316,7 +312,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.title}>Settings</Text>
+          {/* <Text style={styles.title}>Settings</Text> */}
           {savingToDatabase && (
             <View style={styles.savingIndicator}>
               <ActivityIndicator size="small" color="#4A90E2" />
@@ -329,7 +325,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Wake Word</Text>
           <View style={styles.wakeWordExplanation}>
             <Text style={styles.explanationText}>
-              Say the wake word to activate your assistant.
+              Settings can be manually changed below or just ask your assistant "make the wake word detection less sensitive"
             </Text>
           </View>
           <WakeWordToggle />
@@ -551,53 +547,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             description="Make XAI LiveSearch the default search tool.  If toggled off, your assistant will default to a traditional web search engine."
             hasSubSettings={true}
           >
-            <View style={styles.sourcesContainer}>
-              <Text style={styles.sourcesLabel}>Search Sources</Text>
-              <Text style={styles.sourcesDescription}>
-                Select which data sources to include in search. Defaults to web and Twitter/X if none selected.
+            <View style={styles.noteContainer}>
+              <Text style={styles.noteText}>
+                💡 You can specify specific X handles in your request (e.g., "search posts from @elonmusk about Tesla")
               </Text>
-              {[
-                { key: 'web', label: 'Web', description: 'Search general websites' },
-                { key: 'x', label: 'Twitter/X', description: 'Search X posts and content' },
-                { key: 'news', label: 'News', description: 'Search news sources' },
-                { key: 'rss', label: 'RSS Feeds', description: 'Search RSS feed content' },
-              ].map((source) => (
-                <SettingsToggle
-                  key={source.key}
-                  label={source.label}
-                  value={(settings.xaiLiveSearchSources || []).includes(source.key)}
-                  onValueChange={async (enabled) => {
-                    const currentSources = settings.xaiLiveSearchSources || [];
-                    const newSources = enabled
-                      ? [...currentSources.filter((s: string) => s !== source.key), source.key]
-                      : currentSources.filter((s: string) => s !== source.key);
-                    await handleVoiceSettingsUpdate({ xaiLiveSearchSources: newSources });
-                  }}
-                  description={source.description}
-                />
-              ))}
             </View>
-
-            <SettingsTextInput
-              label="Country Code"
-              value={settings.xaiLiveSearchCountry || ''}
-              onChangeText={async (xaiLiveSearchCountry: string) => {
-                await handleVoiceSettingsUpdate({ xaiLiveSearchCountry });
-              }}
-              placeholder="US"
-              description="ISO alpha-2 country code (e.g., US, GB, DE) for regional search focus. Defaults to all regions if none selected."
-            />
-
-            <SettingsArrayInput
-              label="X Handles"
-              values={settings.xaiLiveSearchXHandles || []}
-              onValuesChange={async (xaiLiveSearchXHandles: string[]) => {
-                await handleVoiceSettingsUpdate({ xaiLiveSearchXHandles });
-              }}
-              placeholder="Enter X handle (without @)"
-              description="Specify X handles to search posts from. Enter handles without the @ symbol (e.g., 'stephencurry30')."
-            />
-
+            
             <SettingsToggle
               label="Safe Search"
               value={settings.xaiLiveSearchSafeSearch !== false}
@@ -803,5 +758,18 @@ const styles = StyleSheet.create({
   indentedSetting: {
     marginLeft: 16,
     marginTop: 8,
+  },
+  noteContainer: {
+    backgroundColor: '#2A2A2A',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: '#4A90E2',
+  },
+  noteText: {
+    color: '#B0B0B0',
+    fontSize: 14,
+    lineHeight: 20,
   },
 }); 

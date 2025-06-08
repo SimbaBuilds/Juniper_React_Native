@@ -2,13 +2,27 @@ import { Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { supabase } from '../../supabase/supabase';
-import type { Integration } from '../../supabase/tables';
 
-// Microsoft Graph API configuration for Outlook Email
-const OUTLOOK_EMAIL_CONFIG = {
+// Microsoft Graph API configuration - unified for all services
+const MICROSOFT_CONFIG = {
   CLIENT_ID: Constants.expoConfig?.extra?.OUTLOOK_CLIENT_ID,
   TENANT_ID: Constants.expoConfig?.extra?.OUTLOOK_TENANT_ID || 'common',
-  SCOPES: 'https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/Mail.Read.Shared',
+  // Combined scopes for all Microsoft services
+  SCOPES: [
+    // Calendar scopes
+    'https://graph.microsoft.com/Calendars.Read',
+    'https://graph.microsoft.com/Calendars.Read.Shared',
+    'https://graph.microsoft.com/Calendars.ReadWrite',
+    // Email scopes
+    'https://graph.microsoft.com/Mail.Read',
+    'https://graph.microsoft.com/Mail.ReadWrite',
+    'https://graph.microsoft.com/Mail.Send',
+    // OneDrive scopes
+    'https://graph.microsoft.com/Files.Read',
+    'https://graph.microsoft.com/Files.Read.All',
+    // Contacts scope
+    'https://graph.microsoft.com/Contacts.Read',
+  ].join(' '),
   get REDIRECT_URI() {
     const clientId = this.CLIENT_ID;
     if (!clientId) {
@@ -19,53 +33,30 @@ const OUTLOOK_EMAIL_CONFIG = {
   },
 };
 
-interface OutlookMessage {
-  id: string;
-  subject: string;
-  body: {
-    content: string;
-    contentType: string;
-  };
-  from: {
-    emailAddress: {
-      name: string;
-      address: string;
-    };
-  };
-  receivedDateTime: string;
-  isRead: boolean;
-  importance: string;
-  hasAttachments: boolean;
-  bodyPreview: string;
-}
-
-interface MessagesListResponse {
-  value: OutlookMessage[];
-  '@odata.nextLink'?: string;
-}
-
-interface OutlookEmailAuth {
+interface MicrosoftAuth {
   accessToken: string;
   refreshToken: string;
   expiresAt: number;
+  scope: string;
 }
 
 /**
- * Service for handling Outlook Email integration using Microsoft Graph API
+ * Unified Microsoft authentication service for all Microsoft integrations
+ * Handles OAuth flow and token management for Outlook Calendar, Email, OneDrive, and Contacts
  */
-export class OutlookEmailService {
-  private static instance: OutlookEmailService | null = null;
-  private authData: OutlookEmailAuth | null = null;
+export class MicrosoftAuthService {
+  private static instance: MicrosoftAuthService | null = null;
+  private authData: MicrosoftAuth | null = null;
   private isInitialized = false;
   private authCallbacks: Array<(isAuthenticated: boolean) => void> = [];
 
   private constructor() {}
 
-  public static getInstance(): OutlookEmailService {
-    if (!OutlookEmailService.instance) {
-      OutlookEmailService.instance = new OutlookEmailService();
+  public static getInstance(): MicrosoftAuthService {
+    if (!MicrosoftAuthService.instance) {
+      MicrosoftAuthService.instance = new MicrosoftAuthService();
     }
-    return OutlookEmailService.instance;
+    return MicrosoftAuthService.instance;
   }
 
   /**
@@ -104,8 +95,8 @@ export class OutlookEmailService {
    */
   async initialize(): Promise<void> {
     try {
-      if (!OUTLOOK_EMAIL_CONFIG.CLIENT_ID) {
-        throw new Error('Outlook Email credentials not configured. Please set OUTLOOK_CLIENT_ID environment variable');
+      if (!MICROSOFT_CONFIG.CLIENT_ID) {
+        throw new Error('Microsoft credentials not configured. Please set OUTLOOK_CLIENT_ID environment variable');
       }
       
       await this.loadAuthData();
@@ -116,11 +107,11 @@ export class OutlookEmailService {
       
       this.isInitialized = true;
       
-      console.log('OutlookEmailService initialized');
-      console.log('Using redirect URI:', OUTLOOK_EMAIL_CONFIG.REDIRECT_URI);
-      console.log('Outlook Client ID configured:', !!OUTLOOK_EMAIL_CONFIG.CLIENT_ID);
+      console.log('MicrosoftAuthService initialized');
+      console.log('Using redirect URI:', MICROSOFT_CONFIG.REDIRECT_URI);
+      console.log('Scopes:', MICROSOFT_CONFIG.SCOPES);
     } catch (error) {
-      console.error('Error initializing OutlookEmailService:', error);
+      console.error('Error initializing MicrosoftAuthService:', error);
       throw error;
     }
   }
@@ -130,6 +121,17 @@ export class OutlookEmailService {
    */
   isAuthenticated(): boolean {
     return this.authData !== null && this.authData.accessToken !== '';
+  }
+
+  /**
+   * Get current access token (ensures it's valid)
+   */
+  async getAccessToken(): Promise<string> {
+    await this.ensureValidToken();
+    if (!this.authData?.accessToken) {
+      throw new Error('Not authenticated with Microsoft');
+    }
+    return this.authData.accessToken;
   }
 
   /**
@@ -143,9 +145,9 @@ export class OutlookEmailService {
 
       const authUrl = this.buildAuthUrl();
       
-      console.log('=== STARTING OUTLOOK EMAIL OAUTH FLOW ===');
+      console.log('=== STARTING MICROSOFT OAUTH FLOW ===');
       console.log('Opening OAuth URL:', authUrl);
-      console.log('Expected redirect URI:', OUTLOOK_EMAIL_CONFIG.REDIRECT_URI);
+      console.log('Expected redirect URI:', MICROSOFT_CONFIG.REDIRECT_URI);
       
       const supported = await Linking.canOpenURL(authUrl);
       if (supported) {
@@ -167,7 +169,7 @@ export class OutlookEmailService {
    */
   async handleAuthCallback(code: string): Promise<boolean> {
     try {
-      console.log('=== HANDLING OUTLOOK EMAIL OAUTH CALLBACK ===');
+      console.log('=== HANDLING MICROSOFT OAUTH CALLBACK ===');
       
       if (!code) {
         throw new Error('No authorization code provided');
@@ -182,85 +184,18 @@ export class OutlookEmailService {
         accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token,
         expiresAt: Date.now() + (tokenData.expires_in * 1000),
+        scope: tokenData.scope || MICROSOFT_CONFIG.SCOPES,
       };
 
       await this.saveAuthData();
       await this.saveIntegrationToSupabase(tokenData);
       
-      console.log('✅ Outlook Email authentication successful');
+      console.log('✅ Microsoft authentication successful');
       this.notifyAuthCallbacks();
       return true;
     } catch (error) {
       console.error('❌ Error handling auth callback:', error);
       return false;
-    }
-  }
-
-  /**
-   * Get recent unread emails
-   */
-  async getRecentUnreadEmails(maxResults: number = 5): Promise<OutlookMessage[]> {
-    try {
-      await this.ensureValidToken();
-      
-      const url = `https://graph.microsoft.com/v1.0/me/messages?$filter=isRead eq false&$orderby=receivedDateTime desc&$top=${maxResults}`;
-      
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${this.authData?.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch emails: ${response.statusText}`);
-      }
-
-      const data: MessagesListResponse = await response.json();
-      return data.value || [];
-    } catch (error) {
-      console.error('❌ Error fetching unread emails:', error);
-      
-      if (error instanceof Error) {
-        if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-          throw new Error('Authentication expired. Please sign in again to access your Outlook email.');
-        }
-        
-        if (error.message.includes('403') || error.message.includes('Forbidden')) {
-          throw new Error('Access denied. Please check your Outlook email permissions.');
-        }
-      }
-      
-      console.warn('⚠️ Returning empty emails array due to error');
-      return [];
-    }
-  }
-
-  /**
-   * Get the user's email address
-   */
-  async getUserProfile(): Promise<{ mail: string } | null> {
-    try {
-      await this.ensureValidToken();
-      
-      const response = await fetch(
-        `https://graph.microsoft.com/v1.0/me?$select=mail,displayName`,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.authData?.accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch user profile: ${response.statusText}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      return null;
     }
   }
 
@@ -273,16 +208,16 @@ export class OutlookEmailService {
       await this.deactivateIntegrationInSupabase();
       
       this.authData = null;
-      await AsyncStorage.removeItem('outlook_email_auth');
+      await AsyncStorage.removeItem('microsoft_unified_auth');
       
-      console.log('✅ Outlook Email signed out completely');
+      console.log('✅ Microsoft signed out completely');
       this.notifyAuthCallbacks();
     } catch (error) {
       console.error('❌ Error during sign out:', error);
       
       this.authData = null;
       try {
-        await AsyncStorage.removeItem('outlook_email_auth');
+        await AsyncStorage.removeItem('microsoft_unified_auth');
       } catch (storageError) {
         console.error('❌ Error clearing local storage:', storageError);
       }
@@ -296,23 +231,23 @@ export class OutlookEmailService {
 
   private buildAuthUrl(): string {
     const params = new URLSearchParams({
-      client_id: OUTLOOK_EMAIL_CONFIG.CLIENT_ID!,
+      client_id: MICROSOFT_CONFIG.CLIENT_ID!,
       response_type: 'code',
-      redirect_uri: OUTLOOK_EMAIL_CONFIG.REDIRECT_URI,
-      scope: OUTLOOK_EMAIL_CONFIG.SCOPES,
+      redirect_uri: MICROSOFT_CONFIG.REDIRECT_URI,
+      scope: MICROSOFT_CONFIG.SCOPES,
       response_mode: 'query',
     });
 
-    return `https://login.microsoftonline.com/${OUTLOOK_EMAIL_CONFIG.TENANT_ID}/oauth2/v2.0/authorize?${params}`;
+    return `https://login.microsoftonline.com/${MICROSOFT_CONFIG.TENANT_ID}/oauth2/v2.0/authorize?${params}`;
   }
 
   private async exchangeCodeForToken(code: string): Promise<any> {
     const requestBody = new URLSearchParams();
-    requestBody.append('client_id', OUTLOOK_EMAIL_CONFIG.CLIENT_ID!);
+    requestBody.append('client_id', MICROSOFT_CONFIG.CLIENT_ID!);
     requestBody.append('code', code);
     requestBody.append('grant_type', 'authorization_code');
-    requestBody.append('redirect_uri', OUTLOOK_EMAIL_CONFIG.REDIRECT_URI);
-    requestBody.append('scope', OUTLOOK_EMAIL_CONFIG.SCOPES);
+    requestBody.append('redirect_uri', MICROSOFT_CONFIG.REDIRECT_URI);
+    requestBody.append('scope', MICROSOFT_CONFIG.SCOPES);
     
     return this.makeTokenRequest(requestBody, 'token exchange');
   }
@@ -324,10 +259,10 @@ export class OutlookEmailService {
 
     try {
       const requestBody = new URLSearchParams();
-      requestBody.append('client_id', OUTLOOK_EMAIL_CONFIG.CLIENT_ID!);
+      requestBody.append('client_id', MICROSOFT_CONFIG.CLIENT_ID!);
       requestBody.append('refresh_token', this.authData.refreshToken);
       requestBody.append('grant_type', 'refresh_token');
-      requestBody.append('scope', OUTLOOK_EMAIL_CONFIG.SCOPES);
+      requestBody.append('scope', MICROSOFT_CONFIG.SCOPES);
       
       const tokenData = await this.makeTokenRequest(requestBody, 'token refresh');
       
@@ -351,7 +286,7 @@ export class OutlookEmailService {
 
   private async ensureValidToken(): Promise<void> {
     if (!this.authData) {
-      throw new Error('Not authenticated. Please sign in to access Outlook Email.');
+      throw new Error('Not authenticated. Please sign in to access Microsoft services.');
     }
 
     const bufferTime = 5 * 60 * 1000;
@@ -365,7 +300,7 @@ export class OutlookEmailService {
 
   private async loadAuthData(): Promise<void> {
     try {
-      const stored = await AsyncStorage.getItem('outlook_email_auth');
+      const stored = await AsyncStorage.getItem('microsoft_unified_auth');
       if (stored) {
         this.authData = JSON.parse(stored);
       }
@@ -377,7 +312,7 @@ export class OutlookEmailService {
   private async saveAuthData(): Promise<void> {
     try {
       if (this.authData) {
-        await AsyncStorage.setItem('outlook_email_auth', JSON.stringify(this.authData));
+        await AsyncStorage.setItem('microsoft_unified_auth', JSON.stringify(this.authData));
       }
     } catch (error) {
       console.error('Error saving auth data:', error);
@@ -392,41 +327,39 @@ export class OutlookEmailService {
         throw new Error('User not authenticated with Supabase');
       }
 
-      // Get user's email address
-      const profile = await this.getUserProfile();
-      const emailAddress = profile?.mail || '';
-
       const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
       
+      // Deactivate any existing Microsoft integrations
       await supabase
         .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
-        .eq('integration_type', 'outlook_email')
+        .eq('service_name', 'microsoft')
         .eq('is_active', true);
 
+      // Insert new unified Microsoft integration
       const { error } = await supabase
         .from('integrations')
         .insert({
           user_id: user.id,
-          integration_type: 'outlook_email',
           type: 'built_in',
-          service_name: 'Outlook Email',
+          service_name: 'microsoft',
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
           expires_at: expiresAt.toISOString(),
-          scope: OUTLOOK_EMAIL_CONFIG.SCOPES,
+          scope: tokenData.scope || MICROSOFT_CONFIG.SCOPES,
           is_active: true,
-          email_address: emailAddress,
-          sync_settings: {},
-          configuration: {},
+          configuration: {
+            services: ['calendar', 'email', 'onedrive', 'contacts'],
+            scopes: MICROSOFT_CONFIG.SCOPES.split(' '),
+          },
         });
 
       if (error) {
         throw error;
       }
 
-      console.log('✅ Outlook Email integration saved to Supabase');
+      console.log('✅ Microsoft integration saved to Supabase');
     } catch (error) {
       console.error('❌ Error saving integration to Supabase:', error);
     }
@@ -445,7 +378,7 @@ export class OutlookEmailService {
         .from('integrations')
         .select('*')
         .eq('user_id', user.id)
-        .eq('integration_type', 'outlook_email')
+        .eq('service_name', 'microsoft')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -453,7 +386,7 @@ export class OutlookEmailService {
 
       if (error) {
         if (error.code === 'PGRST116') {
-          console.log('No active Outlook Email integration found in Supabase');
+          console.log('No active Microsoft integration found in Supabase');
           return;
         }
         throw error;
@@ -467,12 +400,13 @@ export class OutlookEmailService {
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
             expiresAt: expiresAt,
+            scope: data.scope || MICROSOFT_CONFIG.SCOPES,
           };
           
           await this.saveAuthData();
-          console.log('✅ Outlook Email integration loaded from Supabase');
+          console.log('✅ Microsoft integration loaded from Supabase');
         } else {
-          console.log('Outlook Email integration found but expired, will need re-authentication');
+          console.log('Microsoft integration found but expired, will need re-authentication');
         }
       }
     } catch (error) {
@@ -504,14 +438,14 @@ export class OutlookEmailService {
         .from('integrations')
         .update(updateData)
         .eq('user_id', user.id)
-        .eq('integration_type', 'outlook_email')
+        .eq('integration_type', 'microsoft')
         .eq('is_active', true);
 
       if (error) {
         throw error;
       }
 
-      console.log('✅ Outlook Email tokens updated in Supabase');
+      console.log('✅ Microsoft tokens updated in Supabase');
     } catch (error) {
       console.error('❌ Error updating tokens in Supabase:', error);
     }
@@ -530,14 +464,14 @@ export class OutlookEmailService {
         .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
-        .eq('integration_type', 'outlook_email')
+        .eq('integration_type', 'microsoft')
         .eq('is_active', true);
 
       if (error) {
         throw error;
       }
 
-      console.log('✅ Outlook Email integration deactivated in Supabase');
+      console.log('✅ Microsoft integration deactivated in Supabase');
     } catch (error) {
       console.error('❌ Error deactivating integration in Supabase:', error);
     }
@@ -552,7 +486,7 @@ export class OutlookEmailService {
     try {
       console.log('🔒 Revoking access token with Microsoft...');
       
-      const response = await fetch(`https://login.microsoftonline.com/${OUTLOOK_EMAIL_CONFIG.TENANT_ID}/oauth2/v2.0/logout`, {
+      const response = await fetch(`https://login.microsoftonline.com/${MICROSOFT_CONFIG.TENANT_ID}/oauth2/v2.0/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -575,7 +509,7 @@ export class OutlookEmailService {
   private async makeTokenRequest(requestBody: URLSearchParams, operation: string): Promise<any> {
     console.log(`🔄 Making ${operation} request...`);
     
-    const response = await fetch(`https://login.microsoftonline.com/${OUTLOOK_EMAIL_CONFIG.TENANT_ID}/oauth2/v2.0/token`, {
+    const response = await fetch(`https://login.microsoftonline.com/${MICROSOFT_CONFIG.TENANT_ID}/oauth2/v2.0/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',

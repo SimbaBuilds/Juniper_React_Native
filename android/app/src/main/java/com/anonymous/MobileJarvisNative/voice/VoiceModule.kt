@@ -961,13 +961,37 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                 return
             }
             
+            // Force reload of Deepgram client to pick up new settings
+            Log.i(TAG, "🎵 VOICE_SETTINGS: Forcing Deepgram client reload...")
+            try {
+                deepgramClient?.release()
+                deepgramClient = null
+                Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ Deepgram client reset for settings reload")
+            } catch (e: Exception) {
+                Log.w(TAG, "🎵 VOICE_SETTINGS: ⚠️ Error resetting Deepgram client: ${e.message}")
+                // Continue anyway as this is not critical
+            }
+            
+            // Notify React Native that settings were successfully updated and native config reloaded
+            val settingsUpdateParams = Arguments.createMap().apply {
+                putString("message", "Native voice settings updated and configuration reloaded")
+                putBoolean("deepgramEnabled", deepgramPrefs.getBoolean("deepgram_enabled", false))
+                putString("selectedVoice", deepgramPrefs.getString("selected_voice", DeepgramClient.DEFAULT_VOICE))
+                putDouble("timestamp", System.currentTimeMillis().toDouble())
+            }
+            
+            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit("NativeVoiceSettingsUpdated", settingsUpdateParams)
+            
             Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ Native voice settings updated and validated successfully")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ Native configuration reloaded")
             Log.i(TAG, "🎵 VOICE_SETTINGS: ================================================")
             
             // Return validation status
             val result = Arguments.createMap().apply {
                 putBoolean("success", true)
-                putString("message", "Settings updated and validated successfully")
+                putString("message", "Settings updated, validated, and native config reloaded")
+                putBoolean("configReloaded", true)
             }
             promise.resolve(result)
             

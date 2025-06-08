@@ -58,6 +58,7 @@ export interface ChatRequest {
 export interface ChatResponse {
   response: string;
   timestamp: number;
+  settings_updated?: boolean;
   additional_data?: any;
 }
 

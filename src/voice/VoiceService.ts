@@ -431,6 +431,15 @@ export class VoiceService {
             
             if (result) {
                 console.log('🎵 VOICE_SETTINGS: ✅ Voice settings updated successfully');
+                
+                // Reset/reload native configuration after settings update
+                console.log('🎵 VOICE_SETTINGS: Reloading native configuration...');
+                const reloadResult = await this.reloadNativeConfiguration();
+                if (reloadResult) {
+                    console.log('🎵 VOICE_SETTINGS: ✅ Native configuration reloaded successfully');
+                } else {
+                    console.warn('🎵 VOICE_SETTINGS: ⚠️ Native configuration reload failed, but settings were updated');
+                }
             } else {
                 console.error('🎵 VOICE_SETTINGS: ❌ Failed to update voice settings');
             }
@@ -438,6 +447,29 @@ export class VoiceService {
             return result;
         } catch (error) {
             console.error('🎵 VOICE_SETTINGS: ❌ Error updating voice settings:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Reload native voice configuration after settings changes
+     */
+    public async reloadNativeConfiguration(): Promise<boolean> {
+        console.log('🎵 RELOAD_CONFIG: Reloading native voice configuration...');
+        try {
+            if (Platform.OS !== 'android') {
+                console.warn('🎵 RELOAD_CONFIG: Configuration reload only supported on Android');
+                return false;
+            }
+            
+            // Reset Deepgram client to pick up new settings
+            console.log('🎵 RELOAD_CONFIG: Resetting Deepgram client...');
+            const resetResult = await VoiceModule.resetDeepgramClient();
+            console.log('🎵 RELOAD_CONFIG: Deepgram reset result:', resetResult);
+            
+            return resetResult?.success ?? false;
+        } catch (error) {
+            console.error('🎵 RELOAD_CONFIG: ❌ Error reloading native configuration:', error);
             return false;
         }
     }

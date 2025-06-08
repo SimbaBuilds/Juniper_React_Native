@@ -124,27 +124,30 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           deepgramEnabled: voiceSettings.deepgram_enabled,
           baseLanguageModel: voiceSettings.base_language_model,
           generalInstructions: generalInstructions,
-          wakeWord: voiceSettings.wake_word || 'Jarvis',
-          selectedWakeWord: voiceSettings.selected_wake_word || 'JARVIS',
+          wakeWord: voiceSettings.selectedWakeWord || 'Jarvis',
+          selectedWakeWord: voiceSettings.selectedWakeWord || 'JARVIS',
           wakeWordSensitivity: voiceSettings.wake_word_sensitivity ?? 0.3,
           wakeWordDetectionEnabled: voiceSettings.wake_word_detection_enabled ?? false,
           selectedDeepgramVoice: voiceSettings.selected_deepgram_voice || 'aura-2-mars-en',
           // XAI LiveSearch settings
           xaiLiveSearchEnabled: voiceSettings.xai_live_search_enabled ?? false,
-          xaiLiveSearchSources: voiceSettings.xai_live_search_sources ?? [],
-          xaiLiveSearchCountry: voiceSettings.xai_live_search_country ?? 'US',
-          xaiLiveSearchXHandles: voiceSettings.xai_live_search_x_handles ?? [],
           xaiLiveSearchSafeSearch: voiceSettings.xai_live_search_safe_search ?? true,
         };
         
         console.log('🔄 VOICE_CONTEXT: Updating with:', updates);
         console.log('🔄 VOICE_CONTEXT: Current settings before update:', voiceSettings);
         
+        // Force sync to native by calling updateSettings (which always syncs now)
+        console.log('🔄 VOICE_CONTEXT: Forcing sync to native layer...');
         await updateSettingsRef.current(updates);
         
-        console.log('✅ VOICE_CONTEXT: Settings updated successfully');
+        console.log('✅ VOICE_CONTEXT: Settings updated and synced to native successfully');
       } else {
         console.log('🔄 VOICE_CONTEXT: No voice settings found in database');
+        
+        // Even if no settings in database, sync current settings to ensure native is up to date
+        console.log('🔄 VOICE_CONTEXT: Syncing current settings to native...');
+        await updateSettingsRef.current({});
       }
     } catch (error) {
       console.error('❌ VOICE_CONTEXT: Error refreshing settings:', error);
@@ -226,6 +229,17 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               const response = await sendMessage(text, updatedHistory);
               console.log('🟠 VOICE_CONTEXT: Received API response');
               
+              // Check if settings were updated and refresh if needed
+              if (response.settings_updated) {
+                console.log('⚙️ VOICE_CONTEXT: Settings were updated, refreshing from database...');
+                try {
+                  await refreshSettings();
+                  console.log('✅ VOICE_CONTEXT: Settings refreshed successfully');
+                } catch (refreshError) {
+                  console.error('❌ VOICE_CONTEXT: Error refreshing settings:', refreshError);
+                }
+              }
+              
               // Send response back to native for TTS (only in voice mode)
               await voiceService.handleApiResponse(requestId, response.response);
               
@@ -260,6 +274,14 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       }
     });
     subscriptions.push(processTextSub);
+    
+    // Listen for native voice settings update confirmations
+    const nativeSettingsUpdateSub = DeviceEventEmitter.addListener('NativeVoiceSettingsUpdated', (event) => {
+      console.log('✅ VOICE_CONTEXT: Native voice settings update confirmed:', event);
+      // This confirms that the native layer has successfully updated its configuration
+      // No additional action needed, but this provides confirmation in logs
+    });
+    subscriptions.push(nativeSettingsUpdateSub);
     
     listenersSetupRef.current = true;
     
@@ -382,6 +404,17 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             
             const response = await sendMessage(text.trim(), updatedHistory);
             console.log('📝 TEXT_INPUT: Received API response');
+            
+            // Check if settings were updated and refresh if needed
+            if (response.settings_updated) {
+              console.log('⚙️ TEXT_INPUT: Settings were updated, refreshing from database...');
+              try {
+                await refreshSettings();
+                console.log('✅ TEXT_INPUT: Settings refreshed successfully');
+              } catch (refreshError) {
+                console.error('❌ TEXT_INPUT: Error refreshing settings:', refreshError);
+              }
+            }
             
             // Add assistant response to chat history
             const assistantMessage: ChatMessage = {

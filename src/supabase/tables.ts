@@ -5,7 +5,6 @@ export type UserProfile = {
     base_language_model: string;
     general_instructions: string;
     wake_word: string;
-    selected_wake_word: string;
     wake_word_sensitivity: number;
     wake_word_detection_enabled: boolean;
     selected_deepgram_voice: string;
@@ -13,9 +12,6 @@ export type UserProfile = {
     preferences: Record<string, any>;
     // XAI LiveSearch settings
     xai_live_search_enabled?: boolean;
-    xai_live_search_sources?: string[];
-    xai_live_search_country?: string;
-    xai_live_search_x_handles?: string[];
     xai_live_search_safe_search?: boolean;
     created_at: Date;
     updated_at: Date;
@@ -23,9 +19,8 @@ export type UserProfile = {
   
   export const userProfileFields = [
     'id', 'display_name', 'deepgram_enabled', 'base_language_model', 'general_instructions',
-    'wake_word', 'selected_wake_word', 'wake_word_sensitivity', 'wake_word_detection_enabled', 'selected_deepgram_voice', 'timezone', 'preferences', 
-    'xai_live_search_enabled', 'xai_live_search_sources', 'xai_live_search_country', 
-    'xai_live_search_x_handles', 'xai_live_search_safe_search',
+    'wake_word', 'wake_word_sensitivity', 'wake_word_detection_enabled', 'selected_deepgram_voice', 'timezone', 'preferences', 
+    'xai_live_search_enabled', 'xai_live_search_safe_search',
     'created_at', 'updated_at'
   ] as const;
   export type UserProfileField = (typeof userProfileFields)[number];
@@ -136,9 +131,8 @@ export type UserProfile = {
   export type Integration = {
     id: string;
     user_id: string;
-    integration_type: string;
-    type: 'built_in' | 'user_added';
-    service_name: string;
+    type: 'built_in' | 'user_created'; // integration type
+    service_name: string; // provider name (google, microsoft, notion, etc.)
     notes?: string;
     configuration: Record<string, any>;
     is_active: boolean;
@@ -166,7 +160,7 @@ export type UserProfile = {
   };
   
   export const integrationFields = [
-    'id', 'user_id', 'integration_type', 'type', 'service_name', 'notes',
+    'id', 'user_id', 'type', 'service_name', 'notes',
     'configuration', 'is_active', 'last_used', 'created_at',
     'access_token', 'refresh_token', 'expires_at', 'scope',
     'email_address', 'sync_settings',

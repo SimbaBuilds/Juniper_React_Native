@@ -3,11 +3,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { supabase } from '../../supabase/supabase';
 
-// Google Drive API configuration
-const GOOGLE_DRIVE_CONFIG = {
+// Google API configuration - unified for all services
+const GOOGLE_CONFIG = {
   CLIENT_ID: Constants.expoConfig?.extra?.GOOGLE_CLIENT_ID,
   API_KEY: Constants.expoConfig?.extra?.GOOGLE_API_KEY,
-  SCOPES: 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.metadata.readonly',
+  // Combined scopes for all Google services
+  SCOPES: [
+    // Calendar scopes
+    'https://www.googleapis.com/auth/calendar.readonly',
+    'https://www.googleapis.com/auth/calendar.events',
+    // Gmail scopes
+    'https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/gmail.modify',
+    // Drive scopes
+    'https://www.googleapis.com/auth/drive.readonly',
+    'https://www.googleapis.com/auth/drive.metadata.readonly',
+    // Contacts scope
+    'https://www.googleapis.com/auth/contacts.readonly',
+  ].join(' '),
   get REDIRECT_URI() {
     const clientId = this.CLIENT_ID;
     if (!clientId) {
@@ -20,54 +33,30 @@ const GOOGLE_DRIVE_CONFIG = {
   },
 };
 
-interface DriveFile {
-  id: string;
-  name: string;
-  mimeType: string;
-  size?: string;
-  modifiedTime: string;
-  createdTime: string;
-  webViewLink: string;
-  iconLink?: string;
-  thumbnailLink?: string;
-  owners: Array<{
-    displayName: string;
-    emailAddress: string;
-  }>;
-  lastModifyingUser: {
-    displayName: string;
-    emailAddress: string;
-  };
-}
-
-interface FilesListResponse {
-  kind: string;
-  files: DriveFile[];
-  nextPageToken?: string;
-}
-
-interface GoogleDriveAuth {
+interface GoogleAuth {
   accessToken: string;
   refreshToken: string;
   expiresAt: number;
+  scope: string;
 }
 
 /**
- * Service for handling Google Drive integration
+ * Unified Google authentication service for all Google integrations
+ * Handles OAuth flow and token management for Calendar, Gmail, Drive, and Contacts
  */
-export class GoogleDriveService {
-  private static instance: GoogleDriveService | null = null;
-  private authData: GoogleDriveAuth | null = null;
+export class GoogleAuthService {
+  private static instance: GoogleAuthService | null = null;
+  private authData: GoogleAuth | null = null;
   private isInitialized = false;
   private authCallbacks: Array<(isAuthenticated: boolean) => void> = [];
 
   private constructor() {}
 
-  public static getInstance(): GoogleDriveService {
-    if (!GoogleDriveService.instance) {
-      GoogleDriveService.instance = new GoogleDriveService();
+  public static getInstance(): GoogleAuthService {
+    if (!GoogleAuthService.instance) {
+      GoogleAuthService.instance = new GoogleAuthService();
     }
-    return GoogleDriveService.instance;
+    return GoogleAuthService.instance;
   }
 
   /**
@@ -106,8 +95,8 @@ export class GoogleDriveService {
    */
   async initialize(): Promise<void> {
     try {
-      if (!GOOGLE_DRIVE_CONFIG.CLIENT_ID || !GOOGLE_DRIVE_CONFIG.API_KEY) {
-        throw new Error('Google Drive credentials not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_API_KEY environment variables');
+      if (!GOOGLE_CONFIG.CLIENT_ID || !GOOGLE_CONFIG.API_KEY) {
+        throw new Error('Google credentials not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_API_KEY environment variables');
       }
       
       await this.loadAuthData();
@@ -118,10 +107,11 @@ export class GoogleDriveService {
       
       this.isInitialized = true;
       
-      console.log('GoogleDriveService initialized');
-      console.log('Using redirect URI:', GOOGLE_DRIVE_CONFIG.REDIRECT_URI);
+      console.log('GoogleAuthService initialized');
+      console.log('Using redirect URI:', GOOGLE_CONFIG.REDIRECT_URI);
+      console.log('Scopes:', GOOGLE_CONFIG.SCOPES);
     } catch (error) {
-      console.error('Error initializing GoogleDriveService:', error);
+      console.error('Error initializing GoogleAuthService:', error);
       throw error;
     }
   }
@@ -131,6 +121,17 @@ export class GoogleDriveService {
    */
   isAuthenticated(): boolean {
     return this.authData !== null && this.authData.accessToken !== '';
+  }
+
+  /**
+   * Get current access token (ensures it's valid)
+   */
+  async getAccessToken(): Promise<string> {
+    await this.ensureValidToken();
+    if (!this.authData?.accessToken) {
+      throw new Error('Not authenticated with Google');
+    }
+    return this.authData.accessToken;
   }
 
   /**
@@ -144,8 +145,9 @@ export class GoogleDriveService {
 
       const authUrl = this.buildAuthUrl();
       
-      console.log('=== STARTING GOOGLE DRIVE OAUTH FLOW ===');
+      console.log('=== STARTING GOOGLE OAUTH FLOW ===');
       console.log('Opening OAuth URL:', authUrl);
+      console.log('Expected redirect URI:', GOOGLE_CONFIG.REDIRECT_URI);
       
       const supported = await Linking.canOpenURL(authUrl);
       if (supported) {
@@ -167,7 +169,7 @@ export class GoogleDriveService {
    */
   async handleAuthCallback(code: string): Promise<boolean> {
     try {
-      console.log('=== HANDLING GOOGLE DRIVE OAUTH CALLBACK ===');
+      console.log('=== HANDLING GOOGLE OAUTH CALLBACK ===');
       
       if (!code) {
         throw new Error('No authorization code provided');
@@ -182,95 +184,18 @@ export class GoogleDriveService {
         accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token,
         expiresAt: Date.now() + (tokenData.expires_in * 1000),
+        scope: tokenData.scope || GOOGLE_CONFIG.SCOPES,
       };
 
       await this.saveAuthData();
       await this.saveIntegrationToSupabase(tokenData);
       
-      console.log('✅ Google Drive authentication successful');
+      console.log('✅ Google authentication successful');
       this.notifyAuthCallbacks();
       return true;
     } catch (error) {
       console.error('❌ Error handling auth callback:', error);
       return false;
-    }
-  }
-
-  /**
-   * Get recent files from Google Drive
-   */
-  async getRecentFiles(maxResults: number = 10): Promise<DriveFile[]> {
-    try {
-      await this.ensureValidToken();
-      
-      const params = new URLSearchParams({
-        key: GOOGLE_DRIVE_CONFIG.API_KEY,
-        pageSize: maxResults.toString(),
-        orderBy: 'modifiedTime desc',
-        fields: 'files(id,name,mimeType,size,modifiedTime,createdTime,webViewLink,iconLink,thumbnailLink,owners,lastModifyingUser)',
-        q: 'trashed=false',
-      });
-
-      const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files?${params}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.authData?.accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch files: ${response.statusText}`);
-      }
-
-      const data: FilesListResponse = await response.json();
-      return data.files || [];
-    } catch (error) {
-      console.error('❌ Error fetching recent files:', error);
-      
-      if (error instanceof Error) {
-        if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-          throw new Error('Authentication expired. Please sign in again to access your Google Drive.');
-        }
-        
-        if (error.message.includes('403') || error.message.includes('Forbidden')) {
-          throw new Error('Access denied. Please check your Google Drive permissions.');
-        }
-      }
-      
-      console.warn('⚠️ Returning empty files array due to error');
-      return [];
-    }
-  }
-
-  /**
-   * Get Drive storage info
-   */
-  async getStorageInfo(): Promise<{ limit: string; usage: string; usageInDrive: string } | null> {
-    try {
-      await this.ensureValidToken();
-      
-      const response = await fetch(
-        `https://www.googleapis.com/drive/v3/about?fields=storageQuota&key=${GOOGLE_DRIVE_CONFIG.API_KEY}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.authData?.accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch storage info: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data.storageQuota || null;
-    } catch (error) {
-      console.error('Error fetching storage info:', error);
-      return null;
     }
   }
 
@@ -283,16 +208,16 @@ export class GoogleDriveService {
       await this.deactivateIntegrationInSupabase();
       
       this.authData = null;
-      await AsyncStorage.removeItem('google_drive_auth');
+      await AsyncStorage.removeItem('google_unified_auth');
       
-      console.log('✅ Google Drive signed out completely');
+      console.log('✅ Google signed out completely');
       this.notifyAuthCallbacks();
     } catch (error) {
       console.error('❌ Error during sign out:', error);
       
       this.authData = null;
       try {
-        await AsyncStorage.removeItem('google_drive_auth');
+        await AsyncStorage.removeItem('google_unified_auth');
       } catch (storageError) {
         console.error('❌ Error clearing local storage:', storageError);
       }
@@ -306,10 +231,10 @@ export class GoogleDriveService {
 
   private buildAuthUrl(): string {
     const params = new URLSearchParams({
-      client_id: GOOGLE_DRIVE_CONFIG.CLIENT_ID!,
-      redirect_uri: GOOGLE_DRIVE_CONFIG.REDIRECT_URI,
+      client_id: GOOGLE_CONFIG.CLIENT_ID!,
+      redirect_uri: GOOGLE_CONFIG.REDIRECT_URI,
       response_type: 'code',
-      scope: GOOGLE_DRIVE_CONFIG.SCOPES,
+      scope: GOOGLE_CONFIG.SCOPES,
       access_type: 'offline',
       prompt: 'consent',
     });
@@ -319,10 +244,10 @@ export class GoogleDriveService {
 
   private async exchangeCodeForToken(code: string): Promise<any> {
     const requestBody = new URLSearchParams();
-    requestBody.append('client_id', GOOGLE_DRIVE_CONFIG.CLIENT_ID!);
+    requestBody.append('client_id', GOOGLE_CONFIG.CLIENT_ID!);
     requestBody.append('code', code);
     requestBody.append('grant_type', 'authorization_code');
-    requestBody.append('redirect_uri', GOOGLE_DRIVE_CONFIG.REDIRECT_URI);
+    requestBody.append('redirect_uri', GOOGLE_CONFIG.REDIRECT_URI);
     
     return this.makeTokenRequest(requestBody, 'token exchange');
   }
@@ -334,7 +259,7 @@ export class GoogleDriveService {
 
     try {
       const requestBody = new URLSearchParams();
-      requestBody.append('client_id', GOOGLE_DRIVE_CONFIG.CLIENT_ID!);
+      requestBody.append('client_id', GOOGLE_CONFIG.CLIENT_ID!);
       requestBody.append('refresh_token', this.authData.refreshToken);
       requestBody.append('grant_type', 'refresh_token');
       
@@ -360,7 +285,7 @@ export class GoogleDriveService {
 
   private async ensureValidToken(): Promise<void> {
     if (!this.authData) {
-      throw new Error('Not authenticated. Please sign in to access Google Drive.');
+      throw new Error('Not authenticated. Please sign in to access Google services.');
     }
 
     const bufferTime = 5 * 60 * 1000;
@@ -374,7 +299,7 @@ export class GoogleDriveService {
 
   private async loadAuthData(): Promise<void> {
     try {
-      const stored = await AsyncStorage.getItem('google_drive_auth');
+      const stored = await AsyncStorage.getItem('google_unified_auth');
       if (stored) {
         this.authData = JSON.parse(stored);
       }
@@ -386,7 +311,7 @@ export class GoogleDriveService {
   private async saveAuthData(): Promise<void> {
     try {
       if (this.authData) {
-        await AsyncStorage.setItem('google_drive_auth', JSON.stringify(this.authData));
+        await AsyncStorage.setItem('google_unified_auth', JSON.stringify(this.authData));
       }
     } catch (error) {
       console.error('Error saving auth data:', error);
@@ -403,28 +328,37 @@ export class GoogleDriveService {
 
       const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
       
+      // Deactivate any existing Google integrations
       await supabase
-        .from('google_drive_integrations')
+        .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
+        .eq('service_name', 'google')
         .eq('is_active', true);
 
+      // Insert new unified Google integration
       const { error } = await supabase
-        .from('google_drive_integrations')
+        .from('integrations')
         .insert({
           user_id: user.id,
+          type: 'built_in',
+          service_name: 'google',
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
           expires_at: expiresAt.toISOString(),
-          scope: GOOGLE_DRIVE_CONFIG.SCOPES,
+          scope: tokenData.scope || GOOGLE_CONFIG.SCOPES,
           is_active: true,
+          configuration: {
+            services: ['calendar', 'gmail', 'drive', 'contacts'],
+            scopes: GOOGLE_CONFIG.SCOPES.split(' '),
+          },
         });
 
       if (error) {
         throw error;
       }
 
-      console.log('✅ Google Drive integration saved to Supabase');
+      console.log('✅ Google integration saved to Supabase');
     } catch (error) {
       console.error('❌ Error saving integration to Supabase:', error);
     }
@@ -440,9 +374,10 @@ export class GoogleDriveService {
       }
 
       const { data, error } = await supabase
-        .from('google_drive_integrations')
+        .from('integrations')
         .select('*')
         .eq('user_id', user.id)
+        .eq('service_name', 'google')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -450,7 +385,7 @@ export class GoogleDriveService {
 
       if (error) {
         if (error.code === 'PGRST116') {
-          console.log('No active Google Drive integration found in Supabase');
+          console.log('No active Google integration found in Supabase');
           return;
         }
         throw error;
@@ -464,12 +399,13 @@ export class GoogleDriveService {
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
             expiresAt: expiresAt,
+            scope: data.scope || GOOGLE_CONFIG.SCOPES,
           };
           
           await this.saveAuthData();
-          console.log('✅ Google Drive integration loaded from Supabase');
+          console.log('✅ Google integration loaded from Supabase');
         } else {
-          console.log('Google Drive integration found but expired, will need re-authentication');
+          console.log('Google integration found but expired, will need re-authentication');
         }
       }
     } catch (error) {
@@ -498,16 +434,17 @@ export class GoogleDriveService {
       }
 
       const { error } = await supabase
-        .from('google_drive_integrations')
+        .from('integrations')
         .update(updateData)
         .eq('user_id', user.id)
+        .eq('integration_type', 'google')
         .eq('is_active', true);
 
       if (error) {
         throw error;
       }
 
-      console.log('✅ Google Drive tokens updated in Supabase');
+      console.log('✅ Google tokens updated in Supabase');
     } catch (error) {
       console.error('❌ Error updating tokens in Supabase:', error);
     }
@@ -523,16 +460,17 @@ export class GoogleDriveService {
       }
 
       const { error } = await supabase
-        .from('google_drive_integrations')
+        .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
+        .eq('integration_type', 'google')
         .eq('is_active', true);
 
       if (error) {
         throw error;
       }
 
-      console.log('✅ Google Drive integration deactivated in Supabase');
+      console.log('✅ Google integration deactivated in Supabase');
     } catch (error) {
       console.error('❌ Error deactivating integration in Supabase:', error);
     }

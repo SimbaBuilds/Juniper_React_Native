@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VoiceSettings } from '../../settings/SettingsScreen';
 import VoiceService from '../VoiceService';
+import WakeWordService from '../../wakeword/WakeWordService';
 
 const VOICE_SETTINGS_KEY = 'voice_settings';
 
@@ -15,9 +16,6 @@ const defaultVoiceSettings: VoiceSettings = {
   selectedDeepgramVoice: 'aura-2-thalia-en',
   // XAI LiveSearch settings
   xaiLiveSearchEnabled: false,
-  xaiLiveSearchSources: ["web", "x"],
-  xaiLiveSearchCountry: 'US',
-  xaiLiveSearchXHandles: [],
   xaiLiveSearchSafeSearch: true,
 };
 
@@ -26,7 +24,6 @@ export const useVoiceSettings = () => {
   const [loading, setLoading] = useState(true);
 
   console.log('📱 VOICE_SETTINGS: Hook called, current settings state:', settings);
-  console.log('📱 VOICE_SETTINGS: Hook called, loading state:', loading);
 
   // Load settings from storage
   const loadSettings = useCallback(async () => {
@@ -97,19 +94,85 @@ export const useVoiceSettings = () => {
     console.log('📱 VOICE_SETTINGS: New merged settings:', newSettings);
     await saveSettings(newSettings);
     
-    // Sync relevant settings to native layer for TTS decision making
-    if ('deepgramEnabled' in updates || 'selectedDeepgramVoice' in updates) {
-      try {
-        console.log('📱 VOICE_SETTINGS: Syncing Deepgram settings to native layer...');
-        const voiceService = VoiceService.getInstance();
-        await voiceService.updateVoiceSettings(
-          updates.deepgramEnabled ?? newSettings.deepgramEnabled,
-          updates.selectedDeepgramVoice ?? newSettings.selectedDeepgramVoice
-        );
-        console.log('📱 VOICE_SETTINGS: ✅ Settings synced to native layer successfully');
-      } catch (error) {
-        console.error('📱 VOICE_SETTINGS: ❌ Error syncing settings to native layer:', error);
+    // Sync ALL relevant settings to native layer, not just Deepgram settings
+    try {
+      console.log('📱 VOICE_SETTINGS: Syncing all voice settings to native layer...');
+      const voiceService = VoiceService.getInstance();
+      
+      // Always sync Deepgram settings when any settings change
+      await voiceService.updateVoiceSettings(
+        newSettings.deepgramEnabled,
+        newSettings.selectedDeepgramVoice
+      );
+      
+      // Check if wake word settings changed and handle restart
+      const hasWakeWordChanges = 'wakeWordDetectionEnabled' in updates || 
+                                'wakeWordSensitivity' in updates || 
+                                'selectedWakeWord' in updates;
+      
+      if (hasWakeWordChanges) {
+        console.log('📱 VOICE_SETTINGS: Wake word settings changed, syncing to native and restarting detection...');
+        
+        try {
+          const wakeWordService = WakeWordService.getInstance();
+          
+          // Sync wake word settings to native
+          if ('selectedWakeWord' in updates) {
+            const success = await wakeWordService.setSelectedWakeWord(newSettings.selectedWakeWord);
+            if (success) {
+              console.log('📱 VOICE_SETTINGS: ✅ Wake word synced to native module');
+            } else {
+              console.error('📱 VOICE_SETTINGS: ❌ Failed to sync wake word to native module');
+            }
+          }
+          
+          if ('wakeWordSensitivity' in updates) {
+            const success = await wakeWordService.setWakeWordSensitivity(newSettings.wakeWordSensitivity);
+            if (success) {
+              console.log('📱 VOICE_SETTINGS: ✅ Wake word sensitivity synced to native module');
+            } else {
+              console.error('📱 VOICE_SETTINGS: ❌ Failed to sync wake word sensitivity to native module');
+            }
+          }
+          
+          // Restart wake word detection if currently running to apply changes
+          const isRunning = await wakeWordService.isWakeWordDetectionRunning();
+          if (isRunning) {
+            console.log('📱 VOICE_SETTINGS: 🔄 Restarting wake word detection to apply new settings...');
+            await wakeWordService.stopWakeWordDetection();
+            
+            // Add delay to ensure clean shutdown
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            const restartSuccess = await wakeWordService.startWakeWordDetection();
+            if (restartSuccess) {
+              console.log('📱 VOICE_SETTINGS: ✅ Wake word detection restarted with new settings');
+            } else {
+              console.error('📱 VOICE_SETTINGS: ❌ Failed to restart wake word detection');
+            }
+          } else {
+            console.log('📱 VOICE_SETTINGS: Wake word detection not running, settings will apply when started');
+          }
+          
+        } catch (error) {
+          console.error('📱 VOICE_SETTINGS: ❌ Error handling wake word settings change:', error);
+        }
       }
+      
+      // Also sync other settings if they changed
+      const hasOtherChanges = 'baseLanguageModel' in updates || 
+                             'generalInstructions' in updates ||
+                             'xaiLiveSearchEnabled' in updates ||
+                             'xaiLiveSearchSafeSearch' in updates;
+      
+      // If other settings changed, we could extend the native module to handle these  
+      if (hasOtherChanges) {
+        console.log('📱 VOICE_SETTINGS: Other settings changed, may need native update in future');
+      }
+      
+      console.log('📱 VOICE_SETTINGS: ✅ Settings synced to native layer successfully');
+    } catch (error) {
+      console.error('📱 VOICE_SETTINGS: ❌ Error syncing settings to native layer:', error);
     }
   }, [settings, saveSettings]);
 
