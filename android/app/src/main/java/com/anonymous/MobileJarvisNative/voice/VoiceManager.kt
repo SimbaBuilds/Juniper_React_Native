@@ -501,6 +501,25 @@ class VoiceManager private constructor() {
         lastProcessedText = text
         Log.i(TAG, "Speech recognized: \"$text\"")
         
+        // IMPORTANT: Stop speech recognition and release audio focus immediately
+        Log.d(TAG, "🎵 SPEECH_RECOGNITION: Stopping speech recognition to release audio focus for TTS")
+        try {
+            // Stop listening and release speech recognition resources
+            isListening = false
+            speechRecognizer?.stopListening()
+            speechRecognizer?.cancel()
+            
+            // Explicitly release audio focus from centralized manager
+            val centralAudioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+            val currentRequest = centralAudioManager.getCurrentRequestInfo()
+            if (currentRequest?.requestType == com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION) {
+                centralAudioManager.releaseAudioFocus(currentRequest.requestId)
+                Log.d(TAG, "🎵 SPEECH_RECOGNITION: Released audio focus for speech recognition")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error stopping speech recognition", e)
+        }
+        
         // Update state to PROCESSING
         updateState(VoiceState.PROCESSING)
         
@@ -518,16 +537,21 @@ class VoiceManager private constructor() {
                     _voiceState.value = VoiceState.RESPONDING(response)
                     Log.i(TAG, "Processing complete, responding to user")
                     
-                    // Speak the response
-                    voiceProcessor.speak(response) {
-                        // Don't return to idle when done speaking, set to LISTENING instead
-                        Log.i(TAG, "TTS complete, setting state to LISTENING to continue conversation")
+                    // Additional delay to ensure audio focus is fully released
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        Log.d(TAG, "🎵 TTS_START: Starting TTS after audio focus release delay")
                         
-                        // Add a short delay for better transition
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            updateState(VoiceState.LISTENING)
-                        }, 300)
-                    }
+                        // Speak the response
+                        voiceProcessor.speak(response) {
+                            // Don't return to idle when done speaking, set to LISTENING instead
+                            Log.i(TAG, "TTS complete, setting state to LISTENING to continue conversation")
+                            
+                            // Add a short delay for better transition
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                updateState(VoiceState.LISTENING)
+                            }, 300)
+                        }
+                    }, 500) // 500ms delay to ensure audio focus handoff
                 } else {
                     Log.w(TAG, "Received empty response from voice processor")
                     _voiceState.value = VoiceState.ERROR("No response received")

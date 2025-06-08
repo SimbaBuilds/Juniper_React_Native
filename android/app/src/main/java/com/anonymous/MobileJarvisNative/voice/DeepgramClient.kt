@@ -9,6 +9,7 @@ import android.util.Log
 import com.anonymous.MobileJarvisNative.ConfigManager
 import com.anonymous.MobileJarvisNative.utils.AudioManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -767,6 +768,17 @@ class DeepgramClient(private val context: Context) {
             val requestId = "deepgram_${UUID.randomUUID()}"
             currentRequestId = requestId
             
+            // Force release any existing audio focus first (aggressive approach)
+            try {
+                Log.d(TAG, "🎵 DEEPGRAM_AUDIO_FOCUS: Forcing release of existing audio focus before TTS")
+                centralAudioManager?.clearAllRequests()
+                
+                // Wait a moment for the release to take effect
+                Thread.sleep(100)
+            } catch (e: Exception) {
+                Log.w(TAG, "🎵 DEEPGRAM_AUDIO_FOCUS: Error during force release", e)
+            }
+            
             val success = centralAudioManager?.requestAudioFocus(
                 requestType = AudioManager.AudioRequestType.TTS,
                 requestId = requestId,
@@ -824,7 +836,7 @@ class DeepgramClient(private val context: Context) {
     /**
      * Convert text to speech and play the audio
      */
-    suspend fun convertTextToSpeech(text: String) = withContext(Dispatchers.IO) {
+    suspend fun convertTextToSpeech(text: String, onComplete: (() -> Unit)? = null) = withContext(Dispatchers.IO) {
         // Validate configuration before attempting TTS
         val validation = validateConfiguration()
         if (!validation.isValid) {
@@ -844,12 +856,32 @@ class DeepgramClient(private val context: Context) {
         val requestId = logRequestStart(text, voiceModel)
         
         try {
-            // Request audio focus before starting
-            val audioFocusGranted = requestAudioFocus()
+            // Enhanced audio focus management with retry logic
+            var audioFocusGranted = false
+            var retryCount = 0
+            val maxRetries = 3
+            
+            while (!audioFocusGranted && retryCount < maxRetries) {
+                retryCount++
+                Log.d(TAG, "🎵 DEEPGRAM_TTS: Audio focus attempt $retryCount for request $requestId")
+                
+                // Wait a bit between retries to allow other audio to release focus
+                if (retryCount > 1) {
+                    delay((100 * retryCount).toLong()) // Progressive delay: 200ms, 300ms
+                }
+                
+                audioFocusGranted = requestAudioFocus()
+                
+                if (audioFocusGranted) {
+                    Log.d(TAG, "🎵 DEEPGRAM_TTS: ✅ Audio focus granted on attempt $retryCount for request $requestId")
+                    break
+                } else {
+                    Log.w(TAG, "🎵 DEEPGRAM_TTS: ⚠️ Audio focus not granted on attempt $retryCount for request $requestId")
+                }
+            }
+            
             if (!audioFocusGranted) {
-                Log.w(TAG, "🎵 DEEPGRAM_TTS: ⚠️ Audio focus not granted for request $requestId - proceeding anyway")
-            } else {
-                Log.d(TAG, "🎵 DEEPGRAM_TTS: ✅ Audio focus granted for request $requestId")
+                Log.w(TAG, "🎵 DEEPGRAM_TTS: ⚠️ Audio focus not granted after $maxRetries attempts for request $requestId - proceeding anyway")
             }
             
             // Get Deepgram API key from config
@@ -932,41 +964,16 @@ class DeepgramClient(private val context: Context) {
             
             Log.d(TAG, "🎵 DEEPGRAM_TTS: Audio saved to: ${tempFile.absolutePath}")
             
-            // Play the audio
+            // Play the audio with enhanced setup
             withContext(Dispatchers.Main) {
                 try {
                     Log.d(TAG, "🎵 DEEPGRAM_TTS: Starting audio playback for request $requestId")
                     
-                    // Reset media player if it's already playing
-                    mediaPlayer?.apply {
-                        reset()
-                        setAudioAttributes(
-                            AudioAttributes.Builder()
-                                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                                .setUsage(AudioAttributes.USAGE_ASSISTANT)
-                                .build()
-                        )
-                        setDataSource(tempFile.absolutePath)
-                        setOnPreparedListener { 
-                            activeRequests[requestId]?.playbackStartTime = System.currentTimeMillis()
-                            Log.d(TAG, "🎵 DEEPGRAM_TTS: ▶️ Starting playback for request $requestId")
-                            it.start() 
-                        }
-                        setOnCompletionListener {
-                            Log.d(TAG, "🎵 DEEPGRAM_TTS: ✅ Playback completed for request $requestId")
-                            tempFile.delete()
-                            releaseAudioFocus()
-                            logRequestSuccess(requestId)
-                        }
-                        setOnErrorListener { _, what, extra ->
-                            val errorMessage = "MediaPlayer error: what=$what, extra=$extra"
-                            Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ MediaPlayer error for request $requestId: $errorMessage")
-                            tempFile.delete()
-                            releaseAudioFocus()
-                            logRequestError(requestId, errorMessage)
-                            true
-                        }
-                        prepareAsync()
+                    // Use the new setupMediaPlayer method with proper completion handling
+                    setupMediaPlayer(tempFile, requestId) {
+                        // Called when playback actually completes
+                        logRequestSuccess(requestId)
+                        onComplete?.invoke()
                     }
                 } catch (e: Exception) {
                     val errorMessage = "Error setting up audio playback: ${e.message}"
@@ -1059,6 +1066,77 @@ class DeepgramClient(private val context: Context) {
             Log.d(TAG, "Deepgram client resources released")
         } catch (e: Exception) {
             Log.e(TAG, "Error releasing Deepgram client resources", e)
+        }
+    }
+
+    /**
+     * Setup MediaPlayer for audio playback
+     */
+    private fun setupMediaPlayer(audioFile: File, requestId: String, onComplete: (() -> Unit)?) {
+        try {
+            mediaPlayer?.reset()
+            
+            // Enhanced audio attributes for better audio focus coordination
+            mediaPlayer?.setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .setUsage(AudioAttributes.USAGE_ASSISTANT)
+                    .setLegacyStreamType(android.media.AudioManager.STREAM_MUSIC)
+                    .build()
+            )
+            
+            mediaPlayer?.setDataSource(audioFile.absolutePath)
+            
+            // Set completion listener BEFORE preparing
+            mediaPlayer?.setOnCompletionListener { mp ->
+                Log.d(TAG, "🎵 DEEPGRAM_TTS: ✅ Playback completed for request $requestId")
+                
+                // Release audio focus when playback actually completes
+                releaseAudioFocus()
+                
+                // Notify completion callback
+                onComplete?.invoke()
+                
+                // Clean up the temporary file
+                try {
+                    if (audioFile.exists()) {
+                        audioFile.delete()
+                        Log.d(TAG, "🎵 DEEPGRAM_TTS: Temporary audio file deleted for request $requestId")
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Could not delete temporary audio file", e)
+                }
+            }
+            
+            // Set error listener
+            mediaPlayer?.setOnErrorListener { mp, what, extra ->
+                Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ MediaPlayer error for request $requestId: what=$what, extra=$extra")
+                
+                // Release audio focus on error
+                releaseAudioFocus()
+                
+                // Notify completion callback even on error to prevent hanging
+                onComplete?.invoke()
+                
+                true // Indicate we handled the error
+            }
+            
+            // Set prepared listener
+            mediaPlayer?.setOnPreparedListener { mp ->
+                activeRequests[requestId]?.playbackStartTime = System.currentTimeMillis()
+                Log.d(TAG, "🎵 DEEPGRAM_TTS: ▶️ Starting playback for request $requestId")
+                mp.start()
+            }
+            
+            // Prepare the media player
+            mediaPlayer?.prepareAsync()
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting up MediaPlayer for request $requestId", e)
+            // Release audio focus on setup error
+            releaseAudioFocus()
+            // Notify completion callback to prevent hanging
+            onComplete?.invoke()
         }
     }
 } 

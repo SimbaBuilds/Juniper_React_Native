@@ -646,18 +646,51 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
             // First, handle the pending callback if it exists
             pendingApiCallbacks.remove(requestId)?.let { callback ->
                 Log.i(TAG, "🟢 NATIVE: Found pending callback for requestId: $requestId")
-                callback(response)
-                Log.i(TAG, "🟢 NATIVE: ✅ Callback executed successfully")
-                promise.resolve(true)
+                
+                // IMPORTANT: Ensure proper audio focus coordination before TTS
+                Log.d(TAG, "🎵 AUDIO_FOCUS: Preparing audio focus for TTS response")
+                
+                // Stop any active speech recognition first
+                voiceManager.stopListening()
+                
+                // Wait a moment for speech recognition to fully release audio focus
+                Handler(Looper.getMainLooper()).postDelayed({
+                    try {
+                        Log.d(TAG, "🎵 AUDIO_FOCUS: Speech recognizer stopped, proceeding with TTS")
+                        callback(response)
+                        Log.i(TAG, "🟢 NATIVE: ✅ Callback executed successfully")
+                        promise.resolve(true)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "🟢 NATIVE: ❌ Error in delayed callback execution", e)
+                        promise.reject("API_RESPONSE_ERROR", "Failed to execute callback: ${e.message}", e)
+                    }
+                }, 200) // 200ms delay to ensure audio focus handoff
+                
             } ?: run {
                 Log.w(TAG, "🟢 NATIVE: No pending callback found for requestId: $requestId")
                 // Still speak the response even if no callback found
                 coroutineScope.launch {
                     try {
                         Log.i(TAG, "🟢 NATIVE: Speaking response via TTS anyway")
-                        val speechResult = speakWithSystemTTS(response)
-                        Log.i(TAG, "🟢 NATIVE: TTS completed with result: $speechResult")
-                        promise.resolve(speechResult)
+                        
+                        // Ensure speech recognition is stopped first
+                        voiceManager.stopListening()
+                        
+                        // Wait for audio focus to be released
+                        withContext(Dispatchers.Main) {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                coroutineScope.launch {
+                                    try {
+                                        val speechResult = speakWithSystemTTS(response)
+                                        Log.i(TAG, "🟢 NATIVE: TTS completed with result: $speechResult")
+                                        promise.resolve(speechResult)
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "🟢 NATIVE: ❌ Error in delayed TTS", e)
+                                        promise.reject("API_RESPONSE_ERROR", "Failed to speak response: ${e.message}", e)
+                                    }
+                                }
+                            }, 200)
+                        }
                     } catch (e: Exception) {
                         Log.e(TAG, "🟢 NATIVE: ❌ Error in handleApiResponse TTS", e)
                         promise.reject("API_RESPONSE_ERROR", "Failed to speak response: ${e.message}", e)
@@ -1215,6 +1248,64 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         }
     }
     
+    /**
+     * Set Deepgram enabled state (following WakeWordModule pattern)
+     */
+    @ReactMethod
+    fun setDeepgramEnabled(enabled: Boolean, promise: Promise) {
+        Log.i(TAG, "🎵 DEEPGRAM_ENABLED: setDeepgramEnabled called with: $enabled")
+        try {
+            val deepgramPrefs = reactContext.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
+            
+            if (enabled) {
+                // Validate configuration before enabling
+                Log.i(TAG, "🎵 DEEPGRAM_ENABLED: Deepgram being enabled, validating configuration...")
+                val deepgramClient = DeepgramClient(reactContext)
+                deepgramClient.initialize()
+                val validation = deepgramClient.validateConfiguration()
+                
+                if (!validation.isValid) {
+                    val errorMessage = "Cannot enable Deepgram: ${validation.issues.joinToString("; ")}"
+                    Log.e(TAG, "🎵 DEEPGRAM_ENABLED: ❌ Validation failed: $errorMessage")
+                    promise.reject("VALIDATION_ERROR", errorMessage)
+                    return
+                }
+                Log.i(TAG, "🎵 DEEPGRAM_ENABLED: ✅ Deepgram configuration validated successfully")
+            }
+            
+            deepgramPrefs.edit().putBoolean("deepgram_enabled", enabled).apply()
+            Log.i(TAG, "🎵 DEEPGRAM_ENABLED: ✅ Deepgram enabled state saved: $enabled")
+            
+            val result = Arguments.createMap()
+            result.putBoolean("success", true)
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "🎵 DEEPGRAM_ENABLED: ❌ Error setting Deepgram enabled state: ${e.message}", e)
+            promise.reject("SET_DEEPGRAM_ENABLED_ERROR", "Failed to set Deepgram enabled state: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Get Deepgram enabled state (following WakeWordModule pattern)
+     */
+    @ReactMethod
+    fun getDeepgramEnabled(promise: Promise) {
+        Log.d(TAG, "🎵 DEEPGRAM_ENABLED: getDeepgramEnabled called")
+        try {
+            val deepgramPrefs = reactContext.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
+            val enabled = deepgramPrefs.getBoolean("deepgram_enabled", false)
+            
+            Log.i(TAG, "🎵 DEEPGRAM_ENABLED: Current Deepgram enabled state: $enabled")
+            
+            val result = Arguments.createMap()
+            result.putBoolean("enabled", enabled)
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "🎵 DEEPGRAM_ENABLED: ❌ Error getting Deepgram enabled state: ${e.message}", e)
+            promise.reject("GET_DEEPGRAM_ENABLED_ERROR", "Failed to get Deepgram enabled state: ${e.message}", e)
+        }
+    }
+
     /**
      * Get current TTS status and configuration
      */
