@@ -42,7 +42,7 @@ export const DatabaseService = {
         display_name: updates.display_name || null,
         deepgram_enabled: updates.deepgram_enabled ?? false,
         base_language_model: updates.base_language_model || 'claude-3-5-sonnet-20241022',
-        general_instructions: updates.general_instructions || 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
+        general_instructions: updates.general_instructions || '',
         wake_word: updates.wake_word || 'JARVIS',
         wake_word_sensitivity: updates.wake_word_sensitivity ?? 0.3,
         wake_word_detection_enabled: updates.wake_word_detection_enabled ?? false,
@@ -75,7 +75,7 @@ export const DatabaseService = {
       
       // Ensure general_instructions is never set to null or empty
       if ('general_instructions' in updateData && (!updateData.general_instructions || updateData.general_instructions.trim() === '')) {
-        updateData.general_instructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+        updateData.general_instructions = '';
       }
       
       const { data, error } = await supabase
@@ -124,7 +124,7 @@ export const DatabaseService = {
         display_name: null,
         deepgram_enabled: false,
         base_language_model: 'claude-3-5-sonnet-20241022',
-        general_instructions: 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
+        general_instructions: '',
         wake_word: 'JARVIS',
         wake_word_sensitivity: 0.3,
         wake_word_detection_enabled: false,
@@ -156,9 +156,9 @@ export const DatabaseService = {
       updated_at: new Date().toISOString()
     };
     
-    // Ensure general_instructions always has a value
-    if ('general_instructions' in updates && (!updates.general_instructions || updates.general_instructions.trim() === '')) {
-      updates.general_instructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+    // Allow empty general_instructions
+    if ('general_instructions' in updates && updates.general_instructions === null) {
+      updates.general_instructions = '';
     }
     
     const { data, error } = await supabase
@@ -265,7 +265,7 @@ export const DatabaseService = {
       const { data, error } = await supabase
         .from('user_profiles')
         .update({
-          general_instructions: 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
+          general_instructions: '',
           updated_at: new Date().toISOString()
         })
         .is('general_instructions', null)

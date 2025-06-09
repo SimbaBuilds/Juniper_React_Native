@@ -69,7 +69,6 @@ const AVAILABLE_DEEPGRAM_VOICES = [
   // Additional variety
   { label: 'Iris', value: 'aura-2-iris-en' },
   { label: 'Luna', value: 'aura-2-luna-en' },
-  { label: 'Orion', value: 'aura-2-orion-en' },
   { label: 'Orpheus', value: 'aura-2-orpheus-en' },
   
  
@@ -153,8 +152,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   // Initialize and sync local state when settings load or change
   useEffect(() => {
     
-    const defaultInstructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
-    const currentInstructions = settings.generalInstructions || defaultInstructions;
+          const currentInstructions = settings.generalInstructions || '';
     
     setLocalGeneralInstructions(currentInstructions);
     setHasUnsavedChanges(false);
@@ -201,12 +199,11 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   }, [user?.id]);
 
   // Handle local text changes (no database update)
-  const handleGeneralInstructionsChange = (text: string) => {
-    setLocalGeneralInstructions(text);
-    const defaultInstructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
-    const currentSaved = settings.generalInstructions || defaultInstructions;
-    setHasUnsavedChanges(text !== currentSaved);
-  };
+      const handleGeneralInstructionsChange = (text: string) => {
+      setLocalGeneralInstructions(text);
+      const currentSaved = settings.generalInstructions || '';
+      setHasUnsavedChanges(text !== currentSaved);
+    };
 
   // Save general instructions to database
   const saveGeneralInstructions = async () => {
@@ -268,10 +265,10 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               dbKey = 'wake_word';
             }
             
-            // Ensure general_instructions always has a default value
-            if (dbKey === 'general_instructions' && (!value || value.trim() === '')) {
-              value = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
-            }
+                          // Allow empty general_instructions
+              if (dbKey === 'general_instructions' && value === null) {
+                value = '';
+              }
             
             acc[dbKey] = value;
             return acc;
@@ -377,9 +374,10 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               label="General Instructions"
               value={localGeneralInstructions}
               onChangeText={handleGeneralInstructionsChange}
-              placeholder="Enter instructions for the AI assistant..."
+              placeholder="e.g. 'Keep your responses to a few sentences'"
               description="Custom instructions to guide the AI's behavior and responses"
               multiline={true}
+              maxCharacters={1000}
             />
             
             {hasUnsavedChanges && (
@@ -549,7 +547,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           >
             <View style={styles.noteContainer}>
               <Text style={styles.noteText}>
-                💡 You can specify specific X handles in your request (e.g., "search posts from @elonmusk about Tesla")
+                💡 You can specify specific X handles in your request (e.g., "search X posts from ShelbyTalcott about recent updates from the White House")
               </Text>
             </View>
             

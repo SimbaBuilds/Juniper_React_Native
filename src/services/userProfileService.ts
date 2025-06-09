@@ -12,7 +12,7 @@ export class UserProfileService {
         display_name: displayName,
         deepgram_enabled: false,
         base_language_model: 'claude-3-5-sonnet-20241022',
-        general_instructions: 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
+        general_instructions: '',
         wake_word: 'Jarvis',
         wake_word_sensitivity: 0.3,
         wake_word_detection_enabled: false,

@@ -48,6 +48,9 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+// Auto-refresh constants
+const AUTO_REFRESH_DELAY = 10 * 60 * 1000; // 10 minutes in milliseconds
+
 /**
  * Provider component for the Voice Context
  * Now serves as a pure bridge to native state - no duplicate state management
@@ -88,6 +91,10 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
   
+  // Auto-refresh timer state
+  const [lastMessageTimestamp, setLastMessageTimestamp] = useState<number | null>(null);
+  const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Voice service instance
   const voiceService = useMemo(() => VoiceService.getInstance(), []);
   
@@ -96,6 +103,75 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
 
   // Server API hook
   const { sendMessage } = useServerApi();
+
+  // Auto-refresh timer functions
+  const resetAutoRefreshTimer = useCallback(() => {
+    // Clear existing timer
+    if (autoRefreshTimerRef.current) {
+      clearTimeout(autoRefreshTimerRef.current);
+    }
+    
+    // Only set timer if there are messages in chat history
+    if (chatHistory.length > 0) {
+      console.log('🕐 Setting auto-refresh timer for 10 minutes');
+      autoRefreshTimerRef.current = setTimeout(() => {
+        console.log('🕐 Auto-refresh timer triggered - clearing chat history');
+        handleAutoRefresh();
+      }, AUTO_REFRESH_DELAY);
+    }
+  }, [chatHistory.length]);
+
+  const handleAutoRefresh = useCallback(async () => {
+    if (chatHistory.length > 0) {
+      console.log('🔄 Auto-refresh: Saving and clearing conversation after 10 minutes of inactivity');
+      
+      // Save conversation to Supabase before clearing
+      try {
+        const conversationId = await conversationService.saveConversation(chatHistory);
+        if (conversationId) {
+          console.log('✅ Auto-refresh: Conversation saved with ID:', conversationId);
+        }
+      } catch (error) {
+        console.error('❌ Auto-refresh: Error saving conversation:', error);
+        // Continue with clearing even if save fails
+      }
+      
+      // Clear chat history
+      setChatHistory([]);
+      setLastMessageTimestamp(null);
+      
+      // Clear the timer since we just cleared history
+      if (autoRefreshTimerRef.current) {
+        clearTimeout(autoRefreshTimerRef.current);
+        autoRefreshTimerRef.current = null;
+      }
+    }
+  }, [chatHistory]);
+
+  // Update last message timestamp and reset timer when chat history changes
+  useEffect(() => {
+    if (chatHistory.length > 0) {
+      const latestMessage = chatHistory[chatHistory.length - 1];
+      setLastMessageTimestamp(latestMessage.timestamp);
+      resetAutoRefreshTimer();
+    } else {
+      // Clear timer when chat history is empty
+      if (autoRefreshTimerRef.current) {
+        clearTimeout(autoRefreshTimerRef.current);
+        autoRefreshTimerRef.current = null;
+      }
+      setLastMessageTimestamp(null);
+    }
+  }, [chatHistory, resetAutoRefreshTimer]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoRefreshTimerRef.current) {
+        clearTimeout(autoRefreshTimerRef.current);
+      }
+    };
+  }, []);
 
   // Simple settings refresh function
   const refreshSettings = useCallback(async () => {
@@ -118,7 +194,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         
         // Update local settings with database values
         const generalInstructions = voiceSettings.general_instructions || 
-          'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+          '';
         
         const updates = {
           deepgramEnabled: voiceSettings.deepgram_enabled,
@@ -327,7 +403,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
 
   // Clear chat history
   const clearChatHistory = useCallback(async () => {
-    console.log('🗑️ Clearing chat history');
+    console.log('🗑️ Clearing chat history (manual)');
     
     // Save conversation to Supabase before clearing if there are messages
     if (chatHistory.length > 0) {

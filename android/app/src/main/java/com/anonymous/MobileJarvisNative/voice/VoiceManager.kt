@@ -551,7 +551,7 @@ class VoiceManager private constructor() {
                                 updateState(VoiceState.LISTENING)
                             }, 300)
                         }
-                    }, 500) // 500ms delay to ensure audio focus handoff
+                    }, 100) // Reduced from 500ms to 100ms for faster response (text format TTS is much faster)
                 } else {
                     Log.w(TAG, "Received empty response from voice processor")
                     _voiceState.value = VoiceState.ERROR("No response received")

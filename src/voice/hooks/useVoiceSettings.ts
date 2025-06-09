@@ -9,7 +9,7 @@ const VOICE_SETTINGS_KEY = 'voice_settings';
 const defaultVoiceSettings: VoiceSettings = {
   deepgramEnabled: false,
   baseLanguageModel: 'grok-3',
-  generalInstructions: 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
+  generalInstructions: '',
   selectedWakeWord: 'JARVIS',
   wakeWordSensitivity: 0.3,
   wakeWordDetectionEnabled: false,

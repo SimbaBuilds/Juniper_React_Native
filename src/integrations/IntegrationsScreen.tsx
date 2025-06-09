@@ -165,7 +165,7 @@ export const IntegrationsScreen: React.FC = () => {
   const renderGoogleServices = () => (
     <View style={styles.servicesContainer}>
       <View style={styles.unifiedConnectSection}>
-        <Text style={styles.unifiedTitle}>Connect All Google Services</Text>
+        <Text style={styles.unifiedTitle}>Connect Google Services</Text>
         <Text style={styles.unifiedDescription}>
           Connect to Google Calendar, Gmail, Google Drive, and Google Contacts with a single authentication flow.
           Grants read/write for calendar, read/draft/send for email, read/write for contacts, and read-only for drive.
@@ -208,7 +208,7 @@ export const IntegrationsScreen: React.FC = () => {
   const renderMicrosoftServices = () => (
     <View style={styles.servicesContainer}>
       <View style={styles.unifiedConnectSection}>
-        <Text style={styles.unifiedTitle}>Connect All Microsoft Services</Text>
+        <Text style={styles.unifiedTitle}>Connect Microsoft Services</Text>
         <Text style={styles.unifiedDescription}>
           Connect to Outlook Calendar, Outlook Email, OneDrive, and Microsoft Contacts with a single authentication flow.
           Grants read/write for calendar, read/draft/send for email, read/write for contacts, and read-only for drive.
