@@ -6,7 +6,7 @@ import WakeWordService, { WakeWordEvents } from '../WakeWordService';
 
 export const WakeWordToggle: React.FC = () => {
     const { isEnabled, setEnabled } = useWakeWord();
-    const { voiceSettings, updateVoiceSettings } = useVoice();
+    const { voiceSettings } = useVoice();
     const [detectionAnimation] = useState(new Animated.Value(0));
     const [isDetected, setIsDetected] = useState(false);
     const selectedWakeWord = voiceSettings?.selectedWakeWord || 'Jarvis';
@@ -42,11 +42,8 @@ export const WakeWordToggle: React.FC = () => {
 
     const handleToggle = async (value: boolean) => {
         try {
-            // Update both the wake word context and the database-backed voice settings
-            await Promise.all([
-                setEnabled(value),
-                updateVoiceSettings({ wakeWordDetectionEnabled: value })
-            ]);
+            // The WakeWordContext will handle both native sync and database updates
+            await setEnabled(value);
         } catch (error) {
             console.error('Error toggling wake word:', error);
         }

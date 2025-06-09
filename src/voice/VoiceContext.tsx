@@ -213,6 +213,11 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         console.log('🔄 VOICE_CONTEXT: Updating with:', updates);
         console.log('🔄 VOICE_CONTEXT: Current settings before update:', voiceSettings);
         
+        // Specifically log wake word detection refresh
+        if (updates.wakeWordDetectionEnabled !== undefined) {
+          console.log('🎤 VOICE_CONTEXT: Refreshing wake word detection enabled state from database:', updates.wakeWordDetectionEnabled);
+        }
+        
         // Force sync to native by calling updateSettings (which always syncs now)
         console.log('🔄 VOICE_CONTEXT: Forcing sync to native layer...');
         await updateSettingsRef.current(updates);

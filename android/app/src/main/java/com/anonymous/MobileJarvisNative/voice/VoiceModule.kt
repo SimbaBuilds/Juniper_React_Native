@@ -377,7 +377,8 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
      */
     private fun getDeepgramClient(): DeepgramClient {
         return deepgramClient ?: run {
-            val client = DeepgramClient(reactContext)
+            // Use singleton instance for better performance
+            val client = DeepgramClient.getInstance(reactContext)
             client.initialize()
             deepgramClient = client
             client
@@ -893,7 +894,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
             
             coroutineScope.launch {
                 try {
-                    val deepgramClient = DeepgramClient(reactApplicationContext)
+                    val deepgramClient = DeepgramClient.getInstance(reactApplicationContext)
                     deepgramClient.initialize()
                     
                     // Get audio data for the voice preview
@@ -955,7 +956,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                 if (enabled) {
                     // Validate configuration before enabling
                     Log.i(TAG, "🎵 VOICE_SETTINGS: Deepgram enabled, validating configuration...")
-                    val deepgramClient = DeepgramClient(reactContext)
+                    val deepgramClient = DeepgramClient.getInstance(reactContext)
                     deepgramClient.initialize()
                     val validation = deepgramClient.validateConfiguration()
                     
@@ -1042,7 +1043,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         try {
             Log.i(TAG, "🎵 VALIDATION: Validating current Deepgram settings...")
             
-            val deepgramClient = DeepgramClient(reactContext)
+            val deepgramClient = DeepgramClient.getInstance(reactContext)
             deepgramClient.initialize()
             val validation = deepgramClient.validateConfiguration()
             
@@ -1080,7 +1081,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         try {
             coroutineScope.launch {
                 try {
-                    val deepgramClient = DeepgramClient(reactContext)
+                    val deepgramClient = DeepgramClient.getInstance(reactContext)
                     deepgramClient.initialize()
                     
                     // First validate configuration
@@ -1132,7 +1133,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         try {
             coroutineScope.launch {
                 try {
-                    val deepgramClient = DeepgramClient(reactContext)
+                    val deepgramClient = DeepgramClient.getInstance(reactContext)
                     deepgramClient.initialize()
                     
                     // Run all diagnostic tests
@@ -1218,7 +1219,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
             deepgramClient = null
             
             // Create and initialize new client
-            val newClient = DeepgramClient(reactContext)
+            val newClient = DeepgramClient.getInstance(reactContext)
             newClient.initialize()
             deepgramClient = newClient
             
@@ -1260,9 +1261,9 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
             if (enabled) {
                 // Validate configuration before enabling
                 Log.i(TAG, "🎵 DEEPGRAM_ENABLED: Deepgram being enabled, validating configuration...")
-                val deepgramClient = DeepgramClient(reactContext)
-                deepgramClient.initialize()
-                val validation = deepgramClient.validateConfiguration()
+                        val deepgramClient = DeepgramClient.getInstance(reactContext)
+        deepgramClient.initialize()
+        val validation = deepgramClient.validateConfiguration()
                 
                 if (!validation.isValid) {
                     val errorMessage = "Cannot enable Deepgram: ${validation.issues.joinToString("; ")}"

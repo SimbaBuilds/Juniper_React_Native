@@ -35,14 +35,7 @@ export const SettingsTextInput: React.FC<SettingsTextInputProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <Text style={styles.label}>{label}</Text>
-        {maxCharacters && (
-          <Text style={[styles.counter, isAtLimit && styles.counterAtLimit]}>
-            {currentCharCount}/{maxCharacters}
-          </Text>
-        )}
-      </View>
+      <Text style={styles.label}>{label}</Text>
       {description && <Text style={styles.description}>{description}</Text>}
       <TextInput
         style={[
@@ -58,6 +51,11 @@ export const SettingsTextInput: React.FC<SettingsTextInputProps> = ({
         numberOfLines={multiline ? 4 : 1}
         editable={!disabled}
       />
+      {maxCharacters && (
+        <Text style={[styles.counter, isAtLimit && styles.counterAtLimit]}>
+          {currentCharCount}/{maxCharacters}
+        </Text>
+      )}
       {maxCharacters && isAtLimit && (
         <Text style={styles.limitWarning}>
           Character limit reached. Please shorten your text.
@@ -74,21 +72,18 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
   },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
   label: {
     fontSize: 16,
     fontWeight: '500',
     color: '#FFFFFF',
+    marginBottom: 4,
   },
   counter: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#B0B0B0',
-    fontWeight: '500',
+    fontWeight: '400',
+    textAlign: 'right',
+    marginTop: 4,
   },
   counterAtLimit: {
     color: '#E74C3C',

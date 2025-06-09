@@ -111,10 +111,42 @@ export const useVoiceSettings = () => {
                                 'selectedWakeWord' in updates;
       
       if (hasWakeWordChanges) {
-        console.log('📱 VOICE_SETTINGS: Wake word settings changed, syncing to native and restarting detection...');
+        console.log('📱 VOICE_SETTINGS: Wake word settings changed, syncing to native and managing detection...');
         
         try {
           const wakeWordService = WakeWordService.getInstance();
+          
+          // Handle wake word detection enabled/disabled state change
+          if ('wakeWordDetectionEnabled' in updates) {
+            const isEnabledNow = newSettings.wakeWordDetectionEnabled;
+            console.log('📱 VOICE_SETTINGS: Wake word detection enabled state changed to:', isEnabledNow);
+            
+            if (isEnabledNow) {
+              // Enable and start wake word detection
+              console.log('📱 VOICE_SETTINGS: 🎤 Enabling wake word detection...');
+              const enableSuccess = await wakeWordService.setWakeWordEnabled(true);
+              if (enableSuccess) {
+                const startSuccess = await wakeWordService.startWakeWordDetection();
+                if (startSuccess) {
+                  console.log('📱 VOICE_SETTINGS: ✅ Wake word detection enabled and started');
+                } else {
+                  console.error('📱 VOICE_SETTINGS: ❌ Wake word detection enabled but failed to start');
+                }
+              } else {
+                console.error('📱 VOICE_SETTINGS: ❌ Failed to enable wake word detection');
+              }
+            } else {
+              // Disable and stop wake word detection
+              console.log('📱 VOICE_SETTINGS: 🛑 Disabling wake word detection...');
+              const stopSuccess = await wakeWordService.stopWakeWordDetection();
+              const disableSuccess = await wakeWordService.setWakeWordEnabled(false);
+              if (stopSuccess && disableSuccess) {
+                console.log('📱 VOICE_SETTINGS: ✅ Wake word detection stopped and disabled');
+              } else {
+                console.error('📱 VOICE_SETTINGS: ❌ Failed to fully disable wake word detection');
+              }
+            }
+          }
           
           // Sync wake word settings to native
           if ('selectedWakeWord' in updates) {
@@ -135,23 +167,25 @@ export const useVoiceSettings = () => {
             }
           }
           
-          // Restart wake word detection if currently running to apply changes
-          const isRunning = await wakeWordService.isWakeWordDetectionRunning();
-          if (isRunning) {
-            console.log('📱 VOICE_SETTINGS: 🔄 Restarting wake word detection to apply new settings...');
-            await wakeWordService.stopWakeWordDetection();
-            
-            // Add delay to ensure clean shutdown
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            const restartSuccess = await wakeWordService.startWakeWordDetection();
-            if (restartSuccess) {
-              console.log('📱 VOICE_SETTINGS: ✅ Wake word detection restarted with new settings');
+          // Restart wake word detection if currently running and other settings changed (but not enabled/disabled state)
+          if (!('wakeWordDetectionEnabled' in updates)) {
+            const isRunning = await wakeWordService.isWakeWordDetectionRunning();
+            if (isRunning) {
+              console.log('📱 VOICE_SETTINGS: 🔄 Restarting wake word detection to apply new settings...');
+              await wakeWordService.stopWakeWordDetection();
+              
+              // Add delay to ensure clean shutdown
+              await new Promise(resolve => setTimeout(resolve, 500));
+              
+              const restartSuccess = await wakeWordService.startWakeWordDetection();
+              if (restartSuccess) {
+                console.log('📱 VOICE_SETTINGS: ✅ Wake word detection restarted with new settings');
+              } else {
+                console.error('📱 VOICE_SETTINGS: ❌ Failed to restart wake word detection');
+              }
             } else {
-              console.error('📱 VOICE_SETTINGS: ❌ Failed to restart wake word detection');
+              console.log('📱 VOICE_SETTINGS: Wake word detection not running, settings will apply when started');
             }
-          } else {
-            console.log('📱 VOICE_SETTINGS: Wake word detection not running, settings will apply when started');
           }
           
         } catch (error) {

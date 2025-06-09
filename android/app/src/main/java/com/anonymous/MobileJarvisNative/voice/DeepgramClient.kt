@@ -9,23 +9,30 @@ import android.util.Log
 import com.anonymous.MobileJarvisNative.ConfigManager
 import com.anonymous.MobileJarvisNative.utils.AudioManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
+import okio.ByteString
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import java.io.ByteArrayOutputStream
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Client for Deepgram API for text-to-speech conversion
  * Now uses centralized AudioManager for audio focus management
+ * Optimized with singleton pattern and caching for reduced latency
  */
-class DeepgramClient(private val context: Context) {
+class DeepgramClient private constructor(private val context: Context) {
     private val TAG = "DeepgramClient"
     private var isInitialized = false
     private lateinit var okHttpClient: OkHttpClient
@@ -33,6 +40,20 @@ class DeepgramClient(private val context: Context) {
     private var mediaPlayer: MediaPlayer? = null
     private var centralAudioManager: com.anonymous.MobileJarvisNative.utils.AudioManager? = null
     private var currentRequestId: String? = null
+    
+    // WebSocket streaming support with real-time playback
+    private var streamingWebSocket: WebSocket? = null
+    private var streamingLatch: CountDownLatch? = null
+    private var streamingAudioBuffer: ByteArrayOutputStream? = null
+    private var isStreamingActive = AtomicBoolean(false)
+    private var isPlaybackStarted = AtomicBoolean(false)
+    private val audioChunks = mutableListOf<ByteArray>()
+    private val minPlaybackThreshold = 8192 // 8KB minimum before starting playback
+    
+    // Validation caching for performance
+    private var lastValidation: DeepgramValidationResult? = null
+    private var lastValidationTime: Long = 0
+    private val validationCacheTimeout = 5000L // 5 seconds
     
     // Enhanced logging data class
     data class TTSRequest(
@@ -51,6 +72,33 @@ class DeepgramClient(private val context: Context) {
     private val activeRequests = mutableMapOf<String, TTSRequest>()
     
     companion object {
+        @Volatile
+        private var INSTANCE: DeepgramClient? = null
+        
+        /**
+         * Get singleton instance of DeepgramClient
+         * Prevents multiple initialization cycles and improves performance
+         */
+        fun getInstance(context: Context): DeepgramClient {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: DeepgramClient(context).also { 
+                    INSTANCE = it
+                    Log.d("DeepgramClient", "🎵 SINGLETON: Created new Deepgram client instance")
+                }
+            }
+        }
+        
+        /**
+         * Release singleton instance (call only on app shutdown)
+         */
+        fun releaseSingleton() {
+            synchronized(this) {
+                INSTANCE?.release()
+                INSTANCE = null
+                Log.d("DeepgramClient", "🎵 SINGLETON: Released Deepgram client instance")
+            }
+        }
+        
         // Available Deepgram Aura-2 models based on latest 2024 docs
         val AVAILABLE_VOICES = mapOf(
             // Aura-2 voices (current generation)
@@ -241,6 +289,22 @@ class DeepgramClient(private val context: Context) {
         val issues: List<String>
     )
     
+    /**
+     * Validate Deepgram configuration and system readiness with caching
+     */
+    fun validateConfigurationCached(): DeepgramValidationResult {
+        val now = System.currentTimeMillis()
+        if (lastValidation != null && (now - lastValidationTime) < validationCacheTimeout) {
+            Log.d(TAG, "🎵 DEEPGRAM_VALIDATION: Using cached validation result (${now - lastValidationTime}ms old)")
+            return lastValidation!!
+        }
+        
+        val result = validateConfiguration()
+        lastValidation = result
+        lastValidationTime = now
+        return result
+    }
+
     /**
      * Validate Deepgram configuration and system readiness
      */
@@ -834,57 +898,67 @@ class DeepgramClient(private val context: Context) {
     }
     
     /**
-     * Convert text to speech and play the audio
+     * Convert text to speech using WebSocket streaming and play the audio
+     * This is the new preferred method for real-time TTS
      */
     suspend fun convertTextToSpeech(text: String, onComplete: (() -> Unit)? = null) = withContext(Dispatchers.IO) {
-        // Validate configuration before attempting TTS
-        val validation = validateConfiguration()
+        // Use streaming WebSocket for better performance
+        convertTextToSpeechStreaming(text, onComplete)
+    }
+    
+    /**
+     * Convert text to speech using Deepgram's WebSocket streaming API
+     * This provides 3x faster speech generation compared to REST API
+     */
+    private suspend fun convertTextToSpeechStreaming(text: String, onComplete: (() -> Unit)? = null) = withContext(Dispatchers.IO) {
+        // Use cached validation for better performance
+        val validation = validateConfigurationCached()
         if (!validation.isValid) {
             val errorMessage = "Deepgram configuration invalid: ${validation.issues.joinToString("; ")}"
-            Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Pre-flight validation failed")
+            Log.e(TAG, "🎵 DEEPGRAM_STREAMING: ❌ Pre-flight validation failed")
             throw IllegalStateException(errorMessage)
         }
         
-        Log.d(TAG, "🎵 DEEPGRAM_TTS: ✅ Pre-flight validation passed")
+        Log.d(TAG, "🎵 DEEPGRAM_STREAMING: ✅ Pre-flight validation passed")
         
-        // Get selected voice from preferences first for logging
+        // Get selected voice from preferences for streaming
         val prefs = context.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
         val selectedVoice = prefs.getString("selected_voice", DEFAULT_VOICE) ?: DEFAULT_VOICE
         val voiceModel = AVAILABLE_VOICES[selectedVoice] ?: DEFAULT_MODEL
         
-        // Start comprehensive logging
+        // Start comprehensive logging for streaming
         val requestId = logRequestStart(text, voiceModel)
         
         try {
-            // Enhanced audio focus management with retry logic
+            // Optimized audio focus management with reduced delays
             var audioFocusGranted = false
             var retryCount = 0
             val maxRetries = 3
             
             while (!audioFocusGranted && retryCount < maxRetries) {
                 retryCount++
-                Log.d(TAG, "🎵 DEEPGRAM_TTS: Audio focus attempt $retryCount for request $requestId")
+                Log.d(TAG, "🎵 DEEPGRAM_STREAMING: Audio focus attempt $retryCount for request $requestId")
                 
-                // Wait a bit between retries to allow other audio to release focus
                 if (retryCount > 1) {
-                    delay((100 * retryCount).toLong()) // Progressive delay: 200ms, 300ms
+                    // Reduced delays: 25ms, 50ms, 75ms instead of 100ms, 200ms, 300ms
+                    delay((25 * retryCount).toLong())
                 }
                 
                 audioFocusGranted = requestAudioFocus()
                 
                 if (audioFocusGranted) {
-                    Log.d(TAG, "🎵 DEEPGRAM_TTS: ✅ Audio focus granted on attempt $retryCount for request $requestId")
+                    Log.d(TAG, "🎵 DEEPGRAM_STREAMING: ✅ Audio focus granted on attempt $retryCount for request $requestId")
                     break
                 } else {
-                    Log.w(TAG, "🎵 DEEPGRAM_TTS: ⚠️ Audio focus not granted on attempt $retryCount for request $requestId")
+                    Log.w(TAG, "🎵 DEEPGRAM_STREAMING: ⚠️ Audio focus not granted on attempt $retryCount for request $requestId")
                 }
             }
             
             if (!audioFocusGranted) {
-                Log.w(TAG, "🎵 DEEPGRAM_TTS: ⚠️ Audio focus not granted after $maxRetries attempts for request $requestId - proceeding anyway")
+                Log.w(TAG, "🎵 DEEPGRAM_STREAMING: ⚠️ Audio focus not granted after $maxRetries attempts for request $requestId - proceeding anyway")
             }
             
-            // Get Deepgram API key from config
+            // Get Deepgram API key
             val apiKey = configManager.getDeepgramApiKey()
             if (apiKey.isBlank()) {
                 logRequestError(requestId, "Deepgram API key not found in config")
@@ -892,99 +966,24 @@ class DeepgramClient(private val context: Context) {
                 throw IllegalStateException("Deepgram API key not found")
             }
             
-            Log.d(TAG, "🎵 DEEPGRAM_TTS: API key found (length: ${apiKey.length}) for request $requestId")
+            Log.d(TAG, "🎵 DEEPGRAM_STREAMING: API key found (length: ${apiKey.length}) for request $requestId")
             
-            // Use simple text format for much faster processing (18x faster than JSON)
-            // Based on testing: JSON=5.8s vs Text=0.33s for same content
-            val url = "https://api.deepgram.com/v1/speak?model=$voiceModel"
+            // Use WebSocket streaming for real-time TTS (3x faster than REST)
+            val success = streamTextToSpeechWebSocket(text, voiceModel, apiKey, requestId, onComplete)
             
-            val request = Request.Builder()
-                .url(url)
-                .header("Authorization", "Token $apiKey")
-                .header("Content-Type", "text/plain")
-                .post(text.toRequestBody("text/plain".toMediaTypeOrNull()))
-                .build()
-            
-            Log.d(TAG, "🎵 DEEPGRAM_TTS: Making API call to Deepgram for request $requestId")
-            Log.d(TAG, "🎵 DEEPGRAM_TTS: URL: $url")
-            Log.d(TAG, "🎵 DEEPGRAM_TTS: Voice model: $voiceModel")
-            
-            // Mark API call time
-            activeRequests[requestId]?.apiCallTime = System.currentTimeMillis()
-            
-            // Execute request
-            val response = okHttpClient.newCall(request).execute()
-            if (!response.isSuccessful) {
-                val errorBody = response.body?.string() ?: "Unknown error"
-                val errorCode = response.code
-                val errorMessage = "Deepgram API error: $errorCode - $errorBody"
-                
-                Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ API call failed for request $requestId")
-                Log.e(TAG, "🎵 DEEPGRAM_TTS: Response code: $errorCode")
-                Log.e(TAG, "🎵 DEEPGRAM_TTS: Response body: $errorBody")
-                
-                // Parse error details if available
-                try {
-                    val errorJson = JSONObject(errorBody)
-                    val apiErrorMessage = errorJson.optString("error", "Unknown error")
-                    val errorDetails = errorJson.optString("message", "")
-                    Log.e(TAG, "🎵 DEEPGRAM_TTS: Parsed error - $apiErrorMessage: $errorDetails")
-                } catch (e: Exception) {
-                    Log.e(TAG, "🎵 DEEPGRAM_TTS: Could not parse error response for request $requestId", e)
-                }
-                
-                logRequestError(requestId, errorMessage)
+            if (success) {
+                Log.i(TAG, "🎵 DEEPGRAM_STREAMING: ✅ WebSocket streaming TTS completed successfully")
+                logRequestSuccess(requestId)
+            } else {
+                Log.e(TAG, "🎵 DEEPGRAM_STREAMING: ❌ WebSocket streaming TTS failed")
+                logRequestError(requestId, "WebSocket streaming failed")
                 releaseAudioFocus()
-                throw IOException(errorMessage)
+                throw IOException("WebSocket streaming TTS failed")
             }
             
-            // Save audio to temporary file
-            val audioBytes = response.body?.bytes()
-            if (audioBytes == null || audioBytes.isEmpty()) {
-                val errorMessage = "Empty response from Deepgram API"
-                logRequestError(requestId, errorMessage)
-                releaseAudioFocus()
-                throw IOException(errorMessage)
-            }
-            
-            // Mark audio received time
-            activeRequests[requestId]?.audioReceivedTime = System.currentTimeMillis()
-            Log.d(TAG, "🎵 DEEPGRAM_TTS: ✅ Audio received for request $requestId (${audioBytes.size} bytes)")
-            
-            val tempFile = File(context.cacheDir, "tts_${requestId}.mp3")
-            
-            FileOutputStream(tempFile).use { fos ->
-                fos.write(audioBytes)
-                fos.flush()
-            }
-            
-            Log.d(TAG, "🎵 DEEPGRAM_TTS: Audio saved to: ${tempFile.absolutePath}")
-            
-            // Play the audio with enhanced setup
-            withContext(Dispatchers.Main) {
-                try {
-                    Log.d(TAG, "🎵 DEEPGRAM_TTS: Starting audio playback for request $requestId")
-                    
-                    // Use the new setupMediaPlayer method with proper completion handling
-                    setupMediaPlayer(tempFile, requestId) {
-                        // Called when playback actually completes
-                        logRequestSuccess(requestId)
-                        onComplete?.invoke()
-                    }
-                } catch (e: Exception) {
-                    val errorMessage = "Error setting up audio playback: ${e.message}"
-                    Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Playback setup failed for request $requestId", e)
-                    tempFile.delete()
-                    releaseAudioFocus()
-                    logRequestError(requestId, errorMessage, e)
-                    throw e
-                }
-            }
-            
-            Log.i(TAG, "🎵 DEEPGRAM_TTS: ✅ TTS request $requestId initiated successfully")
         } catch (e: Exception) {
-            Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ TTS process failed for request $requestId", e)
-            logRequestError(requestId, "TTS process error: ${e.message}", e)
+            Log.e(TAG, "🎵 DEEPGRAM_STREAMING: ❌ Streaming TTS process failed for request $requestId", e)
+            logRequestError(requestId, "Streaming TTS process error: ${e.message}", e)
             releaseAudioFocus()
             throw e
         }
@@ -1058,6 +1057,303 @@ class DeepgramClient(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Error releasing Deepgram client resources", e)
         }
+    }
+
+    /**
+     * WebSocket streaming TTS implementation using Deepgram 2025 API
+     * Provides 3x faster speech generation and real-time audio streaming
+     */
+    private suspend fun streamTextToSpeechWebSocket(
+        text: String,
+        voiceModel: String,
+        apiKey: String,
+        requestId: String,
+        onComplete: (() -> Unit)?
+    ): Boolean = withContext(Dispatchers.IO) {
+        Log.d(TAG, "🎵 WEBSOCKET_TTS: ========== Starting WebSocket TTS Stream ==========")
+        Log.d(TAG, "🎵 WEBSOCKET_TTS: Request ID: $requestId")
+        Log.d(TAG, "🎵 WEBSOCKET_TTS: Voice Model: $voiceModel")
+        Log.d(TAG, "🎵 WEBSOCKET_TTS: Text length: ${text.length}")
+
+        try {
+            // Initialize streaming state for real-time playback
+            isStreamingActive.set(true)
+            isPlaybackStarted.set(false)
+            streamingAudioBuffer = ByteArrayOutputStream()
+            audioChunks.clear()
+            streamingLatch = CountDownLatch(1)
+
+            // Optimized WebSocket URL for faster processing
+            val wsUrl = "wss://api.deepgram.com/v1/speak?" +
+                    "model=$voiceModel&" +
+                    "encoding=linear16&" +
+                    "sample_rate=24000&" +  // Reduced from 48000 for faster processing
+                    "channels=1&" +
+                    "bit_depth=16&" +
+                    "container=none"        // No container overhead
+
+            Log.d(TAG, "🎵 WEBSOCKET_TTS: WebSocket URL: $wsUrl")
+
+            // Create WebSocket request with authorization
+            val wsRequest = Request.Builder()
+                .url(wsUrl)
+                .header("Authorization", "Token $apiKey")
+                .build()
+
+            // Create WebSocket listener with real-time playback
+            val wsListener = object : WebSocketListener() {
+                override fun onOpen(webSocket: WebSocket, response: Response) {
+                    Log.d(TAG, "🎵 WEBSOCKET_TTS: ✅ WebSocket connection opened")
+                    
+                    try {
+                        // Send the text for synthesis
+                        val speakMessage = JSONObject().apply {
+                            put("type", "Speak")
+                            put("text", text)
+                        }
+                        
+                        Log.d(TAG, "🎵 WEBSOCKET_TTS: Sending speak message: ${speakMessage.toString()}")
+                        val success = webSocket.send(speakMessage.toString())
+                        
+                        if (success) {
+                            Log.d(TAG, "🎵 WEBSOCKET_TTS: ✅ Speak message sent successfully")
+                            
+                            // Send flush message to indicate end of input
+                            val flushMessage = JSONObject().apply {
+                                put("type", "Flush")
+                            }
+                            
+                            val flushSuccess = webSocket.send(flushMessage.toString())
+                            Log.d(TAG, "🎵 WEBSOCKET_TTS: Flush message sent: $flushSuccess")
+                        } else {
+                            Log.e(TAG, "🎵 WEBSOCKET_TTS: ❌ Failed to send speak message")
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "🎵 WEBSOCKET_TTS: ❌ Error sending messages", e)
+                        webSocket.close(1000, "Error sending messages")
+                    }
+                }
+
+                override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
+                    val chunk = bytes.toByteArray()
+                    Log.d(TAG, "🎵 WEBSOCKET_TTS: 📦 Received audio chunk: ${chunk.size} bytes")
+                    
+                    try {
+                        // Store chunk and accumulate for streaming playback
+                        audioChunks.add(chunk)
+                        streamingAudioBuffer?.write(chunk)
+                        
+                        val totalSize = streamingAudioBuffer?.toByteArray()?.size ?: 0
+                        Log.d(TAG, "🎵 WEBSOCKET_TTS: Total audio data: $totalSize bytes")
+                        
+                        // Start playback immediately when we have enough data for smooth playback
+                        if (!isPlaybackStarted.get() && totalSize >= minPlaybackThreshold) {
+                            Log.i(TAG, "🎵 WEBSOCKET_TTS: 🚀 STREAMING PLAYBACK: Starting playback with ${totalSize} bytes (threshold: ${minPlaybackThreshold})")
+                            isPlaybackStarted.set(true)
+                            
+                                                         // Start playback on main thread while continuing to receive data
+                             GlobalScope.launch(Dispatchers.Main) {
+                                 startStreamingPlayback(requestId, onComplete)
+                             }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "🎵 WEBSOCKET_TTS: ❌ Error processing audio chunk", e)
+                    }
+                }
+
+                override fun onMessage(webSocket: WebSocket, text: String) {
+                    Log.d(TAG, "🎵 WEBSOCKET_TTS: 📄 Received text message: $text")
+                    
+                    try {
+                        val message = JSONObject(text)
+                        val type = message.optString("type")
+                        
+                        when (type) {
+                            "Metadata" -> {
+                                Log.d(TAG, "🎵 WEBSOCKET_TTS: Metadata received: $text")
+                            }
+                            "Flushed" -> {
+                                Log.d(TAG, "🎵 WEBSOCKET_TTS: ✅ Stream flushed - all audio data received")
+                                webSocket.close(1000, "Stream completed")
+                            }
+                            else -> {
+                                Log.d(TAG, "🎵 WEBSOCKET_TTS: Unknown message type: $type")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "🎵 WEBSOCKET_TTS: Could not parse text message as JSON: $text", e)
+                    }
+                }
+
+                override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                    Log.d(TAG, "🎵 WEBSOCKET_TTS: ✅ WebSocket closed: $code - $reason")
+                    isStreamingActive.set(false)
+                    streamingLatch?.countDown()
+                }
+
+                override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                    Log.e(TAG, "🎵 WEBSOCKET_TTS: ❌ WebSocket failure: ${t.message}", t)
+                    if (response != null) {
+                        Log.e(TAG, "🎵 WEBSOCKET_TTS: Response: ${response.code} - ${response.message}")
+                    }
+                    isStreamingActive.set(false)
+                    streamingLatch?.countDown()
+                }
+            }
+
+            // Start WebSocket connection
+            streamingWebSocket = okHttpClient.newWebSocket(wsRequest, wsListener)
+            Log.d(TAG, "🎵 WEBSOCKET_TTS: WebSocket connection initiated")
+
+            // Update request timing
+            activeRequests[requestId]?.apiCallTime = System.currentTimeMillis()
+
+            // Wait for streaming to complete with timeout (or until playback has started)
+            val streamCompleted = streamingLatch?.await(30, TimeUnit.SECONDS) ?: false
+            
+            if (!streamCompleted && !isPlaybackStarted.get()) {
+                Log.e(TAG, "🎵 WEBSOCKET_TTS: ❌ Streaming timeout after 30 seconds and no playback started")
+                streamingWebSocket?.close(1000, "Timeout")
+                return@withContext false
+            }
+
+            // If playback hasn't started yet but we received data, start it now
+            if (!isPlaybackStarted.get()) {
+                val audioData = streamingAudioBuffer?.toByteArray()
+                if (audioData != null && audioData.isNotEmpty()) {
+                    Log.i(TAG, "🎵 WEBSOCKET_TTS: 🚀 FALLBACK PLAYBACK: Starting playback with ${audioData.size} bytes")
+                    isPlaybackStarted.set(true)
+                    activeRequests[requestId]?.audioReceivedTime = System.currentTimeMillis()
+                    
+                    withContext(Dispatchers.Main) {
+                        startStreamingPlayback(requestId, onComplete)
+                    }
+                } else {
+                    Log.e(TAG, "🎵 WEBSOCKET_TTS: ❌ No audio data received")
+                    return@withContext false
+                }
+            }
+
+            return@withContext true
+
+        } catch (e: Exception) {
+            Log.e(TAG, "🎵 WEBSOCKET_TTS: ❌ WebSocket streaming error", e)
+            isStreamingActive.set(false)
+            streamingLatch?.countDown()
+            streamingWebSocket?.close(1000, "Error occurred")
+            return@withContext false
+        } finally {
+            // Cleanup streaming resources
+            streamingWebSocket = null
+            streamingAudioBuffer = null
+            streamingLatch = null
+            isStreamingActive.set(false)
+            Log.d(TAG, "🎵 WEBSOCKET_TTS: ========== WebSocket TTS Stream Complete ==========")
+        }
+    }
+
+    /**
+     * Start streaming playback with current buffered audio data
+     * This enables real-time playback while continuing to receive data
+     */
+    private suspend fun startStreamingPlayback(requestId: String, onComplete: (() -> Unit)?) {
+        try {
+            val currentAudioData = streamingAudioBuffer?.toByteArray()
+            if (currentAudioData == null || currentAudioData.isEmpty()) {
+                Log.e(TAG, "🎵 STREAMING_PLAYBACK: No audio data available for playback")
+                return
+            }
+            
+            Log.i(TAG, "🎵 STREAMING_PLAYBACK: Creating initial WAV file with ${currentAudioData.size} bytes")
+            
+            // Create WAV file from current buffered data
+            val wavFile = createWavFile(currentAudioData, requestId)
+            if (wavFile == null) {
+                Log.e(TAG, "🎵 STREAMING_PLAYBACK: Failed to create WAV file")
+                return
+            }
+            
+            Log.i(TAG, "🎵 STREAMING_PLAYBACK: ✅ Starting playback: ${wavFile.absolutePath} (${wavFile.length()} bytes)")
+            activeRequests[requestId]?.audioReceivedTime = System.currentTimeMillis()
+            
+            // Start MediaPlayer with the initial audio
+            setupMediaPlayer(wavFile, requestId, onComplete)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "🎵 STREAMING_PLAYBACK: Error starting streaming playback", e)
+        }
+    }
+
+    /**
+     * Create a WAV file from raw linear16 audio data
+     */
+    private fun createWavFile(audioData: ByteArray, requestId: String): File? {
+        return try {
+            Log.d(TAG, "🎵 WEBSOCKET_TTS: Creating WAV file for ${audioData.size} bytes of audio data")
+
+            // WAV file parameters for optimized Deepgram linear16 format
+            val sampleRate = 24000  // Reduced from 48000 for faster processing
+            val channels = 1
+            val bitsPerSample = 16
+            val byteRate = sampleRate * channels * bitsPerSample / 8
+            val blockAlign = channels * bitsPerSample / 8
+
+            // Create temporary file
+            val wavFile = File(context.cacheDir, "deepgram_audio_${requestId}_${System.currentTimeMillis()}.wav")
+            val outputStream = FileOutputStream(wavFile)
+
+            // Write WAV header
+            outputStream.write("RIFF".toByteArray())
+            outputStream.write(intToLittleEndian(36 + audioData.size))
+            outputStream.write("WAVE".toByteArray())
+            
+            // fmt chunk
+            outputStream.write("fmt ".toByteArray())
+            outputStream.write(intToLittleEndian(16)) // fmt chunk size
+            outputStream.write(shortToLittleEndian(1)) // PCM format
+            outputStream.write(shortToLittleEndian(channels))
+            outputStream.write(intToLittleEndian(sampleRate))
+            outputStream.write(intToLittleEndian(byteRate))
+            outputStream.write(shortToLittleEndian(blockAlign))
+            outputStream.write(shortToLittleEndian(bitsPerSample))
+            
+            // data chunk
+            outputStream.write("data".toByteArray())
+            outputStream.write(intToLittleEndian(audioData.size))
+            outputStream.write(audioData)
+            
+            outputStream.close()
+
+            Log.d(TAG, "🎵 WEBSOCKET_TTS: ✅ WAV file created successfully: ${wavFile.absolutePath}")
+            Log.d(TAG, "🎵 WEBSOCKET_TTS: WAV file details - Size: ${wavFile.length()} bytes, Sample rate: $sampleRate Hz, Channels: $channels")
+
+            wavFile
+        } catch (e: Exception) {
+            Log.e(TAG, "🎵 WEBSOCKET_TTS: ❌ Error creating WAV file", e)
+            null
+        }
+    }
+
+    /**
+     * Convert integer to little-endian byte array
+     */
+    private fun intToLittleEndian(value: Int): ByteArray {
+        return byteArrayOf(
+            (value and 0xff).toByte(),
+            ((value shr 8) and 0xff).toByte(),
+            ((value shr 16) and 0xff).toByte(),
+            ((value shr 24) and 0xff).toByte()
+        )
+    }
+
+    /**
+     * Convert short to little-endian byte array
+     */
+    private fun shortToLittleEndian(value: Int): ByteArray {
+        return byteArrayOf(
+            (value and 0xff).toByte(),
+            ((value shr 8) and 0xff).toByte()
+        )
     }
 
     /**

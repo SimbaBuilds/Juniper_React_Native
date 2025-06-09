@@ -140,7 +140,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         />
       ) : (
         <View style={styles.emptyChatContainer}>
-          <Text style={styles.emptyChatText}>Say the wake word or type a message to start or continue the chat.</Text>
+          <Text style={styles.emptyChatText}>Say the wake word or type a message to start or continue a chat.</Text>
         </View>
       )}
       

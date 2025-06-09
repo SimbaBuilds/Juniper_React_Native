@@ -132,7 +132,7 @@ class VoiceManager private constructor() {
         whisperClient = WhisperClient(context)
         
         // Initialize Deepgram client for TTS
-        deepgramClient = DeepgramClient(context)
+        deepgramClient = DeepgramClient.getInstance(context)
     }
     
     /**
@@ -290,7 +290,7 @@ class VoiceManager private constructor() {
             try {
                 // Initialize Deepgram client if needed
                 if (!::deepgramClient.isInitialized) {
-                    deepgramClient = DeepgramClient(context)
+                    deepgramClient = DeepgramClient.getInstance(context)
                 }
                 deepgramClient.initialize()
                 Log.d(TAG, "Deepgram client initialized for future use")

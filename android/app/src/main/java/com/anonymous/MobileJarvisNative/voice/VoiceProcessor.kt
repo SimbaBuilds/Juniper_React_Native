@@ -324,7 +324,7 @@ class ModularVoiceProcessor(private val context: Context) : VoiceProcessor {
     
     private fun getOrCreateDeepgramClient(): DeepgramClient {
         return deepgramClient ?: run {
-            val client = DeepgramClient(context)
+            val client = DeepgramClient.getInstance(context)
             client.initialize()
             deepgramClient = client
             client

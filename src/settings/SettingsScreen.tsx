@@ -58,7 +58,6 @@ const AVAILABLE_DEEPGRAM_VOICES = [
   // Professional voices
   { label: 'Asteria', value: 'aura-2-asteria-en' },
   { label: 'Athenia', value: 'aura-2-athena-en' },
-  { label: 'Hera', value: 'aura-2-hera-en' },
   { label: 'Hermes', value: 'aura-2-hermes-en' },
 
    // International accents
@@ -148,6 +147,8 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const [localGeneralInstructions, setLocalGeneralInstructions] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  // State for permissions tooltip
+  const [showPermissionsTooltip, setShowPermissionsTooltip] = useState(false);
 
   // Initialize and sync local state when settings load or change
   useEffect(() => {
@@ -322,7 +323,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Wake Word</Text>
           <View style={styles.wakeWordExplanation}>
             <Text style={styles.explanationText}>
-              Settings can be manually changed below or just ask your assistant "make the wake word detection less sensitive"
+              Settings below can be manually changed or just tell your assistant e.g. "make wake word detection less sensitive" or "go to sleep"
             </Text>
           </View>
           <WakeWordToggle />
@@ -330,7 +331,23 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         </View>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Permissions</Text>
+          <View style={styles.sectionHeaderWithInfo}>
+            <Text style={styles.sectionTitle}>Permissions</Text>
+            <TouchableOpacity
+              style={styles.infoIcon}
+              onPress={() => setShowPermissionsTooltip(!showPermissionsTooltip)}
+            >
+              <Ionicons name="information-circle-outline" size={20} color="#B0B0B0" />
+            </TouchableOpacity>
+          </View>
+          
+          {showPermissionsTooltip && (
+            <View style={styles.permissionsTooltip}>
+              <Text style={styles.explanationText}>
+                Your assistant cannot change permissions for you
+              </Text>
+            </View>
+          )}
           
           <View style={styles.permissionItem}>
             <Text style={styles.permissionTitle}>Microphone Access</Text>
@@ -504,7 +521,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               await handleVoiceSettingsUpdate({ deepgramEnabled });
               console.log('🎵 DEEPGRAM_TOGGLE: ✅ Deepgram toggle update completed');
             }}
-            description="How your assistant sounds; falls back to on device text-to-speech when disabled."
+            description="Choose from a variety of voices; when disabled, the application falls back to on device text-to-speech."
             hasSubSettings={true}
           >
             <VoiceSelectionDropdown
@@ -621,6 +638,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '500',
     color: '#FFFFFF',
+  },
+  sectionHeaderWithInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  infoIcon: {
+    marginLeft: 8,
+  },
+  permissionsTooltip: {
+    backgroundColor: '#1E1E1E',
+    padding: 16,
+    borderRadius: 8,
     marginBottom: 16,
   },
   wakeWordExplanation: {

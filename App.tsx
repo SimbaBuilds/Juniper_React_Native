@@ -296,10 +296,10 @@ function MainTabNavigator() {
       })}
     >
       <Tab.Screen 
-        name="Home" 
-        component={HomeScreen}
+        name="Automations" 
+        component={AutomationsScreen}
         options={{
-          title: 'Voice Assistant',
+          title: 'Automations',
         }}
       />
       <Tab.Screen 
@@ -310,10 +310,10 @@ function MainTabNavigator() {
         }}
       />
       <Tab.Screen 
-        name="Automations" 
-        component={AutomationsScreen}
+        name="Home" 
+        component={HomeScreen}
         options={{
-          title: 'Automations',
+          title: 'Voice Assistant',
         }}
       />
       <Tab.Screen 
@@ -330,6 +330,7 @@ function MainTabNavigator() {
           title: 'Settings',
         }}
       />
+
     </Tab.Navigator>
   );
 }
