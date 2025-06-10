@@ -3,6 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VoiceSettings } from '../../settings/SettingsScreen';
 import VoiceService from '../VoiceService';
 import WakeWordService from '../../wakeword/WakeWordService';
+import { DatabaseService } from '../../supabase/supabase';
+import { useAuth } from '../../auth/AuthContext';
 
 const VOICE_SETTINGS_KEY = 'voice_settings';
 
@@ -22,6 +24,7 @@ const defaultVoiceSettings: VoiceSettings = {
 export const useVoiceSettings = () => {
   const [settings, setSettings] = useState<VoiceSettings>(defaultVoiceSettings);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   console.log('📱 VOICE_SETTINGS: Hook called, current settings state:', settings);
 
@@ -105,6 +108,52 @@ export const useVoiceSettings = () => {
     console.log('📱 VOICE_SETTINGS: xaiLiveSearchSafeSearch:', newSettings.xaiLiveSearchSafeSearch);
     
     await saveSettings(newSettings);
+    
+    // ========== DATABASE SAVE ==========
+    // Save to database if user is authenticated
+    if (user?.id) {
+      try {
+        console.log('📱 VOICE_SETTINGS: ========== SAVING TO DATABASE ==========');
+        console.log('📱 VOICE_SETTINGS: User ID:', user.id);
+        console.log('📱 VOICE_SETTINGS: About to save settings to database...');
+        
+        // Convert camelCase keys to snake_case for database
+        const dbUpdates = Object.keys(updates).reduce((acc, key) => {
+          let dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          let value = updates[key as keyof Partial<VoiceSettings>];
+          
+          // Map selectedWakeWord to wake_word (consolidating duplicate fields)
+          if (key === 'selectedWakeWord') {
+            dbKey = 'wake_word';
+          }
+          
+          // Allow empty general_instructions
+          if (dbKey === 'general_instructions' && value === null) {
+            value = '';
+          }
+          
+          acc[dbKey] = value;
+          return acc;
+        }, {} as any);
+
+        console.log('📱 VOICE_SETTINGS: Database updates being sent:', JSON.stringify(dbUpdates, null, 2));
+        
+        const dbSaveStartTime = Date.now();
+        await DatabaseService.updateVoiceSettings(user.id, dbUpdates);
+        const dbSaveEndTime = Date.now();
+        
+        console.log('✅ VOICE_SETTINGS: ========== DATABASE SAVE COMPLETED ==========');
+        console.log('✅ VOICE_SETTINGS: Database save duration:', (dbSaveEndTime - dbSaveStartTime), 'ms');
+        console.log('✅ VOICE_SETTINGS: Voice settings saved to database successfully');
+      } catch (dbError) {
+        console.error('❌ VOICE_SETTINGS: ========== DATABASE SAVE FAILED ==========');
+        console.error('❌ VOICE_SETTINGS: Error saving to database:', dbError);
+        console.error('❌ VOICE_SETTINGS: Database error stack:', dbError instanceof Error ? dbError.stack : 'No stack available');
+        // Don't throw error - continue with local settings even if database save fails
+      }
+    } else {
+      console.log('📱 VOICE_SETTINGS: ⚠️ No user ID, skipping database save');
+    }
     
     // Sync ALL relevant settings to native layer, not just Deepgram settings
     try {

@@ -52,7 +52,7 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 syncWithDatabaseState(databaseEnabledState);
             }
         }
-    }, [voiceSettings?.wakeWordDetectionEnabled, settingsLoading, isEnabled]);
+    }, [voiceSettings?.wakeWordDetectionEnabled, settingsLoading]);
 
     // Sync with database state without triggering database updates
     const syncWithDatabaseState = useCallback(async (databaseEnabledState: boolean) => {
@@ -238,8 +238,24 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             }
             
             // Update both local state and database-backed voice settings
-            console.log('🔄 WAKE_WORD_CONTEXT: Updating database-backed voice settings...');
-            await updateVoiceSettings({ wakeWordDetectionEnabled: enabled });
+            console.log('🔄 WAKE_WORD_CONTEXT: ========== DATABASE UPDATE STARTED ==========');
+            console.log('🔄 WAKE_WORD_CONTEXT: About to call updateVoiceSettings with:', { wakeWordDetectionEnabled: enabled });
+            console.log('🔄 WAKE_WORD_CONTEXT: Timestamp:', new Date().toISOString());
+            
+            const updateStartTime = Date.now();
+            try {
+                await updateVoiceSettings({ wakeWordDetectionEnabled: enabled });
+                const updateEndTime = Date.now();
+                console.log('✅ WAKE_WORD_CONTEXT: ========== DATABASE UPDATE COMPLETED ==========');
+                console.log('✅ WAKE_WORD_CONTEXT: updateVoiceSettings completed successfully in', (updateEndTime - updateStartTime), 'ms');
+                console.log('✅ WAKE_WORD_CONTEXT: Database should now have wakeWordDetectionEnabled:', enabled);
+            } catch (updateError) {
+                const updateEndTime = Date.now();
+                console.error('❌ WAKE_WORD_CONTEXT: ========== DATABASE UPDATE FAILED ==========');
+                console.error('❌ WAKE_WORD_CONTEXT: updateVoiceSettings failed after', (updateEndTime - updateStartTime), 'ms');
+                console.error('❌ WAKE_WORD_CONTEXT: Update error:', updateError);
+                throw updateError; // Re-throw the error
+            }
             
             // The database update will trigger the useEffect above which will sync the native layer
             console.log('✅ WAKE_WORD_CONTEXT: Wake word state update initiated');

@@ -63,7 +63,7 @@ export const WakeWordToggle: React.FC = () => {
     };
 
     // Use the wake word from voice settings if available
-    const currentWakeWord = voiceSettings?.wakeWord || 'Jarvis';
+    const currentWakeWord = voiceSettings?.selectedWakeWord || 'JARVIS';
 
     return (
         <View style={styles.container}>
