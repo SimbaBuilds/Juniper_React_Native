@@ -943,51 +943,92 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         promise: Promise
     ) {
         try {
-            Log.i(TAG, "🎵 VOICE_SETTINGS: ========== Settings Update ==========")
-            Log.i(TAG, "🎵 VOICE_SETTINGS: Updating native voice settings")
-            Log.i(TAG, "🎵 VOICE_SETTINGS: deepgramEnabled: $deepgramEnabled")
-            Log.i(TAG, "🎵 VOICE_SETTINGS: selectedDeepgramVoice: $selectedDeepgramVoice")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ========== NATIVE SETTINGS UPDATE RECEIVED ==========")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: updateVoiceSettings called from React Native")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: Timestamp: ${System.currentTimeMillis()}")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: Thread: ${Thread.currentThread().name}")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: Parameters received:")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: - deepgramEnabled: $deepgramEnabled (type: ${deepgramEnabled?.javaClass?.simpleName ?: "null"})")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: - selectedDeepgramVoice: $selectedDeepgramVoice (type: ${selectedDeepgramVoice?.javaClass?.simpleName ?: "null"})")
             
             val deepgramPrefs = reactContext.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
             val editor = deepgramPrefs.edit()
             
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ========== PROCESSING DEEPGRAM ENABLED SETTING ==========")
             // Validate and update deepgram enabled setting
             deepgramEnabled?.let { enabled ->
+                Log.i(TAG, "🎵 VOICE_SETTINGS: Processing deepgramEnabled value: $enabled")
+                
                 if (enabled) {
                     // Validate configuration before enabling
-                    Log.i(TAG, "🎵 VOICE_SETTINGS: Deepgram enabled, validating configuration...")
+                    Log.i(TAG, "🎵 VOICE_SETTINGS: Deepgram is being enabled, validating configuration...")
+                    
+                    val deepgramValidationStartTime = System.currentTimeMillis()
                     val deepgramClient = DeepgramClient.getInstance(reactContext)
                     deepgramClient.initialize()
                     val validation = deepgramClient.validateConfiguration()
+                    val deepgramValidationEndTime = System.currentTimeMillis()
+                    
+                    Log.i(TAG, "🎵 VOICE_SETTINGS: Deepgram validation took ${deepgramValidationEndTime - deepgramValidationStartTime}ms")
+                    Log.i(TAG, "🎵 VOICE_SETTINGS: Validation result: isValid=${validation.isValid}")
+                    Log.i(TAG, "🎵 VOICE_SETTINGS: Validation details:")
+                    Log.i(TAG, "🎵 VOICE_SETTINGS: - apiKeyPresent: ${validation.apiKeyPresent}")
+                    Log.i(TAG, "🎵 VOICE_SETTINGS: - apiKeyValid: ${validation.apiKeyValid}")
+                    Log.i(TAG, "🎵 VOICE_SETTINGS: - networkAvailable: ${validation.networkAvailable}")
+                    Log.i(TAG, "🎵 VOICE_SETTINGS: - audioSystemReady: ${validation.audioSystemReady}")
+                    Log.i(TAG, "🎵 VOICE_SETTINGS: - voiceConfigValid: ${validation.voiceConfigValid}")
                     
                     if (!validation.isValid) {
                         val errorMessage = "Cannot enable Deepgram: ${validation.issues.joinToString("; ")}"
                         Log.e(TAG, "🎵 VOICE_SETTINGS: ❌ Validation failed: $errorMessage")
+                        Log.e(TAG, "🎵 VOICE_SETTINGS: Validation issues:")
+                        validation.issues.forEachIndexed { index, issue ->
+                            Log.e(TAG, "🎵 VOICE_SETTINGS:   ${index + 1}. $issue")
+                        }
                         promise.reject("VALIDATION_ERROR", errorMessage)
                         return
                     }
                     Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ Deepgram configuration validated successfully")
                 }
                 
+                Log.i(TAG, "🎵 VOICE_SETTINGS: Saving deepgram_enabled = $enabled to SharedPreferences")
                 editor.putBoolean("deepgram_enabled", enabled)
-                Log.i(TAG, "🎵 VOICE_SETTINGS: Set deepgram_enabled to: $enabled")
+                Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ deepgram_enabled saved to editor")
+            } ?: run {
+                Log.i(TAG, "🎵 VOICE_SETTINGS: deepgramEnabled is null, skipping")
             }
             
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ========== PROCESSING SELECTED VOICE SETTING ==========")
             // Validate and update selected voice
             selectedDeepgramVoice?.let { voice ->
+                Log.i(TAG, "🎵 VOICE_SETTINGS: Processing selectedDeepgramVoice value: $voice")
+                Log.i(TAG, "🎵 VOICE_SETTINGS: Available voices: ${DeepgramClient.AVAILABLE_VOICES.keys.joinToString(", ")}")
+                
                 if (!DeepgramClient.AVAILABLE_VOICES.containsKey(voice)) {
                     val errorMessage = "Invalid voice '$voice'. Available voices: ${DeepgramClient.AVAILABLE_VOICES.keys.joinToString(", ")}"
                     Log.e(TAG, "🎵 VOICE_SETTINGS: ❌ $errorMessage")
                     promise.reject("INVALID_VOICE", errorMessage)
                     return
+                } else {
+                    Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ Voice '$voice' is valid")
                 }
                 
+                Log.i(TAG, "🎵 VOICE_SETTINGS: Saving selected_voice = $voice to SharedPreferences")
                 editor.putString("selected_voice", voice)
-                Log.i(TAG, "🎵 VOICE_SETTINGS: Set selected_voice to: $voice")
+                Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ selected_voice saved to editor")
+            } ?: run {
+                Log.i(TAG, "🎵 VOICE_SETTINGS: selectedDeepgramVoice is null, skipping")
             }
             
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ========== COMMITTING CHANGES TO SHARED PREFERENCES ==========")
             // Apply changes atomically
+            val commitStartTime = System.currentTimeMillis()
             val success = editor.commit() // Use commit() for immediate synchronous write
+            val commitEndTime = System.currentTimeMillis()
+            
+            Log.i(TAG, "🎵 VOICE_SETTINGS: SharedPreferences commit took ${commitEndTime - commitStartTime}ms")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: Commit result: $success")
+            
             if (!success) {
                 val errorMessage = "Failed to save settings to SharedPreferences"
                 Log.e(TAG, "🎵 VOICE_SETTINGS: ❌ $errorMessage")
@@ -995,42 +1036,74 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                 return
             }
             
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ Settings successfully committed to SharedPreferences")
+            
+            // Verify saved values
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ========== VERIFYING SAVED VALUES ==========")
+            val savedDeepgramEnabled = deepgramPrefs.getBoolean("deepgram_enabled", false)
+            val savedSelectedVoice = deepgramPrefs.getString("selected_voice", DeepgramClient.DEFAULT_VOICE)
+            Log.i(TAG, "🎵 VOICE_SETTINGS: Verified saved values:")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: - deepgram_enabled: $savedDeepgramEnabled")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: - selected_voice: $savedSelectedVoice")
+            
             // Force reload of Deepgram client to pick up new settings
-            Log.i(TAG, "🎵 VOICE_SETTINGS: Forcing Deepgram client reload...")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ========== RELOADING DEEPGRAM CLIENT ==========")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: Forcing Deepgram client reload to pick up new settings...")
             try {
+                val reloadStartTime = System.currentTimeMillis()
                 deepgramClient?.release()
                 deepgramClient = null
+                val reloadEndTime = System.currentTimeMillis()
+                
+                Log.i(TAG, "🎵 VOICE_SETTINGS: Deepgram client reload took ${reloadEndTime - reloadStartTime}ms")
                 Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ Deepgram client reset for settings reload")
             } catch (e: Exception) {
-                Log.w(TAG, "🎵 VOICE_SETTINGS: ⚠️ Error resetting Deepgram client: ${e.message}")
+                Log.w(TAG, "🎵 VOICE_SETTINGS: ⚠️ Error resetting Deepgram client: ${e.message}", e)
                 // Continue anyway as this is not critical
             }
             
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ========== NOTIFYING REACT NATIVE ==========")
             // Notify React Native that settings were successfully updated and native config reloaded
+            val eventStartTime = System.currentTimeMillis()
             val settingsUpdateParams = Arguments.createMap().apply {
                 putString("message", "Native voice settings updated and configuration reloaded")
-                putBoolean("deepgramEnabled", deepgramPrefs.getBoolean("deepgram_enabled", false))
-                putString("selectedVoice", deepgramPrefs.getString("selected_voice", DeepgramClient.DEFAULT_VOICE))
+                putBoolean("deepgramEnabled", savedDeepgramEnabled)
+                putString("selectedVoice", savedSelectedVoice ?: DeepgramClient.DEFAULT_VOICE)
                 putDouble("timestamp", System.currentTimeMillis().toDouble())
             }
             
-            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-                .emit("NativeVoiceSettingsUpdated", settingsUpdateParams)
+            try {
+                reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                    .emit("NativeVoiceSettingsUpdated", settingsUpdateParams)
+                
+                val eventEndTime = System.currentTimeMillis()
+                Log.i(TAG, "🎵 VOICE_SETTINGS: React Native event emission took ${eventEndTime - eventStartTime}ms")
+                Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ NativeVoiceSettingsUpdated event sent to React Native")
+            } catch (e: Exception) {
+                Log.e(TAG, "🎵 VOICE_SETTINGS: ❌ Error sending event to React Native: ${e.message}", e)
+            }
             
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ========== SETTINGS UPDATE COMPLETED SUCCESSFULLY ==========")
             Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ Native voice settings updated and validated successfully")
             Log.i(TAG, "🎵 VOICE_SETTINGS: ✅ Native configuration reloaded")
-            Log.i(TAG, "🎵 VOICE_SETTINGS: ================================================")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: Total update duration: ${System.currentTimeMillis() - commitStartTime}ms")
+            Log.i(TAG, "🎵 VOICE_SETTINGS: ================================================================")
             
             // Return validation status
             val result = Arguments.createMap().apply {
                 putBoolean("success", true)
                 putString("message", "Settings updated, validated, and native config reloaded")
                 putBoolean("configReloaded", true)
+                putBoolean("deepgramEnabled", savedDeepgramEnabled)
+                putString("selectedVoice", savedSelectedVoice ?: DeepgramClient.DEFAULT_VOICE)
             }
             promise.resolve(result)
             
         } catch (e: Exception) {
+            Log.e(TAG, "🎵 VOICE_SETTINGS: ========== SETTINGS UPDATE ERROR ==========")
             Log.e(TAG, "🎵 VOICE_SETTINGS: ❌ Error updating voice settings: ${e.message}", e)
+            Log.e(TAG, "🎵 VOICE_SETTINGS: Error type: ${e.javaClass.simpleName}")
+            Log.e(TAG, "🎵 VOICE_SETTINGS: Error stack trace:", e)
             promise.reject("UPDATE_SETTINGS_ERROR", "Failed to update voice settings: ${e.message}", e)
         }
     }

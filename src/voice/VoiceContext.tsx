@@ -181,10 +181,13 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
 
     try {
+      console.log('🔄 VOICE_CONTEXT: ========== SETTINGS REFRESH STARTED ==========');
+      console.log('🔄 VOICE_CONTEXT: User ID:', user.id);
       console.log('🔄 VOICE_CONTEXT: Refreshing settings from database...');
       
       // First, ensure we have the latest local settings
       await loadSettingsRef.current();
+      console.log('🔄 VOICE_CONTEXT: Local settings loaded');
       
       // Get voice settings from database
       const voiceSettings = await DatabaseService.getVoiceSettings(user.id);
@@ -210,28 +213,53 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           xaiLiveSearchSafeSearch: voiceSettings.xai_live_search_safe_search ?? true,
         };
         
-        console.log('🔄 VOICE_CONTEXT: Updating with:', updates);
-        console.log('🔄 VOICE_CONTEXT: Current settings before update:', voiceSettings);
+        console.log('🔄 VOICE_CONTEXT: ========== MERGED SETTINGS FOR NATIVE ==========');
+        console.log('🔄 VOICE_CONTEXT: deepgramEnabled:', updates.deepgramEnabled);
+        console.log('🔄 VOICE_CONTEXT: baseLanguageModel:', updates.baseLanguageModel);
+        console.log('🔄 VOICE_CONTEXT: generalInstructions length:', updates.generalInstructions.length);
+        console.log('🔄 VOICE_CONTEXT: wakeWord:', updates.wakeWord);
+        console.log('🔄 VOICE_CONTEXT: selectedWakeWord:', updates.selectedWakeWord);
+        console.log('🔄 VOICE_CONTEXT: wakeWordSensitivity:', updates.wakeWordSensitivity);
+        console.log('🔄 VOICE_CONTEXT: wakeWordDetectionEnabled:', updates.wakeWordDetectionEnabled);
+        console.log('🔄 VOICE_CONTEXT: selectedDeepgramVoice:', updates.selectedDeepgramVoice);
+        console.log('🔄 VOICE_CONTEXT: xaiLiveSearchEnabled:', updates.xaiLiveSearchEnabled);
+        console.log('🔄 VOICE_CONTEXT: xaiLiveSearchSafeSearch:', updates.xaiLiveSearchSafeSearch);
+        console.log('🔄 VOICE_CONTEXT: Current settings before update:', JSON.stringify(voiceSettings, null, 2));
         
         // Specifically log wake word detection refresh
         if (updates.wakeWordDetectionEnabled !== undefined) {
+          console.log('🎤 VOICE_CONTEXT: ========== WAKE WORD DETECTION REFRESH ==========');
           console.log('🎤 VOICE_CONTEXT: Refreshing wake word detection enabled state from database:', updates.wakeWordDetectionEnabled);
+          console.log('🎤 VOICE_CONTEXT: Wake word sensitivity:', updates.wakeWordSensitivity);
+          console.log('🎤 VOICE_CONTEXT: Selected wake word:', updates.selectedWakeWord);
         }
         
         // Force sync to native by calling updateSettings (which always syncs now)
-        console.log('🔄 VOICE_CONTEXT: Forcing sync to native layer...');
+        console.log('🔄 VOICE_CONTEXT: ========== SYNCING TO NATIVE LAYER ==========');
+        console.log('🔄 VOICE_CONTEXT: About to call updateSettingsRef.current with updates...');
+        const syncStartTime = Date.now();
+        
         await updateSettingsRef.current(updates);
         
+        const syncEndTime = Date.now();
+        console.log('🔄 VOICE_CONTEXT: ========== NATIVE SYNC COMPLETED ==========');
+        console.log('🔄 VOICE_CONTEXT: Sync duration:', (syncEndTime - syncStartTime), 'ms');
         console.log('✅ VOICE_CONTEXT: Settings updated and synced to native successfully');
       } else {
-        console.log('🔄 VOICE_CONTEXT: No voice settings found in database');
+        console.log('🔄 VOICE_CONTEXT: ========== NO DATABASE SETTINGS FOUND ==========');
+        console.log('🔄 VOICE_CONTEXT: No voice settings found in database for user:', user.id);
         
         // Even if no settings in database, sync current settings to ensure native is up to date
         console.log('🔄 VOICE_CONTEXT: Syncing current settings to native...');
         await updateSettingsRef.current({});
+        console.log('🔄 VOICE_CONTEXT: Current settings synced to native');
       }
+      
+      console.log('🔄 VOICE_CONTEXT: ========== SETTINGS REFRESH COMPLETED ==========');
     } catch (error) {
+      console.error('❌ VOICE_CONTEXT: ========== SETTINGS REFRESH ERROR ==========');
       console.error('❌ VOICE_CONTEXT: Error refreshing settings:', error);
+      console.error('❌ VOICE_CONTEXT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
     }
   }, [user?.id]);
 
@@ -309,16 +337,22 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               
               const response = await sendMessage(text, updatedHistory);
               console.log('🟠 VOICE_CONTEXT: Received API response');
+              console.log('🔄 VOICE_CONTEXT: Response settings_updated flag:', response.settings_updated);
               
               // Check if settings were updated and refresh if needed
               if (response.settings_updated) {
                 console.log('⚙️ VOICE_CONTEXT: Settings were updated, refreshing from database...');
                 try {
+                  const refreshStartTime = Date.now();
                   await refreshSettings();
                   console.log('✅ VOICE_CONTEXT: Settings refreshed successfully');
                 } catch (refreshError) {
+                  console.error('❌ VOICE_CONTEXT: ========== SETTINGS REFRESH FAILED ==========');
                   console.error('❌ VOICE_CONTEXT: Error refreshing settings:', refreshError);
+                  console.error('❌ VOICE_CONTEXT: Refresh error stack:', refreshError instanceof Error ? refreshError.stack : 'No stack available');
                 }
+              } else {
+                console.log('⚙️ VOICE_CONTEXT: No settings update flag - skipping settings refresh');
               }
               
               // Send response back to native for TTS (only in voice mode)
@@ -326,6 +360,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               
             } catch (error) {
               console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
+              console.error('🟠 VOICE_CONTEXT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
               
               const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
               
@@ -343,6 +378,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         
       } catch (error) {
         console.error('🟠 VOICE_CONTEXT: ❌ Error in processTextFromNative:', error);
+        console.error('🟠 VOICE_CONTEXT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
         
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         
@@ -462,7 +498,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
 
     try {
+      console.log('📝 TEXT_INPUT: ========== TEXT MESSAGE PROCESSING ==========');
       console.log('📝 TEXT_INPUT: Processing text message:', text);
+      console.log('📝 TEXT_INPUT: Current voice settings:', JSON.stringify(voiceSettings, null, 2));
       
       // Switch to text mode when user sends a text message
       setInputMode('text');
@@ -481,20 +519,39 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         // Send to API with updated history in a separate async operation
         setTimeout(async () => {
           try {
+            console.log('📝 TEXT_INPUT: ========== SENDING TO API ==========');
             console.log('📝 TEXT_INPUT: Sending message to API');
             
+            const apiStartTime = Date.now();
             const response = await sendMessage(text.trim(), updatedHistory);
+            const apiEndTime = Date.now();
+            
+            console.log('📝 TEXT_INPUT: ========== API RESPONSE RECEIVED ==========');
+            console.log('📝 TEXT_INPUT: API call duration:', (apiEndTime - apiStartTime), 'ms');
             console.log('📝 TEXT_INPUT: Received API response');
+            console.log('📝 TEXT_INPUT: Response settings_updated flag:', response.settings_updated);
             
             // Check if settings were updated and refresh if needed
             if (response.settings_updated) {
+              console.log('⚙️ TEXT_INPUT: ========== SETTINGS UPDATE DETECTED ==========');
               console.log('⚙️ TEXT_INPUT: Settings were updated, refreshing from database...');
+              console.log('⚙️ TEXT_INPUT: Current time:', new Date().toISOString());
+              
               try {
+                const refreshStartTime = Date.now();
                 await refreshSettings();
+                const refreshEndTime = Date.now();
+                
+                console.log('⚙️ TEXT_INPUT: ========== SETTINGS REFRESH COMPLETED ==========');
+                console.log('⚙️ TEXT_INPUT: Settings refresh duration:', (refreshEndTime - refreshStartTime), 'ms');
                 console.log('✅ TEXT_INPUT: Settings refreshed successfully');
               } catch (refreshError) {
+                console.error('❌ TEXT_INPUT: ========== SETTINGS REFRESH FAILED ==========');
                 console.error('❌ TEXT_INPUT: Error refreshing settings:', refreshError);
+                console.error('❌ TEXT_INPUT: Refresh error stack:', refreshError instanceof Error ? refreshError.stack : 'No stack available');
               }
+            } else {
+              console.log('⚙️ TEXT_INPUT: No settings update flag - skipping settings refresh');
             }
             
             // Add assistant response to chat history
@@ -511,6 +568,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             
           } catch (error) {
             console.error('📝 TEXT_INPUT: ❌ Error processing text message:', error);
+            console.error('📝 TEXT_INPUT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
             
             // Add error message to chat history
             const errorMessage: ChatMessage = {
@@ -528,6 +586,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       
     } catch (error) {
       console.error('📝 TEXT_INPUT: ❌ Error in sendTextMessage:', error);
+      console.error('📝 TEXT_INPUT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
       throw error;
     }
   }, [sendMessage, voiceSettings]);

@@ -416,37 +416,63 @@ export class VoiceService {
      * Update voice settings in native layer
      */
     public async updateVoiceSettings(deepgramEnabled?: boolean, selectedDeepgramVoice?: string): Promise<boolean> {
-        console.log('🎵 VOICE_SETTINGS: updateVoiceSettings called');
+        console.log('🎵 VOICE_SETTINGS: ========== UPDATE VOICE SETTINGS CALLED ==========');
         console.log('🎵 VOICE_SETTINGS: deepgramEnabled:', deepgramEnabled);
         console.log('🎵 VOICE_SETTINGS: selectedDeepgramVoice:', selectedDeepgramVoice);
+        console.log('🎵 VOICE_SETTINGS: Current platform:', Platform.OS);
+        console.log('🎵 VOICE_SETTINGS: Timestamp:', new Date().toISOString());
+        
         try {
             if (Platform.OS !== 'android') {
-                console.warn('🎵 VOICE_SETTINGS: Voice settings update only supported on Android, current platform:', Platform.OS);
+                console.warn('🎵 VOICE_SETTINGS: ⚠️ Voice settings update only supported on Android, current platform:', Platform.OS);
                 return false;
             }
             
-            console.log('🎵 VOICE_SETTINGS: Calling native VoiceModule.updateVoiceSettings...');
+            console.log('🎵 VOICE_SETTINGS: ========== CALLING NATIVE MODULE ==========');
+            console.log('🎵 VOICE_SETTINGS: About to call VoiceModule.updateVoiceSettings...');
+            console.log('🎵 VOICE_SETTINGS: Parameters being sent to native:');
+            console.log('🎵 VOICE_SETTINGS: - deepgramEnabled:', deepgramEnabled, '(type:', typeof deepgramEnabled, ')');
+            console.log('🎵 VOICE_SETTINGS: - selectedDeepgramVoice:', selectedDeepgramVoice, '(type:', typeof selectedDeepgramVoice, ')');
+            
+            const nativeCallStartTime = Date.now();
             const result = await VoiceModule.updateVoiceSettings(deepgramEnabled, selectedDeepgramVoice);
-            console.log('🎵 VOICE_SETTINGS: Native call result:', result);
+            const nativeCallEndTime = Date.now();
+            
+            console.log('🎵 VOICE_SETTINGS: ========== NATIVE MODULE RESPONSE ==========');
+            console.log('🎵 VOICE_SETTINGS: Native call duration:', (nativeCallEndTime - nativeCallStartTime), 'ms');
+            console.log('🎵 VOICE_SETTINGS: Native call result:', result, '(type:', typeof result, ')');
             
             if (result) {
-                console.log('🎵 VOICE_SETTINGS: ✅ Voice settings updated successfully');
+                console.log('🎵 VOICE_SETTINGS: ✅ Voice settings updated successfully in native layer');
                 
                 // Reset/reload native configuration after settings update
-                console.log('🎵 VOICE_SETTINGS: Reloading native configuration...');
+                console.log('🎵 VOICE_SETTINGS: ========== RELOADING NATIVE CONFIGURATION ==========');
+                console.log('🎵 VOICE_SETTINGS: Initiating native configuration reload...');
+                
+                const reloadStartTime = Date.now();
                 const reloadResult = await this.reloadNativeConfiguration();
+                const reloadEndTime = Date.now();
+                
+                console.log('🎵 VOICE_SETTINGS: Reload duration:', (reloadEndTime - reloadStartTime), 'ms');
+                console.log('🎵 VOICE_SETTINGS: Reload result:', reloadResult);
+                
                 if (reloadResult) {
                     console.log('🎵 VOICE_SETTINGS: ✅ Native configuration reloaded successfully');
                 } else {
                     console.warn('🎵 VOICE_SETTINGS: ⚠️ Native configuration reload failed, but settings were updated');
                 }
+                
+                console.log('🎵 VOICE_SETTINGS: ========== VOICE SETTINGS UPDATE COMPLETED ==========');
             } else {
-                console.error('🎵 VOICE_SETTINGS: ❌ Failed to update voice settings');
+                console.error('🎵 VOICE_SETTINGS: ❌ Failed to update voice settings in native layer');
             }
             
             return result;
         } catch (error) {
+            console.error('🎵 VOICE_SETTINGS: ========== VOICE SETTINGS UPDATE ERROR ==========');
             console.error('🎵 VOICE_SETTINGS: ❌ Error updating voice settings:', error);
+            console.error('🎵 VOICE_SETTINGS: Error type:', error instanceof Error ? error.constructor.name : typeof error);
+            console.error('🎵 VOICE_SETTINGS: Error stack:', error instanceof Error ? error.stack : 'No stack available');
             return false;
         }
     }
@@ -455,21 +481,40 @@ export class VoiceService {
      * Reload native voice configuration after settings changes
      */
     public async reloadNativeConfiguration(): Promise<boolean> {
+        console.log('🎵 RELOAD_CONFIG: ========== RELOAD NATIVE CONFIGURATION ==========');
         console.log('🎵 RELOAD_CONFIG: Reloading native voice configuration...');
+        console.log('🎵 RELOAD_CONFIG: Current platform:', Platform.OS);
+        console.log('🎵 RELOAD_CONFIG: Timestamp:', new Date().toISOString());
+        
         try {
             if (Platform.OS !== 'android') {
-                console.warn('🎵 RELOAD_CONFIG: Configuration reload only supported on Android');
+                console.warn('🎵 RELOAD_CONFIG: ⚠️ Configuration reload only supported on Android, current platform:', Platform.OS);
                 return false;
             }
             
             // Reset Deepgram client to pick up new settings
-            console.log('🎵 RELOAD_CONFIG: Resetting Deepgram client...');
+            console.log('🎵 RELOAD_CONFIG: About to reset Deepgram client...');
+            const resetStartTime = Date.now();
             const resetResult = await VoiceModule.resetDeepgramClient();
-            console.log('🎵 RELOAD_CONFIG: Deepgram reset result:', resetResult);
+            const resetEndTime = Date.now();
             
-            return resetResult?.success ?? false;
+            console.log('🎵 RELOAD_CONFIG: Reset call duration:', (resetEndTime - resetStartTime), 'ms');
+            console.log('🎵 RELOAD_CONFIG: Deepgram reset result:', resetResult, '(type:', typeof resetResult, ')');
+            
+            const success = resetResult?.success ?? false;
+            
+            if (success) {
+                console.log('🎵 RELOAD_CONFIG: ✅ Native configuration reloaded successfully');
+            } else {
+                console.error('🎵 RELOAD_CONFIG: ❌ Failed to reload native configuration');
+            }
+            
+            return success;
         } catch (error) {
+            console.error('🎵 RELOAD_CONFIG: ========== RELOAD CONFIGURATION ERROR ==========');
             console.error('🎵 RELOAD_CONFIG: ❌ Error reloading native configuration:', error);
+            console.error('🎵 RELOAD_CONFIG: Error type:', error instanceof Error ? error.constructor.name : typeof error);
+            console.error('🎵 RELOAD_CONFIG: Error stack:', error instanceof Error ? error.stack : 'No stack available');
             return false;
         }
     }
