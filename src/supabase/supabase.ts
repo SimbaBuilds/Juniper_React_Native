@@ -51,9 +51,6 @@ export const DatabaseService = {
         preferences: updates.preferences || {},
         // XAI LiveSearch defaults
         xai_live_search_enabled: updates.xai_live_search_enabled ?? false,
-        xai_live_search_sources: updates.xai_live_search_sources ?? [],
-        xai_live_search_country: updates.xai_live_search_country ?? 'US',
-        xai_live_search_x_handles: updates.xai_live_search_x_handles ?? [],
         xai_live_search_safe_search: updates.xai_live_search_safe_search ?? true,
         updated_at: new Date().toISOString()
       };
@@ -113,6 +110,12 @@ export const DatabaseService = {
     deepgram_enabled?: boolean;
     base_language_model?: string;
     general_instructions?: string;
+    wake_word_detection_enabled?: boolean;
+    wake_word_sensitivity?: number;
+    wake_word?: string;
+    selected_deepgram_voice?: string;
+    xai_live_search_enabled?: boolean;
+    xai_live_search_safe_search?: boolean;
   }) {
     // First, ensure the user profile exists with all required fields
     let profile = await this.getUserProfile(userId);
@@ -133,9 +136,6 @@ export const DatabaseService = {
         preferences: {},
         // XAI LiveSearch defaults
         xai_live_search_enabled: false,
-        xai_live_search_sources: [],
-        xai_live_search_country: 'US',
-        xai_live_search_x_handles: [],
         xai_live_search_safe_search: true,
         updated_at: new Date().toISOString()
       };
