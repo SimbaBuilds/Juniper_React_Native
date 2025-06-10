@@ -10,6 +10,7 @@ import com.anonymous.MobileJarvisNative.ConfigManager
 import com.anonymous.MobileJarvisNative.utils.AudioManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -850,8 +851,30 @@ class DeepgramClient private constructor(private val context: Context) {
                     Log.d(TAG, "🎵 Deepgram audio focus gained")
                 },
                 onFocusLost = {
-                    Log.d(TAG, "🎵 Deepgram audio focus lost - stopping playback")
-                    stopPlayback()
+                    Log.w(TAG, "🎵 Deepgram audio focus lost - attempting to reclaim focus")
+                    // Don't immediately stop playback, try to reclaim focus first
+                    CoroutineScope(Dispatchers.IO).launch {
+                        delay(100) // Brief delay before attempting to reclaim
+                        val reclaimSuccess = centralAudioManager?.requestAudioFocus(
+                            requestType = AudioManager.AudioRequestType.TTS,
+                            requestId = currentRequestId ?: "deepgram_reclaim_${UUID.randomUUID()}",
+                            onFocusGained = {
+                                Log.d(TAG, "🎵 Deepgram audio focus reclaimed successfully")
+                            },
+                            onFocusLost = {
+                                Log.w(TAG, "🎵 Deepgram audio focus lost again - stopping playback")
+                                stopPlayback()
+                            },
+                            onFocusDucked = {
+                                Log.d(TAG, "🎵 Deepgram audio focus ducked after reclaim")
+                            }
+                        ) ?: false
+                        
+                        if (!reclaimSuccess) {
+                            Log.w(TAG, "🎵 Failed to reclaim audio focus - stopping playback")
+                            stopPlayback()
+                        }
+                    }
                 },
                 onFocusDucked = {
                     Log.d(TAG, "🎵 Deepgram audio focus ducked - continuing at lower volume")
@@ -1146,16 +1169,10 @@ class DeepgramClient private constructor(private val context: Context) {
                         val totalSize = streamingAudioBuffer?.toByteArray()?.size ?: 0
                         Log.d(TAG, "🎵 WEBSOCKET_TTS: Total audio data: $totalSize bytes")
                         
-                        // Start playback immediately when we have enough data for smooth playback
-                        if (!isPlaybackStarted.get() && totalSize >= minPlaybackThreshold) {
-                            Log.i(TAG, "🎵 WEBSOCKET_TTS: 🚀 STREAMING PLAYBACK: Starting playback with ${totalSize} bytes (threshold: ${minPlaybackThreshold})")
-                            isPlaybackStarted.set(true)
-                            
-                                                         // Start playback on main thread while continuing to receive data
-                             GlobalScope.launch(Dispatchers.Main) {
-                                 startStreamingPlayback(requestId, onComplete)
-                             }
-                        }
+                        // Don't start playback until we have the complete stream
+                        // This prevents audio cutoff issues and ensures full playback
+                        Log.d(TAG, "🎵 WEBSOCKET_TTS: Buffering audio data: ${totalSize} bytes (waiting for complete stream)")
+                        
                     } catch (e: Exception) {
                         Log.e(TAG, "🎵 WEBSOCKET_TTS: ❌ Error processing audio chunk", e)
                     }
@@ -1174,6 +1191,24 @@ class DeepgramClient private constructor(private val context: Context) {
                             }
                             "Flushed" -> {
                                 Log.d(TAG, "🎵 WEBSOCKET_TTS: ✅ Stream flushed - all audio data received")
+                                
+                                val totalAudioSize = streamingAudioBuffer?.toByteArray()?.size ?: 0
+                                Log.i(TAG, "🎵 WEBSOCKET_TTS: Complete audio data size: $totalAudioSize bytes")
+                                
+                                // Start playback now that we have all the data
+                                if (!isPlaybackStarted.get() && totalAudioSize > 0) {
+                                    Log.i(TAG, "🎵 WEBSOCKET_TTS: 🚀 COMPLETE PLAYBACK: Starting playback with full stream ($totalAudioSize bytes)")
+                                    isPlaybackStarted.set(true)
+                                    
+                                    GlobalScope.launch(Dispatchers.Main) {
+                                        startStreamingPlayback(requestId, onComplete)
+                                    }
+                                } else if (isPlaybackStarted.get()) {
+                                    Log.d(TAG, "🎵 WEBSOCKET_TTS: Playback already started, stream complete")
+                                } else {
+                                    Log.e(TAG, "🎵 WEBSOCKET_TTS: ❌ No audio data to play (size: $totalAudioSize)")
+                                }
+                                
                                 webSocket.close(1000, "Stream completed")
                             }
                             else -> {
@@ -1208,8 +1243,10 @@ class DeepgramClient private constructor(private val context: Context) {
             // Update request timing
             activeRequests[requestId]?.apiCallTime = System.currentTimeMillis()
 
-            // Wait for streaming to complete with timeout (or until playback has started)
+            // Wait for streaming to complete with timeout - but don't rush playback
             val streamCompleted = streamingLatch?.await(30, TimeUnit.SECONDS) ?: false
+            
+            Log.d(TAG, "🎵 WEBSOCKET_TTS: Stream completed: $streamCompleted, Playback started: ${isPlaybackStarted.get()}")
             
             if (!streamCompleted && !isPlaybackStarted.get()) {
                 Log.e(TAG, "🎵 WEBSOCKET_TTS: ❌ Streaming timeout after 30 seconds and no playback started")
@@ -1217,11 +1254,11 @@ class DeepgramClient private constructor(private val context: Context) {
                 return@withContext false
             }
 
-            // If playback hasn't started yet but we received data, start it now
+            // Always check if we have complete audio data and start playback if not started
             if (!isPlaybackStarted.get()) {
                 val audioData = streamingAudioBuffer?.toByteArray()
                 if (audioData != null && audioData.isNotEmpty()) {
-                    Log.i(TAG, "🎵 WEBSOCKET_TTS: 🚀 FALLBACK PLAYBACK: Starting playback with ${audioData.size} bytes")
+                    Log.i(TAG, "🎵 WEBSOCKET_TTS: 🚀 FALLBACK PLAYBACK: Starting playback with complete ${audioData.size} bytes")
                     isPlaybackStarted.set(true)
                     activeRequests[requestId]?.audioReceivedTime = System.currentTimeMillis()
                     
@@ -1229,11 +1266,14 @@ class DeepgramClient private constructor(private val context: Context) {
                         startStreamingPlayback(requestId, onComplete)
                     }
                 } else {
-                    Log.e(TAG, "🎵 WEBSOCKET_TTS: ❌ No audio data received")
+                    Log.e(TAG, "🎵 WEBSOCKET_TTS: ❌ No audio data received for fallback")
                     return@withContext false
                 }
             }
-
+            
+            // Wait a bit longer to ensure playback started successfully
+            delay(100)
+            
             return@withContext true
 
         } catch (e: Exception) {
@@ -1243,11 +1283,19 @@ class DeepgramClient private constructor(private val context: Context) {
             streamingWebSocket?.close(1000, "Error occurred")
             return@withContext false
         } finally {
-            // Cleanup streaming resources
+            // Cleanup streaming resources - but keep audio buffer until playback completes
             streamingWebSocket = null
-            streamingAudioBuffer = null
             streamingLatch = null
             isStreamingActive.set(false)
+            
+            // Only clear audio buffer if playback hasn't started or failed
+            if (!isPlaybackStarted.get()) {
+                streamingAudioBuffer = null
+                Log.d(TAG, "🎵 WEBSOCKET_TTS: Cleared audio buffer - playback never started")
+            } else {
+                Log.d(TAG, "🎵 WEBSOCKET_TTS: Keeping audio buffer for ongoing playback")
+            }
+            
             Log.d(TAG, "🎵 WEBSOCKET_TTS: ========== WebSocket TTS Stream Complete ==========")
         }
     }
@@ -1381,6 +1429,10 @@ class DeepgramClient private constructor(private val context: Context) {
                 // Release audio focus when playback actually completes
                 releaseAudioFocus()
                 
+                // Clean up streaming audio buffer now that playback is complete
+                streamingAudioBuffer = null
+                Log.d(TAG, "🎵 DEEPGRAM_TTS: Streaming audio buffer cleared after playback completion")
+                
                 // Notify completion callback
                 onComplete?.invoke()
                 
@@ -1401,6 +1453,10 @@ class DeepgramClient private constructor(private val context: Context) {
                 
                 // Release audio focus on error
                 releaseAudioFocus()
+                
+                // Clean up streaming audio buffer on error
+                streamingAudioBuffer = null
+                Log.d(TAG, "🎵 DEEPGRAM_TTS: Streaming audio buffer cleared after error")
                 
                 // Notify completion callback even on error to prevent hanging
                 onComplete?.invoke()
