@@ -42,16 +42,15 @@ export const DatabaseService = {
         display_name: updates.display_name || null,
         deepgram_enabled: updates.deepgram_enabled ?? false,
         base_language_model: updates.base_language_model || 'claude-3-5-sonnet-20241022',
-        general_instructions: updates.general_instructions || 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
-        assistant_name: updates.assistant_name || 'Jarvis',
-        wake_word: updates.wake_word || 'Hey Jarvis',
+        general_instructions: updates.general_instructions || '',
+        wake_word: updates.wake_word || 'JARVIS',
+        wake_word_sensitivity: updates.wake_word_sensitivity ?? 0.3,
+        wake_word_detection_enabled: updates.wake_word_detection_enabled ?? false,
+        selected_deepgram_voice: updates.selected_deepgram_voice || 'aura-2-arcas-en',
         timezone: updates.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         preferences: updates.preferences || {},
         // XAI LiveSearch defaults
         xai_live_search_enabled: updates.xai_live_search_enabled ?? false,
-        xai_live_search_sources: updates.xai_live_search_sources ?? [],
-        xai_live_search_country: updates.xai_live_search_country ?? 'US',
-        xai_live_search_x_handles: updates.xai_live_search_x_handles ?? [],
         xai_live_search_safe_search: updates.xai_live_search_safe_search ?? true,
         updated_at: new Date().toISOString()
       };
@@ -73,7 +72,7 @@ export const DatabaseService = {
       
       // Ensure general_instructions is never set to null or empty
       if ('general_instructions' in updateData && (!updateData.general_instructions || updateData.general_instructions.trim() === '')) {
-        updateData.general_instructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+        updateData.general_instructions = '';
       }
       
       const { data, error } = await supabase
@@ -97,14 +96,12 @@ export const DatabaseService = {
       deepgram_enabled: profile.deepgram_enabled,
       base_language_model: profile.base_language_model,
       general_instructions: profile.general_instructions,
-      assistant_name: profile.assistant_name,
-      wake_word: profile.wake_word,
+      selectedWakeWord: profile.wake_word, // Map wake_word to selectedWakeWord for frontend
+      wake_word_sensitivity: profile.wake_word_sensitivity,
       wake_word_detection_enabled: profile.wake_word_detection_enabled,
+      selected_deepgram_voice: profile.selected_deepgram_voice,
       // XAI LiveSearch settings
       xai_live_search_enabled: profile.xai_live_search_enabled,
-      xai_live_search_sources: profile.xai_live_search_sources,
-      xai_live_search_country: profile.xai_live_search_country,
-      xai_live_search_x_handles: profile.xai_live_search_x_handles,
       xai_live_search_safe_search: profile.xai_live_search_safe_search,
     }
   },
@@ -113,6 +110,12 @@ export const DatabaseService = {
     deepgram_enabled?: boolean;
     base_language_model?: string;
     general_instructions?: string;
+    wake_word_detection_enabled?: boolean;
+    wake_word_sensitivity?: number;
+    wake_word?: string;
+    selected_deepgram_voice?: string;
+    xai_live_search_enabled?: boolean;
+    xai_live_search_safe_search?: boolean;
   }) {
     // First, ensure the user profile exists with all required fields
     let profile = await this.getUserProfile(userId);
@@ -124,17 +127,15 @@ export const DatabaseService = {
         display_name: null,
         deepgram_enabled: false,
         base_language_model: 'claude-3-5-sonnet-20241022',
-        general_instructions: 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
-        assistant_name: 'Assistant',
-        wake_word: 'Jarvis',
+        general_instructions: '',
+        wake_word: 'JARVIS',
+        wake_word_sensitivity: 0.3,
         wake_word_detection_enabled: false,
+        selected_deepgram_voice: 'aura-2-arcas-en',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         preferences: {},
         // XAI LiveSearch defaults
         xai_live_search_enabled: false,
-        xai_live_search_sources: [],
-        xai_live_search_country: 'US',
-        xai_live_search_x_handles: [],
         xai_live_search_safe_search: true,
         updated_at: new Date().toISOString()
       };
@@ -155,9 +156,9 @@ export const DatabaseService = {
       updated_at: new Date().toISOString()
     };
     
-    // Ensure general_instructions always has a value
-    if ('general_instructions' in updates && (!updates.general_instructions || updates.general_instructions.trim() === '')) {
-      updates.general_instructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+    // Allow empty general_instructions
+    if ('general_instructions' in updates && updates.general_instructions === null) {
+      updates.general_instructions = '';
     }
     
     const { data, error } = await supabase
@@ -264,7 +265,7 @@ export const DatabaseService = {
       const { data, error } = await supabase
         .from('user_profiles')
         .update({
-          general_instructions: 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
+          general_instructions: '',
           updated_at: new Date().toISOString()
         })
         .is('general_instructions', null)

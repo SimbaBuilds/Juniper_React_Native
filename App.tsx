@@ -6,7 +6,7 @@ import { Linking } from 'react-native';
 import { VoiceProvider } from './src/voice/VoiceContext';
 import { WakeWordProvider } from './src/wakeword/WakeWordContext';
 import WakeWordService from './src/wakeword/WakeWordService';
-import { GoogleCalendarService } from './src/integrations/calendar/GoogleCalendarService';
+import { GoogleAuthService } from './src/integrations/google/GoogleAuthService';
 import { HomeScreen } from './src/HomeScreen';
 import { SettingsScreen } from './src/settings/SettingsScreen';
 import { IntegrationsScreen } from './src/integrations/IntegrationsScreen';
@@ -136,7 +136,7 @@ export default function App() {
             
             if (code) {
               console.log('✅ Processing OAuth callback with code');
-              GoogleCalendarService.getInstance().handleAuthCallback(code);
+              GoogleAuthService.getInstance().handleAuthCallback(code);
             } else {
               console.warn('⚠️ No code parameter found in OAuth redirect URL');
             }
@@ -165,7 +165,7 @@ export default function App() {
             
             if (code) {
               console.log('✅ Processing OAuth callback with code (custom scheme fallback)');
-              GoogleCalendarService.getInstance().handleAuthCallback(code);
+              GoogleAuthService.getInstance().handleAuthCallback(code);
             }
           }
         } catch (error) {
@@ -260,6 +260,7 @@ export default function App() {
 function MainTabNavigator() {
   return (
     <Tab.Navigator
+      initialRouteName="Home"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
@@ -296,10 +297,10 @@ function MainTabNavigator() {
       })}
     >
       <Tab.Screen 
-        name="Home" 
-        component={HomeScreen}
+        name="Automations" 
+        component={AutomationsScreen}
         options={{
-          title: 'Voice Assistant',
+          title: 'Automations',
         }}
       />
       <Tab.Screen 
@@ -310,10 +311,10 @@ function MainTabNavigator() {
         }}
       />
       <Tab.Screen 
-        name="Automations" 
-        component={AutomationsScreen}
+        name="Home" 
+        component={HomeScreen}
         options={{
-          title: 'Automations',
+          title: 'Voice Assistant',
         }}
       />
       <Tab.Screen 
@@ -330,6 +331,7 @@ function MainTabNavigator() {
           title: 'Settings',
         }}
       />
+
     </Tab.Navigator>
   );
 }

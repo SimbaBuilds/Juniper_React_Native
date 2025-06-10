@@ -98,7 +98,7 @@ export const AutomationsScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.title}>Automations</Text>
+          {/* <Text style={styles.title}>Automations</Text> */}
         </View>
 
         <View style={styles.instructionsSection}>

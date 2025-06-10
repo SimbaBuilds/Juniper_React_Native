@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { GoogleCalendarManager } from './calendar/GoogleCalendarManager';
-import { OutlookCalendarManager } from './calendar/OutlookCalendarManager';
-import { GmailManager } from './email/GmailManager';
-import { OutlookEmailManager } from './email/OutlookEmailManager';
-import { GoogleDriveManager } from './drive/GoogleDriveManager';
-import { OneDriveManager } from './drive/OneDriveManager';
+import { GoogleAuthService } from './google/GoogleAuthService';
+import { MicrosoftAuthService } from './microsoft/MicrosoftAuthService';
 import { NotionManager } from './notion/NotionManager';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
@@ -33,6 +29,10 @@ export const IntegrationsScreen: React.FC = () => {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [googleAuthService] = useState(() => GoogleAuthService.getInstance());
+  const [microsoftAuthService] = useState(() => MicrosoftAuthService.getInstance());
+  const [googleAuthenticated, setGoogleAuthenticated] = useState(false);
+  const [microsoftAuthenticated, setMicrosoftAuthenticated] = useState(false);
   const [sections, setSections] = useState<ExpandableSection[]>([
     {
       id: 'google',
@@ -66,16 +66,31 @@ export const IntegrationsScreen: React.FC = () => {
         setLoading(true);
         setError(null);
         
+        // Initialize auth services
+        await googleAuthService.initialize();
+        await microsoftAuthService.initialize();
+        
+        // Set initial auth states
+        setGoogleAuthenticated(googleAuthService.isAuthenticated());
+        setMicrosoftAuthenticated(microsoftAuthService.isAuthenticated());
+        
+        // Set up auth callbacks
+        const handleGoogleAuthChange = (isAuth: boolean) => setGoogleAuthenticated(isAuth);
+        const handleMicrosoftAuthChange = (isAuth: boolean) => setMicrosoftAuthenticated(isAuth);
+        
+        googleAuthService.addAuthCallback(handleGoogleAuthChange);
+        microsoftAuthService.addAuthCallback(handleMicrosoftAuthChange);
+        
         const dbIntegrations = await DatabaseService.getIntegrations(user.id);
         
         // Convert database integrations to UI format
         const formattedIntegrations: Integration[] = dbIntegrations.map((integration: any) => ({
           id: integration.id,
-          name: integration.integration_type,
+          name: integration.service_name,
           credentials: integration.configuration?.credentials || 'Not configured',
           automations: integration.configuration?.automations || [],
           connected: integration.is_active,
-          icon: getIconForIntegrationType(integration.integration_type)
+          icon: getIconForIntegrationType(integration.service_name)
         }));
 
         // Add default integrations if none exist
@@ -102,6 +117,12 @@ export const IntegrationsScreen: React.FC = () => {
         } else {
           setIntegrations(formattedIntegrations);
         }
+        
+        // Cleanup callbacks on unmount
+        return () => {
+          googleAuthService.removeAuthCallback(handleGoogleAuthChange);
+          microsoftAuthService.removeAuthCallback(handleMicrosoftAuthChange);
+        };
       } catch (err) {
         console.error('Error loading integrations:', err);
         setError('Failed to load integrations');
@@ -111,7 +132,7 @@ export const IntegrationsScreen: React.FC = () => {
     };
 
     loadIntegrations();
-  }, [user?.id]);
+  }, [user?.id, googleAuthService, microsoftAuthService]);
 
   const getIconForIntegrationType = (type: string): keyof typeof Ionicons.glyphMap => {
     switch (type.toLowerCase()) {
@@ -144,18 +165,42 @@ export const IntegrationsScreen: React.FC = () => {
   const renderGoogleServices = () => (
     <View style={styles.servicesContainer}>
       <View style={styles.unifiedConnectSection}>
-        <Text style={styles.unifiedTitle}>Connect All Google Services</Text>
+        <Text style={styles.unifiedTitle}>Connect Google Services</Text>
         <Text style={styles.unifiedDescription}>
           Connect to Google Calendar, Gmail, Google Drive, and Google Contacts with a single authentication flow.
           Grants read/write for calendar, read/draft/send for email, read/write for contacts, and read-only for drive.
         </Text>
-        <TouchableOpacity
-          style={styles.unifiedConnectButton}
-          onPress={() => console.log('Connect Google Services')}
-        >
-          <Ionicons name="logo-google" size={20} color="#FFFFFF" />
-          <Text style={styles.unifiedConnectText}>Connect Google</Text>
-        </TouchableOpacity>
+        {googleAuthenticated ? (
+          <View style={styles.connectedContainer}>
+            <Text style={styles.connectedText}>✅ Connected to Google</Text>
+            <TouchableOpacity
+              style={[styles.unifiedConnectButton, styles.disconnectButton]}
+              onPress={async () => {
+                try {
+                  await googleAuthService.signOut();
+                } catch (error) {
+                  console.error('Error signing out of Google:', error);
+                }
+              }}
+            >
+              <Text style={styles.unifiedConnectText}>Disconnect</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.unifiedConnectButton}
+            onPress={async () => {
+              try {
+                await googleAuthService.authenticate();
+              } catch (error) {
+                console.error('Error authenticating with Google:', error);
+              }
+            }}
+          >
+            <Ionicons name="logo-google" size={20} color="#FFFFFF" />
+            <Text style={styles.unifiedConnectText}>Connect Google</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -163,18 +208,42 @@ export const IntegrationsScreen: React.FC = () => {
   const renderMicrosoftServices = () => (
     <View style={styles.servicesContainer}>
       <View style={styles.unifiedConnectSection}>
-        <Text style={styles.unifiedTitle}>Connect All Microsoft Services</Text>
+        <Text style={styles.unifiedTitle}>Connect Microsoft Services</Text>
         <Text style={styles.unifiedDescription}>
           Connect to Outlook Calendar, Outlook Email, OneDrive, and Microsoft Contacts with a single authentication flow.
           Grants read/write for calendar, read/draft/send for email, read/write for contacts, and read-only for drive.
         </Text>
-        <TouchableOpacity
-          style={styles.unifiedConnectButton}
-          onPress={() => console.log('Connect Microsoft Services')}
-        >
-          <Ionicons name="logo-microsoft" size={20} color="#FFFFFF" />
-          <Text style={styles.unifiedConnectText}>Connect Microsoft</Text>
-        </TouchableOpacity>
+        {microsoftAuthenticated ? (
+          <View style={styles.connectedContainer}>
+            <Text style={styles.connectedText}>✅ Connected to Microsoft</Text>
+            <TouchableOpacity
+              style={[styles.unifiedConnectButton, styles.disconnectButton]}
+              onPress={async () => {
+                try {
+                  await microsoftAuthService.signOut();
+                } catch (error) {
+                  console.error('Error signing out of Microsoft:', error);
+                }
+              }}
+            >
+              <Text style={styles.unifiedConnectText}>Disconnect</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.unifiedConnectButton}
+            onPress={async () => {
+              try {
+                await microsoftAuthService.authenticate();
+              } catch (error) {
+                console.error('Error authenticating with Microsoft:', error);
+              }
+            }}
+          >
+            <Ionicons name="logo-microsoft" size={20} color="#FFFFFF" />
+            <Text style={styles.unifiedConnectText}>Connect Microsoft</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -226,7 +295,7 @@ export const IntegrationsScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.title}>Integrations</Text>
+          {/* <Text style={styles.title}>Integrations</Text> */}
         </View>
 
         <View style={styles.instructionsSection}>
@@ -423,6 +492,8 @@ const styles = StyleSheet.create({
   },
   connectedText: {
     color: '#4CAF50',
+    fontSize: 16,
+    fontWeight: '600',
   },
   disconnectedText: {
     color: '#757575', // Changed from red to grey as requested
@@ -493,5 +564,13 @@ const styles = StyleSheet.create({
     color: '#B0B0B0',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  connectedContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  disconnectButton: {
+    backgroundColor: '#F44336',
   },
 }); 

@@ -48,6 +48,9 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+// Auto-refresh constants
+const AUTO_REFRESH_DELAY = 10 * 60 * 1000; // 10 minutes in milliseconds
+
 /**
  * Provider component for the Voice Context
  * Now serves as a pure bridge to native state - no duplicate state management
@@ -88,6 +91,10 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
   
+  // Auto-refresh timer state
+  const [lastMessageTimestamp, setLastMessageTimestamp] = useState<number | null>(null);
+  const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Voice service instance
   const voiceService = useMemo(() => VoiceService.getInstance(), []);
   
@@ -97,6 +104,75 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   // Server API hook
   const { sendMessage } = useServerApi();
 
+  // Auto-refresh timer functions
+  const resetAutoRefreshTimer = useCallback(() => {
+    // Clear existing timer
+    if (autoRefreshTimerRef.current) {
+      clearTimeout(autoRefreshTimerRef.current);
+    }
+    
+    // Only set timer if there are messages in chat history
+    if (chatHistory.length > 0) {
+      console.log('🕐 Setting auto-refresh timer for 10 minutes');
+      autoRefreshTimerRef.current = setTimeout(() => {
+        console.log('🕐 Auto-refresh timer triggered - clearing chat history');
+        handleAutoRefresh();
+      }, AUTO_REFRESH_DELAY);
+    }
+  }, [chatHistory.length]);
+
+  const handleAutoRefresh = useCallback(async () => {
+    if (chatHistory.length > 0) {
+      console.log('🔄 Auto-refresh: Saving and clearing conversation after 10 minutes of inactivity');
+      
+      // Save conversation to Supabase before clearing
+      try {
+        const conversationId = await conversationService.saveConversation(chatHistory);
+        if (conversationId) {
+          console.log('✅ Auto-refresh: Conversation saved with ID:', conversationId);
+        }
+      } catch (error) {
+        console.error('❌ Auto-refresh: Error saving conversation:', error);
+        // Continue with clearing even if save fails
+      }
+      
+      // Clear chat history
+      setChatHistory([]);
+      setLastMessageTimestamp(null);
+      
+      // Clear the timer since we just cleared history
+      if (autoRefreshTimerRef.current) {
+        clearTimeout(autoRefreshTimerRef.current);
+        autoRefreshTimerRef.current = null;
+      }
+    }
+  }, [chatHistory]);
+
+  // Update last message timestamp and reset timer when chat history changes
+  useEffect(() => {
+    if (chatHistory.length > 0) {
+      const latestMessage = chatHistory[chatHistory.length - 1];
+      setLastMessageTimestamp(latestMessage.timestamp);
+      resetAutoRefreshTimer();
+    } else {
+      // Clear timer when chat history is empty
+      if (autoRefreshTimerRef.current) {
+        clearTimeout(autoRefreshTimerRef.current);
+        autoRefreshTimerRef.current = null;
+      }
+      setLastMessageTimestamp(null);
+    }
+  }, [chatHistory, resetAutoRefreshTimer]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoRefreshTimerRef.current) {
+        clearTimeout(autoRefreshTimerRef.current);
+      }
+    };
+  }, []);
+
   // Simple settings refresh function
   const refreshSettings = useCallback(async () => {
     if (!user?.id) {
@@ -105,10 +181,13 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
 
     try {
+      console.log('🔄 VOICE_CONTEXT: ========== SETTINGS REFRESH STARTED ==========');
+      console.log('🔄 VOICE_CONTEXT: User ID:', user.id);
       console.log('🔄 VOICE_CONTEXT: Refreshing settings from database...');
       
       // First, ensure we have the latest local settings
       await loadSettingsRef.current();
+      console.log('🔄 VOICE_CONTEXT: Local settings loaded');
       
       // Get voice settings from database
       const voiceSettings = await DatabaseService.getVoiceSettings(user.id);
@@ -118,34 +197,69 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         
         // Update local settings with database values
         const generalInstructions = voiceSettings.general_instructions || 
-          'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+          '';
         
         const updates = {
           deepgramEnabled: voiceSettings.deepgram_enabled,
           baseLanguageModel: voiceSettings.base_language_model,
           generalInstructions: generalInstructions,
-          assistantName: voiceSettings.assistant_name || 'Assistant',
-          wakeWord: voiceSettings.wake_word || 'Jarvis',
+          wakeWord: voiceSettings.selectedWakeWord || 'Jarvis',
+          selectedWakeWord: voiceSettings.selectedWakeWord || 'JARVIS',
+          wakeWordSensitivity: voiceSettings.wake_word_sensitivity ?? 0.3,
           wakeWordDetectionEnabled: voiceSettings.wake_word_detection_enabled ?? false,
+          selectedDeepgramVoice: voiceSettings.selected_deepgram_voice || 'aura-2-mars-en',
           // XAI LiveSearch settings
           xaiLiveSearchEnabled: voiceSettings.xai_live_search_enabled ?? false,
-          xaiLiveSearchSources: voiceSettings.xai_live_search_sources ?? [],
-          xaiLiveSearchCountry: voiceSettings.xai_live_search_country ?? 'US',
-          xaiLiveSearchXHandles: voiceSettings.xai_live_search_x_handles ?? [],
           xaiLiveSearchSafeSearch: voiceSettings.xai_live_search_safe_search ?? true,
         };
         
-        console.log('🔄 VOICE_CONTEXT: Updating with:', updates);
-        console.log('🔄 VOICE_CONTEXT: Current settings before update:', voiceSettings);
+        console.log('🔄 VOICE_CONTEXT: ========== MERGED SETTINGS FOR NATIVE ==========');
+        console.log('🔄 VOICE_CONTEXT: deepgramEnabled:', updates.deepgramEnabled);
+        console.log('🔄 VOICE_CONTEXT: baseLanguageModel:', updates.baseLanguageModel);
+        console.log('🔄 VOICE_CONTEXT: generalInstructions length:', updates.generalInstructions.length);
+        console.log('🔄 VOICE_CONTEXT: wakeWord:', updates.wakeWord);
+        console.log('🔄 VOICE_CONTEXT: selectedWakeWord:', updates.selectedWakeWord);
+        console.log('🔄 VOICE_CONTEXT: wakeWordSensitivity:', updates.wakeWordSensitivity);
+        console.log('🔄 VOICE_CONTEXT: wakeWordDetectionEnabled:', updates.wakeWordDetectionEnabled);
+        console.log('🔄 VOICE_CONTEXT: selectedDeepgramVoice:', updates.selectedDeepgramVoice);
+        console.log('🔄 VOICE_CONTEXT: xaiLiveSearchEnabled:', updates.xaiLiveSearchEnabled);
+        console.log('🔄 VOICE_CONTEXT: xaiLiveSearchSafeSearch:', updates.xaiLiveSearchSafeSearch);
+        console.log('🔄 VOICE_CONTEXT: Current settings before update:', JSON.stringify(voiceSettings, null, 2));
+        
+        // Specifically log wake word detection refresh
+        if (updates.wakeWordDetectionEnabled !== undefined) {
+          console.log('🎤 VOICE_CONTEXT: ========== WAKE WORD DETECTION REFRESH ==========');
+          console.log('🎤 VOICE_CONTEXT: Refreshing wake word detection enabled state from database:', updates.wakeWordDetectionEnabled);
+          console.log('🎤 VOICE_CONTEXT: Wake word sensitivity:', updates.wakeWordSensitivity);
+          console.log('🎤 VOICE_CONTEXT: Selected wake word:', updates.selectedWakeWord);
+        }
+        
+        // Force sync to native by calling updateSettings (which always syncs now)
+        console.log('🔄 VOICE_CONTEXT: ========== SYNCING TO NATIVE LAYER ==========');
+        console.log('🔄 VOICE_CONTEXT: About to call updateSettingsRef.current with updates...');
+        const syncStartTime = Date.now();
         
         await updateSettingsRef.current(updates);
         
-        console.log('✅ VOICE_CONTEXT: Settings updated successfully');
+        const syncEndTime = Date.now();
+        console.log('🔄 VOICE_CONTEXT: ========== NATIVE SYNC COMPLETED ==========');
+        console.log('🔄 VOICE_CONTEXT: Sync duration:', (syncEndTime - syncStartTime), 'ms');
+        console.log('✅ VOICE_CONTEXT: Settings updated and synced to native successfully');
       } else {
-        console.log('🔄 VOICE_CONTEXT: No voice settings found in database');
+        console.log('🔄 VOICE_CONTEXT: ========== NO DATABASE SETTINGS FOUND ==========');
+        console.log('🔄 VOICE_CONTEXT: No voice settings found in database for user:', user.id);
+        
+        // Even if no settings in database, sync current settings to ensure native is up to date
+        console.log('🔄 VOICE_CONTEXT: Syncing current settings to native...');
+        await updateSettingsRef.current({});
+        console.log('🔄 VOICE_CONTEXT: Current settings synced to native');
       }
+      
+      console.log('🔄 VOICE_CONTEXT: ========== SETTINGS REFRESH COMPLETED ==========');
     } catch (error) {
+      console.error('❌ VOICE_CONTEXT: ========== SETTINGS REFRESH ERROR ==========');
       console.error('❌ VOICE_CONTEXT: Error refreshing settings:', error);
+      console.error('❌ VOICE_CONTEXT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
     }
   }, [user?.id]);
 
@@ -223,12 +337,30 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               
               const response = await sendMessage(text, updatedHistory);
               console.log('🟠 VOICE_CONTEXT: Received API response');
+              console.log('🔄 VOICE_CONTEXT: Response settings_updated flag:', response.settings_updated);
+              
+              // Check if settings were updated and refresh if needed
+              if (response.settings_updated) {
+                console.log('⚙️ VOICE_CONTEXT: Settings were updated, refreshing from database...');
+                try {
+                  const refreshStartTime = Date.now();
+                  await refreshSettings();
+                  console.log('✅ VOICE_CONTEXT: Settings refreshed successfully');
+                } catch (refreshError) {
+                  console.error('❌ VOICE_CONTEXT: ========== SETTINGS REFRESH FAILED ==========');
+                  console.error('❌ VOICE_CONTEXT: Error refreshing settings:', refreshError);
+                  console.error('❌ VOICE_CONTEXT: Refresh error stack:', refreshError instanceof Error ? refreshError.stack : 'No stack available');
+                }
+              } else {
+                console.log('⚙️ VOICE_CONTEXT: No settings update flag - skipping settings refresh');
+              }
               
               // Send response back to native for TTS (only in voice mode)
               await voiceService.handleApiResponse(requestId, response.response);
               
             } catch (error) {
               console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
+              console.error('🟠 VOICE_CONTEXT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
               
               const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
               
@@ -246,6 +378,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         
       } catch (error) {
         console.error('🟠 VOICE_CONTEXT: ❌ Error in processTextFromNative:', error);
+        console.error('🟠 VOICE_CONTEXT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
         
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         
@@ -258,6 +391,14 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       }
     });
     subscriptions.push(processTextSub);
+    
+    // Listen for native voice settings update confirmations
+    const nativeSettingsUpdateSub = DeviceEventEmitter.addListener('NativeVoiceSettingsUpdated', (event) => {
+      console.log('✅ VOICE_CONTEXT: Native voice settings update confirmed:', event);
+      // This confirms that the native layer has successfully updated its configuration
+      // No additional action needed, but this provides confirmation in logs
+    });
+    subscriptions.push(nativeSettingsUpdateSub);
     
     listenersSetupRef.current = true;
     
@@ -303,7 +444,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
 
   // Clear chat history
   const clearChatHistory = useCallback(async () => {
-    console.log('🗑️ Clearing chat history');
+    console.log('🗑️ Clearing chat history (manual)');
     
     // Save conversation to Supabase before clearing if there are messages
     if (chatHistory.length > 0) {
@@ -357,7 +498,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
 
     try {
+      console.log('📝 TEXT_INPUT: ========== TEXT MESSAGE PROCESSING ==========');
       console.log('📝 TEXT_INPUT: Processing text message:', text);
+      console.log('📝 TEXT_INPUT: Current voice settings:', JSON.stringify(voiceSettings, null, 2));
       
       // Switch to text mode when user sends a text message
       setInputMode('text');
@@ -376,10 +519,40 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         // Send to API with updated history in a separate async operation
         setTimeout(async () => {
           try {
+            console.log('📝 TEXT_INPUT: ========== SENDING TO API ==========');
             console.log('📝 TEXT_INPUT: Sending message to API');
             
+            const apiStartTime = Date.now();
             const response = await sendMessage(text.trim(), updatedHistory);
+            const apiEndTime = Date.now();
+            
+            console.log('📝 TEXT_INPUT: ========== API RESPONSE RECEIVED ==========');
+            console.log('📝 TEXT_INPUT: API call duration:', (apiEndTime - apiStartTime), 'ms');
             console.log('📝 TEXT_INPUT: Received API response');
+            console.log('📝 TEXT_INPUT: Response settings_updated flag:', response.settings_updated);
+            
+            // Check if settings were updated and refresh if needed
+            if (response.settings_updated) {
+              console.log('⚙️ TEXT_INPUT: ========== SETTINGS UPDATE DETECTED ==========');
+              console.log('⚙️ TEXT_INPUT: Settings were updated, refreshing from database...');
+              console.log('⚙️ TEXT_INPUT: Current time:', new Date().toISOString());
+              
+              try {
+                const refreshStartTime = Date.now();
+                await refreshSettings();
+                const refreshEndTime = Date.now();
+                
+                console.log('⚙️ TEXT_INPUT: ========== SETTINGS REFRESH COMPLETED ==========');
+                console.log('⚙️ TEXT_INPUT: Settings refresh duration:', (refreshEndTime - refreshStartTime), 'ms');
+                console.log('✅ TEXT_INPUT: Settings refreshed successfully');
+              } catch (refreshError) {
+                console.error('❌ TEXT_INPUT: ========== SETTINGS REFRESH FAILED ==========');
+                console.error('❌ TEXT_INPUT: Error refreshing settings:', refreshError);
+                console.error('❌ TEXT_INPUT: Refresh error stack:', refreshError instanceof Error ? refreshError.stack : 'No stack available');
+              }
+            } else {
+              console.log('⚙️ TEXT_INPUT: No settings update flag - skipping settings refresh');
+            }
             
             // Add assistant response to chat history
             const assistantMessage: ChatMessage = {
@@ -395,6 +568,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             
           } catch (error) {
             console.error('📝 TEXT_INPUT: ❌ Error processing text message:', error);
+            console.error('📝 TEXT_INPUT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
             
             // Add error message to chat history
             const errorMessage: ChatMessage = {
@@ -412,6 +586,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       
     } catch (error) {
       console.error('📝 TEXT_INPUT: ❌ Error in sendTextMessage:', error);
+      console.error('📝 TEXT_INPUT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
       throw error;
     }
   }, [sendMessage, voiceSettings]);

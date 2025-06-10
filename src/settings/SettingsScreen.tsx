@@ -15,22 +15,64 @@ import { ExpandableSettingsToggle } from './components/ExpandableSettingsToggle'
 import { SettingsDropdown } from './components/SettingsDropdown';
 import { SettingsTextInput } from './components/SettingsTextInput';
 import { SettingsArrayInput } from './components/SettingsArrayInput';
+import { SettingsSlider } from './components/SettingsSlider';
+import { VoiceSelectionDropdown } from './components/VoiceSelectionDropdown';
+import WakeWordService from '../wakeword/WakeWordService';
 
 // Voice Settings interface
 export interface VoiceSettings {
   deepgramEnabled: boolean;
   baseLanguageModel: 'grok-3' | 'grok-3.5' | 'gpt-4o' | 'claude-3-5-sonnet-20241022';
   generalInstructions: string;
-  assistantName: string;
-  wakeWord: string;
+  selectedWakeWord: string;
+  wakeWordSensitivity: number;
   wakeWordDetectionEnabled: boolean;
+  selectedDeepgramVoice: string;
   // XAI LiveSearch settings
   xaiLiveSearchEnabled: boolean;
-  xaiLiveSearchSources: string[];
-  xaiLiveSearchCountry: string;
-  xaiLiveSearchXHandles: string[];
   xaiLiveSearchSafeSearch: boolean;
 }
+
+// Available wake words from Picovoice
+const AVAILABLE_WAKE_WORDS = [
+  { label: 'Bumblebee', value: 'BUMBLEBEE' },
+  { label: 'Grasshopper', value: 'GRASSHOPPER' },
+  { label: 'Jarvis', value: 'JARVIS' },
+  { label: 'Picovoice', value: 'PICOVOICE' },
+  { label: 'Porcupine', value: 'PORCUPINE' },
+  { label: 'Terminator', value: 'TERMINATOR' },
+];
+
+// Available Deepgram Aura voices
+const AVAILABLE_DEEPGRAM_VOICES = [
+  // Featured Aura-2 voices (most popular and versatile)
+  { label: 'Mars', value: 'aura-2-mars-en' },
+  { label: 'Apollo', value: 'aura-2-apollo-en' },
+  { label: 'Arcas', value: 'aura-2-arcas-en' },
+  { label: 'Aries', value: 'aura-2-aries-en' },
+
+  // Legacy voices for compatibility
+  { label: 'Athena', value: 'aura-athena-en' },
+  { label: 'Helios', value: 'aura-helios-en' },
+
+  // Professional voices
+  { label: 'Asteria', value: 'aura-2-asteria-en' },
+  { label: 'Athenia', value: 'aura-2-athena-en' },
+  { label: 'Hermes', value: 'aura-2-hermes-en' },
+
+   // International accents
+   { label: 'Draco', value: 'aura-2-draco-en' },
+   { label: 'Hyperion', value: 'aura-2-hyperion-en' },
+   { label: 'Pandora', value: 'aura-2-pandora-en' },
+  
+  // Additional variety
+  { label: 'Iris', value: 'aura-2-iris-en' },
+  { label: 'Luna', value: 'aura-2-luna-en' },
+  { label: 'Orpheus', value: 'aura-2-orpheus-en' },
+  
+ 
+  
+];
 
 // Model display mapping for UI
 const MODEL_DISPLAY_NAMES = {
@@ -90,7 +132,6 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
   // Add logging for what we receive from VoiceContext
   console.log('🖥️ SETTINGS_SCREEN: Received settings from VoiceContext:', settings);
-  console.log('🖥️ SETTINGS_SCREEN: Settings loading state:', settingsLoading);
 
   // Use ref to avoid dependency cycles
   const refreshSettingsRef = useRef(refreshSettings);
@@ -106,21 +147,17 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const [localGeneralInstructions, setLocalGeneralInstructions] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  console.log('🖥️ SETTINGS_SCREEN: Current localGeneralInstructions state:', localGeneralInstructions);
-  console.log('🖥️ SETTINGS_SCREEN: Has unsaved changes:', hasUnsavedChanges);
+  // State for permissions tooltip
+  const [showPermissionsTooltip, setShowPermissionsTooltip] = useState(false);
 
   // Initialize and sync local state when settings load or change
   useEffect(() => {
-    console.log('🖥️ SETTINGS_SCREEN: useEffect triggered for settings.generalInstructions:', settings.generalInstructions);
     
-    const defaultInstructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
-    const currentInstructions = settings.generalInstructions || defaultInstructions;
+          const currentInstructions = settings.generalInstructions || '';
     
-    console.log('🖥️ SETTINGS_SCREEN: Setting localGeneralInstructions to:', currentInstructions);
     setLocalGeneralInstructions(currentInstructions);
     setHasUnsavedChanges(false);
     
-    console.log('🖥️ SETTINGS_SCREEN: useEffect completed, localGeneralInstructions should now be:', currentInstructions);
   }, [settings.generalInstructions]);
 
   // Refresh settings from database every time user navigates to Settings
@@ -163,12 +200,11 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   }, [user?.id]);
 
   // Handle local text changes (no database update)
-  const handleGeneralInstructionsChange = (text: string) => {
-    setLocalGeneralInstructions(text);
-    const defaultInstructions = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
-    const currentSaved = settings.generalInstructions || defaultInstructions;
-    setHasUnsavedChanges(text !== currentSaved);
-  };
+      const handleGeneralInstructionsChange = (text: string) => {
+      setLocalGeneralInstructions(text);
+      const currentSaved = settings.generalInstructions || '';
+      setHasUnsavedChanges(text !== currentSaved);
+    };
 
   // Save general instructions to database
   const saveGeneralInstructions = async () => {
@@ -222,13 +258,18 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         try {
           // Convert camelCase keys to snake_case for database
           const dbUpdates = Object.keys(updates).reduce((acc, key) => {
-            const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+            let dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
             let value = updates[key];
             
-            // Ensure general_instructions always has a default value
-            if (dbKey === 'general_instructions' && (!value || value.trim() === '')) {
-              value = 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.';
+            // Map selectedWakeWord to wake_word (consolidating duplicate fields)
+            if (key === 'selectedWakeWord') {
+              dbKey = 'wake_word';
             }
+            
+                          // Allow empty general_instructions
+              if (dbKey === 'general_instructions' && value === null) {
+                value = '';
+              }
             
             acc[dbKey] = value;
             return acc;
@@ -269,7 +310,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.title}>Settings</Text>
+          {/* <Text style={styles.title}>Settings</Text> */}
           {savingToDatabase && (
             <View style={styles.savingIndicator}>
               <ActivityIndicator size="small" color="#4A90E2" />
@@ -282,8 +323,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Wake Word</Text>
           <View style={styles.wakeWordExplanation}>
             <Text style={styles.explanationText}>
-              The wake word is the word you will use to activate and speak to your assistant.
-              You do not have to have the app open to activate your assistant.
+              Settings below can be manually changed or just tell your assistant e.g. "make wake word detection less sensitive" or "go to sleep"
             </Text>
           </View>
           <WakeWordToggle />
@@ -291,7 +331,23 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         </View>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Permissions</Text>
+          <View style={styles.sectionHeaderWithInfo}>
+            <Text style={styles.sectionTitle}>Permissions</Text>
+            <TouchableOpacity
+              style={styles.infoIcon}
+              onPress={() => setShowPermissionsTooltip(!showPermissionsTooltip)}
+            >
+              <Ionicons name="information-circle-outline" size={20} color="#B0B0B0" />
+            </TouchableOpacity>
+          </View>
+          
+          {showPermissionsTooltip && (
+            <View style={styles.permissionsTooltip}>
+              <Text style={styles.explanationText}>
+                Your assistant cannot change permissions for you
+              </Text>
+            </View>
+          )}
           
           <View style={styles.permissionItem}>
             <Text style={styles.permissionTitle}>Microphone Access</Text>
@@ -335,9 +391,10 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               label="General Instructions"
               value={localGeneralInstructions}
               onChangeText={handleGeneralInstructionsChange}
-              placeholder="Enter instructions for the AI assistant..."
+              placeholder="e.g. 'Keep your responses to a few sentences'"
               description="Custom instructions to guide the AI's behavior and responses"
               multiline={true}
+              maxCharacters={1000}
             />
             
             {hasUnsavedChanges && (
@@ -361,35 +418,127 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             )}
           </View>
 
-          <SettingsTextInput
-            label="Assistant Name"
-            value={settings.assistantName || ''}
-            onChangeText={async (assistantName: string) => {
-              await handleVoiceSettingsUpdate({ assistantName });
-            }}
-            placeholder="Assistant"
-            description="The name of your AI assistant"
-          />
+          <View style={styles.wakeWordSettingsCard}>
+            <SettingsDropdown
+              label="Wake Word"
+              value={settings.selectedWakeWord || 'JARVIS'}
+              options={AVAILABLE_WAKE_WORDS}
+              onValueChange={async (selectedWakeWord) => {
+                console.log('🎯 WAKEWORD_SELECTION: Wake word changed in settings screen');
+                console.log('🎯 WAKEWORD_SELECTION: Previous wake word:', settings.selectedWakeWord || 'JARVIS');
+                console.log('🎯 WAKEWORD_SELECTION: New wake word:', selectedWakeWord);
+                console.log('🎯 WAKEWORD_SELECTION: Available options:', AVAILABLE_WAKE_WORDS.map(w => w.value));
+                
+                // Update both the voice settings and the native wake word module
+                await Promise.all([
+                  handleVoiceSettingsUpdate({ selectedWakeWord }),
+                  (async () => {
+                    try {
+                      const wakeWordService = WakeWordService.getInstance();
+                      const success = await wakeWordService.setSelectedWakeWord(selectedWakeWord);
+                      if (success) {
+                        console.log('🎯 WAKEWORD_SELECTION: ✅ Successfully synced wake word to native module');
+                        
+                        // Restart wake word detection if currently running to apply changes
+                        const isRunning = await wakeWordService.isWakeWordDetectionRunning();
+                        if (isRunning) {
+                          console.log('🔄 Restarting wake word detection to apply new wake word...');
+                          await wakeWordService.stopWakeWordDetection();
+                          await new Promise(resolve => setTimeout(resolve, 500));
+                          await wakeWordService.startWakeWordDetection();
+                          console.log('✅ Wake word detection restarted with new wake word');
+                        }
+                      } else {
+                        console.error('🎯 WAKEWORD_SELECTION: ❌ Failed to sync wake word to native module');
+                      }
+                    } catch (error) {
+                      console.error('🎯 WAKEWORD_SELECTION: ❌ Error syncing wake word to native module:', error);
+                    }
+                  })()
+                ]);
+                
+                console.log('🎯 WAKEWORD_SELECTION: ✅ Wake word setting update completed');
+              }}
+              description="The word you say to activate your assistant."
+            />
 
-          <SettingsTextInput
-            label="Wake Word"
-            value={settings.wakeWord || ''}
-            onChangeText={async (wakeWord: string) => {
-              await handleVoiceSettingsUpdate({ wakeWord });
-            }}
-            placeholder="Jarvis"
-            description="The word you'll say to activate voice recognition"
-          />
+            <View style={styles.indentedSetting}>
+              <SettingsSlider
+                label="Wake Word Sensitivity"
+                value={settings.wakeWordSensitivity || 0.3}
+              onValueChange={async (wakeWordSensitivity) => {
+                console.log('🎚️ WAKEWORD_SENSITIVITY: Sensitivity changed in settings screen');
+                console.log('🎚️ WAKEWORD_SENSITIVITY: Previous sensitivity:', settings.wakeWordSensitivity || 0.3);
+                console.log('🎚️ WAKEWORD_SENSITIVITY: New sensitivity:', wakeWordSensitivity);
+                console.log('🎚️ WAKEWORD_SENSITIVITY: Percentage:', `${Math.round(wakeWordSensitivity * 100)}%`);
+                
+                // Update both the voice settings and the native wake word module
+                await Promise.all([
+                  handleVoiceSettingsUpdate({ wakeWordSensitivity }),
+                  (async () => {
+                    try {
+                      const wakeWordService = WakeWordService.getInstance();
+                      const success = await wakeWordService.setWakeWordSensitivity(wakeWordSensitivity);
+                      if (success) {
+                        console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Successfully synced sensitivity to native module');
+                        
+                        // Restart wake word detection if currently running to apply changes
+                        const isRunning = await wakeWordService.isWakeWordDetectionRunning();
+                        if (isRunning) {
+                          console.log('🔄 Restarting wake word detection to apply new sensitivity...');
+                          await wakeWordService.stopWakeWordDetection();
+                          await new Promise(resolve => setTimeout(resolve, 500));
+                          await wakeWordService.startWakeWordDetection();
+                          console.log('✅ Wake word detection restarted with new sensitivity');
+                        }
+                      } else {
+                        console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Failed to sync sensitivity to native module');
+                      }
+                    } catch (error) {
+                      console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Error syncing sensitivity to native module:', error);
+                    }
+                  })()
+                ]);
+                
+                console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Sensitivity setting update completed');
+              }}
+              minimumValue={0}
+              maximumValue={1}
+              step={0.1}
+              description="The sensitivity level for wake word detection (0 = less sensitive, 1 = more sensitive)."
+              formatValue={(value) => `${Math.round(value * 100)}%`}
+              />
+            </View>
+          </View>
 
           <ExpandableSettingsToggle
             label="Deepgram Voice"
             value={settings.deepgramEnabled}
             onValueChange={async (deepgramEnabled) => {
+              console.log('🎵 DEEPGRAM_TOGGLE: Deepgram voice toggled in settings screen');
+              console.log('🎵 DEEPGRAM_TOGGLE: Previous enabled state:', settings.deepgramEnabled);
+              console.log('🎵 DEEPGRAM_TOGGLE: New enabled state:', deepgramEnabled);
               await handleVoiceSettingsUpdate({ deepgramEnabled });
+              console.log('🎵 DEEPGRAM_TOGGLE: ✅ Deepgram toggle update completed');
             }}
-            description="Determine how your assistant sounds."
+            description="Choose from a variety of voices; when disabled, the application falls back to on device text-to-speech."
             hasSubSettings={true}
-          />
+          >
+            <VoiceSelectionDropdown
+              label="Voice Selection"
+              value={settings.selectedDeepgramVoice || 'aura-2-mars-en'}
+              options={AVAILABLE_DEEPGRAM_VOICES}
+              onValueChange={async (selectedDeepgramVoice) => {
+                console.log('🎵 DEEPGRAM_SELECTION: Deepgram voice selected in settings screen');
+                console.log('🎵 DEEPGRAM_SELECTION: Previous voice:', settings.selectedDeepgramVoice || 'aura-2-mars-en');
+                console.log('🎵 DEEPGRAM_SELECTION: New voice:', selectedDeepgramVoice);
+                console.log('🎵 DEEPGRAM_SELECTION: Available voices:', AVAILABLE_DEEPGRAM_VOICES.map(v => v.value));
+                await handleVoiceSettingsUpdate({ selectedDeepgramVoice });
+                console.log('🎵 DEEPGRAM_SELECTION: ✅ Deepgram voice setting update completed');
+              }}
+              description="Choose the voice for your assistant's responses. Tap Preview to hear each voice."
+            />
+          </ExpandableSettingsToggle>
 
           <SettingsDropdown
             label="Model Selection"
@@ -401,7 +550,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             onValueChange={async (baseLanguageModel) => {
               await handleVoiceSettingsUpdate({ baseLanguageModel });
             }}
-            description="These models are used for chat only and satisfy different style/personality preferences; other models are used for complex backend tasks."
+            description="The model used for chat; other models are used for complex backend tasks."
           />
 
           <ExpandableSettingsToggle
@@ -413,53 +562,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             description="Make XAI LiveSearch the default search tool.  If toggled off, your assistant will default to a traditional web search engine."
             hasSubSettings={true}
           >
-            <View style={styles.sourcesContainer}>
-              <Text style={styles.sourcesLabel}>Search Sources</Text>
-              <Text style={styles.sourcesDescription}>
-                Select which data sources to include in search. Defaults to web and Twitter/X if none selected.
+            <View style={styles.noteContainer}>
+              <Text style={styles.noteText}>
+                💡 You can specify specific X handles in your request (e.g., "search X posts from ShelbyTalcott about recent updates from the White House")
               </Text>
-              {[
-                { key: 'web', label: 'Web', description: 'Search general websites' },
-                { key: 'x', label: 'Twitter/X', description: 'Search X posts and content' },
-                { key: 'news', label: 'News', description: 'Search news sources' },
-                { key: 'rss', label: 'RSS Feeds', description: 'Search RSS feed content' },
-              ].map((source) => (
-                <SettingsToggle
-                  key={source.key}
-                  label={source.label}
-                  value={(settings.xaiLiveSearchSources || []).includes(source.key)}
-                  onValueChange={async (enabled) => {
-                    const currentSources = settings.xaiLiveSearchSources || [];
-                    const newSources = enabled
-                      ? [...currentSources.filter((s: string) => s !== source.key), source.key]
-                      : currentSources.filter((s: string) => s !== source.key);
-                    await handleVoiceSettingsUpdate({ xaiLiveSearchSources: newSources });
-                  }}
-                  description={source.description}
-                />
-              ))}
             </View>
-
-            <SettingsTextInput
-              label="Country Code"
-              value={settings.xaiLiveSearchCountry || ''}
-              onChangeText={async (xaiLiveSearchCountry: string) => {
-                await handleVoiceSettingsUpdate({ xaiLiveSearchCountry });
-              }}
-              placeholder="US"
-              description="ISO alpha-2 country code (e.g., US, GB, DE) for regional search focus. Defaults to all regions if none selected."
-            />
-
-            <SettingsArrayInput
-              label="X Handles"
-              values={settings.xaiLiveSearchXHandles || []}
-              onValuesChange={async (xaiLiveSearchXHandles: string[]) => {
-                await handleVoiceSettingsUpdate({ xaiLiveSearchXHandles });
-              }}
-              placeholder="Enter X handle (without @)"
-              description="Specify X handles to search posts from. Enter handles without the @ symbol (e.g., 'stephencurry30')."
-            />
-
+            
             <SettingsToggle
               label="Safe Search"
               value={settings.xaiLiveSearchSafeSearch !== false}
@@ -530,6 +638,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '500',
     color: '#FFFFFF',
+  },
+  sectionHeaderWithInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  infoIcon: {
+    marginLeft: 8,
+  },
+  permissionsTooltip: {
+    backgroundColor: '#1E1E1E',
+    padding: 16,
+    borderRadius: 8,
     marginBottom: 16,
   },
   wakeWordExplanation: {
@@ -655,5 +776,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 16,
+  },
+  wakeWordSettingsCard: {
+    backgroundColor: '#1E1E1E',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  indentedSetting: {
+    marginLeft: 16,
+    marginTop: 8,
+  },
+  noteContainer: {
+    backgroundColor: '#2A2A2A',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: '#4A90E2',
+  },
+  noteText: {
+    color: '#B0B0B0',
+    fontSize: 14,
+    lineHeight: 20,
   },
 }); 

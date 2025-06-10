@@ -11,10 +11,12 @@ export class UserProfileService {
         id: userId,
         display_name: displayName,
         deepgram_enabled: false,
-        base_language_model: 'grok-3',
-        general_instructions: 'You are a helpful AI assistant. Be concise, accurate, and friendly in your responses.',
-        assistant_name: 'Jarvis',
-        wake_word: 'Hey Jarvis',
+        base_language_model: 'claude-3-5-sonnet-20241022',
+        general_instructions: '',
+        wake_word: 'Jarvis',
+        wake_word_sensitivity: 0.3,
+        wake_word_detection_enabled: false,
+        selected_deepgram_voice: 'aura-2-mars-en',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         preferences: {
           theme: 'system',
@@ -24,7 +26,10 @@ export class UserProfileService {
             personalizedExperience: true
           },
           language: 'en'
-        }
+        },
+        // XAI LiveSearch defaults
+        xai_live_search_enabled: false,
+        xai_live_search_safe_search: true,
       };
 
       const { data, error } = await supabase

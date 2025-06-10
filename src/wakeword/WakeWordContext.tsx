@@ -4,6 +4,7 @@ import { Alert } from 'react-native';
 import { checkWakeWordPermissions, requestWakeWordPermissions } from '../settings/permissions';
 import { VoiceState } from '../voice/VoiceService';
 import { useVoiceState } from '../voice/hooks/useVoiceState';
+import { useVoice } from '../voice/VoiceContext';
 
 interface WakeWordContextType {
     isEnabled: boolean;
@@ -32,42 +33,101 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     // Get voice state to coordinate with ongoing conversations
     const { voiceState } = useVoiceState();
+    
+    // Get voice settings to sync wake word configuration - this is the database-backed source of truth
+    const { voiceSettings, settingsLoading, updateVoiceSettings } = useVoice();
 
-    // Sync state with native module
+    // Sync wake word enabled state with database-backed voice settings
+    useEffect(() => {
+        if (!settingsLoading && voiceSettings?.wakeWordDetectionEnabled !== undefined) {
+            const databaseEnabledState = voiceSettings.wakeWordDetectionEnabled;
+            
+            console.log('🔄 WAKE_WORD_CONTEXT: Syncing with database-backed voice settings');
+            console.log('🔄 WAKE_WORD_CONTEXT: Database wake word enabled:', databaseEnabledState);
+            console.log('🔄 WAKE_WORD_CONTEXT: Current local enabled:', isEnabled);
+            
+            // Only sync if the database value is different from local state
+            if (databaseEnabledState !== isEnabled) {
+                console.log('🔄 WAKE_WORD_CONTEXT: Database state differs from local, syncing...');
+                syncWithDatabaseState(databaseEnabledState);
+            }
+        }
+    }, [voiceSettings?.wakeWordDetectionEnabled, settingsLoading, isEnabled]);
+
+    // Sync with database state without triggering database updates
+    const syncWithDatabaseState = useCallback(async (databaseEnabledState: boolean) => {
+        try {
+            console.log('🔄 WAKE_WORD_CONTEXT: Syncing to database state:', databaseEnabledState);
+            
+            // Update local state first
+            setIsEnabled(databaseEnabledState);
+            
+            // Sync native layer to match database state
+            const nativeSuccess = await wakeWordService.setWakeWordEnabled(databaseEnabledState);
+            
+            if (nativeSuccess) {
+                console.log('✅ WAKE_WORD_CONTEXT: Native layer synced with database state');
+                
+                if (databaseEnabledState) {
+                    // If enabled, start detection
+                    const runningState = await wakeWordService.isWakeWordDetectionRunning();
+                    setIsRunning(runningState);
+                    
+                    if (!runningState) {
+                        console.log('🎤 WAKE_WORD_CONTEXT: Starting detection to match enabled state');
+                        await wakeWordService.startWakeWordDetection();
+                        setIsRunning(true);
+                    }
+                } else {
+                    // If disabled, stop detection
+                    setIsRunning(false);
+                }
+            } else {
+                console.error('❌ WAKE_WORD_CONTEXT: Failed to sync native layer with database state');
+                // Re-sync state on failure
+                await syncState();
+            }
+        } catch (error) {
+            console.error('❌ WAKE_WORD_CONTEXT: Error syncing with database state:', error);
+            await syncState();
+        }
+    }, []);
+
+    // Sync state with native module (fallback method)
     const syncState = useCallback(async () => {
         try {
             const status = await wakeWordService.isWakeWordEnabled();
-            console.log('🔄 Syncing wake word state:', status);
+            console.log('🔄 WAKE_WORD_CONTEXT: Native wake word state:', status);
             
             // Only update state if it's different to avoid unnecessary re-renders
             if (isEnabled !== status) {
-                console.log('📝 Updating enabled state:', status);
+                console.log('📝 WAKE_WORD_CONTEXT: Updating enabled state from native:', status);
                 setIsEnabled(status);
             }
             
             if (status) {
                 const running = await wakeWordService.isWakeWordDetectionRunning();
-                console.log('🔄 Syncing running state:', running);
+                console.log('🔄 WAKE_WORD_CONTEXT: Native running state:', running);
                 
                 if (isRunning !== running) {
-                    console.log('📝 Updating running state:', running);
+                    console.log('📝 WAKE_WORD_CONTEXT: Updating running state from native:', running);
                     setIsRunning(running);
                 }
                 
                 if (!running && status) {
-                    console.log('🔄 Auto-starting wake word detection');
+                    console.log('🔄 WAKE_WORD_CONTEXT: Auto-starting wake word detection');
                     await wakeWordService.startWakeWordDetection();
                     setIsRunning(true);
                 }
             } else {
                 // If not enabled, ensure running is false
                 if (isRunning) {
-                    console.log('📝 Setting running to false because enabled is false');
+                    console.log('📝 WAKE_WORD_CONTEXT: Setting running to false because enabled is false');
                     setIsRunning(false);
                 }
             }
         } catch (error) {
-            console.error('❌ Error syncing wake word state:', error);
+            console.error('❌ WAKE_WORD_CONTEXT: Error syncing wake word state:', error);
         }
     }, [isEnabled, isRunning]);
 
@@ -77,29 +137,49 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         
         const initialize = async () => {
             try {
-                // Initial state check
-                const status = await wakeWordService.isWakeWordEnabled();
-                console.log('🚀 Initial wake word state:', status);
+                console.log('🚀 WAKE_WORD_CONTEXT: Initializing wake word context...');
                 
-                if (mounted) {
-                    setIsEnabled(status);
+                // Wait for voice settings to load if they're still loading
+                if (settingsLoading) {
+                    console.log('🚀 WAKE_WORD_CONTEXT: Waiting for voice settings to load...');
+                    return; // This effect will re-run when settingsLoading changes
+                }
+                
+                // If voice settings are available, use them as the source of truth
+                if (voiceSettings?.wakeWordDetectionEnabled !== undefined) {
+                    const databaseEnabledState = voiceSettings.wakeWordDetectionEnabled;
+                    console.log('🚀 WAKE_WORD_CONTEXT: Using database state as initial state:', databaseEnabledState);
                     
-                    if (status) {
-                        const running = await wakeWordService.isWakeWordDetectionRunning();
-                        console.log('🚀 Initial running state:', running);
-                        setIsRunning(running);
-                        
-                        if (!running) {
-                            console.log('🚀 Starting wake word detection during initialization');
-                            await wakeWordService.startWakeWordDetection();
-                            setIsRunning(true);
-                        }
+                    if (mounted) {
+                        await syncWithDatabaseState(databaseEnabledState);
+                        setIsInitialized(true);
                     }
+                } else {
+                    // Fallback to native state if database settings aren't available
+                    console.log('🚀 WAKE_WORD_CONTEXT: Database settings not available, using native state');
+                    const status = await wakeWordService.isWakeWordEnabled();
+                    console.log('🚀 WAKE_WORD_CONTEXT: Initial native wake word state:', status);
                     
-                    setIsInitialized(true);
+                    if (mounted) {
+                        setIsEnabled(status);
+                        
+                        if (status) {
+                            const running = await wakeWordService.isWakeWordDetectionRunning();
+                            console.log('🚀 WAKE_WORD_CONTEXT: Initial native running state:', running);
+                            setIsRunning(running);
+                            
+                            if (!running) {
+                                console.log('🚀 WAKE_WORD_CONTEXT: Starting wake word detection during initialization');
+                                await wakeWordService.startWakeWordDetection();
+                                setIsRunning(true);
+                            }
+                        }
+                        
+                        setIsInitialized(true);
+                    }
                 }
             } catch (error) {
-                console.error('❌ Error during initialization:', error);
+                console.error('❌ WAKE_WORD_CONTEXT: Error during initialization:', error);
                 if (mounted) {
                     setIsEnabled(false);
                     setIsRunning(false);
@@ -113,7 +193,7 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return () => {
             mounted = false;
         };
-    }, []);
+    }, [settingsLoading, voiceSettings?.wakeWordDetectionEnabled]);
 
     // Subscribe to wake word detection events
     useEffect(() => {
@@ -142,33 +222,29 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const setEnabled = async (enabled: boolean) => {
         try {
-            console.log('🔄 Setting wake word enabled:', enabled);
+            console.log('🔄 WAKE_WORD_CONTEXT: Setting wake word enabled via context:', enabled);
             
             if (enabled) {
                 // Check permissions first
                 const permissionsResult = await checkWakeWordPermissions();
                 if (!permissionsResult.granted) {
-                    console.log('📝 Need to request wake word permissions');
+                    console.log('📝 WAKE_WORD_CONTEXT: Need to request wake word permissions');
                     const requestResult = await requestWakeWordPermissions();
                     if (!requestResult.granted) {
-                        console.error('❌ Permission request denied');
+                        console.error('❌ WAKE_WORD_CONTEXT: Permission request denied');
                         throw new Error('Microphone permission is required for wake word detection');
                     }
                 }
             }
             
-            const success = await wakeWordService.setWakeWordEnabled(enabled);
+            // Update both local state and database-backed voice settings
+            console.log('🔄 WAKE_WORD_CONTEXT: Updating database-backed voice settings...');
+            await updateVoiceSettings({ wakeWordDetectionEnabled: enabled });
             
-            if (success) {
-                setIsEnabled(enabled);
-                setIsRunning(enabled);
-                console.log('✅ Wake word state updated successfully');
-            } else {
-                console.error('❌ Failed to set wake word enabled state');
-                await syncState(); // Resync state on failure
-            }
+            // The database update will trigger the useEffect above which will sync the native layer
+            console.log('✅ WAKE_WORD_CONTEXT: Wake word state update initiated');
         } catch (error) {
-            console.error('❌ Error setting wake word enabled state:', error);
+            console.error('❌ WAKE_WORD_CONTEXT: Error setting wake word enabled state:', error);
             
             // Show user-friendly error message
             if (error instanceof Error && error.message.includes('permission')) {
@@ -188,12 +264,12 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const startDetection = async () => {
         try {
-            console.log('🎤 Starting wake word detection');
+            console.log('🎤 WAKE_WORD_CONTEXT: Starting wake word detection');
             await wakeWordService.startWakeWordDetection();
             setIsRunning(true);
-            console.log('✅ Wake word detection started');
+            console.log('✅ WAKE_WORD_CONTEXT: Wake word detection started');
         } catch (error) {
-            console.error('❌ Error starting wake word detection:', error);
+            console.error('❌ WAKE_WORD_CONTEXT: Error starting wake word detection:', error);
             await syncState(); // Resync state on error
             throw error;
         }
@@ -201,12 +277,12 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const stopDetection = async () => {
         try {
-            console.log('🛑 Stopping wake word detection');
+            console.log('🛑 WAKE_WORD_CONTEXT: Stopping wake word detection');
             await wakeWordService.stopWakeWordDetection();
             setIsRunning(false);
-            console.log('✅ Wake word detection stopped');
+            console.log('✅ WAKE_WORD_CONTEXT: Wake word detection stopped');
         } catch (error) {
-            console.error('❌ Error stopping wake word detection:', error);
+            console.error('❌ WAKE_WORD_CONTEXT: Error stopping wake word detection:', error);
             await syncState(); // Resync state on error
             throw error;
         }

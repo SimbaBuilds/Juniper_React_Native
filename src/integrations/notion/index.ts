@@ -1,3 +1,3 @@
-export { NotionService } from './NotionService';
-export { useNotion } from './useNotion';
-export { NotionManager } from './NotionManager'; 
+export { NotionManager } from './NotionManager';
+export { NotionAuthService } from './NotionAuthService';
+export { NotionService } from './NotionService'; 

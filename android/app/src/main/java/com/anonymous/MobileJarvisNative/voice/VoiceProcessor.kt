@@ -7,6 +7,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.SupervisorJob
+import kotlin.coroutines.suspendCoroutine
+import kotlin.coroutines.resume
 import org.json.JSONObject
 import java.io.File
 import com.anonymous.MobileJarvisNative.voice.DeepgramClient
@@ -193,18 +196,138 @@ class ModularVoiceProcessor(private val context: Context) : VoiceProcessor {
     }
     
     override fun speak(text: String, onComplete: () -> Unit) {
-        Log.i(TAG, "Speaking with System TTS: $text")
         try {
-            // Use system TTS directly - simpler and more reliable
+            // Check SharedPreferences for Deepgram settings
+            val deepgramPrefs = context.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
+            val deepgramEnabled = deepgramPrefs.getBoolean("deepgram_enabled", false)
+            val selectedVoice = deepgramPrefs.getString("selected_voice", "aura-2-draco-en") ?: "aura-2-draco-en"
+            
+            Log.i(TAG, "🎵 TTS_DECISION: ========== TTS Decision Logic ==========")
+            Log.i(TAG, "🎵 TTS_DECISION: Text to speak: '${text.take(100)}${if(text.length > 100) "..." else ""}'")
+            Log.i(TAG, "🎵 TTS_DECISION: Deepgram enabled: $deepgramEnabled")
+            Log.i(TAG, "🎵 TTS_DECISION: Selected voice: $selectedVoice")
+            Log.i(TAG, "🎵 TTS_DECISION: Decision: ${if(deepgramEnabled) "Try Deepgram first, fallback to System" else "Use System TTS directly"}")
+            Log.i(TAG, "🎵 TTS_DECISION: ==========================================")
+            
+            if (deepgramEnabled) {
+                // Try Deepgram first, fallback to System TTS
+                tryDeepgramWithFallback(text, onComplete)
+            } else {
+                // Use System TTS directly
+                useSystemTTS(text, onComplete)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in speak() decision logic", e)
+            // Fallback to system TTS on any error
+            useSystemTTS(text, onComplete)
+        }
+    }
+    
+    /**
+     * Try Deepgram TTS with fallback to System TTS
+     */
+    private fun tryDeepgramWithFallback(text: String, onComplete: () -> Unit) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val deepgramSuccess = attemptDeepgramTTS(text)
+                withContext(Dispatchers.Main) {
+                    if (!deepgramSuccess) {
+                        Log.w(TAG, "🎵 TTS_FALLBACK: Deepgram failed, falling back to System TTS")
+                        useSystemTTS(text, onComplete)
+                    } else {
+                        Log.i(TAG, "🎵 TTS_SUCCESS: Deepgram TTS completed successfully")
+                        isSpeaking = false
+                        onComplete()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "🎵 TTS_ERROR: Error in Deepgram attempt: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    useSystemTTS(text, onComplete)
+                }
+            }
+        }
+    }
+    
+    /**
+     * Use System TTS
+     */
+    private fun useSystemTTS(text: String, onComplete: () -> Unit) {
+        Log.i(TAG, "🎵 SYSTEM_TTS: Using System TTS for: '${text.take(50)}${if(text.length > 50) "..." else ""}'")
+        try {
             isSpeaking = true
             TextToSpeechManager.speak(text) {
                 isSpeaking = false
                 onComplete()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error speaking with System TTS", e)
+            Log.e(TAG, "🎵 SYSTEM_TTS: Error with System TTS", e)
             isSpeaking = false
             onComplete()
+        }
+    }
+    
+    /**
+     * Attempt Deepgram TTS
+     */
+    private suspend fun attemptDeepgramTTS(text: String): Boolean {
+        return try {
+            Log.i(TAG, "🎵 DEEPGRAM_TTS: Attempting Deepgram TTS...")
+            
+            val deepgramClient = getOrCreateDeepgramClient()
+            val prefs = context.getSharedPreferences("deepgram_prefs", Context.MODE_PRIVATE)
+            val voice = prefs.getString("selected_voice", "aura-2-draco-en") ?: "aura-2-draco-en"
+            
+            // Validate configuration
+            val validation = deepgramClient.validateConfiguration()
+            if (!validation.isValid) {
+                Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Configuration invalid: ${validation.issues.joinToString("; ")}")
+                return false
+            }
+            
+            // Set speaking flag
+            withContext(Dispatchers.Main) {
+                isSpeaking = true
+            }
+            
+            // Use a suspendCoroutine to wait for actual TTS completion
+            return suspendCoroutine { continuation ->
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        // Attempt synthesis and playback with completion callback
+                        deepgramClient.convertTextToSpeech(text) {
+                            // This is called when TTS actually finishes playing
+                            Log.i(TAG, "🎵 DEEPGRAM_TTS: ✅ Deepgram TTS playback completed successfully")
+                            isSpeaking = false
+                            continuation.resume(true)
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Deepgram TTS failed: ${e.message}", e)
+                        isSpeaking = false
+                        continuation.resume(false)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "🎵 DEEPGRAM_TTS: ❌ Deepgram TTS failed: ${e.message}", e)
+            withContext(Dispatchers.Main) {
+                isSpeaking = false
+            }
+            false
+        }
+    }
+    
+    /**
+     * Get or create Deepgram client instance
+     */
+    private var deepgramClient: DeepgramClient? = null
+    
+    private fun getOrCreateDeepgramClient(): DeepgramClient {
+        return deepgramClient ?: run {
+            val client = DeepgramClient.getInstance(context)
+            client.initialize()
+            deepgramClient = client
+            client
         }
     }
     

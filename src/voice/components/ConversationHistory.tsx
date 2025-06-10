@@ -52,7 +52,9 @@ export const ConversationHistory: React.FC<ConversationHistoryProps> = ({
     
     try {
       const summaries = await conversationService.getRecentConversations();
-      setConversations(summaries.map(summary => ({
+      // Limit to most recent 20 conversations
+      const recentSummaries = summaries.slice(0, 20);
+      setConversations(recentSummaries.map(summary => ({
         ...summary,
         isExpanded: false,
         isLoading: false,
@@ -66,6 +68,7 @@ export const ConversationHistory: React.FC<ConversationHistoryProps> = ({
     }
   };
 
+  // Rest of the component remains unchanged...
   const refreshConversations = async () => {
     console.log('🔄 Refreshing conversation history...');
     setHasLoaded(false); // Reset loaded state to force reload

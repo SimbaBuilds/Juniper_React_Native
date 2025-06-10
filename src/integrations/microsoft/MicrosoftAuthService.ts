@@ -2,13 +2,27 @@ import { Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { supabase } from '../../supabase/supabase';
-import type { OutlookCalendarIntegration } from '../../supabase/tables';
 
-// Microsoft Graph API configuration
-const OUTLOOK_CONFIG = {
+// Microsoft Graph API configuration - unified for all services
+const MICROSOFT_CONFIG = {
   CLIENT_ID: Constants.expoConfig?.extra?.OUTLOOK_CLIENT_ID,
   TENANT_ID: Constants.expoConfig?.extra?.OUTLOOK_TENANT_ID || 'common',
-  SCOPES: 'https://graph.microsoft.com/Calendars.Read https://graph.microsoft.com/Calendars.Read.Shared',
+  // Combined scopes for all Microsoft services
+  SCOPES: [
+    // Calendar scopes
+    'https://graph.microsoft.com/Calendars.Read',
+    'https://graph.microsoft.com/Calendars.Read.Shared',
+    'https://graph.microsoft.com/Calendars.ReadWrite',
+    // Email scopes
+    'https://graph.microsoft.com/Mail.Read',
+    'https://graph.microsoft.com/Mail.ReadWrite',
+    'https://graph.microsoft.com/Mail.Send',
+    // OneDrive scopes
+    'https://graph.microsoft.com/Files.Read',
+    'https://graph.microsoft.com/Files.Read.All',
+    // Contacts scope
+    'https://graph.microsoft.com/Contacts.Read',
+  ].join(' '),
   get REDIRECT_URI() {
     const clientId = this.CLIENT_ID;
     if (!clientId) {
@@ -19,62 +33,30 @@ const OUTLOOK_CONFIG = {
   },
 };
 
-interface CalendarEvent {
-  id: string;
-  subject: string;
-  body?: {
-    content: string;
-    contentType: string;
-  };
-  start: {
-    dateTime: string;
-    timeZone: string;
-  };
-  end: {
-    dateTime: string;
-    timeZone: string;
-  };
-  location?: {
-    displayName: string;
-  };
-  attendees?: Array<{
-    emailAddress: {
-      name?: string;
-      address: string;
-    };
-    status: {
-      response: string;
-    };
-  }>;
-}
-
-interface OutlookCalendarAuth {
+interface MicrosoftAuth {
   accessToken: string;
   refreshToken: string;
   expiresAt: number;
-}
-
-interface EventsListResponse {
-  value: CalendarEvent[];
-  '@odata.nextLink'?: string;
+  scope: string;
 }
 
 /**
- * Service for handling Outlook Calendar integration using Microsoft Graph API
+ * Unified Microsoft authentication service for all Microsoft integrations
+ * Handles OAuth flow and token management for Outlook Calendar, Email, OneDrive, and Contacts
  */
-export class OutlookCalendarService {
-  private static instance: OutlookCalendarService | null = null;
-  private authData: OutlookCalendarAuth | null = null;
+export class MicrosoftAuthService {
+  private static instance: MicrosoftAuthService | null = null;
+  private authData: MicrosoftAuth | null = null;
   private isInitialized = false;
   private authCallbacks: Array<(isAuthenticated: boolean) => void> = [];
 
   private constructor() {}
 
-  public static getInstance(): OutlookCalendarService {
-    if (!OutlookCalendarService.instance) {
-      OutlookCalendarService.instance = new OutlookCalendarService();
+  public static getInstance(): MicrosoftAuthService {
+    if (!MicrosoftAuthService.instance) {
+      MicrosoftAuthService.instance = new MicrosoftAuthService();
     }
-    return OutlookCalendarService.instance;
+    return MicrosoftAuthService.instance;
   }
 
   /**
@@ -113,8 +95,8 @@ export class OutlookCalendarService {
    */
   async initialize(): Promise<void> {
     try {
-      if (!OUTLOOK_CONFIG.CLIENT_ID) {
-        throw new Error('Outlook Calendar credentials not configured. Please set OUTLOOK_CLIENT_ID environment variable');
+      if (!MICROSOFT_CONFIG.CLIENT_ID) {
+        throw new Error('Microsoft credentials not configured. Please set OUTLOOK_CLIENT_ID environment variable');
       }
       
       await this.loadAuthData();
@@ -125,11 +107,11 @@ export class OutlookCalendarService {
       
       this.isInitialized = true;
       
-      console.log('OutlookCalendarService initialized');
-      console.log('Using redirect URI:', OUTLOOK_CONFIG.REDIRECT_URI);
-      console.log('Outlook Client ID configured:', !!OUTLOOK_CONFIG.CLIENT_ID);
+      console.log('MicrosoftAuthService initialized');
+      console.log('Using redirect URI:', MICROSOFT_CONFIG.REDIRECT_URI);
+      console.log('Scopes:', MICROSOFT_CONFIG.SCOPES);
     } catch (error) {
-      console.error('Error initializing OutlookCalendarService:', error);
+      console.error('Error initializing MicrosoftAuthService:', error);
       throw error;
     }
   }
@@ -139,6 +121,17 @@ export class OutlookCalendarService {
    */
   isAuthenticated(): boolean {
     return this.authData !== null && this.authData.accessToken !== '';
+  }
+
+  /**
+   * Get current access token (ensures it's valid)
+   */
+  async getAccessToken(): Promise<string> {
+    await this.ensureValidToken();
+    if (!this.authData?.accessToken) {
+      throw new Error('Not authenticated with Microsoft');
+    }
+    return this.authData.accessToken;
   }
 
   /**
@@ -152,9 +145,9 @@ export class OutlookCalendarService {
 
       const authUrl = this.buildAuthUrl();
       
-      console.log('=== STARTING OUTLOOK OAUTH FLOW ===');
+      console.log('=== STARTING MICROSOFT OAUTH FLOW ===');
       console.log('Opening OAuth URL:', authUrl);
-      console.log('Expected redirect URI:', OUTLOOK_CONFIG.REDIRECT_URI);
+      console.log('Expected redirect URI:', MICROSOFT_CONFIG.REDIRECT_URI);
       
       const supported = await Linking.canOpenURL(authUrl);
       if (supported) {
@@ -176,7 +169,7 @@ export class OutlookCalendarService {
    */
   async handleAuthCallback(code: string): Promise<boolean> {
     try {
-      console.log('=== HANDLING OUTLOOK OAUTH CALLBACK ===');
+      console.log('=== HANDLING MICROSOFT OAUTH CALLBACK ===');
       
       if (!code) {
         throw new Error('No authorization code provided');
@@ -191,58 +184,18 @@ export class OutlookCalendarService {
         accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token,
         expiresAt: Date.now() + (tokenData.expires_in * 1000),
+        scope: tokenData.scope || MICROSOFT_CONFIG.SCOPES,
       };
 
       await this.saveAuthData();
       await this.saveIntegrationToSupabase(tokenData);
       
-      console.log('✅ Outlook Calendar authentication successful');
+      console.log('✅ Microsoft authentication successful');
       this.notifyAuthCallbacks();
       return true;
     } catch (error) {
       console.error('❌ Error handling auth callback:', error);
       return false;
-    }
-  }
-
-  /**
-   * Get upcoming events
-   */
-  async getUpcomingEvents(maxResults: number = 5): Promise<CalendarEvent[]> {
-    try {
-      await this.ensureValidToken();
-      
-      const timeMin = new Date().toISOString();
-      const url = `https://graph.microsoft.com/v1.0/me/events?$filter=start/dateTime ge '${timeMin}'&$orderby=start/dateTime&$top=${maxResults}`;
-      
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${this.authData?.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch events: ${response.statusText}`);
-      }
-
-      const data: EventsListResponse = await response.json();
-      return data.value || [];
-    } catch (error) {
-      console.error('❌ Error fetching upcoming events:', error);
-      
-      if (error instanceof Error) {
-        if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-          throw new Error('Authentication expired. Please sign in again to access your calendar.');
-        }
-        
-        if (error.message.includes('403') || error.message.includes('Forbidden')) {
-          throw new Error('Access denied. Please check your Outlook Calendar permissions.');
-        }
-      }
-      
-      console.warn('⚠️ Returning empty events array due to error');
-      return [];
     }
   }
 
@@ -255,16 +208,16 @@ export class OutlookCalendarService {
       await this.deactivateIntegrationInSupabase();
       
       this.authData = null;
-      await AsyncStorage.removeItem('outlook_calendar_auth');
+      await AsyncStorage.removeItem('microsoft_unified_auth');
       
-      console.log('✅ Outlook Calendar signed out completely');
+      console.log('✅ Microsoft signed out completely');
       this.notifyAuthCallbacks();
     } catch (error) {
       console.error('❌ Error during sign out:', error);
       
       this.authData = null;
       try {
-        await AsyncStorage.removeItem('outlook_calendar_auth');
+        await AsyncStorage.removeItem('microsoft_unified_auth');
       } catch (storageError) {
         console.error('❌ Error clearing local storage:', storageError);
       }
@@ -278,23 +231,23 @@ export class OutlookCalendarService {
 
   private buildAuthUrl(): string {
     const params = new URLSearchParams({
-      client_id: OUTLOOK_CONFIG.CLIENT_ID!,
+      client_id: MICROSOFT_CONFIG.CLIENT_ID!,
       response_type: 'code',
-      redirect_uri: OUTLOOK_CONFIG.REDIRECT_URI,
-      scope: OUTLOOK_CONFIG.SCOPES,
+      redirect_uri: MICROSOFT_CONFIG.REDIRECT_URI,
+      scope: MICROSOFT_CONFIG.SCOPES,
       response_mode: 'query',
     });
 
-    return `https://login.microsoftonline.com/${OUTLOOK_CONFIG.TENANT_ID}/oauth2/v2.0/authorize?${params}`;
+    return `https://login.microsoftonline.com/${MICROSOFT_CONFIG.TENANT_ID}/oauth2/v2.0/authorize?${params}`;
   }
 
   private async exchangeCodeForToken(code: string): Promise<any> {
     const requestBody = new URLSearchParams();
-    requestBody.append('client_id', OUTLOOK_CONFIG.CLIENT_ID!);
+    requestBody.append('client_id', MICROSOFT_CONFIG.CLIENT_ID!);
     requestBody.append('code', code);
     requestBody.append('grant_type', 'authorization_code');
-    requestBody.append('redirect_uri', OUTLOOK_CONFIG.REDIRECT_URI);
-    requestBody.append('scope', OUTLOOK_CONFIG.SCOPES);
+    requestBody.append('redirect_uri', MICROSOFT_CONFIG.REDIRECT_URI);
+    requestBody.append('scope', MICROSOFT_CONFIG.SCOPES);
     
     return this.makeTokenRequest(requestBody, 'token exchange');
   }
@@ -306,10 +259,10 @@ export class OutlookCalendarService {
 
     try {
       const requestBody = new URLSearchParams();
-      requestBody.append('client_id', OUTLOOK_CONFIG.CLIENT_ID!);
+      requestBody.append('client_id', MICROSOFT_CONFIG.CLIENT_ID!);
       requestBody.append('refresh_token', this.authData.refreshToken);
       requestBody.append('grant_type', 'refresh_token');
-      requestBody.append('scope', OUTLOOK_CONFIG.SCOPES);
+      requestBody.append('scope', MICROSOFT_CONFIG.SCOPES);
       
       const tokenData = await this.makeTokenRequest(requestBody, 'token refresh');
       
@@ -333,7 +286,7 @@ export class OutlookCalendarService {
 
   private async ensureValidToken(): Promise<void> {
     if (!this.authData) {
-      throw new Error('Not authenticated. Please sign in to access Outlook Calendar.');
+      throw new Error('Not authenticated. Please sign in to access Microsoft services.');
     }
 
     const bufferTime = 5 * 60 * 1000;
@@ -347,7 +300,7 @@ export class OutlookCalendarService {
 
   private async loadAuthData(): Promise<void> {
     try {
-      const stored = await AsyncStorage.getItem('outlook_calendar_auth');
+      const stored = await AsyncStorage.getItem('microsoft_unified_auth');
       if (stored) {
         this.authData = JSON.parse(stored);
       }
@@ -359,7 +312,7 @@ export class OutlookCalendarService {
   private async saveAuthData(): Promise<void> {
     try {
       if (this.authData) {
-        await AsyncStorage.setItem('outlook_calendar_auth', JSON.stringify(this.authData));
+        await AsyncStorage.setItem('microsoft_unified_auth', JSON.stringify(this.authData));
       }
     } catch (error) {
       console.error('Error saving auth data:', error);
@@ -376,28 +329,37 @@ export class OutlookCalendarService {
 
       const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
       
+      // Deactivate any existing Microsoft integrations
       await supabase
-        .from('outlook_calendar_integrations')
+        .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
+        .eq('service_name', 'microsoft')
         .eq('is_active', true);
 
+      // Insert new unified Microsoft integration
       const { error } = await supabase
-        .from('outlook_calendar_integrations')
+        .from('integrations')
         .insert({
           user_id: user.id,
+          type: 'built_in',
+          service_name: 'microsoft',
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
           expires_at: expiresAt.toISOString(),
-          scope: OUTLOOK_CONFIG.SCOPES,
+          scope: tokenData.scope || MICROSOFT_CONFIG.SCOPES,
           is_active: true,
+          configuration: {
+            services: ['calendar', 'email', 'onedrive', 'contacts'],
+            scopes: MICROSOFT_CONFIG.SCOPES.split(' '),
+          },
         });
 
       if (error) {
         throw error;
       }
 
-      console.log('✅ Outlook Calendar integration saved to Supabase');
+      console.log('✅ Microsoft integration saved to Supabase');
     } catch (error) {
       console.error('❌ Error saving integration to Supabase:', error);
     }
@@ -413,9 +375,10 @@ export class OutlookCalendarService {
       }
 
       const { data, error } = await supabase
-        .from('outlook_calendar_integrations')
+        .from('integrations')
         .select('*')
         .eq('user_id', user.id)
+        .eq('service_name', 'microsoft')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -423,7 +386,7 @@ export class OutlookCalendarService {
 
       if (error) {
         if (error.code === 'PGRST116') {
-          console.log('No active Outlook Calendar integration found in Supabase');
+          console.log('No active Microsoft integration found in Supabase');
           return;
         }
         throw error;
@@ -437,12 +400,13 @@ export class OutlookCalendarService {
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
             expiresAt: expiresAt,
+            scope: data.scope || MICROSOFT_CONFIG.SCOPES,
           };
           
           await this.saveAuthData();
-          console.log('✅ Outlook Calendar integration loaded from Supabase');
+          console.log('✅ Microsoft integration loaded from Supabase');
         } else {
-          console.log('Outlook Calendar integration found but expired, will need re-authentication');
+          console.log('Microsoft integration found but expired, will need re-authentication');
         }
       }
     } catch (error) {
@@ -471,16 +435,17 @@ export class OutlookCalendarService {
       }
 
       const { error } = await supabase
-        .from('outlook_calendar_integrations')
+        .from('integrations')
         .update(updateData)
         .eq('user_id', user.id)
+        .eq('integration_type', 'microsoft')
         .eq('is_active', true);
 
       if (error) {
         throw error;
       }
 
-      console.log('✅ Outlook Calendar tokens updated in Supabase');
+      console.log('✅ Microsoft tokens updated in Supabase');
     } catch (error) {
       console.error('❌ Error updating tokens in Supabase:', error);
     }
@@ -496,16 +461,17 @@ export class OutlookCalendarService {
       }
 
       const { error } = await supabase
-        .from('outlook_calendar_integrations')
+        .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
+        .eq('integration_type', 'microsoft')
         .eq('is_active', true);
 
       if (error) {
         throw error;
       }
 
-      console.log('✅ Outlook Calendar integration deactivated in Supabase');
+      console.log('✅ Microsoft integration deactivated in Supabase');
     } catch (error) {
       console.error('❌ Error deactivating integration in Supabase:', error);
     }
@@ -520,7 +486,7 @@ export class OutlookCalendarService {
     try {
       console.log('🔒 Revoking access token with Microsoft...');
       
-      const response = await fetch(`https://login.microsoftonline.com/${OUTLOOK_CONFIG.TENANT_ID}/oauth2/v2.0/logout`, {
+      const response = await fetch(`https://login.microsoftonline.com/${MICROSOFT_CONFIG.TENANT_ID}/oauth2/v2.0/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -543,7 +509,7 @@ export class OutlookCalendarService {
   private async makeTokenRequest(requestBody: URLSearchParams, operation: string): Promise<any> {
     console.log(`🔄 Making ${operation} request...`);
     
-    const response = await fetch(`https://login.microsoftonline.com/${OUTLOOK_CONFIG.TENANT_ID}/oauth2/v2.0/token`, {
+    const response = await fetch(`https://login.microsoftonline.com/${MICROSOFT_CONFIG.TENANT_ID}/oauth2/v2.0/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',

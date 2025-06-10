@@ -1,11 +1,8 @@
-// Calendar integrations
-export * from './calendar';
+// Google integrations
+export * from './google';
 
-// Email integrations
-export * from './email';
-
-// Drive integrations
-export * from './drive';
+// Microsoft integrations
+export * from './microsoft';
 
 // Notion integrations
 export * from './notion';

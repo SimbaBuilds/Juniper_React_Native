@@ -190,7 +190,7 @@ export const MemoriesScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.title}>Memories</Text>
+          {/* <Text style={styles.title}>Memories</Text> */}
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => setShowAddModal(true)}
@@ -206,7 +206,7 @@ export const MemoriesScreen: React.FC = () => {
             Add a memory by telling your assistant e.g.{'\n'}
             "Remember these news sources for future reference."
             {'\n\n'}
-            Or use the + button to manually add a memory.  Tags help the assistant retrieve the memory better..
+            Or use the + button to add a memory manually.  Use tags to help the assistant retrieve the memory.
           </Text>
         </View>
 

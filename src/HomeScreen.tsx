@@ -14,7 +14,7 @@ export const HomeScreen: React.FC = () => {
       <View style={styles.content}>
         <View style={styles.header}>
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>Voice Assistant</Text>
+            {/* <Text style={styles.title}>Voice Assistant</Text> */}
           </View>
         </View>
         
