@@ -323,7 +323,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Wake Word</Text>
           <View style={styles.wakeWordExplanation}>
             <Text style={styles.explanationText}>
-              Settings below can be manually changed or just tell your assistant e.g. "make wake word detection less sensitive" or "go to sleep"
+              Settings below can be manually changed or just tell your assistant e.g. "make wake word detection less sensitive" or "enable Deepgram"
             </Text>
           </View>
           <WakeWordToggle />
