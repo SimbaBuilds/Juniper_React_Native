@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { GoogleAuthService } from './google/GoogleAuthService';
-import { MicrosoftAuthService } from './microsoft/MicrosoftAuthService';
-import { NotionManager } from './notion/NotionManager';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
+import { useNavigation } from '@react-navigation/native';
+import { useVoice } from '../voice/VoiceContext';
 
 interface Integration {
   id: string;
@@ -16,46 +15,13 @@ interface Integration {
   icon: keyof typeof Ionicons.glyphMap;
 }
 
-interface ExpandableSection {
-  id: string;
-  title: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  expanded: boolean;
-  integrations: string[];
-}
-
 export const IntegrationsScreen: React.FC = () => {
   const { user } = useAuth();
+  const navigation = useNavigation();
+  const { sendTextMessage } = useVoice();
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [googleAuthService] = useState(() => GoogleAuthService.getInstance());
-  const [microsoftAuthService] = useState(() => MicrosoftAuthService.getInstance());
-  const [googleAuthenticated, setGoogleAuthenticated] = useState(false);
-  const [microsoftAuthenticated, setMicrosoftAuthenticated] = useState(false);
-  const [sections, setSections] = useState<ExpandableSection[]>([
-    {
-      id: 'google',
-      title: 'Google Services',
-      icon: 'logo-google',
-      expanded: false,
-      integrations: ['google-calendar', 'gmail', 'google-drive']
-    },
-    {
-      id: 'microsoft',
-      title: 'Microsoft Services',
-      icon: 'logo-microsoft',
-      expanded: false,
-      integrations: ['outlook-calendar', 'outlook-email', 'onedrive']
-    },
-    {
-      id: 'notion',
-      title: 'Notion',
-      icon: 'document-text-outline',
-      expanded: false,
-      integrations: ['notion']
-    }
-  ]);
 
   // Load integrations from database
   useEffect(() => {
@@ -65,21 +31,6 @@ export const IntegrationsScreen: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        
-        // Initialize auth services
-        await googleAuthService.initialize();
-        await microsoftAuthService.initialize();
-        
-        // Set initial auth states
-        setGoogleAuthenticated(googleAuthService.isAuthenticated());
-        setMicrosoftAuthenticated(microsoftAuthService.isAuthenticated());
-        
-        // Set up auth callbacks
-        const handleGoogleAuthChange = (isAuth: boolean) => setGoogleAuthenticated(isAuth);
-        const handleMicrosoftAuthChange = (isAuth: boolean) => setMicrosoftAuthenticated(isAuth);
-        
-        googleAuthService.addAuthCallback(handleGoogleAuthChange);
-        microsoftAuthService.addAuthCallback(handleMicrosoftAuthChange);
         
         const dbIntegrations = await DatabaseService.getIntegrations(user.id);
         
@@ -97,14 +48,6 @@ export const IntegrationsScreen: React.FC = () => {
         if (formattedIntegrations.length === 0) {
           const defaultIntegrations: Integration[] = [
             {
-              id: 'outlook-email',
-              name: 'Outlook Email',
-              credentials: 'Not configured',
-              automations: [],
-              connected: false,
-              icon: 'mail-outline',
-            },
-            {
               id: 'notion',
               name: 'Notion',
               credentials: 'Not configured',
@@ -119,10 +62,7 @@ export const IntegrationsScreen: React.FC = () => {
         }
         
         // Cleanup callbacks on unmount
-        return () => {
-          googleAuthService.removeAuthCallback(handleGoogleAuthChange);
-          microsoftAuthService.removeAuthCallback(handleMicrosoftAuthChange);
-        };
+        return () => {};
       } catch (err) {
         console.error('Error loading integrations:', err);
         setError('Failed to load integrations');
@@ -132,7 +72,7 @@ export const IntegrationsScreen: React.FC = () => {
     };
 
     loadIntegrations();
-  }, [user?.id, googleAuthService, microsoftAuthService]);
+  }, [user?.id]);
 
   const getIconForIntegrationType = (type: string): keyof typeof Ionicons.glyphMap => {
     switch (type.toLowerCase()) {
@@ -150,123 +90,36 @@ export const IntegrationsScreen: React.FC = () => {
     }
   };
 
-  const toggleSection = (sectionId: string) => {
-    setSections(prev => prev.map(section => 
-      section.id === sectionId 
-        ? { ...section, expanded: !section.expanded }
-        : section
-    ));
+  // Handle Notion connection
+  const handleConnectNotion = async () => {
+    try {
+      console.log('🔗 Initiating Notion connection conversation...');
+      
+      // Send the message to start the conversation
+      await sendTextMessage("Connect with Notion");
+      
+      // Navigate to Home Screen (Voice Assistant)
+      navigation.navigate('Home' as never);
+    } catch (error) {
+      console.error('Error initiating Notion connection:', error);
+    }
   };
 
-  const handleConnectPlaceholder = (integrationName: string) => {
-    console.log(`Connect ${integrationName} placeholder`);
-  };
-
-  const renderGoogleServices = () => (
-    <View style={styles.servicesContainer}>
-      <View style={styles.unifiedConnectSection}>
-        <Text style={styles.unifiedTitle}>Connect Google Services</Text>
-        <Text style={styles.unifiedDescription}>
-          Connect to Google Calendar, Gmail, Google Drive, and Google Contacts with a single authentication flow.
-          Grants read/write for calendar, read/draft/send for email, read/write for contacts, and read-only for drive.
-        </Text>
-        {googleAuthenticated ? (
-          <View style={styles.connectedContainer}>
-            <Text style={styles.connectedText}>✅ Connected to Google</Text>
-            <TouchableOpacity
-              style={[styles.unifiedConnectButton, styles.disconnectButton]}
-              onPress={async () => {
-                try {
-                  await googleAuthService.signOut();
-                } catch (error) {
-                  console.error('Error signing out of Google:', error);
-                }
-              }}
-            >
-              <Text style={styles.unifiedConnectText}>Disconnect</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.unifiedConnectButton}
-            onPress={async () => {
-              try {
-                await googleAuthService.authenticate();
-              } catch (error) {
-                console.error('Error authenticating with Google:', error);
-              }
-            }}
-          >
-            <Ionicons name="logo-google" size={20} color="#FFFFFF" />
-            <Text style={styles.unifiedConnectText}>Connect Google</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
-  );
-
-  const renderMicrosoftServices = () => (
-    <View style={styles.servicesContainer}>
-      <View style={styles.unifiedConnectSection}>
-        <Text style={styles.unifiedTitle}>Connect Microsoft Services</Text>
-        <Text style={styles.unifiedDescription}>
-          Connect to Outlook Calendar, Outlook Email, OneDrive, and Microsoft Contacts with a single authentication flow.
-          Grants read/write for calendar, read/draft/send for email, read/write for contacts, and read-only for drive.
-        </Text>
-        {microsoftAuthenticated ? (
-          <View style={styles.connectedContainer}>
-            <Text style={styles.connectedText}>✅ Connected to Microsoft</Text>
-            <TouchableOpacity
-              style={[styles.unifiedConnectButton, styles.disconnectButton]}
-              onPress={async () => {
-                try {
-                  await microsoftAuthService.signOut();
-                } catch (error) {
-                  console.error('Error signing out of Microsoft:', error);
-                }
-              }}
-            >
-              <Text style={styles.unifiedConnectText}>Disconnect</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.unifiedConnectButton}
-            onPress={async () => {
-              try {
-                await microsoftAuthService.authenticate();
-              } catch (error) {
-                console.error('Error authenticating with Microsoft:', error);
-              }
-            }}
-          >
-            <Ionicons name="logo-microsoft" size={20} color="#FFFFFF" />
-            <Text style={styles.unifiedConnectText}>Connect Microsoft</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
-  );
-
-  const renderNotionServices = () => (
-    <View style={styles.servicesContainer}>
-      <View style={styles.serviceSection}>
-        <Text style={styles.serviceTitle}>Notion Tasks</Text>
-        <NotionManager />
-      </View>
-    </View>
-  );
-
-  const renderSectionContent = (sectionId: string) => {
-    switch (sectionId) {
-      case 'google':
-        return renderGoogleServices();
-      case 'microsoft':
-        return renderMicrosoftServices();
-      case 'notion':
-        return renderNotionServices();
-      default:
-        return null;
+  // Handle adding different integration
+  const handleAddDifferentIntegration = async () => {
+    try {
+      console.log('🔗 Initiating new integration conversation...');
+      
+      // Send the first message to start the conversation
+      await sendTextMessage("I want to add a new integration");
+      
+      // Note: The assistant will respond automatically through the normal conversation flow
+      // No need to manually add the assistant response here
+      
+      // Navigate to Home Screen (Voice Assistant)
+      navigation.navigate('Home' as never);
+    } catch (error) {
+      console.error('Error initiating new integration conversation:', error);
     }
   };
 
@@ -294,44 +147,14 @@ export const IntegrationsScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          {/* <Text style={styles.title}>Integrations</Text> */}
-        </View>
-
         <View style={styles.instructionsSection}>
-          <Text style={styles.instructionsTitle}>How to Add Integrations</Text>
+          <Text style={styles.instructionsTitle}>Adding Integrations</Text>
           <Text style={styles.instructionsText}>
-            To add an integration, authenticate with one of the default services below or simply ask your assistant:{'\n'}
-            "Connect with my Tesla so we can tell it when to pick up my son."
+            To add an integration, simply ask your assistant e.g. "Connect with Notion."
             {'\n\n'}
-            Your assistant will make the connection or scope out integration time and cost.
+            Your assistant will make the connection or scope out setup time and cost.
           </Text>
         </View>
-
-        {sections.map((section) => (
-          <View key={section.id} style={styles.expandableSection}>
-            <TouchableOpacity 
-              style={styles.sectionHeader}
-              onPress={() => toggleSection(section.id)}
-            >
-              <View style={styles.sectionTitleRow}>
-                <Ionicons name={section.icon} size={24} color="#4A90E2" />
-                <Text style={styles.sectionTitle}>{section.title}</Text>
-              </View>
-              <Ionicons 
-                name={section.expanded ? 'chevron-up' : 'chevron-down'} 
-                size={20} 
-                color="#B0B0B0" 
-              />
-            </TouchableOpacity>
-            
-            {section.expanded && (
-              <View style={styles.sectionContent}>
-                {renderSectionContent(section.id)}
-              </View>
-            )}
-          </View>
-        ))}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Your Integrations</Text>
@@ -339,9 +162,26 @@ export const IntegrationsScreen: React.FC = () => {
           <View style={styles.emptyIntegrationsContainer}>
             <Ionicons name="apps-outline" size={48} color="#B0B0B0" />
             <Text style={styles.emptyIntegrationsTitle}>No Integrations Yet</Text>
-            {/* <Text style={styles.emptyIntegrationsText}>
-              Your connected integrations will appear here once you authenticate with the services above
-            </Text> */}
+            
+            <View style={styles.suggestionContainer}>
+              <Text style={styles.suggestionText}>
+                Notion is a great platform for your assistant to organize tasks and projects for yourself and your team; it even has email and calendar services. Start by{' '}
+                <Text 
+                  style={styles.clickableLink}
+                  onPress={handleConnectNotion}
+                >
+                  connecting with Notion
+                </Text>
+                {' '}in a few simple steps or by{' '}
+                <Text 
+                  style={styles.clickableLink}
+                  onPress={handleAddDifferentIntegration}
+                >
+                  connecting with a different service
+                </Text>
+                {' '}(e.g. Slack, Amazon Echo, Cursor, Tesla etc.)
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -572,5 +412,22 @@ const styles = StyleSheet.create({
   },
   disconnectButton: {
     backgroundColor: '#F44336',
+  },
+  suggestionContainer: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 16,
+  },
+  suggestionText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  clickableLink: {
+    color: '#4A90E2',
+    fontWeight: '500',
+    textDecorationLine: 'underline',
   },
 }); 
