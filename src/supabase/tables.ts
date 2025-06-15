@@ -142,7 +142,7 @@ export type UserProfile = {
     access_token?: string;
     refresh_token?: string;
     expires_at?: Date;
-    scope?: string;
+    scopes?: string;
     // Email specific fields
     email_address?: string;
     sync_settings?: Record<string, any>;
