@@ -166,7 +166,7 @@ class ServerApiService {
             headers: { 
               'Content-Type': 'multipart/form-data'
             },
-            timeout: 30000 // 30 second timeout for Android
+            timeout: 45000 // 45 second timeout for Android
           }).catch((error: unknown) => {
             console.error('🔴 SERVER_API: ❌ API request error:', error);
             console.error('🔴 SERVER_API: API request failed in queue');

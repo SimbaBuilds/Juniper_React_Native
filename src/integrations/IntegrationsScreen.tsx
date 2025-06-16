@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
@@ -22,6 +22,11 @@ export const IntegrationsScreen: React.FC = () => {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Modal state for new integration input
+  const [showIntegrationModal, setShowIntegrationModal] = useState(false);
+  const [integrationInput, setIntegrationInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load integrations from database
   useEffect(() => {
@@ -102,24 +107,54 @@ export const IntegrationsScreen: React.FC = () => {
       navigation.navigate('Home' as never);
     } catch (error) {
       console.error('Error initiating Notion connection:', error);
+      Alert.alert('Error', 'Failed to initiate Notion connection. Please try again.');
     }
   };
 
-  // Handle adding different integration
-  const handleAddDifferentIntegration = async () => {
+  // Handle opening the integration modal
+  const handleAddDifferentIntegration = () => {
+    console.log('🔗 Opening new integration modal...');
+    setShowIntegrationModal(true);
+  };
+
+  // Handle closing the integration modal
+  const handleCloseIntegrationModal = () => {
+    setShowIntegrationModal(false);
+    setIntegrationInput('');
+    setIsSubmitting(false);
+  };
+
+  // Handle submitting the integration request
+  const handleSubmitIntegration = async () => {
+    const trimmedInput = integrationInput.trim();
+    
+    if (!trimmedInput) {
+      Alert.alert('Required', 'Please enter the service and how you want to use it.');
+      return;
+    }
+
+    if (trimmedInput.length > 1000) {
+      Alert.alert('Too Long', 'Please limit your message to 1000 characters or less.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
     try {
-      console.log('🔗 Initiating new integration conversation...');
+      console.log('🔗 Submitting integration request:', trimmedInput);
       
-      // Send the first message to start the conversation
-      await sendTextMessage("I want to add a new integration");
+      // Send the user's message to start the conversation
+      await sendTextMessage(trimmedInput);
       
-      // Note: The assistant will respond automatically through the normal conversation flow
-      // No need to manually add the assistant response here
+      // Close modal and reset
+      handleCloseIntegrationModal();
       
       // Navigate to Home Screen (Voice Assistant)
       navigation.navigate('Home' as never);
     } catch (error) {
-      console.error('Error initiating new integration conversation:', error);
+      console.error('Error submitting integration request:', error);
+      Alert.alert('Error', 'Failed to submit integration request. Please try again.');
+      setIsSubmitting(false);
     }
   };
 
@@ -185,6 +220,73 @@ export const IntegrationsScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* Integration Input Modal */}
+      <Modal
+        visible={showIntegrationModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={handleCloseIntegrationModal}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>New Integration</Text>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={handleCloseIntegrationModal}
+              disabled={isSubmitting}
+            >
+              <Ionicons name="close" size={24} color="#888888" />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.modalContent}>
+            <Text style={styles.modalQuestion}>
+              What service do you want to integrate with and what do you want to use it for?
+            </Text>
+            
+            <TextInput
+              style={styles.modalTextInput}
+              value={integrationInput}
+              onChangeText={setIntegrationInput}
+              placeholder="e.g., I want to connect with Gmail to automatically sort and respond to emails based on priority..."
+              placeholderTextColor="#666666"
+              multiline
+              maxLength={1000}
+              editable={!isSubmitting}
+              textAlignVertical="top"
+            />
+            
+            <View style={styles.modalFooter}>
+              <Text style={styles.characterCount}>
+                {integrationInput.length}/1000 characters
+              </Text>
+              
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={handleCloseIntegrationModal}
+                  disabled={isSubmitting}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.submitButton, (!integrationInput.trim() || isSubmitting) && styles.submitButtonDisabled]}
+                  onPress={handleSubmitIntegration}
+                  disabled={!integrationInput.trim() || isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.submitButtonText}>Submit</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -429,5 +531,83 @@ const styles = StyleSheet.create({
     color: '#4A90E2',
     fontWeight: '500',
     textDecorationLine: 'underline',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#FFFFFF',
+  },
+  modalCloseButton: {
+    padding: 8,
+  },
+  modalContent: {
+    padding: 16,
+  },
+  modalQuestion: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    marginBottom: 16,
+  },
+  modalTextInput: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 8,
+    padding: 12,
+    color: '#FFFFFF',
+    fontSize: 16,
+    height: 120,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#444444',
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  characterCount: {
+    color: '#888888',
+    fontSize: 12,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  modalButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 6,
+    minWidth: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#757575',
+  },
+  cancelButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  submitButton: {
+    backgroundColor: '#4A90E2',
+  },
+  submitButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#757575',
   },
 }); 

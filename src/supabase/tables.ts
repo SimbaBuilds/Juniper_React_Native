@@ -132,7 +132,7 @@ export type UserProfile = {
     id: string;
     user_id: string;
     type: 'built_in' | 'user_created'; // integration type
-    service_name: string; // provider name (google, microsoft, notion, etc.)
+    service_id: string; // points to service id instead of service_name
     notes?: string;
     configuration: Record<string, any>;
     is_active: boolean;
@@ -157,18 +157,55 @@ export type UserProfile = {
     // Common sync fields
     last_sync?: Date;
     updated_at?: Date;
+    // New integration fields
+    integration_method?: string;
+    available_actions?: string[];
+    connection_test_script?: string;
+    client_id?: string;
+    client_secret_id?: string;
+    client_secret_value?: string;
   };
   
   export const integrationFields = [
-    'id', 'user_id', 'type', 'service_name', 'notes',
+    'id', 'user_id', 'type', 'service_id', 'notes',
     'configuration', 'is_active', 'last_used', 'created_at',
     'access_token', 'refresh_token', 'expires_at', 'scope',
     'email_address', 'sync_settings',
     'bot_id', 'workspace_name', 'workspace_icon', 'workspace_id', 
     'owner_info', 'duplicated_template_id', 'permissions',
-    'last_sync', 'updated_at'
+    'last_sync', 'updated_at', 'integration_method', 'available_actions',
+    'connection_test_script', 'client_id', 'client_secret_id', 'client_secret_value'
   ] as const;
   export type IntegrationField = (typeof integrationFields)[number];
+
+  export type Service = {
+    id: string;
+    created_at: Date;
+    service_name: string;
+    num_users: number;
+  };
+
+  export const serviceFields = [
+    'id', 'created_at', 'service_name', 'num_users'
+  ] as const;
+  export type ServiceField = (typeof serviceFields)[number];
+
+  export type Action = {
+    id: string;
+    service_id: string;
+    name: string;
+    description: string;
+    parameters: Record<string, any>;
+    returns: Record<string, any>;
+    example: Record<string, any>;
+    run_script: string;
+  };
+
+  export const actionFields = [
+    'id', 'service_id', 'name', 'description', 'parameters',
+    'returns', 'example', 'run_script'
+  ] as const;
+  export type ActionField = (typeof actionFields)[number];
 
 
 
