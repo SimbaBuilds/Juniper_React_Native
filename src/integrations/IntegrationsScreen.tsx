@@ -152,7 +152,7 @@ export const IntegrationsScreen: React.FC = () => {
           <Text style={styles.instructionsText}>
             To add an integration, simply ask your assistant e.g. "Connect with Notion."
             {'\n\n'}
-            Your assistant will make the connection or scope out setup time and cost.
+            Your assistant will make the connection or scope out setup options, time, and cost.
           </Text>
         </View>
 
@@ -165,7 +165,7 @@ export const IntegrationsScreen: React.FC = () => {
             
             <View style={styles.suggestionContainer}>
               <Text style={styles.suggestionText}>
-                Notion is a great platform for your assistant to organize tasks and projects for yourself and your team; it even has email and calendar services. Start by{' '}
+                Notion is a great platform for your assistant to manage tasks and projects for yourself and your team; it even has email and calendar services. Start by{' '}
                 <Text 
                   style={styles.clickableLink}
                   onPress={handleConnectNotion}
@@ -179,7 +179,7 @@ export const IntegrationsScreen: React.FC = () => {
                 >
                   connecting with a different service
                 </Text>
-                {' '}(e.g. Slack, Amazon Echo, Cursor, Tesla etc.)
+                {' '}(e.g. Slack, Gmail, Amazon Echo, Cursor, Tesla etc.)
               </Text>
             </View>
           </View>
