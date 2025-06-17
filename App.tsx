@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Linking } from 'react-native';
-import { VoiceProvider } from './src/voice/VoiceContext';
+import { VoiceProvider, useVoice } from './src/voice/VoiceContext';
 import { WakeWordProvider } from './src/wakeword/WakeWordContext';
 import WakeWordService from './src/wakeword/WakeWordService';
 import { GoogleAuthService } from './src/auth/GoogleAuthService';
@@ -258,6 +258,8 @@ export default function App() {
 }
 
 function MainTabNavigator() {
+  const { integrationInProgress } = useVoice();
+  
   return (
     <Tab.Navigator
       initialRouteName="Home"
@@ -308,6 +310,7 @@ function MainTabNavigator() {
         component={IntegrationsScreen}
         options={{
           title: 'Integrations',
+          tabBarBadge: integrationInProgress ? '●' : undefined,
         }}
       />
       <Tab.Screen 
@@ -331,7 +334,6 @@ function MainTabNavigator() {
           title: 'Settings',
         }}
       />
-
     </Tab.Navigator>
   );
 }

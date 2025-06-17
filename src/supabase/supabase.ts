@@ -247,6 +247,35 @@ export const DatabaseService = {
     return data || []
   },
 
+  // Check integration status for polling
+  async getIntegrationStatus(userId: string) {
+    const { data, error } = await supabase
+      .from('integrations')
+      .select('id, service_id, status, created_at, updated_at')
+      .eq('user_id', userId)
+      .in('status', ['pending', 'in_progress', 'authentication_ready'])
+    
+    if (error) throw error
+    return {
+      integration_in_progress: data && data.length > 0,
+      in_progress_count: data?.length || 0,
+      integrations: data || []
+    }
+  },
+
+  // Get integrations that need authentication
+  async getAuthenticationReadyIntegrations(userId: string) {
+    const { data, error } = await supabase
+      .from('integrations')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'authentication_ready')
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data || []
+  },
+
   // Automations
   async getAutomations(userId: string) {
     const { data, error } = await supabase

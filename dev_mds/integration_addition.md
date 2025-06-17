@@ -1,0 +1,6 @@
+- [ ]  In integrations screen
+    - [ ]  db refresh checks db for in_progress integrations - if in_progress, badge on nav button and link to config form under “your integrations”
+- [ ]  form completion submit automatically updates integration record with creds and status change
+- [ ]  DB polling continues (auth ready state shows badge)
+- [ ]  user must trigger auth from integrations screen to complete integration
+    - [ ]  tokens stored in integration record

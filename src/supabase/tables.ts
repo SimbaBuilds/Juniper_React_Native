@@ -118,23 +118,35 @@ export type UserProfile = {
     is_active: boolean;
     execution_count: number;
     last_executed?: Date;
+    notes?: string;
     created_at: Date;
   };
   
   export const automationFields = [
     'id', 'user_id', 'name', 'trigger_conditions', 'actions',
-    'is_active', 'execution_count', 'last_executed', 'created_at'
+    'is_active', 'execution_count', 'last_executed', 'notes', 'created_at'
   ] as const;
   export type AutomationField = (typeof automationFields)[number];
   
   
+  export type ConfigForm = {
+    id: string;
+    service_id: string;
+    json: Record<string, any>;
+    link?: string;
+    updated_at: Date;
+  };
+
+  export const configFormFields = [
+    'id', 'service_id', 'json', 'link', 'updated_at'
+  ] as const;
+  export type ConfigFormField = (typeof configFormFields)[number];
+  
   export type Integration = {
     id: string;
     user_id: string;
-    type: 'built_in' | 'user_created'; // integration type
     service_id: string; // points to service id instead of service_name
     notes?: string;
-    configuration: Record<string, any>;
     is_active: boolean;
     last_used?: Date;
     created_at: Date;
@@ -142,10 +154,8 @@ export type UserProfile = {
     access_token?: string;
     refresh_token?: string;
     expires_at?: Date;
-    scopes?: string;
     // Email specific fields
     email_address?: string;
-    sync_settings?: Record<string, any>;
     // Notion specific fields
     bot_id?: string;
     workspace_name?: string;
@@ -153,28 +163,19 @@ export type UserProfile = {
     workspace_id?: string;
     owner_info?: Record<string, any>;
     duplicated_template_id?: string;
-    permissions?: string[];
     // Common sync fields
     last_sync?: Date;
     updated_at?: Date;
-    // New integration fields
-    integration_method?: string;
-    available_actions?: string[];
-    connection_test_script?: string;
     client_id?: string;
     client_secret_id?: string;
     client_secret_value?: string;
   };
   
   export const integrationFields = [
-    'id', 'user_id', 'type', 'service_id', 'notes',
-    'configuration', 'is_active', 'last_used', 'created_at',
-    'access_token', 'refresh_token', 'expires_at', 'scope',
-    'email_address', 'sync_settings',
-    'bot_id', 'workspace_name', 'workspace_icon', 'workspace_id', 
-    'owner_info', 'duplicated_template_id', 'permissions',
-    'last_sync', 'updated_at', 'integration_method', 'available_actions',
-    'connection_test_script', 'client_id', 'client_secret_id', 'client_secret_value'
+    'id', 'user_id', 'service_id', 'notes', 'is_active', 'last_used', 'created_at',
+    'access_token', 'refresh_token', 'expires_at', 'email_address',
+    'bot_id', 'workspace_name', 'workspace_icon', 'workspace_id', 'owner_info', 'duplicated_template_id',
+    'last_sync', 'updated_at', 'client_id', 'client_secret_id', 'client_secret_value'
   ] as const;
   export type IntegrationField = (typeof integrationFields)[number];
 
@@ -184,10 +185,15 @@ export type UserProfile = {
     service_name: string;
     num_users: number;
     config_form_json?: Record<string, any>; // Cached config form data
+    auth_script?: string;
+    tools?: string[];
+    client_creation_script?: string;
+    integration_method?: string; // e.g. OAuth, External App, Internal App etc.
   };
 
   export const serviceFields = [
-    'id', 'created_at', 'service_name', 'num_users', 'config_form_json'
+    'id', 'created_at', 'service_name', 'num_users', 'config_form_json',
+    'auth_script', 'tools', 'client_creation_script', 'integration_method'
   ] as const;
   export type ServiceField = (typeof serviceFields)[number];
 
@@ -219,6 +225,23 @@ export type UserProfile = {
     'rate_limit', 'created_at', 'updated_at'
   ] as const;
   export type ActionField = (typeof actionFields)[number];
+
+  export type CancellationRequest = {
+    id: string;
+    user_id: string;
+    request_id: string;          // Unique identifier for the request to cancel
+    request_type: string;        // Type of request (chat, integration, etc.)
+    status: string;              // pending, processed, expired
+    metadata: Record<string, any>; // Additional cancellation context
+    created_at: Date;
+    processed_at?: Date;
+  };
+
+  export const cancellationRequestFields = [
+    'id', 'user_id', 'request_id', 'request_type', 'status',
+    'metadata', 'created_at', 'processed_at'
+  ] as const;
+  export type CancellationRequestField = (typeof cancellationRequestFields)[number];
 
 
 

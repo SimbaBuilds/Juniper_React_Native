@@ -11,6 +11,8 @@ interface UseServerApiResult {
   response: ChatResponse | null;
   sendMessage: (message: string, history: ChatMessage[]) => Promise<ChatResponse>;
   updateConfig: (config: Partial<ServerApiConfig>) => void;
+  cancelRequest: () => Promise<boolean>;
+  isRequestInProgress: boolean;
 }
 
 /**
@@ -34,6 +36,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [response, setResponse] = useState<ChatResponse | null>(null);
+  const [isRequestInProgress, setIsRequestInProgress] = useState(false);
 
   // Initialize with custom config if provided
   useEffect(() => {
@@ -50,6 +53,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
     history: ChatMessage[],
   ): Promise<ChatResponse> => {
     setIsLoading(true);
+    setIsRequestInProgress(true);
     setError(null);
 
     try {
@@ -61,6 +65,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
       
       setResponse(result);
       setIsLoading(false);
+      setIsRequestInProgress(false);
       
       // Call onResponse callback if provided
       if (options.onResponse) {
@@ -73,6 +78,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
       const error = err instanceof Error ? err : new Error(String(err));
       setError(error);
       setIsLoading(false);
+      setIsRequestInProgress(false);
       
       // Call onError callback if provided
       if (options.onError) {
@@ -82,6 +88,25 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
       throw error;
     }
   }, [options.preferences, options.onResponse, options.onError]);
+
+  /**
+   * Cancel the current request
+   */
+  const cancelRequest = useCallback(async (): Promise<boolean> => {
+    try {
+      const cancelled = await ServerApiService.cancelCurrentRequest();
+      if (cancelled) {
+        setIsLoading(false);
+        setIsRequestInProgress(false);
+        setError(new Error('Request was cancelled'));
+      }
+      return cancelled;
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+      setError(error instanceof Error ? error : new Error('Failed to cancel request'));
+      return false;
+    }
+  }, []);
 
   /**
    * Update server API configuration
@@ -96,5 +121,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
     response,
     sendMessage,
     updateConfig,
+    cancelRequest,
+    isRequestInProgress,
   };
 }; 

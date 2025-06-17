@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Act
 import { Ionicons } from '@expo/vector-icons';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useVoice } from '../voice/VoiceContext';
 
 interface Integration {
@@ -20,6 +20,7 @@ export const IntegrationsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { sendTextMessage } = useVoice();
   const [integrations, setIntegrations] = useState<Integration[]>([]);
+  const [authReadyIntegrations, setAuthReadyIntegrations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -29,55 +30,66 @@ export const IntegrationsScreen: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load integrations from database
-  useEffect(() => {
-    const loadIntegrations = async () => {
-      if (!user?.id) return;
+  const loadIntegrations = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
       
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const dbIntegrations = await DatabaseService.getIntegrations(user.id);
-        
-        // Convert database integrations to UI format
-        const formattedIntegrations: Integration[] = dbIntegrations.map((integration: any) => ({
-          id: integration.id,
-          name: integration.service_name,
-          credentials: integration.configuration?.credentials || 'Not configured',
-          automations: integration.configuration?.automations || [],
-          connected: integration.is_active,
-          icon: getIconForIntegrationType(integration.service_name)
-        }));
+      const dbIntegrations = await DatabaseService.getIntegrations(user.id);
+      const authReadyInts = await DatabaseService.getAuthenticationReadyIntegrations(user.id);
+      
+      // Filter out authentication_ready integrations from main list
+      const activeIntegrations = dbIntegrations.filter((int: any) => int.status !== 'authentication_ready');
+      
+      // Convert database integrations to UI format
+      const formattedIntegrations: Integration[] = activeIntegrations.map((integration: any) => ({
+        id: integration.id,
+        name: integration.service_name,
+        credentials: integration.configuration?.credentials || 'Not configured',
+        automations: integration.configuration?.automations || [],
+        connected: integration.is_active,
+        icon: getIconForIntegrationType(integration.service_name)
+      }));
 
-        // Add default integrations if none exist
-        if (formattedIntegrations.length === 0) {
-          const defaultIntegrations: Integration[] = [
-            {
-              id: 'notion',
-              name: 'Notion',
-              credentials: 'Not configured',
-              automations: [],
-              connected: false,
-              icon: 'document-text',
-            },
-          ];
-          setIntegrations(defaultIntegrations);
-        } else {
-          setIntegrations(formattedIntegrations);
-        }
-        
-        // Cleanup callbacks on unmount
-        return () => {};
-      } catch (err) {
-        console.error('Error loading integrations:', err);
-        setError('Failed to load integrations');
-      } finally {
-        setLoading(false);
+      // Set authentication ready integrations
+      setAuthReadyIntegrations(authReadyInts);
+
+      // Add default integrations if none exist
+      if (formattedIntegrations.length === 0) {
+        const defaultIntegrations: Integration[] = [
+          {
+            id: 'notion',
+            name: 'Notion',
+            credentials: 'Not configured',
+            automations: [],
+            connected: false,
+            icon: 'document-text',
+          },
+        ];
+        setIntegrations(defaultIntegrations);
+      } else {
+        setIntegrations(formattedIntegrations);
       }
-    };
+    } catch (err) {
+      console.error('Error loading integrations:', err);
+      setError('Failed to load integrations');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadIntegrations();
   }, [user?.id]);
+
+  // Refresh integrations when screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      loadIntegrations();
+    }, [user?.id])
+  );
 
   const getIconForIntegrationType = (type: string): keyof typeof Ionicons.glyphMap => {
     switch (type.toLowerCase()) {
@@ -190,6 +202,39 @@ export const IntegrationsScreen: React.FC = () => {
             Your assistant will make the connection or scope out setup options, time, and cost.
           </Text>
         </View>
+
+        {/* Authentication Ready Section */}
+        {authReadyIntegrations.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Complete Setup</Text>
+            <Text style={styles.sectionSubtitle}>These integrations are ready for authentication</Text>
+            
+            {authReadyIntegrations.map((integration) => (
+              <View key={integration.id} style={styles.authReadyItem}>
+                <View style={styles.authReadyLeft}>
+                  <Ionicons name={getIconForIntegrationType(integration.service_name)} size={24} color="#4A90E2" />
+                  <View style={styles.authReadyInfo}>
+                    <Text style={styles.authReadyName}>{integration.service_name}</Text>
+                    <Text style={styles.authReadyDescription}>Tap to complete authentication</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={styles.authButton}
+                  onPress={() => {
+                    if (integration.auth_flow_url) {
+                      // Open external URL for authentication
+                      console.log('Opening auth URL:', integration.auth_flow_url);
+                      // You can use Linking.openURL(integration.auth_flow_url) here
+                    }
+                  }}
+                >
+                  <Text style={styles.authButtonText}>Authenticate</Text>
+                  <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Your Integrations</Text>
@@ -609,5 +654,55 @@ const styles = StyleSheet.create({
   },
   submitButtonDisabled: {
     backgroundColor: '#757575',
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#B0B0B0',
+    marginBottom: 16,
+    marginTop: 4,
+  },
+  authReadyItem: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#4A90E2',
+  },
+  authReadyLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  authReadyInfo: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  authReadyName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  authReadyDescription: {
+    fontSize: 14,
+    color: '#B0B0B0',
+  },
+  authButton: {
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  authButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
   },
 }); 

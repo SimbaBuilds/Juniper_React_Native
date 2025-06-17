@@ -4,7 +4,7 @@ import VoiceService from './VoiceService';
 import { useServerApi } from '../api/useServerApi';
 import { useVoiceState as useVoiceStateHook } from './hooks/useVoiceState';
 import { useVoiceSettings } from './hooks/useVoiceSettings';
-import { DatabaseService, supabase } from '../supabase/supabase';
+import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
 import { DeviceEventEmitter, EmitterSubscription } from 'react-native';
 import { conversationService } from '../services/conversationService';
@@ -21,6 +21,7 @@ const VoiceContext = createContext<VoiceContextValue>({
   isSpeaking: false,
   isError: false,
   inputMode: 'voice',
+  integrationInProgress: false,
   setVoiceState: () => {},
   setWakeWordEnabled: () => {},
   setError: () => {},
@@ -33,6 +34,9 @@ const VoiceContext = createContext<VoiceContextValue>({
   clearChatHistory: () => {},
   refreshSettings: async () => {},
   sendTextMessage: async () => {},
+  continuePreviousChat: () => {},
+  cancelRequest: async () => false,
+  isRequestInProgress: false,
   voiceSettings: {},
   settingsLoading: false,
   updateVoiceSettings: async () => {},
@@ -90,10 +94,12 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const [response, setResponse] = useState<string>('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
+  const [integrationInProgress, setIntegrationInProgress] = useState<boolean>(false);
   
   // Auto-refresh timer state
   const [lastMessageTimestamp, setLastMessageTimestamp] = useState<number | null>(null);
   const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const integrationPollingTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Voice service instance
   const voiceService = useMemo(() => VoiceService.getInstance(), []);
@@ -102,25 +108,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const listenersSetupRef = useRef(false);
 
   // Server API hook
-  const { sendMessage } = useServerApi();
+  const { sendMessage, cancelRequest, isRequestInProgress } = useServerApi();
 
   // Auto-refresh timer functions
-  const resetAutoRefreshTimer = useCallback(() => {
-    // Clear existing timer
-    if (autoRefreshTimerRef.current) {
-      clearTimeout(autoRefreshTimerRef.current);
-    }
-    
-    // Only set timer if there are messages in chat history
-    if (chatHistory.length > 0) {
-      console.log('🕐 Setting auto-refresh timer for 10 minutes');
-      autoRefreshTimerRef.current = setTimeout(() => {
-        console.log('🕐 Auto-refresh timer triggered - clearing chat history');
-        handleAutoRefresh();
-      }, AUTO_REFRESH_DELAY);
-    }
-  }, [chatHistory.length]);
-
   const handleAutoRefresh = useCallback(async () => {
     if (chatHistory.length > 0) {
       console.log('🔄 Auto-refresh: Saving and clearing conversation after 10 minutes of inactivity');
@@ -148,6 +138,56 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
   }, [chatHistory]);
 
+  const resetAutoRefreshTimer = useCallback(() => {
+    // Clear existing timer
+    if (autoRefreshTimerRef.current) {
+      clearTimeout(autoRefreshTimerRef.current);
+    }
+    
+    // Only set timer if there are messages in chat history
+    if (chatHistory.length > 0) {
+      console.log('🕐 Setting auto-refresh timer for 10 minutes');
+      autoRefreshTimerRef.current = setTimeout(() => {
+        console.log('🕐 Auto-refresh timer triggered - clearing chat history');
+        handleAutoRefresh();
+      }, AUTO_REFRESH_DELAY);
+    }
+  }, [chatHistory.length, handleAutoRefresh]);
+
+  // Integration status polling functions
+  const stopIntegrationPolling = useCallback(() => {
+    console.log('🛑 Stopping integration status polling');
+    if (integrationPollingTimerRef.current) {
+      clearInterval(integrationPollingTimerRef.current);
+      integrationPollingTimerRef.current = null;
+    }
+  }, []);
+
+  const startIntegrationPolling = useCallback(() => {
+    console.log('🔄 Starting integration status polling every 15 seconds');
+    
+    if (integrationPollingTimerRef.current) {
+      clearInterval(integrationPollingTimerRef.current);
+    }
+    
+    integrationPollingTimerRef.current = setInterval(async () => {
+      if (!user?.id) return;
+      
+      try {
+        const status = await DatabaseService.getIntegrationStatus(user.id);
+        console.log('🔄 Integration status poll result:', status);
+        
+        if (!status.integration_in_progress) {
+          console.log('✅ Integration completed - stopping polling');
+          setIntegrationInProgress(false);
+          stopIntegrationPolling();
+        }
+      } catch (error) {
+        console.error('❌ Error polling integration status:', error);
+      }
+    }, 15000); // Poll every 15 seconds
+  }, [user?.id, stopIntegrationPolling]);
+
   // Update last message timestamp and reset timer when chat history changes
   useEffect(() => {
     if (chatHistory.length > 0) {
@@ -169,6 +209,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     return () => {
       if (autoRefreshTimerRef.current) {
         clearTimeout(autoRefreshTimerRef.current);
+      }
+      if (integrationPollingTimerRef.current) {
+        clearInterval(integrationPollingTimerRef.current);
       }
     };
   }, []);
@@ -530,6 +573,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             console.log('📝 TEXT_INPUT: API call duration:', (apiEndTime - apiStartTime), 'ms');
             console.log('📝 TEXT_INPUT: Received API response');
             console.log('📝 TEXT_INPUT: Response settings_updated flag:', response.settings_updated);
+            console.log('📝 TEXT_INPUT: Response integration_in_progress flag:', response.integration_in_progress);
             
             // Check if settings were updated and refresh if needed
             if (response.settings_updated) {
@@ -552,6 +596,18 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               }
             } else {
               console.log('⚙️ TEXT_INPUT: No settings update flag - skipping settings refresh');
+            }
+            
+            // Check if integration is in progress and start polling if needed
+            if (response.integration_in_progress) {
+              console.log('🔗 TEXT_INPUT: ========== INTEGRATION IN PROGRESS DETECTED ==========');
+              console.log('🔗 TEXT_INPUT: Integration building started, beginning status polling...');
+              console.log('🔗 TEXT_INPUT: Current time:', new Date().toISOString());
+              
+              setIntegrationInProgress(true);
+              startIntegrationPolling();
+            } else {
+              console.log('🔗 TEXT_INPUT: No integration in progress flag - skipping polling');
             }
             
             // Add assistant response to chat history
@@ -591,6 +647,12 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
   }, [sendMessage, voiceSettings]);
 
+  // Continue previous chat by setting the chat history
+  const continuePreviousChat = useCallback((messages: ChatMessage[]) => {
+    console.log('📚 Continuing previous chat with', messages.length, 'messages');
+    setChatHistory(messages);
+  }, []);
+
   // Context value - now purely bridging to native state
   const value: VoiceContextValue = {
     // Native state (single source of truth)
@@ -606,6 +668,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     response,
     chatHistory,
     inputMode,
+    integrationInProgress,
     
     // Voice settings
     voiceSettings,
@@ -625,6 +688,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     clearChatHistory,
     refreshSettings,
     sendTextMessage,
+    continuePreviousChat,
+    cancelRequest,
+    isRequestInProgress,
   };
   
   return <VoiceContext.Provider value={value}>{children}</VoiceContext.Provider>;
