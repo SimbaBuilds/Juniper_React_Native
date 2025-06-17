@@ -195,15 +195,27 @@ export type UserProfile = {
     service_id: string;
     name: string;
     description: string;
-    parameters: Record<string, any>;
-    returns: Record<string, any>;
-    example: Record<string, any>;
-    run_script: string;
+    parameters: Record<string, any>;  // JSON schema for input parameters
+    returns: Record<string, any>;     // JSON schema for output format
+    example: Record<string, any>;     // Example usage
+    run_script: string;               // Executable Python script/logic
+    endpoint_url?: string;            // API endpoint if applicable
+    http_method?: string;             // GET, POST, etc.
+    auth_required: boolean;           // Whether authentication is needed
+    category?: string;                // e.g., "communication", "storage", "analytics"
+    version: string;                  // Tool version
+    is_active: boolean;               // Whether tool is available for use
+    execution_timeout: number;        // Timeout in seconds
+    rate_limit?: number;              // Max executions per minute
+    created_at: Date;
+    updated_at?: Date;
   };
 
   export const actionFields = [
     'id', 'service_id', 'name', 'description', 'parameters',
-    'returns', 'example', 'run_script'
+    'returns', 'example', 'run_script', 'endpoint_url', 'http_method',
+    'auth_required', 'category', 'version', 'is_active', 'execution_timeout',
+    'rate_limit', 'created_at', 'updated_at'
   ] as const;
   export type ActionField = (typeof actionFields)[number];
 
