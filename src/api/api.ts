@@ -6,7 +6,7 @@ import { supabase } from '../supabase/supabase';
 
 const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL,
-  timeout: Platform.OS === 'android' ? 30000 : 15000, // Longer timeout for Android
+  timeout: Platform.OS === 'android' ? 45000 : 15000, // Longer timeout for Android
 });
 
 // Add request interceptor to add auth token

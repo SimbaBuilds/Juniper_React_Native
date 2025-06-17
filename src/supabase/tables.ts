@@ -132,7 +132,7 @@ export type UserProfile = {
     id: string;
     user_id: string;
     type: 'built_in' | 'user_created'; // integration type
-    service_name: string; // provider name (google, microsoft, notion, etc.)
+    service_id: string; // points to service id instead of service_name
     notes?: string;
     configuration: Record<string, any>;
     is_active: boolean;
@@ -142,7 +142,7 @@ export type UserProfile = {
     access_token?: string;
     refresh_token?: string;
     expires_at?: Date;
-    scope?: string;
+    scopes?: string;
     // Email specific fields
     email_address?: string;
     sync_settings?: Record<string, any>;
@@ -157,18 +157,68 @@ export type UserProfile = {
     // Common sync fields
     last_sync?: Date;
     updated_at?: Date;
+    // New integration fields
+    integration_method?: string;
+    available_actions?: string[];
+    connection_test_script?: string;
+    client_id?: string;
+    client_secret_id?: string;
+    client_secret_value?: string;
   };
   
   export const integrationFields = [
-    'id', 'user_id', 'type', 'service_name', 'notes',
+    'id', 'user_id', 'type', 'service_id', 'notes',
     'configuration', 'is_active', 'last_used', 'created_at',
     'access_token', 'refresh_token', 'expires_at', 'scope',
     'email_address', 'sync_settings',
     'bot_id', 'workspace_name', 'workspace_icon', 'workspace_id', 
     'owner_info', 'duplicated_template_id', 'permissions',
-    'last_sync', 'updated_at'
+    'last_sync', 'updated_at', 'integration_method', 'available_actions',
+    'connection_test_script', 'client_id', 'client_secret_id', 'client_secret_value'
   ] as const;
   export type IntegrationField = (typeof integrationFields)[number];
+
+  export type Service = {
+    id: string;
+    created_at: Date;
+    service_name: string;
+    num_users: number;
+    config_form_json?: Record<string, any>; // Cached config form data
+  };
+
+  export const serviceFields = [
+    'id', 'created_at', 'service_name', 'num_users', 'config_form_json'
+  ] as const;
+  export type ServiceField = (typeof serviceFields)[number];
+
+  export type Action = {
+    id: string;
+    service_id: string;
+    name: string;
+    description: string;
+    parameters: Record<string, any>;  // JSON schema for input parameters
+    returns: Record<string, any>;     // JSON schema for output format
+    example: Record<string, any>;     // Example usage
+    run_script: string;               // Executable Python script/logic
+    endpoint_url?: string;            // API endpoint if applicable
+    http_method?: string;             // GET, POST, etc.
+    auth_required: boolean;           // Whether authentication is needed
+    category?: string;                // e.g., "communication", "storage", "analytics"
+    version: string;                  // Tool version
+    is_active: boolean;               // Whether tool is available for use
+    execution_timeout: number;        // Timeout in seconds
+    rate_limit?: number;              // Max executions per minute
+    created_at: Date;
+    updated_at?: Date;
+  };
+
+  export const actionFields = [
+    'id', 'service_id', 'name', 'description', 'parameters',
+    'returns', 'example', 'run_script', 'endpoint_url', 'http_method',
+    'auth_required', 'category', 'version', 'is_active', 'execution_timeout',
+    'rate_limit', 'created_at', 'updated_at'
+  ] as const;
+  export type ActionField = (typeof actionFields)[number];
 
 
 

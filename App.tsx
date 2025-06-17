@@ -6,7 +6,7 @@ import { Linking } from 'react-native';
 import { VoiceProvider } from './src/voice/VoiceContext';
 import { WakeWordProvider } from './src/wakeword/WakeWordContext';
 import WakeWordService from './src/wakeword/WakeWordService';
-import { GoogleAuthService } from './src/integrations/google/GoogleAuthService';
+import { GoogleAuthService } from './src/auth/GoogleAuthService';
 import { HomeScreen } from './src/HomeScreen';
 import { SettingsScreen } from './src/settings/SettingsScreen';
 import { IntegrationsScreen } from './src/integrations/IntegrationsScreen';

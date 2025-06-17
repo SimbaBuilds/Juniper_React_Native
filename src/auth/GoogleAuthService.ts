@@ -1,7 +1,7 @@
 import { Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { supabase } from '../../supabase/supabase';
+import { supabase } from '../supabase/supabase';
 
 // Google API configuration - unified for all services
 const GOOGLE_CONFIG = {
