@@ -564,7 +564,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           >
             <View style={styles.noteContainer}>
               <Text style={styles.noteText}>
-                💡 You can specify specific X handles in your request (e.g., "search X posts from ShelbyTalcott about recent updates from the White House")
+                💡 You can specify specific X handles and date ranges in your request (e.g., "search X posts from Shelby Talcott about recent updates from the White House from the past two days")
               </Text>
             </View>
             
