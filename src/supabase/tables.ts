@@ -183,10 +183,11 @@ export type UserProfile = {
     created_at: Date;
     service_name: string;
     num_users: number;
+    config_form_json?: Record<string, any>; // Cached config form data
   };
 
   export const serviceFields = [
-    'id', 'created_at', 'service_name', 'num_users'
+    'id', 'created_at', 'service_name', 'num_users', 'config_form_json'
   ] as const;
   export type ServiceField = (typeof serviceFields)[number];
 
