@@ -148,6 +148,7 @@ export type UserProfile = {
     service_id: string; // points to service id instead of service_name
     notes?: string;
     is_active: boolean;
+    status?: string; // pending, in_progress, active, inactive, failed
     last_used?: Date;
     created_at: Date;
     // OAuth fields (for calendar and email integrations)
@@ -172,7 +173,7 @@ export type UserProfile = {
   };
   
   export const integrationFields = [
-    'id', 'user_id', 'service_id', 'notes', 'is_active', 'last_used', 'created_at',
+    'id', 'user_id', 'service_id', 'notes', 'is_active', 'status', 'last_used', 'created_at',
     'access_token', 'refresh_token', 'expires_at', 'email_address',
     'bot_id', 'workspace_name', 'workspace_icon', 'workspace_id', 'owner_info', 'duplicated_template_id',
     'last_sync', 'updated_at', 'client_id', 'client_secret_id', 'client_secret_value'
@@ -242,6 +243,24 @@ export type UserProfile = {
     'metadata', 'created_at', 'processed_at'
   ] as const;
   export type CancellationRequestField = (typeof cancellationRequestFields)[number];
+
+  export type IntegrationBuildState = {
+    id: string;
+    user_id: string;
+    service_name: string;
+    completed_steps: string[];      // List of completed step names
+    current_status: string;         // not_started, in_progress, step1_complete, step2_ready, form_submitted, completed, failed
+    state_data: Record<string, any>; // Additional state information
+    created_at: Date;
+    last_updated: Date;
+    updated_by?: string;
+  };
+
+  export const integrationBuildStateFields = [
+    'id', 'user_id', 'service_name', 'completed_steps', 'current_status',
+    'state_data', 'created_at', 'last_updated', 'updated_by'
+  ] as const;
+  export type IntegrationBuildStateField = (typeof integrationBuildStateFields)[number];
 
 
 
