@@ -14,7 +14,6 @@ export const HomeScreen: React.FC = () => {
       <View style={styles.content}>
         <View style={styles.header}>
           <View style={styles.titleContainer}>
-            {/* <Text style={styles.title}>Voice Assistant</Text> */}
           </View>
         </View>
         
@@ -28,12 +27,6 @@ export const HomeScreen: React.FC = () => {
             <VoiceAssistant onSpeechResult={(text) => console.log('Speech recognized:', text)} />
           </View>
         </VoiceErrorBoundary>
-        
-        {/* <View style={styles.infoSection}>
-          <Text style={styles.infoText}>
-            You can continue the conversation with text message or saying wake word.
-          </Text>
-        </View> */}
       </View>
     </SafeAreaView>
   );

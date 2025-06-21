@@ -188,7 +188,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       } catch (error) {
         console.error('❌ Error polling integration build status:', error);
       }
-    }, 15000); // Poll every 15 seconds
+    }, 5000); // Poll every 5 seconds
   }, [user?.id, stopIntegrationPolling]);
 
   // Update last message timestamp and reset timer when chat history changes

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Modal, TextInput, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { DatabaseService } from '../supabase/supabase';
+import { DatabaseService, supabase } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useVoice } from '../voice/VoiceContext';
@@ -22,6 +22,7 @@ export const IntegrationsScreen: React.FC = () => {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [authReadyIntegrations, setAuthReadyIntegrations] = useState<any[]>([]);
   const [formReadyIntegrations, setFormReadyIntegrations] = useState<any[]>([]);
+  const [completedIntegrations, setCompletedIntegrations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -41,6 +42,7 @@ export const IntegrationsScreen: React.FC = () => {
       const dbIntegrations = await DatabaseService.getIntegrations(user.id);
       const authReadyInts = await DatabaseService.getAuthenticationReadyIntegrations(user.id);
       const formReadyInts = await DatabaseService.getFormReadyIntegrations(user.id);
+      const completedInts = await DatabaseService.getCompletedIntegrations(user.id);
       
       // Filter out authentication_ready integrations from main list
       const activeIntegrations = dbIntegrations.filter((int: any) => int.status !== 'authentication_ready');
@@ -55,9 +57,10 @@ export const IntegrationsScreen: React.FC = () => {
         icon: getIconForIntegrationType(integration.service_name)
       }));
 
-      // Set authentication ready integrations and form ready integrations
+      // Set authentication ready integrations, form ready integrations, and completed integrations
       setAuthReadyIntegrations(authReadyInts);
       setFormReadyIntegrations(formReadyInts);
+      setCompletedIntegrations(completedInts);
 
       // Add default integrations if none exist
       if (formattedIntegrations.length === 0) {
@@ -221,10 +224,54 @@ export const IntegrationsScreen: React.FC = () => {
     }
   };
 
+  // Handle completed integration activation
+  const handleActivateIntegration = async (buildState: any) => {
+    try {
+      console.log('✅ Activating completed integration:', buildState.service_name);
+      
+      // Get the actual integration record
+      const dbIntegrations = await DatabaseService.getIntegrations(user!.id);
+      const integration = dbIntegrations.find((int: any) => 
+        int.service_name === buildState.service_name
+      );
+      
+      if (!integration) {
+        Alert.alert('Error', 'Integration record not found');
+        return;
+      }
+
+      // Update integration to active status
+      const { error } = await supabase
+        .from('integrations')
+        .update({ 
+          is_active: true,
+          status: 'active',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', integration.id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Show success message
+      Alert.alert(
+        'Integration Activated!',
+        `Your ${buildState.service_name} integration is now active and ready to use.`,
+        [{ text: 'OK', onPress: () => loadIntegrations() }]
+      );
+      
+    } catch (error) {
+      console.error('Error activating integration:', error);
+      Alert.alert('Error', 'Failed to activate integration. Please try again.');
+    }
+  };
+
   // Handle authentication for auth_ready integrations
   const handleAuthenticate = async (buildState: any) => {
     try {
       console.log('🔗 Handling authentication for:', buildState.service_name);
+      console.log('🔗 Integration ID:', buildState.id);
       
       // Get service information to find the auth script
       const service = await DatabaseService.getServiceByName(buildState.service_name);
@@ -240,20 +287,37 @@ export const IntegrationsScreen: React.FC = () => {
 
       console.log('🔗 Executing auth script for:', service.service_name);
       
-      // Execute auth script - this would typically involve:
-      // 1. Running the auth script logic
-      // 2. Opening OAuth flows
-      // 3. Handling authentication callbacks
-      
-      // Handle different types of auth scripts
+      // For OAuth flows, we need to call the backend to generate the proper OAuth URL
+      // with the integration ID embedded in the state parameter
       try {
-        // If auth_script contains a URL, open it
+        // Check if this is an OAuth URL or script
         if (service.auth_script.includes('http')) {
-          console.log('🔗 Opening auth URL:', service.auth_script);
+          console.log('🔗 Detected OAuth URL, generating proper OAuth flow with integration ID');
           
-          const canOpen = await Linking.canOpenURL(service.auth_script);
+          // Call backend to generate OAuth URL with integration ID
+          const oauthUrlResponse = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/integrations/${buildState.id}/oauth-url`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              service_name: buildState.service_name,
+              integration_id: buildState.id
+            })
+          });
+
+          if (!oauthUrlResponse.ok) {
+            throw new Error('Failed to generate OAuth URL');
+          }
+
+          const oauthData = await oauthUrlResponse.json();
+          const oauthUrl = oauthData.authorization_url || service.auth_script;
+          
+          console.log('🔗 Opening OAuth URL with integration ID:', oauthUrl);
+          
+          const canOpen = await Linking.canOpenURL(oauthUrl);
           if (canOpen) {
-            await Linking.openURL(service.auth_script);
+            await Linking.openURL(oauthUrl);
           } else {
             Alert.alert('Error', 'Unable to open authentication URL. Please check your internet connection.');
           }
@@ -367,6 +431,37 @@ export const IntegrationsScreen: React.FC = () => {
                 >
                   <Text style={styles.authButtonText}>Authenticate</Text>
                   <Ionicons name="key" size={16} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Completed Integrations Section */}
+        {completedIntegrations.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Ready to Activate</Text>
+            <Text style={styles.sectionSubtitle}>These integrations are configured and ready to use</Text>
+            
+            {completedIntegrations.map((buildState) => (
+              <View key={buildState.id} style={styles.authReadyItem}>
+                <View style={styles.authReadyLeft}>
+                  <Ionicons name={getIconForIntegrationType(buildState.service_name)} size={24} color="#4CAF50" />
+                  <View style={styles.authReadyInfo}>
+                    <Text style={styles.authReadyName}>{buildState.service_name}</Text>
+                    <Text style={styles.authReadyDescription}>
+                      {buildState.state_data?.auth_type === 'api_key' ? 'API key configured' : 
+                       buildState.state_data?.auth_type === 'app_password' ? 'App password configured' :
+                       'Credentials configured'}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.authButton, styles.activateButton]}
+                  onPress={() => handleActivateIntegration(buildState)}
+                >
+                  <Text style={styles.authButtonText}>Activate</Text>
+                  <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
             ))}
@@ -845,6 +940,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   formButton: {
+    backgroundColor: '#4CAF50',
+  },
+  activateButton: {
     backgroundColor: '#4CAF50',
   },
   authButtonText: {
