@@ -133,12 +133,12 @@ export type UserProfile = {
     id: string;
     service_id: string;
     json: Record<string, any>;
-    link?: string;
+    setup_instructions?: string;
     updated_at: Date;
   };
 
   export const configFormFields = [
-    'id', 'service_id', 'json', 'link', 'updated_at'
+    'id', 'service_id', 'json', 'setup_instructions', 'updated_at'
   ] as const;
   export type ConfigFormField = (typeof configFormFields)[number];
   
@@ -185,16 +185,15 @@ export type UserProfile = {
     created_at: Date;
     service_name: string;
     num_users: number;
-    config_form_json?: Record<string, any>; // Cached config form data
+    config_form_id?: string; // Foreign key to ConfigForm.id
     auth_script?: string;
     tools?: string[];
-    client_creation_script?: string;
     integration_method?: string; // e.g. OAuth, External App, Internal App etc.
   };
 
   export const serviceFields = [
-    'id', 'created_at', 'service_name', 'num_users', 'config_form_json',
-    'auth_script', 'tools', 'client_creation_script', 'integration_method'
+    'id', 'created_at', 'service_name', 'num_users', 'config_form_id',
+    'auth_script', 'tools', 'integration_method'
   ] as const;
   export type ServiceField = (typeof serviceFields)[number];
 
@@ -249,7 +248,7 @@ export type UserProfile = {
     user_id: string;
     service_name: string;
     completed_steps: string[];      // List of completed step names
-    current_status: string;         // not_started, in_progress, step1_complete, step2_ready, form_submitted, completed, failed
+    current_status: string;         // not_started, in_progress, form_ready, auth_ready, completed, failed
     state_data: Record<string, any>; // Additional state information
     created_at: Date;
     last_updated: Date;

@@ -156,7 +156,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
 
   // Integration status polling functions
   const stopIntegrationPolling = useCallback(() => {
-    console.log('🛑 Stopping integration status polling');
+    console.log('🛑 Stopping integration build status polling');
     if (integrationPollingTimerRef.current) {
       clearInterval(integrationPollingTimerRef.current);
       integrationPollingTimerRef.current = null;
@@ -164,7 +164,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   }, []);
 
   const startIntegrationPolling = useCallback(() => {
-    console.log('🔄 Starting integration status polling every 15 seconds');
+    console.log('🔄 Starting integration build status polling every 15 seconds');
     
     if (integrationPollingTimerRef.current) {
       clearInterval(integrationPollingTimerRef.current);
@@ -174,16 +174,19 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       if (!user?.id) return;
       
       try {
-        const status = await DatabaseService.getIntegrationStatus(user.id);
-        console.log('🔄 Integration status poll result:', status);
+        const status = await DatabaseService.getIntegrationBuildStatus(user.id);
+        console.log('🔄 Integration build status poll result:', status);
         
         if (!status.integration_in_progress) {
-          console.log('✅ Integration completed - stopping polling');
+          console.log('✅ Integration build completed - stopping polling');
           setIntegrationInProgress(false);
           stopIntegrationPolling();
+        } else {
+          console.log(`🔄 Integration builds in progress: ${status.in_progress_count}, states:`, 
+            status.build_states.map(s => `${s.service_name}:${s.current_status}`).join(', '));
         }
       } catch (error) {
-        console.error('❌ Error polling integration status:', error);
+        console.error('❌ Error polling integration build status:', error);
       }
     }, 15000); // Poll every 15 seconds
   }, [user?.id, stopIntegrationPolling]);
@@ -600,14 +603,14 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             
             // Check if integration is in progress and start polling if needed
             if (response.integration_in_progress) {
-              console.log('🔗 TEXT_INPUT: ========== INTEGRATION IN PROGRESS DETECTED ==========');
-              console.log('🔗 TEXT_INPUT: Integration building started, beginning status polling...');
+              console.log('🔗 TEXT_INPUT: ========== INTEGRATION BUILD IN PROGRESS DETECTED ==========');
+              console.log('🔗 TEXT_INPUT: Integration build started, beginning build state polling...');
               console.log('🔗 TEXT_INPUT: Current time:', new Date().toISOString());
               
               setIntegrationInProgress(true);
               startIntegrationPolling();
             } else {
-              console.log('🔗 TEXT_INPUT: No integration in progress flag - skipping polling');
+              console.log('🔗 TEXT_INPUT: No integration build in progress flag - skipping polling');
             }
             
             // Add assistant response to chat history

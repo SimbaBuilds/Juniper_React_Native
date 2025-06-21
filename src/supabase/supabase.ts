@@ -247,33 +247,76 @@ export const DatabaseService = {
     return data || []
   },
 
-  // Check integration status for polling
-  async getIntegrationStatus(userId: string) {
+  // Check integration build status for polling
+  async getIntegrationBuildStatus(userId: string) {
     const { data, error } = await supabase
-      .from('integrations')
-      .select('id, service_id, status, created_at, updated_at')
+      .from('integration_build_states')
+      .select('id, service_name, current_status, created_at, last_updated')
       .eq('user_id', userId)
-      .in('status', ['pending', 'in_progress', 'authentication_ready'])
+      .in('current_status', ['in_progress', 'form_ready', 'auth_ready'])
     
     if (error) throw error
     return {
       integration_in_progress: data && data.length > 0,
       in_progress_count: data?.length || 0,
-      integrations: data || []
+      build_states: data || []
     }
   },
 
-  // Get integrations that need authentication
+  // Legacy method for backward compatibility (deprecated)
+  async getIntegrationStatus(userId: string) {
+    console.warn('getIntegrationStatus is deprecated, use getIntegrationBuildStatus instead')
+    return await this.getIntegrationBuildStatus(userId)
+  },
+
+  // Get integration build states that need authentication
   async getAuthenticationReadyIntegrations(userId: string) {
     const { data, error } = await supabase
-      .from('integrations')
+      .from('integration_build_states')
       .select('*')
       .eq('user_id', userId)
-      .eq('status', 'authentication_ready')
+      .eq('current_status', 'auth_ready')
       .order('created_at', { ascending: false })
     
     if (error) throw error
     return data || []
+  },
+
+  // Get integration build states that need form completion
+  async getFormReadyIntegrations(userId: string) {
+    const { data, error } = await supabase
+      .from('integration_build_states')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('current_status', 'form_ready')
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data || []
+  },
+
+  // Get service information by service name
+  async getServiceByName(serviceName: string) {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .eq('service_name', serviceName)
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  // Get config form by service ID
+  async getConfigFormByServiceId(serviceId: string) {
+    const { data, error } = await supabase
+      .from('config_forms')
+      .select('*')
+      .eq('service_id', serviceId)
+      .single()
+    
+    if (error) throw error
+    return data
   },
 
   // Automations

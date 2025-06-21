@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Modal, TextInput, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
@@ -21,6 +21,7 @@ export const IntegrationsScreen: React.FC = () => {
   const { sendTextMessage } = useVoice();
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [authReadyIntegrations, setAuthReadyIntegrations] = useState<any[]>([]);
+  const [formReadyIntegrations, setFormReadyIntegrations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -39,6 +40,7 @@ export const IntegrationsScreen: React.FC = () => {
       
       const dbIntegrations = await DatabaseService.getIntegrations(user.id);
       const authReadyInts = await DatabaseService.getAuthenticationReadyIntegrations(user.id);
+      const formReadyInts = await DatabaseService.getFormReadyIntegrations(user.id);
       
       // Filter out authentication_ready integrations from main list
       const activeIntegrations = dbIntegrations.filter((int: any) => int.status !== 'authentication_ready');
@@ -53,8 +55,9 @@ export const IntegrationsScreen: React.FC = () => {
         icon: getIconForIntegrationType(integration.service_name)
       }));
 
-      // Set authentication ready integrations
+      // Set authentication ready integrations and form ready integrations
       setAuthReadyIntegrations(authReadyInts);
+      setFormReadyIntegrations(formReadyInts);
 
       // Add default integrations if none exist
       if (formattedIntegrations.length === 0) {
@@ -170,6 +173,118 @@ export const IntegrationsScreen: React.FC = () => {
     }
   };
 
+  // Handle form completion for form_ready integrations
+  const handleCompleteForm = async (buildState: any) => {
+    try {
+      console.log('🔗 Handling form completion for:', buildState.service_name);
+      
+      // Get service information to find the config form
+      const service = await DatabaseService.getServiceByName(buildState.service_name);
+      if (!service) {
+        Alert.alert('Error', 'Service information not found');
+        return;
+      }
+
+      // Get config form by service ID
+      const configForm = await DatabaseService.getConfigFormByServiceId(service.id);
+      if (!configForm) {
+        Alert.alert('Error', 'Configuration form not found');
+        return;
+      }
+
+      // Open the config form URL
+      const formUrl = `/integration/setup/${configForm.id}`;
+      console.log('🔗 Opening config form URL:', formUrl);
+      
+      // For web-based config forms, we would typically open in a web browser
+      // Since this is a React Native app, you might want to:
+      // 1. Open in an in-app browser
+      // 2. Navigate to a dedicated form screen
+      // 3. Open in external browser
+      
+      // For now, let's open in external browser
+      const webBaseUrl = process.env.EXPO_PUBLIC_WEB_URL || 'https://your-web-app.com';
+      const fullUrl = `${webBaseUrl}${formUrl}`;
+      console.log('🔗 Opening full URL:', fullUrl);
+      
+      // Check if URL can be opened
+      const canOpen = await Linking.canOpenURL(fullUrl);
+      if (canOpen) {
+        await Linking.openURL(fullUrl);
+      } else {
+        Alert.alert('Error', 'Unable to open configuration form. Please check your internet connection.');
+      }
+      
+    } catch (error) {
+      console.error('Error handling form completion:', error);
+      Alert.alert('Error', 'Failed to open configuration form. Please try again.');
+    }
+  };
+
+  // Handle authentication for auth_ready integrations
+  const handleAuthenticate = async (buildState: any) => {
+    try {
+      console.log('🔗 Handling authentication for:', buildState.service_name);
+      
+      // Get service information to find the auth script
+      const service = await DatabaseService.getServiceByName(buildState.service_name);
+      if (!service) {
+        Alert.alert('Error', 'Service information not found');
+        return;
+      }
+
+      if (!service.auth_script) {
+        Alert.alert('Error', 'Authentication script not found for this service');
+        return;
+      }
+
+      console.log('🔗 Executing auth script for:', service.service_name);
+      
+      // Execute auth script - this would typically involve:
+      // 1. Running the auth script logic
+      // 2. Opening OAuth flows
+      // 3. Handling authentication callbacks
+      
+      // Handle different types of auth scripts
+      try {
+        // If auth_script contains a URL, open it
+        if (service.auth_script.includes('http')) {
+          console.log('🔗 Opening auth URL:', service.auth_script);
+          
+          const canOpen = await Linking.canOpenURL(service.auth_script);
+          if (canOpen) {
+            await Linking.openURL(service.auth_script);
+          } else {
+            Alert.alert('Error', 'Unable to open authentication URL. Please check your internet connection.');
+          }
+        } else {
+          // If it's actual script code, you'd need to execute it
+          // This would require a more sophisticated implementation
+          console.log('🔗 Auth script content:', service.auth_script.substring(0, 100) + '...');
+          console.log('🔗 Script-based auth execution not yet implemented');
+          Alert.alert(
+            'Authentication Required', 
+            'This integration requires custom authentication setup. Please contact support for assistance.',
+            [
+              { text: 'OK', style: 'default' },
+              { text: 'Contact Support', style: 'default', onPress: () => {
+                // You could open a support URL or email here
+                console.log('🔗 User requested support for auth setup');
+              }}
+            ]
+          );
+        }
+      } catch (linkError) {
+        console.error('Error handling auth script:', linkError);
+        Alert.alert('Error', 'Failed to start authentication flow. Please try again.');
+      }
+      
+    } catch (error) {
+      console.error('Error handling authentication:', error);
+      Alert.alert('Error', 'Failed to start authentication. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -203,33 +318,55 @@ export const IntegrationsScreen: React.FC = () => {
           </Text>
         </View>
 
+        {/* Form Ready Section */}
+        {formReadyIntegrations.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Complete Configuration</Text>
+            <Text style={styles.sectionSubtitle}>These integrations need configuration forms completed</Text>
+            <Text style={styles.emailNotice}>This form has also been emailed to you for easy desktop access</Text>
+            
+            {formReadyIntegrations.map((buildState) => (
+              <View key={buildState.id} style={styles.authReadyItem}>
+                <View style={styles.authReadyLeft}>
+                  <Ionicons name={getIconForIntegrationType(buildState.service_name)} size={24} color="#4CAF50" />
+                  <View style={styles.authReadyInfo}>
+                    <Text style={styles.authReadyName}>{buildState.service_name}</Text>
+                    <Text style={styles.authReadyDescription}>Complete configuration form</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.authButton, styles.formButton]}
+                  onPress={() => handleCompleteForm(buildState)}
+                >
+                  <Text style={styles.authButtonText}>Configure</Text>
+                  <Ionicons name="settings" size={16} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Authentication Ready Section */}
         {authReadyIntegrations.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Complete Setup</Text>
+            <Text style={styles.sectionTitle}>Complete Authentication</Text>
             <Text style={styles.sectionSubtitle}>These integrations are ready for authentication</Text>
             
-            {authReadyIntegrations.map((integration) => (
-              <View key={integration.id} style={styles.authReadyItem}>
+            {authReadyIntegrations.map((buildState) => (
+              <View key={buildState.id} style={styles.authReadyItem}>
                 <View style={styles.authReadyLeft}>
-                  <Ionicons name={getIconForIntegrationType(integration.service_name)} size={24} color="#4A90E2" />
+                  <Ionicons name={getIconForIntegrationType(buildState.service_name)} size={24} color="#FF9800" />
                   <View style={styles.authReadyInfo}>
-                    <Text style={styles.authReadyName}>{integration.service_name}</Text>
-                    <Text style={styles.authReadyDescription}>Tap to complete authentication</Text>
+                    <Text style={styles.authReadyName}>{buildState.service_name}</Text>
+                    <Text style={styles.authReadyDescription}>Complete authentication</Text>
                   </View>
                 </View>
                 <TouchableOpacity
                   style={styles.authButton}
-                  onPress={() => {
-                    if (integration.auth_flow_url) {
-                      // Open external URL for authentication
-                      console.log('Opening auth URL:', integration.auth_flow_url);
-                      // You can use Linking.openURL(integration.auth_flow_url) here
-                    }
-                  }}
+                  onPress={() => handleAuthenticate(buildState)}
                 >
                   <Text style={styles.authButtonText}>Authenticate</Text>
-                  <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+                  <Ionicons name="key" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
             ))}
@@ -661,6 +798,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     marginTop: 4,
   },
+  emailNotice: {
+    fontSize: 13,
+    color: '#4CAF50',
+    fontStyle: 'italic',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
   authReadyItem: {
     backgroundColor: '#1E1E1E',
     borderRadius: 8,
@@ -699,6 +843,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  formButton: {
+    backgroundColor: '#4CAF50',
   },
   authButtonText: {
     color: '#FFFFFF',
