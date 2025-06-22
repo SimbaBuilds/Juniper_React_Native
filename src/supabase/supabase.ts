@@ -251,15 +251,21 @@ export const DatabaseService = {
   async getIntegrationBuildStatus(userId: string) {
     const { data, error } = await supabase
       .from('integration_build_states')
-      .select('id, service_name, current_status, created_at, last_updated')
+      .select('id, service_name, current_status, created_at, last_updated, state_data')
       .eq('user_id', userId)
-      .in('current_status', ['in_progress', 'form_ready', 'auth_ready'])
+      .in('current_status', ['in_progress', 'form_ready', 'auth_ready', 'completed'])
     
     if (error) throw error
+    
+    // Filter out completed integrations from "in progress" count
+    // since completed integrations don't need user action
+    const activeStates = data?.filter(state => state.current_status !== 'completed') || []
+    
     return {
-      integration_in_progress: data && data.length > 0,
-      in_progress_count: data?.length || 0,
-      build_states: data || []
+      integration_in_progress: activeStates.length > 0,
+      in_progress_count: activeStates.length,
+      build_states: data || [],
+      active_build_states: activeStates
     }
   },
 
@@ -289,6 +295,19 @@ export const DatabaseService = {
       .select('*')
       .eq('user_id', userId)
       .eq('current_status', 'form_ready')
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data || []
+  },
+
+  // Get completed integrations that are ready to use
+  async getCompletedIntegrations(userId: string) {
+    const { data, error } = await supabase
+      .from('integration_build_states')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('current_status', 'completed')
       .order('created_at', { ascending: false })
     
     if (error) throw error
