@@ -4,10 +4,13 @@ import VoiceService from './VoiceService';
 import { useServerApi } from '../api/useServerApi';
 import { useVoiceState as useVoiceStateHook } from './hooks/useVoiceState';
 import { useVoiceSettings } from './hooks/useVoiceSettings';
-import { DatabaseService, supabase } from '../supabase/supabase';
+import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
-import { DeviceEventEmitter, EmitterSubscription } from 'react-native';
+import { DeviceEventEmitter, EmitterSubscription, Platform, NativeModules } from 'react-native';
 import { conversationService } from '../services/conversationService';
+import { isCancellationError } from '../utils/cancellationUtils';
+
+const { VoiceModule } = NativeModules;
 
 // Create context with default values
 const VoiceContext = createContext<VoiceContextValue>({
@@ -21,6 +24,7 @@ const VoiceContext = createContext<VoiceContextValue>({
   isSpeaking: false,
   isError: false,
   inputMode: 'voice',
+  integrationInProgress: false,
   setVoiceState: () => {},
   setWakeWordEnabled: () => {},
   setError: () => {},
@@ -33,6 +37,9 @@ const VoiceContext = createContext<VoiceContextValue>({
   clearChatHistory: () => {},
   refreshSettings: async () => {},
   sendTextMessage: async () => {},
+  continuePreviousChat: () => {},
+  cancelRequest: async () => false,
+  isRequestInProgress: false,
   voiceSettings: {},
   settingsLoading: false,
   updateVoiceSettings: async () => {},
@@ -90,10 +97,12 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const [response, setResponse] = useState<string>('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
+  const [integrationInProgress, setIntegrationInProgress] = useState<boolean>(false);
   
   // Auto-refresh timer state
   const [lastMessageTimestamp, setLastMessageTimestamp] = useState<number | null>(null);
   const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const integrationPollingTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Voice service instance
   const voiceService = useMemo(() => VoiceService.getInstance(), []);
@@ -102,25 +111,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const listenersSetupRef = useRef(false);
 
   // Server API hook
-  const { sendMessage } = useServerApi();
+  const { sendMessage, cancelRequest, isRequestInProgress } = useServerApi();
 
   // Auto-refresh timer functions
-  const resetAutoRefreshTimer = useCallback(() => {
-    // Clear existing timer
-    if (autoRefreshTimerRef.current) {
-      clearTimeout(autoRefreshTimerRef.current);
-    }
-    
-    // Only set timer if there are messages in chat history
-    if (chatHistory.length > 0) {
-      console.log('🕐 Setting auto-refresh timer for 10 minutes');
-      autoRefreshTimerRef.current = setTimeout(() => {
-        console.log('🕐 Auto-refresh timer triggered - clearing chat history');
-        handleAutoRefresh();
-      }, AUTO_REFRESH_DELAY);
-    }
-  }, [chatHistory.length]);
-
   const handleAutoRefresh = useCallback(async () => {
     if (chatHistory.length > 0) {
       console.log('🔄 Auto-refresh: Saving and clearing conversation after 10 minutes of inactivity');
@@ -148,6 +141,59 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
   }, [chatHistory]);
 
+  const resetAutoRefreshTimer = useCallback(() => {
+    // Clear existing timer
+    if (autoRefreshTimerRef.current) {
+      clearTimeout(autoRefreshTimerRef.current);
+    }
+    
+    // Only set timer if there are messages in chat history
+    if (chatHistory.length > 0) {
+      console.log('🕐 Setting auto-refresh timer for 10 minutes');
+      autoRefreshTimerRef.current = setTimeout(() => {
+        console.log('🕐 Auto-refresh timer triggered - clearing chat history');
+        handleAutoRefresh();
+      }, AUTO_REFRESH_DELAY);
+    }
+  }, [chatHistory.length, handleAutoRefresh]);
+
+  // Integration status polling functions
+  const stopIntegrationPolling = useCallback(() => {
+    console.log('🛑 Stopping integration build status polling');
+    if (integrationPollingTimerRef.current) {
+      clearInterval(integrationPollingTimerRef.current);
+      integrationPollingTimerRef.current = null;
+    }
+  }, []);
+
+  const startIntegrationPolling = useCallback(() => {
+    console.log('🔄 Starting integration build status polling every 15 seconds');
+    
+    if (integrationPollingTimerRef.current) {
+      clearInterval(integrationPollingTimerRef.current);
+    }
+    
+    integrationPollingTimerRef.current = setInterval(async () => {
+      if (!user?.id) return;
+      
+      try {
+        const status = await DatabaseService.getIntegrationBuildStatus(user.id);
+        console.log('🔄 Integration build status poll result:', status);
+        
+        if (!status.integration_in_progress) {
+          console.log('✅ Integration build completed - stopping polling');
+          setIntegrationInProgress(false);
+          stopIntegrationPolling();
+        } else {
+          console.log(`🔄 Integration builds in progress: ${status.in_progress_count}, states:`, 
+            status.build_states.map(s => `${s.service_name}:${s.current_status}`).join(', '));
+        }
+      } catch (error) {
+        console.error('❌ Error polling integration build status:', error);
+      }
+    }, 5000); // Poll every 5 seconds
+  }, [user?.id, stopIntegrationPolling]);
+
   // Update last message timestamp and reset timer when chat history changes
   useEffect(() => {
     if (chatHistory.length > 0) {
@@ -169,6 +215,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     return () => {
       if (autoRefreshTimerRef.current) {
         clearTimeout(autoRefreshTimerRef.current);
+      }
+      if (integrationPollingTimerRef.current) {
+        clearInterval(integrationPollingTimerRef.current);
       }
     };
   }, []);
@@ -193,7 +242,6 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       const voiceSettings = await DatabaseService.getVoiceSettings(user.id);
       
       if (voiceSettings) {
-        console.log('🔄 VOICE_CONTEXT: Found voice settings:', voiceSettings);
         
         // Update local settings with database values
         const generalInstructions = voiceSettings.general_instructions || 
@@ -316,6 +364,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       try {
         console.log(`🟡 VOICE_SERVICE: Adding user message to chat history`);
         
+        // Clear any previous errors before starting new request
+        setError(null);
+        
         // Switch to voice mode when processing voice input
         setInputMode('voice');
         
@@ -360,15 +411,17 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               
             } catch (error) {
               console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
-              console.error('🟠 VOICE_CONTEXT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
               
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-              
-              // Send error response back to native
-              try {
-                await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
-              } catch (responseError) {
-                console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
+              if (!isCancellationError(error)) {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                // Send error response back to native
+                try {
+                  await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
+                } catch (responseError) {
+                  console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
+                }
+              } else {
+                console.log('🟠 VOICE_CONTEXT: Request was cancelled - not sending error to native');
               }
             }
           }, 0);
@@ -380,13 +433,16 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         console.error('🟠 VOICE_CONTEXT: ❌ Error in processTextFromNative:', error);
         console.error('🟠 VOICE_CONTEXT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
         
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        
-        // Send error response back to native
-        try {
-          await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
-        } catch (responseError) {
-          console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
+        if (!isCancellationError(error)) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+          // Send error response back to native
+          try {
+            await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
+          } catch (responseError) {
+            console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
+          }
+        } else {
+          console.log('🟠 VOICE_CONTEXT: Request was cancelled - not sending error to native');
         }
       }
     });
@@ -446,6 +502,17 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const clearChatHistory = useCallback(async () => {
     console.log('🗑️ Clearing chat history (manual)');
     
+    // Clear native state to ensure clean slate
+    if (Platform.OS === 'android' && VoiceModule?.clearNativeState) {
+      try {
+        console.log('🧹 CLEAR_CHAT: Clearing native state...');
+        await VoiceModule.clearNativeState();
+        console.log('🧹 CLEAR_CHAT: ✅ Native state cleared');
+      } catch (nativeError) {
+        console.warn('🧹 CLEAR_CHAT: ⚠️ Failed to clear native state:', nativeError);
+      }
+    }
+    
     // Save conversation to Supabase before clearing if there are messages
     if (chatHistory.length > 0) {
       try {
@@ -502,6 +569,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       console.log('📝 TEXT_INPUT: Processing text message:', text);
       console.log('📝 TEXT_INPUT: Current voice settings:', JSON.stringify(voiceSettings, null, 2));
       
+      // Clear any previous errors before starting new request
+      setError(null);
+      
       // Switch to text mode when user sends a text message
       setInputMode('text');
       
@@ -530,6 +600,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             console.log('📝 TEXT_INPUT: API call duration:', (apiEndTime - apiStartTime), 'ms');
             console.log('📝 TEXT_INPUT: Received API response');
             console.log('📝 TEXT_INPUT: Response settings_updated flag:', response.settings_updated);
+            console.log('📝 TEXT_INPUT: Response integration_in_progress flag:', response.integration_in_progress);
             
             // Check if settings were updated and refresh if needed
             if (response.settings_updated) {
@@ -554,6 +625,18 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               console.log('⚙️ TEXT_INPUT: No settings update flag - skipping settings refresh');
             }
             
+            // Check if integration is in progress and start polling if needed
+            if (response.integration_in_progress) {
+              console.log('🔗 TEXT_INPUT: ========== INTEGRATION BUILD IN PROGRESS DETECTED ==========');
+              console.log('🔗 TEXT_INPUT: Integration build started, beginning build state polling...');
+              console.log('🔗 TEXT_INPUT: Current time:', new Date().toISOString());
+              
+              setIntegrationInProgress(true);
+              startIntegrationPolling();
+            } else {
+              console.log('🔗 TEXT_INPUT: No integration build in progress flag - skipping polling');
+            }
+            
             // Add assistant response to chat history
             const assistantMessage: ChatMessage = {
               role: 'assistant',
@@ -568,16 +651,20 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             
           } catch (error) {
             console.error('📝 TEXT_INPUT: ❌ Error processing text message:', error);
-            console.error('📝 TEXT_INPUT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
             
-            // Add error message to chat history
-            const errorMessage: ChatMessage = {
-              role: 'assistant',
-              content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              timestamp: Date.now()
-            };
-            
-            setChatHistory(prevHistory => [...prevHistory, errorMessage]);
+            // Don't show cancellation errors to user in chat
+            if (!isCancellationError(error)) {
+              // Add error message to chat history only for non-cancellation errors
+              const errorMessage: ChatMessage = {
+                role: 'assistant',
+                content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                timestamp: Date.now()
+              };
+              
+              setChatHistory(prevHistory => [...prevHistory, errorMessage]);
+            } else {
+              console.log('📝 TEXT_INPUT: Request was cancelled - not showing error to user');
+            }
           }
         }, 0);
         
@@ -590,6 +677,12 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       throw error;
     }
   }, [sendMessage, voiceSettings]);
+
+  // Continue previous chat by setting the chat history
+  const continuePreviousChat = useCallback((messages: ChatMessage[]) => {
+    console.log('📚 Continuing previous chat with', messages.length, 'messages');
+    setChatHistory(messages);
+  }, []);
 
   // Context value - now purely bridging to native state
   const value: VoiceContextValue = {
@@ -606,6 +699,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     response,
     chatHistory,
     inputMode,
+    integrationInProgress,
     
     // Voice settings
     voiceSettings,
@@ -625,6 +719,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     clearChatHistory,
     refreshSettings,
     sendTextMessage,
+    continuePreviousChat,
+    cancelRequest,
+    isRequestInProgress,
   };
   
   return <VoiceContext.Provider value={value}>{children}</VoiceContext.Provider>;

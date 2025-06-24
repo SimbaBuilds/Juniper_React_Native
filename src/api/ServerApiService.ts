@@ -1,6 +1,7 @@
 import { ChatMessage } from '../voice/VoiceContext';
 import SettingsService from '../app-config/AppConfigService';
 import api from './api';
+import { supabase } from '../supabase/supabase';
 
 // Helper function to convert camelCase to snake_case
 function toSnakeCase(str: string): string {
@@ -59,6 +60,7 @@ export interface ChatResponse {
   response: string;
   timestamp: number;
   settings_updated?: boolean;
+  integration_in_progress?: boolean;
   additional_data?: any;
 }
 
@@ -68,6 +70,8 @@ export interface ChatResponse {
 class ServerApiService {
   private config: ServerApiConfig;
   private requestQueue: Promise<any> = Promise.resolve();
+  private currentRequestController: AbortController | null = null;
+  private currentRequestId: string | null = null;
 
   constructor(config?: Partial<ServerApiConfig>) {
     this.config = {
@@ -105,6 +109,72 @@ class ServerApiService {
   }
 
   /**
+   * Cancel the current request if one is in progress
+   */
+  public async cancelCurrentRequest(): Promise<boolean> {
+    if (this.currentRequestController && this.currentRequestId) {
+      console.log('🔴 SERVER_API: Cancelling current request...', this.currentRequestId);
+      
+      try {
+        // Insert cancellation request into database
+        await this.insertCancellationRequest(this.currentRequestId);
+        
+        // Also abort the HTTP request on client side
+        this.currentRequestController.abort();
+        this.currentRequestController = null;
+        this.currentRequestId = null;
+        
+        console.log('✅ SERVER_API: Request cancelled successfully');
+        return true;
+      } catch (error) {
+        console.error('❌ SERVER_API: Error cancelling request:', error);
+        return false;
+      }
+    }
+    console.log('🔴 SERVER_API: No active request to cancel');
+    return false;
+  }
+
+  /**
+   * Check if there's a request currently in progress
+   */
+  public isRequestInProgress(): boolean {
+    return this.currentRequestController !== null && this.currentRequestId !== null;
+  }
+
+  /**
+   * Insert cancellation request into database
+   */
+  private async insertCancellationRequest(requestId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('No authenticated user');
+      }
+
+      const { error } = await supabase
+        .from('cancellation_requests')
+        .insert({
+          user_id: user.id,
+          request_id: requestId,
+          request_type: 'chat',
+          status: 'pending',
+          metadata: { cancelled_at: new Date().toISOString() },
+          created_at: new Date().toISOString()
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ SERVER_API: Cancellation request inserted into database');
+    } catch (error) {
+      console.error('❌ SERVER_API: Error inserting cancellation request:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Send chat request to server
    */
   public async sendChatRequest(
@@ -113,9 +183,20 @@ class ServerApiService {
     preferences?: ChatRequest['preferences'],
   ): Promise<ChatResponse> {
     // Queue requests to prevent concurrent auth issues
-    return this.requestQueue = this.requestQueue.then(async () => {
+    // Use .catch() to prevent cancelled requests from breaking the queue
+    return this.requestQueue = this.requestQueue.catch(() => {
+      // Reset queue on error to prevent cancellation from blocking future requests
+      console.log('🔄 SERVER_API: Queue error detected, resetting queue for new request');
+      return Promise.resolve();
+    }).then(async () => {
       console.log(`🔴 SERVER_API: sendChatRequest called`);
       console.log(`🔴 SERVER_API: Message: "${message}"`);
+
+      // Generate unique request ID and create AbortController for this request
+      this.currentRequestId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      this.currentRequestController = new AbortController();
+
+      console.log('🔴 SERVER_API: Generated request ID:', this.currentRequestId);
 
       try {
         // Add a delay to ensure previous operations are complete (longer for Android)
@@ -166,7 +247,8 @@ class ServerApiService {
             headers: { 
               'Content-Type': 'multipart/form-data'
             },
-            timeout: 45000 // 45 second timeout for Android
+            timeout: 30000, // 30 second timeout for Android
+            signal: this.currentRequestController.signal // Add AbortController signal
           }).catch((error: unknown) => {
             console.error('🔴 SERVER_API: ❌ API request error:', error);
             console.error('🔴 SERVER_API: API request failed in queue');
@@ -178,8 +260,23 @@ class ServerApiService {
 
         const data: ChatResponse = apiResponse.data;
         console.log('🔴 SERVER_API: ✅ Server response received');
+        
+        // Clear the controller and request ID since request completed successfully
+        this.currentRequestController = null;
+        this.currentRequestId = null;
+        
         return data;
       } catch (error) {
+        // Clear the controller and request ID on error
+        this.currentRequestController = null;
+        this.currentRequestId = null;
+        
+        // Check if error was due to cancellation
+        if (error instanceof Error && (error.name === 'CanceledError' || error.message?.includes('canceled'))) {
+          console.log('🔴 SERVER_API: Request was cancelled');
+          throw new Error('Request was cancelled');
+        }
+        
         console.error('🔴 SERVER_API: ❌ Error sending chat request:', error);
         console.error('🔴 SERVER_API: Queued request failed');
         throw error;

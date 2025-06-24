@@ -1,6 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
+import { Platform, NativeModules } from 'react-native';
 import ServerApiService, { ServerApiConfig, ChatResponse } from './ServerApiService';
 import { ChatMessage } from '../voice/VoiceContext';
+
+const { VoiceModule } = NativeModules;
 
 /**
  * Return type for the useServerApi hook
@@ -11,6 +14,8 @@ interface UseServerApiResult {
   response: ChatResponse | null;
   sendMessage: (message: string, history: ChatMessage[]) => Promise<ChatResponse>;
   updateConfig: (config: Partial<ServerApiConfig>) => void;
+  cancelRequest: () => Promise<boolean>;
+  isRequestInProgress: boolean;
 }
 
 /**
@@ -34,6 +39,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [response, setResponse] = useState<ChatResponse | null>(null);
+  const [isRequestInProgress, setIsRequestInProgress] = useState(false);
 
   // Initialize with custom config if provided
   useEffect(() => {
@@ -49,8 +55,10 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
     message: string, 
     history: ChatMessage[],
   ): Promise<ChatResponse> => {
-    setIsLoading(true);
+    // Clear any previous cancellation errors before starting new request
     setError(null);
+    setIsLoading(true);
+    setIsRequestInProgress(true);
 
     try {
       const result = await ServerApiService.sendChatRequest(
@@ -61,6 +69,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
       
       setResponse(result);
       setIsLoading(false);
+      setIsRequestInProgress(false);
       
       // Call onResponse callback if provided
       if (options.onResponse) {
@@ -73,6 +82,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
       const error = err instanceof Error ? err : new Error(String(err));
       setError(error);
       setIsLoading(false);
+      setIsRequestInProgress(false);
       
       // Call onError callback if provided
       if (options.onError) {
@@ -82,6 +92,44 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
       throw error;
     }
   }, [options.preferences, options.onResponse, options.onError]);
+
+  /**
+   * Cancel the current request and clear native state
+   */
+  const cancelRequest = useCallback(async (): Promise<boolean> => {
+    try {
+      console.log('🚫 CANCEL: Cancelling server request and clearing native state...');
+      
+      // Cancel the server request first
+      const cancelled = await ServerApiService.cancelCurrentRequest();
+      
+      // Clear native state to prevent persistence across chats
+      if (Platform.OS === 'android' && VoiceModule?.clearNativeState) {
+        try {
+          await VoiceModule.clearNativeState();
+          console.log('🧹 CANCEL: ✅ Native state cleared after cancellation');
+        } catch (nativeError) {
+          console.warn('🧹 CANCEL: ⚠️ Failed to clear native state:', nativeError);
+          // Don't fail the whole cancellation if native cleanup fails
+        }
+      }
+      
+      if (cancelled) {
+        setIsLoading(false);
+        setIsRequestInProgress(false);
+        setError(new Error('Request was cancelled'));
+        console.log('🚫 CANCEL: ✅ Request cancelled successfully');
+      } else {
+        console.log('🚫 CANCEL: ⚠️ Request was not cancelled (may have already completed)');
+      }
+      
+      return cancelled;
+    } catch (error) {
+      console.error('🚫 CANCEL: ❌ Error cancelling request:', error);
+      setError(error instanceof Error ? error : new Error('Failed to cancel request'));
+      return false;
+    }
+  }, []);
 
   /**
    * Update server API configuration
@@ -96,5 +144,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
     response,
     sendMessage,
     updateConfig,
+    cancelRequest,
+    isRequestInProgress,
   };
 }; 

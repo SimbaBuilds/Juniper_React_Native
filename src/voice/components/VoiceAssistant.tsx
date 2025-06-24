@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert } from 'react-native';
 import { VoiceButton } from './VoiceButton';
 import { VoiceResponseDisplay } from './VoiceResponseDisplay';
 import { useVoice } from '../VoiceContext';
@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { NativeModules } from 'react-native';
 import { ConversationHistory } from './ConversationHistory';
 import { TextChatInput } from './TextChatInput';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 const { VoiceModule } = NativeModules;
 
@@ -34,7 +35,10 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     setTranscript,
     interruptSpeech,
     clearChatHistory,
-    sendTextMessage
+    sendTextMessage,
+    continuePreviousChat,
+    cancelRequest,
+    isRequestInProgress
   } = useVoice();
 
   // State for conversation history modal
@@ -49,6 +53,28 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   // Handle conversation history opened callback
   const handleConversationHistoryOpened = () => {
     console.log('📚 Conversation history opened and loading...');
+  };
+
+  // Handle copy chat
+  const handleCopyChat = async () => {
+    if (chatHistory.length === 0) {
+      Alert.alert('No Chat', 'There are no messages to copy.');
+      return;
+    }
+
+    try {
+      const chatText = chatHistory.map(message => {
+        const time = formatTime(message.timestamp);
+        const role = message.role === 'user' ? 'You' : 'Assistant';
+        return `[${time}] ${role}: ${message.content}`;
+      }).join('\n\n');
+
+      await Clipboard.setString(chatText);
+      Alert.alert('Success', 'Chat conversation copied to clipboard!');
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+      Alert.alert('Error', 'Failed to copy chat to clipboard.');
+    }
   };
 
   // When a speech result is received, call the callback
@@ -75,6 +101,25 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     console.log('Interrupting speech...');
     const result = await interruptSpeech();
     console.log('Interrupt result:', result);
+  };
+
+  /**
+   * Handle cancel button press
+   * This cancels the current API request and notifies the backend via database
+   */
+  const handleCancel = async () => {
+    console.log('Cancelling current request...');
+    try {
+      const cancelled = await cancelRequest();
+      console.log('Cancel result:', cancelled);
+      if (cancelled) {
+        console.log('✅ Request cancelled successfully');
+      } else {
+        console.log('❌ No active request to cancel');
+      }
+    } catch (error) {
+      console.error('❌ Error cancelling request:', error);
+    }
   };
 
   if (isError) {
@@ -108,6 +153,19 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
             <Ionicons name="time-outline" size={20} color="#888888" />
           </TouchableOpacity>
 
+          {/* Copy chat button - only shown when there are messages */}
+          {chatHistory.length > 0 && (
+            <TouchableOpacity 
+              style={styles.copyButton}
+              onPress={handleCopyChat}
+              activeOpacity={0.7}
+              accessibilityLabel="Copy chat"
+              accessibilityHint="Copy the current conversation"
+            >
+              <Ionicons name="copy-outline" size={20} color="#888888" />
+            </TouchableOpacity>
+          )}
+
           {/* Clear chat button - only shown when there are messages */}
           {chatHistory.length > 0 && (
             <TouchableOpacity 
@@ -133,7 +191,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
               styles.chatBubble, 
               item.role === 'user' ? styles.userBubble : styles.assistantBubble
             ]}>
-              <Text style={styles.chatText}>{item.content}</Text>
+              <Text style={styles.chatText} selectable={true}>{item.content}</Text>
               <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
             </View>
           )}
@@ -144,6 +202,20 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         </View>
       )}
       
+      {/* Cancel button - only shown when a request is in progress */}
+      {isRequestInProgress && (
+        <TouchableOpacity 
+          style={styles.cancelButton}
+          onPress={handleCancel}
+          activeOpacity={0.7}
+          accessibilityLabel="Cancel request"
+          accessibilityHint="Cancels the current request to the server"
+        >
+          <Ionicons name="close-circle" size={24} color="white" />
+          <Text style={styles.cancelButtonText}>Cancel Request</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Interrupt button - only shown when the assistant is speaking */}
       {isSpeaking && (
         <TouchableOpacity 
@@ -170,6 +242,10 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         visible={showConversationHistory}
         onClose={() => setShowConversationHistory(false)}
         onOpen={handleConversationHistoryOpened}
+        onContinueChat={(messages) => {
+          continuePreviousChat(messages);
+          setShowConversationHistory(false);
+        }}
       />
     </View>
   );
@@ -216,6 +292,15 @@ const styles = StyleSheet.create({
   },
   historyButtonText: {
     display: 'none',
+  },
+  copyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 8,
+    borderRadius: 16,
+    backgroundColor: 'rgba(136, 136, 136, 0.1)',
+    marginLeft: 8,
   },
   clearButton: {
     flexDirection: 'row',
@@ -292,6 +377,29 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   interruptButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  cancelButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f39c12',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    marginBottom: 20,
+    marginHorizontal: 16,
+    alignSelf: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  cancelButtonText: {
     color: 'white',
     fontWeight: '600',
     fontSize: 16,

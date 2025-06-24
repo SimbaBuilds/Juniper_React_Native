@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { isCancellationError } from '../../utils/cancellationUtils';
 
 interface TextChatInputProps {
   onSendMessage: (text: string) => Promise<void>;
@@ -28,7 +29,13 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
       setMessage(''); // Clear input after successful send
     } catch (error) {
       console.error('Error sending message:', error);
-      Alert.alert('Error', 'Failed to send message. Please try again.');
+      
+      // Don't show alert for cancellation errors
+      if (!isCancellationError(error)) {
+        Alert.alert('Error', 'Failed to send message. Please try again.');
+      } else {
+        console.log('Message was cancelled - not showing error alert');
+      }
     } finally {
       setIsSending(false);
     }

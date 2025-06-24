@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Linking } from 'react-native';
-import { VoiceProvider } from './src/voice/VoiceContext';
+import { VoiceProvider, useVoice } from './src/voice/VoiceContext';
 import { WakeWordProvider } from './src/wakeword/WakeWordContext';
 import WakeWordService from './src/wakeword/WakeWordService';
 import { GoogleAuthService } from './src/auth/GoogleAuthService';
@@ -19,6 +19,7 @@ import LoginPage from './src/auth/LoginPage';
 import SignUpPage from './src/auth/SignUpPage';
 import PhoneSignUpPage from './src/auth/PhoneSignUpPage';
 import { AuthProvider } from './src/auth/AuthContext';
+import OAuthCallbackHandler from './src/integrations/OAuthCallbackHandler';
 
 type RootStackParamList = {
   MainTabs: undefined;
@@ -30,6 +31,7 @@ type RootStackParamList = {
   Login: undefined;
   SignUp: undefined;
   PhoneSignUp: undefined;
+  OAuthCallback: { url: string; integration_id?: string };
 };
 
 type TabParamList = {
@@ -46,6 +48,7 @@ const Tab = createBottomTabNavigator<TabParamList>();
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigationRef = useRef<any>(null);
 
   // Initialize any needed configurations here
   useEffect(() => {
@@ -80,7 +83,7 @@ export default function App() {
     initializeApp();
   }, []);
 
-  // Handle Google Calendar OAuth deep links
+  // Handle OAuth deep links with hybrid callback system
   useEffect(() => {
     console.log('Setting up deep link handlers...');
     
@@ -88,97 +91,63 @@ export default function App() {
       const url = event.url;
       console.log('=== DEEP LINK RECEIVED ===');
       console.log('Full URL:', url);
-      console.log('URL length:', url.length);
-      console.log('URL type:', typeof url);
       
-      // Log what we're checking for
-      console.log('Checking for oauth2redirect pattern...');
-      console.log('Contains oauth2redirect?', url.includes('oauth2redirect'));
-      console.log('Checking for custom scheme pattern...');
-      console.log('Starts with mobilejarvisnative://oauth/callback?', url.startsWith('mobilejarvisnative://oauth/callback'));
+      // Check if this is an OAuth callback URL
+      const isOAuthCallback = url.includes('oauth2redirect') || 
+                            url.includes('com.googleusercontent.apps') ||
+                            url.startsWith('mobilejarvisnative://oauth/callback') ||
+                            url.includes('/oauth/callback') ||
+                            url.includes('code=') ||
+                            url.includes('error=');
       
-      // Handle the reverse client ID format (primary): com.googleusercontent.apps.{client-id}:/oauth2redirect
-      // or com.googleusercontent.apps.{client-id}://oauth2redirect
-      if (url.includes('oauth2redirect') || url.includes('com.googleusercontent.apps')) {
-        console.log('✅ Matched Google OAuth redirect pattern');
-        try {
-          console.log('Parsing URL for parameters...');
+      if (isOAuthCallback) {
+        console.log('✅ Detected OAuth callback - using hybrid processing system');
+        
+        // Navigate to OAuthCallback screen with URL for processing
+        // This will use our hybrid mapping system in the backend
+        if (navigationRef.current && session) {
+          console.log('✅ Navigating to OAuthCallback screen for hybrid processing');
+          navigationRef.current.navigate('OAuthCallback', { url });
+        } else {
+          // Fallback: If navigation not available or user not logged in, process here
+          console.log('⚠️ Navigation not available or user not logged in, processing callback inline');
           
-          // Handle both :/ and :// formats
-          let queryString = '';
-          if (url.includes('?')) {
-            queryString = url.split('?')[1];
-          } else if (url.includes('#')) {
-            // Some OAuth flows use hash fragments
-            queryString = url.split('#')[1];
-          }
-          
-          console.log('Query string:', queryString);
-          
-          if (queryString) {
-            const urlParams = new URLSearchParams(queryString);
-            console.log('URL parameters:', Object.fromEntries(urlParams.entries()));
-            
-            const code = urlParams.get('code');
-            const error = urlParams.get('error');
-            const state = urlParams.get('state');
-            
-            console.log('Extracted code:', code ? `${code.substring(0, 10)}...` : 'null');
-            console.log('Extracted error:', error);
-            console.log('Extracted state:', state);
-            
-            if (error) {
-              console.error('❌ OAuth error:', error);
-              const errorDescription = urlParams.get('error_description');
-              console.error('❌ OAuth error description:', errorDescription);
-              return;
+          // For legacy Google Calendar integration compatibility
+          if (url.includes('oauth2redirect') || url.includes('com.googleusercontent.apps')) {
+            try {
+              let queryString = '';
+              if (url.includes('?')) {
+                queryString = url.split('?')[1];
+              } else if (url.includes('#')) {
+                queryString = url.split('#')[1];
+              }
+              
+              if (queryString) {
+                const urlParams = new URLSearchParams(queryString);
+                const code = urlParams.get('code');
+                const error = urlParams.get('error');
+                
+                if (error) {
+                  console.error('❌ OAuth error:', error);
+                  return;
+                }
+                
+                if (code) {
+                  console.log('✅ Processing Google OAuth callback with legacy handler');
+                  GoogleAuthService.getInstance().handleAuthCallback(code);
+                }
+              }
+            } catch (error) {
+                             console.error('❌ Error processing legacy OAuth callback:', error);
             }
-            
-            if (code) {
-              console.log('✅ Processing OAuth callback with code');
-              GoogleAuthService.getInstance().handleAuthCallback(code);
-            } else {
-              console.warn('⚠️ No code parameter found in OAuth redirect URL');
-            }
-          } else {
-            console.warn('⚠️ No query parameters found in OAuth redirect URL');
           }
-        } catch (error) {
-          console.error('❌ Error processing OAuth callback:', error);
         }
-      }
-      
-      // Keep custom scheme as fallback: mobilejarvisnative://oauth/callback
-      else if (url.startsWith('mobilejarvisnative://oauth/callback')) {
-        console.log('✅ Matched custom scheme pattern');
-        try {
-          const urlParts = url.split('?');
-          if (urlParts.length > 1) {
-            const urlParams = new URLSearchParams(urlParts[1]);
-            const code = urlParams.get('code');
-            const error = urlParams.get('error');
-            
-            if (error) {
-              console.error('❌ OAuth error:', error);
-              return;
-            }
-            
-            if (code) {
-              console.log('✅ Processing OAuth callback with code (custom scheme fallback)');
-              GoogleAuthService.getInstance().handleAuthCallback(code);
-            }
-          }
-        } catch (error) {
-          console.error('❌ Error processing OAuth callback:', error);
-        }
-      }
-      
-      // Log if no patterns matched
-      else {
+      } else {
         console.log('❌ URL did not match any OAuth patterns');
-        console.log('Expected patterns:');
+        console.log('Expected OAuth patterns:');
         console.log('  1. Contains "oauth2redirect" or "com.googleusercontent.apps"');
         console.log('  2. Starts with "mobilejarvisnative://oauth/callback"');
+        console.log('  3. Contains "code=" or "error=" parameters');
       }
     };
 
@@ -209,7 +178,7 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <AuthProvider>
         <VoiceProvider>
           <WakeWordProvider>
@@ -220,10 +189,20 @@ export default function App() {
               initialRouteName={session ? "MainTabs" : "Login"}
             >
               {session ? (
-                <Stack.Screen 
-                  name="MainTabs" 
-                  component={MainTabNavigator}
-                />
+                <>
+                  <Stack.Screen 
+                    name="MainTabs" 
+                    component={MainTabNavigator}
+                  />
+                  <Stack.Screen 
+                    name="OAuthCallback" 
+                    component={OAuthCallbackHandler}
+                    options={{
+                      title: 'Completing Integration...',
+                      headerShown: true,
+                    }}
+                  />
+                </>
               ) : (
                 <>
                   <Stack.Screen 
@@ -258,6 +237,8 @@ export default function App() {
 }
 
 function MainTabNavigator() {
+  const { integrationInProgress } = useVoice();
+  
   return (
     <Tab.Navigator
       initialRouteName="Home"
@@ -296,25 +277,26 @@ function MainTabNavigator() {
         },
       })}
     >
-      <Tab.Screen 
+      {/* <Tab.Screen 
         name="Automations" 
         component={AutomationsScreen}
         options={{
           title: 'Automations',
         }}
-      />
+      /> */}
       <Tab.Screen 
         name="Integrations" 
         component={IntegrationsScreen}
         options={{
           title: 'Integrations',
+          tabBarBadge: integrationInProgress ? '●' : undefined,
         }}
       />
       <Tab.Screen 
         name="Home" 
         component={HomeScreen}
         options={{
-          title: 'Voice Assistant',
+          title: 'Home',
         }}
       />
       <Tab.Screen 
@@ -331,7 +313,6 @@ function MainTabNavigator() {
           title: 'Settings',
         }}
       />
-
     </Tab.Navigator>
   );
 }

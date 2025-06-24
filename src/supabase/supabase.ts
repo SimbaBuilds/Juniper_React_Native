@@ -247,6 +247,97 @@ export const DatabaseService = {
     return data || []
   },
 
+  // Check integration build status for polling
+  async getIntegrationBuildStatus(userId: string) {
+    const { data, error } = await supabase
+      .from('integration_build_states')
+      .select('id, service_name, current_status, created_at, last_updated, state_data')
+      .eq('user_id', userId)
+      .in('current_status', ['in_progress', 'form_ready', 'auth_ready', 'completed'])
+    
+    if (error) throw error
+    
+    // Filter out completed integrations from "in progress" count
+    // since completed integrations don't need user action
+    const activeStates = data?.filter(state => state.current_status !== 'completed') || []
+    
+    return {
+      integration_in_progress: activeStates.length > 0,
+      in_progress_count: activeStates.length,
+      build_states: data || [],
+      active_build_states: activeStates
+    }
+  },
+
+  // Legacy method for backward compatibility (deprecated)
+  async getIntegrationStatus(userId: string) {
+    console.warn('getIntegrationStatus is deprecated, use getIntegrationBuildStatus instead')
+    return await this.getIntegrationBuildStatus(userId)
+  },
+
+  // Get integration build states that need authentication
+  async getAuthenticationReadyIntegrations(userId: string) {
+    const { data, error } = await supabase
+      .from('integration_build_states')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('current_status', 'auth_ready')
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data || []
+  },
+
+  // Get integration build states that need form completion
+  async getFormReadyIntegrations(userId: string) {
+    const { data, error } = await supabase
+      .from('integration_build_states')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('current_status', 'form_ready')
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data || []
+  },
+
+  // Get completed integrations that are ready to use
+  async getCompletedIntegrations(userId: string) {
+    const { data, error } = await supabase
+      .from('integration_build_states')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('current_status', 'completed')
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data || []
+  },
+
+  // Get service information by service name
+  async getServiceByName(serviceName: string) {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .eq('service_name', serviceName)
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  // Get config form by service ID
+  async getConfigFormByServiceId(serviceId: string) {
+    const { data, error } = await supabase
+      .from('config_forms')
+      .select('*')
+      .eq('service_id', serviceId)
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
   // Automations
   async getAutomations(userId: string) {
     const { data, error } = await supabase

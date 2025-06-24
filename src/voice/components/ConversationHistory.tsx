@@ -18,6 +18,7 @@ interface ConversationHistoryProps {
   visible: boolean;
   onClose: () => void;
   onOpen?: () => void;
+  onContinueChat?: (messages: ChatMessage[]) => void;
 }
 
 interface ExpandedConversation extends ConversationSummary {
@@ -30,6 +31,7 @@ export const ConversationHistory: React.FC<ConversationHistoryProps> = ({
   visible,
   onClose,
   onOpen,
+  onContinueChat,
 }) => {
   const [conversations, setConversations] = useState<ExpandedConversation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -188,6 +190,32 @@ export const ConversationHistory: React.FC<ConversationHistoryProps> = ({
           >
             <Ionicons name="trash-outline" size={18} color="#ff4444" />
           </TouchableOpacity>
+          
+          {onContinueChat && (
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={async () => {
+                if (item.messages && item.messages.length > 0) {
+                  // Messages already loaded, continue immediately
+                  onContinueChat(item.messages);
+                } else {
+                  // Messages not loaded yet, load them first
+                  try {
+                    const messages = await conversationService.getConversationMessages(item.id);
+                    if (messages && messages.length > 0) {
+                      onContinueChat(messages);
+                    }
+                  } catch (err) {
+                    console.error('Error loading messages for continue:', err);
+                    Alert.alert('Error', 'Failed to load conversation messages');
+                  }
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="play" size={18} color="#3B82F6" />
+            </TouchableOpacity>
+          )}
           
           <Ionicons
             name={item.isExpanded ? "chevron-up" : "chevron-down"}
@@ -421,6 +449,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   deleteButton: {
+    padding: 8,
+    marginRight: 8,
+  },
+  continueButton: {
     padding: 8,
     marginRight: 8,
   },

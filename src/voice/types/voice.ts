@@ -24,6 +24,7 @@ export interface VoiceContextState {
   isError: boolean;
   chatHistory: { role: 'user' | 'assistant'; content: string; timestamp: number }[];
   inputMode: 'voice' | 'text';
+  integrationInProgress: boolean;
 }
 
 /**
@@ -42,6 +43,9 @@ export interface VoiceContextActions {
   clearChatHistory: () => void;
   refreshSettings: () => Promise<void>;
   sendTextMessage: (text: string) => Promise<void>;
+  continuePreviousChat: (messages: { role: 'user' | 'assistant'; content: string; timestamp: number }[]) => void;
+  cancelRequest: () => Promise<boolean>;
+  isRequestInProgress: boolean;
   
   // Voice settings
   voiceSettings: any;
