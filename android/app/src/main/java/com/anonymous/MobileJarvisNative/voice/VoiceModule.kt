@@ -64,13 +64,16 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                 
                 Log.d(TAG, "🔵 VOICE_MODULE: ✅ Successfully sent processTextFromNative event")
                 
-                // Set timeout for the request
-                Handler(Looper.getMainLooper()).postDelayed({
+                // Set timeout for the request and track the handler
+                val timeoutHandler = Handler(Looper.getMainLooper())
+                timeoutHandlers[requestId] = timeoutHandler
+                timeoutHandler.postDelayed({
+                    timeoutHandlers.remove(requestId)
                     pendingApiCallbacks.remove(requestId)?.let { callback ->
                         Log.w(TAG, "🔵 VOICE_MODULE: Timeout for request: $requestId")
                         callback("I'm sorry, there was a timeout processing your request. Please try again.")
                     }
-                }, 45000)
+                }, 30000)
                 
             } catch (e: Exception) {
                 Log.e(TAG, "🔵 VOICE_MODULE: ❌ Error emitting processTextFromNative event", e)
@@ -646,6 +649,8 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
             
             // First, handle the pending callback if it exists
             pendingApiCallbacks.remove(requestId)?.let { callback ->
+                // Cancel the timeout handler since we got a response
+                timeoutHandlers.remove(requestId)?.removeCallbacksAndMessages(null)
                 Log.i(TAG, "🟢 NATIVE: Found pending callback for requestId: $requestId")
                 
                 // IMPORTANT: Ensure proper audio focus coordination before TTS
@@ -790,6 +795,57 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
 
     // Store pending callbacks
     private val pendingApiCallbacks = mutableMapOf<String, (String) -> Unit>()
+    
+    // Track timeout handlers to cancel them when needed
+    private val timeoutHandlers = mutableMapOf<String, Handler>()
+
+    /**
+     * Clear all pending native state (for cleanup between chat sessions)
+     */
+    @ReactMethod
+    fun clearNativeState(promise: Promise) {
+        try {
+            Log.i(TAG, "🧹 NATIVE_CLEANUP: Clearing all native state...")
+            
+            // Clear pending callbacks
+            val pendingCount = pendingApiCallbacks.size
+            pendingApiCallbacks.clear()
+            Log.d(TAG, "🧹 NATIVE_CLEANUP: Cleared $pendingCount pending API callbacks")
+            
+            // Cancel and clear timeout handlers
+            timeoutHandlers.values.forEach { handler ->
+                handler.removeCallbacksAndMessages(null)
+            }
+            val timeoutCount = timeoutHandlers.size
+            timeoutHandlers.clear()
+            Log.d(TAG, "🧹 NATIVE_CLEANUP: Cancelled $timeoutCount timeout handlers")
+            
+            // Reset voice manager state
+            voiceManager.updateState(VoiceManager.VoiceState.IDLE)
+            Log.d(TAG, "🧹 NATIVE_CLEANUP: Reset voice state to IDLE")
+            
+            // Stop any ongoing speech or listening
+            voiceManager.stopListening()
+            voiceManager.interruptSpeech()
+            Log.d(TAG, "🧹 NATIVE_CLEANUP: Stopped listening and interrupted speech")
+            
+            // Release audio focus through centralized manager
+            try {
+                val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                audioManager.clearAllRequests()
+                Log.d(TAG, "🧹 NATIVE_CLEANUP: Cleared all audio focus requests")
+            } catch (e: Exception) {
+                Log.w(TAG, "🧹 NATIVE_CLEANUP: Error clearing audio focus: ${e.message}")
+            }
+            
+            Log.i(TAG, "🧹 NATIVE_CLEANUP: ✅ Native state cleanup completed successfully")
+            promise.resolve(true)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "🧹 NATIVE_CLEANUP: ❌ Error clearing native state: ${e.message}", e)
+            promise.reject("CLEAR_STATE_ERROR", "Failed to clear native state: ${e.message}", e)
+        }
+    }
 
     /**
      * Process text using React Native API with authentication (called from React Native)

@@ -183,7 +183,12 @@ class ServerApiService {
     preferences?: ChatRequest['preferences'],
   ): Promise<ChatResponse> {
     // Queue requests to prevent concurrent auth issues
-    return this.requestQueue = this.requestQueue.then(async () => {
+    // Use .catch() to prevent cancelled requests from breaking the queue
+    return this.requestQueue = this.requestQueue.catch(() => {
+      // Reset queue on error to prevent cancellation from blocking future requests
+      console.log('🔄 SERVER_API: Queue error detected, resetting queue for new request');
+      return Promise.resolve();
+    }).then(async () => {
       console.log(`🔴 SERVER_API: sendChatRequest called`);
       console.log(`🔴 SERVER_API: Message: "${message}"`);
 
@@ -242,7 +247,7 @@ class ServerApiService {
             headers: { 
               'Content-Type': 'multipart/form-data'
             },
-            timeout: 45000, // 45 second timeout for Android
+            timeout: 30000, // 30 second timeout for Android
             signal: this.currentRequestController.signal // Add AbortController signal
           }).catch((error: unknown) => {
             console.error('🔴 SERVER_API: ❌ API request error:', error);

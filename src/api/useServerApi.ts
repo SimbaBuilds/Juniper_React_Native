@@ -1,6 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
+import { Platform, NativeModules } from 'react-native';
 import ServerApiService, { ServerApiConfig, ChatResponse } from './ServerApiService';
 import { ChatMessage } from '../voice/VoiceContext';
+
+const { VoiceModule } = NativeModules;
 
 /**
  * Return type for the useServerApi hook
@@ -52,9 +55,10 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
     message: string, 
     history: ChatMessage[],
   ): Promise<ChatResponse> => {
+    // Clear any previous cancellation errors before starting new request
+    setError(null);
     setIsLoading(true);
     setIsRequestInProgress(true);
-    setError(null);
 
     try {
       const result = await ServerApiService.sendChatRequest(
@@ -90,19 +94,38 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
   }, [options.preferences, options.onResponse, options.onError]);
 
   /**
-   * Cancel the current request
+   * Cancel the current request and clear native state
    */
   const cancelRequest = useCallback(async (): Promise<boolean> => {
     try {
+      console.log('🚫 CANCEL: Cancelling server request and clearing native state...');
+      
+      // Cancel the server request first
       const cancelled = await ServerApiService.cancelCurrentRequest();
+      
+      // Clear native state to prevent persistence across chats
+      if (Platform.OS === 'android' && VoiceModule?.clearNativeState) {
+        try {
+          await VoiceModule.clearNativeState();
+          console.log('🧹 CANCEL: ✅ Native state cleared after cancellation');
+        } catch (nativeError) {
+          console.warn('🧹 CANCEL: ⚠️ Failed to clear native state:', nativeError);
+          // Don't fail the whole cancellation if native cleanup fails
+        }
+      }
+      
       if (cancelled) {
         setIsLoading(false);
         setIsRequestInProgress(false);
         setError(new Error('Request was cancelled'));
+        console.log('🚫 CANCEL: ✅ Request cancelled successfully');
+      } else {
+        console.log('🚫 CANCEL: ⚠️ Request was not cancelled (may have already completed)');
       }
+      
       return cancelled;
     } catch (error) {
-      console.error('Error cancelling request:', error);
+      console.error('🚫 CANCEL: ❌ Error cancelling request:', error);
       setError(error instanceof Error ? error : new Error('Failed to cancel request'));
       return false;
     }

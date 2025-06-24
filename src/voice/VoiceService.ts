@@ -416,11 +416,7 @@ export class VoiceService {
      * Update voice settings in native layer
      */
     public async updateVoiceSettings(deepgramEnabled?: boolean, selectedDeepgramVoice?: string): Promise<boolean> {
-        console.log('🎵 VOICE_SETTINGS: ========== UPDATE VOICE SETTINGS CALLED ==========');
-        console.log('🎵 VOICE_SETTINGS: deepgramEnabled:', deepgramEnabled);
-        console.log('🎵 VOICE_SETTINGS: selectedDeepgramVoice:', selectedDeepgramVoice);
-        console.log('🎵 VOICE_SETTINGS: Current platform:', Platform.OS);
-        console.log('🎵 VOICE_SETTINGS: Timestamp:', new Date().toISOString());
+
         
         try {
             if (Platform.OS !== 'android') {
@@ -428,36 +424,20 @@ export class VoiceService {
                 return false;
             }
             
-            console.log('🎵 VOICE_SETTINGS: ========== CALLING NATIVE MODULE ==========');
-            console.log('🎵 VOICE_SETTINGS: About to call VoiceModule.updateVoiceSettings...');
-            console.log('🎵 VOICE_SETTINGS: Parameters being sent to native:');
-            console.log('🎵 VOICE_SETTINGS: - deepgramEnabled:', deepgramEnabled, '(type:', typeof deepgramEnabled, ')');
-            console.log('🎵 VOICE_SETTINGS: - selectedDeepgramVoice:', selectedDeepgramVoice, '(type:', typeof selectedDeepgramVoice, ')');
-            
+
             const nativeCallStartTime = Date.now();
             const result = await VoiceModule.updateVoiceSettings(deepgramEnabled, selectedDeepgramVoice);
             const nativeCallEndTime = Date.now();
             
-            console.log('🎵 VOICE_SETTINGS: ========== NATIVE MODULE RESPONSE ==========');
-            console.log('🎵 VOICE_SETTINGS: Native call duration:', (nativeCallEndTime - nativeCallStartTime), 'ms');
-            console.log('🎵 VOICE_SETTINGS: Native call result:', result, '(type:', typeof result, ')');
-            
+
             if (result) {
-                console.log('🎵 VOICE_SETTINGS: ✅ Voice settings updated successfully in native layer');
-                
-                // Reset/reload native configuration after settings update
-                console.log('🎵 VOICE_SETTINGS: ========== RELOADING NATIVE CONFIGURATION ==========');
-                console.log('🎵 VOICE_SETTINGS: Initiating native configuration reload...');
-                
+     
                 const reloadStartTime = Date.now();
                 const reloadResult = await this.reloadNativeConfiguration();
                 const reloadEndTime = Date.now();
                 
-                console.log('🎵 VOICE_SETTINGS: Reload duration:', (reloadEndTime - reloadStartTime), 'ms');
-                console.log('🎵 VOICE_SETTINGS: Reload result:', reloadResult);
                 
                 if (reloadResult) {
-                    console.log('🎵 VOICE_SETTINGS: ✅ Native configuration reloaded successfully');
                 } else {
                     console.warn('🎵 VOICE_SETTINGS: ⚠️ Native configuration reload failed, but settings were updated');
                 }

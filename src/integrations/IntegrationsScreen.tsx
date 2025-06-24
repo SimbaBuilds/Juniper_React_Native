@@ -56,8 +56,8 @@ export const IntegrationsScreen: React.FC = () => {
           <Text style={styles.instructionsTitle}>Adding Integrations</Text>
           <Text style={styles.instructionsText}>
             To add an integration, simply ask your assistant e.g. "Connect with Notion."
-            {'\n\n'}
-            Your assistant will make the connection or scope out setup options, time, and cost.
+            {'\n'}
+            Note: there is no pre-built set of integrations.  You can add any service you want, and we will guide you through set up.
           </Text>
         </View>
 

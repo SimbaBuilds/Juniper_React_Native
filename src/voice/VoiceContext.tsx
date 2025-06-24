@@ -6,8 +6,11 @@ import { useVoiceState as useVoiceStateHook } from './hooks/useVoiceState';
 import { useVoiceSettings } from './hooks/useVoiceSettings';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
-import { DeviceEventEmitter, EmitterSubscription } from 'react-native';
+import { DeviceEventEmitter, EmitterSubscription, Platform, NativeModules } from 'react-native';
 import { conversationService } from '../services/conversationService';
+import { isCancellationError } from '../utils/cancellationUtils';
+
+const { VoiceModule } = NativeModules;
 
 // Create context with default values
 const VoiceContext = createContext<VoiceContextValue>({
@@ -239,7 +242,6 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       const voiceSettings = await DatabaseService.getVoiceSettings(user.id);
       
       if (voiceSettings) {
-        console.log('🔄 VOICE_CONTEXT: Found voice settings:', voiceSettings);
         
         // Update local settings with database values
         const generalInstructions = voiceSettings.general_instructions || 
@@ -362,6 +364,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       try {
         console.log(`🟡 VOICE_SERVICE: Adding user message to chat history`);
         
+        // Clear any previous errors before starting new request
+        setError(null);
+        
         // Switch to voice mode when processing voice input
         setInputMode('voice');
         
@@ -406,15 +411,17 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               
             } catch (error) {
               console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
-              console.error('🟠 VOICE_CONTEXT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
               
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-              
-              // Send error response back to native
-              try {
-                await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
-              } catch (responseError) {
-                console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
+              if (!isCancellationError(error)) {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                // Send error response back to native
+                try {
+                  await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
+                } catch (responseError) {
+                  console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
+                }
+              } else {
+                console.log('🟠 VOICE_CONTEXT: Request was cancelled - not sending error to native');
               }
             }
           }, 0);
@@ -426,13 +433,16 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         console.error('🟠 VOICE_CONTEXT: ❌ Error in processTextFromNative:', error);
         console.error('🟠 VOICE_CONTEXT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
         
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        
-        // Send error response back to native
-        try {
-          await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
-        } catch (responseError) {
-          console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
+        if (!isCancellationError(error)) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+          // Send error response back to native
+          try {
+            await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
+          } catch (responseError) {
+            console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
+          }
+        } else {
+          console.log('🟠 VOICE_CONTEXT: Request was cancelled - not sending error to native');
         }
       }
     });
@@ -492,6 +502,17 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const clearChatHistory = useCallback(async () => {
     console.log('🗑️ Clearing chat history (manual)');
     
+    // Clear native state to ensure clean slate
+    if (Platform.OS === 'android' && VoiceModule?.clearNativeState) {
+      try {
+        console.log('🧹 CLEAR_CHAT: Clearing native state...');
+        await VoiceModule.clearNativeState();
+        console.log('🧹 CLEAR_CHAT: ✅ Native state cleared');
+      } catch (nativeError) {
+        console.warn('🧹 CLEAR_CHAT: ⚠️ Failed to clear native state:', nativeError);
+      }
+    }
+    
     // Save conversation to Supabase before clearing if there are messages
     if (chatHistory.length > 0) {
       try {
@@ -547,6 +568,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       console.log('📝 TEXT_INPUT: ========== TEXT MESSAGE PROCESSING ==========');
       console.log('📝 TEXT_INPUT: Processing text message:', text);
       console.log('📝 TEXT_INPUT: Current voice settings:', JSON.stringify(voiceSettings, null, 2));
+      
+      // Clear any previous errors before starting new request
+      setError(null);
       
       // Switch to text mode when user sends a text message
       setInputMode('text');
@@ -627,16 +651,20 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             
           } catch (error) {
             console.error('📝 TEXT_INPUT: ❌ Error processing text message:', error);
-            console.error('📝 TEXT_INPUT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
             
-            // Add error message to chat history
-            const errorMessage: ChatMessage = {
-              role: 'assistant',
-              content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              timestamp: Date.now()
-            };
-            
-            setChatHistory(prevHistory => [...prevHistory, errorMessage]);
+            // Don't show cancellation errors to user in chat
+            if (!isCancellationError(error)) {
+              // Add error message to chat history only for non-cancellation errors
+              const errorMessage: ChatMessage = {
+                role: 'assistant',
+                content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                timestamp: Date.now()
+              };
+              
+              setChatHistory(prevHistory => [...prevHistory, errorMessage]);
+            } else {
+              console.log('📝 TEXT_INPUT: Request was cancelled - not showing error to user');
+            }
           }
         }, 0);
         

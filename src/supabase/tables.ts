@@ -187,13 +187,14 @@ export type UserProfile = {
     num_users: number;
     config_form_id?: string; // Foreign key to ConfigForm.id
     auth_script?: string;
+    refresh_script?: string;
     tools?: string[];
     integration_method?: string; // e.g. OAuth, External App, Internal App etc.
   };
 
   export const serviceFields = [
     'id', 'created_at', 'service_name', 'num_users', 'config_form_id',
-    'auth_script', 'tools', 'integration_method'
+    'auth_script', 'refresh_script', 'tools', 'integration_method'
   ] as const;
   export type ServiceField = (typeof serviceFields)[number];
 
