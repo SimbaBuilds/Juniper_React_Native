@@ -52,6 +52,8 @@ export const DatabaseService = {
         // XAI LiveSearch defaults
         xai_live_search_enabled: updates.xai_live_search_enabled ?? false,
         xai_live_search_safe_search: updates.xai_live_search_safe_search ?? true,
+        // User tags defaults
+        user_tags: updates.user_tags || [],
         updated_at: new Date().toISOString()
       };
       
@@ -137,6 +139,8 @@ export const DatabaseService = {
         // XAI LiveSearch defaults
         xai_live_search_enabled: false,
         xai_live_search_safe_search: true,
+        // User tags defaults
+        user_tags: [],
         updated_at: new Date().toISOString()
       };
       
@@ -170,6 +174,46 @@ export const DatabaseService = {
     
     if (error) throw error;
     return data;
+  },
+
+  // User Tags Management
+  async getUserTags(userId: string): Promise<string[]> {
+    const profile = await this.getUserProfile(userId);
+    return profile?.user_tags || [];
+  },
+
+  async addUserTag(userId: string, tag: string): Promise<string[]> {
+    const profile = await this.getUserProfile(userId);
+    const currentTags = profile?.user_tags || [];
+    
+    // Check if tag already exists
+    if (currentTags.includes(tag)) {
+      return currentTags;
+    }
+    
+    // Check max tags limit
+    if (currentTags.length >= 50) {
+      throw new Error('Maximum of 50 user tags allowed');
+    }
+    
+    // Check tag length
+    if (tag.length > 25) {
+      throw new Error('Tag must be 25 characters or less');
+    }
+    
+    const newTags = [...currentTags, tag];
+    
+    await this.updateUserProfile(userId, { user_tags: newTags });
+    return newTags;
+  },
+
+  async removeUserTag(userId: string, tag: string): Promise<string[]> {
+    const profile = await this.getUserProfile(userId);
+    const currentTags = profile?.user_tags || [];
+    const newTags = currentTags.filter((t: string) => t !== tag);
+    
+    await this.updateUserProfile(userId, { user_tags: newTags });
+    return newTags;
   },
 
   // Legacy methods for backward compatibility (deprecated)
@@ -324,6 +368,17 @@ export const DatabaseService = {
     
     if (error) throw error
     return data
+  },
+
+  // Get all available services
+  async getAllServices() {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .order('service_name')
+    
+    if (error) throw error
+    return data || []
   },
 
   // Get config form by service ID

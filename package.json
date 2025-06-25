@@ -7,7 +7,13 @@
     "android": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "android:build": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home cd android && ./gradlew assembleRelease"
+    "android:build": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home cd android && ./gradlew assembleRelease",
+    "test:ios": "./scripts/run-ios-tests.sh",
+    "test:ios:performance": "./scripts/performance-tests.sh",
+    "test:ios:errors": "./scripts/error-handling-tests.sh",
+    "test:ios:validate": "./scripts/pre-manual-validation.sh",
+    "test:ios:conversation": "node tests/integration/conversation-test-fixed.js",
+    "test:ios:full": "npm run test:ios && npm run test:ios:performance && npm run test:ios:errors && npm run test:ios:validate"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.1.2",
@@ -21,7 +27,9 @@
     "expo": "~50.0.0",
     "expo-constants": "~15.4.6",
     "expo-dev-client": "~3.3.12",
+    "expo-secure-store": "^14.2.3",
     "expo-status-bar": "~1.11.1",
+    "express": "^5.1.0",
     "react": "18.2.0",
     "react-native": "^0.73.6",
     "react-native-app-auth": "^8.0.3",

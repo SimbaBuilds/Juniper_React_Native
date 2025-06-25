@@ -40,3 +40,8 @@ android/.gradle/buildOutputCleanup/
 android/.gradle/buildOutputCleanup/buildOutputCleanup.lock
 
 app.config.js
+
+
+tests/
+
+.cursor/

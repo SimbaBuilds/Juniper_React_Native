@@ -13,6 +13,8 @@ export type UserProfile = {
     // XAI LiveSearch settings
     xai_live_search_enabled?: boolean;
     xai_live_search_safe_search?: boolean;
+    // User-defined tags for categorization and organization (max 50 tags)
+    user_tags: string[];
     created_at: Date;
     updated_at: Date;
   };
@@ -20,7 +22,7 @@ export type UserProfile = {
   export const userProfileFields = [
     'id', 'display_name', 'deepgram_enabled', 'base_language_model', 'general_instructions',
     'wake_word', 'wake_word_sensitivity', 'wake_word_detection_enabled', 'selected_deepgram_voice', 'timezone', 'preferences', 
-    'xai_live_search_enabled', 'xai_live_search_safe_search',
+    'xai_live_search_enabled', 'xai_live_search_safe_search', 'user_tags',
     'created_at', 'updated_at'
   ] as const;
   export type UserProfileField = (typeof userProfileFields)[number];
@@ -69,7 +71,7 @@ export type UserProfile = {
     category?: string;
     title: string;
     content: string;
-    tags: string[];
+    tags: string[]; // Memory tags for categorization and retrieval (max 4 tags)
     importance_score: number;
     embedding?: number[];
     decay_factor: number;
@@ -81,7 +83,7 @@ export type UserProfile = {
   };
   
   export const memoryFields = [
-    'id', 'user_id', 'memory_type', 'category', 'title', 'content',
+    'id', 'user_id', 'memory_type', 'category', 'title', 'content', 'tags',
     'importance_score', 'embedding', 'decay_factor', 'auto_committed',
     'source_conversation_id', 'last_accessed', 'created_at', 'updated_at'
   ] as const;
@@ -155,6 +157,8 @@ export type UserProfile = {
     access_token?: string;
     refresh_token?: string;
     expires_at?: Date;
+    // API key authentication (alternative to OAuth)
+    api_key?: string;
     // Email specific fields
     email_address?: string;
     // Notion specific fields
@@ -174,7 +178,7 @@ export type UserProfile = {
   
   export const integrationFields = [
     'id', 'user_id', 'service_id', 'notes', 'is_active', 'status', 'last_used', 'created_at',
-    'access_token', 'refresh_token', 'expires_at', 'email_address',
+    'access_token', 'refresh_token', 'expires_at', 'api_key', 'email_address',
     'bot_id', 'workspace_name', 'workspace_icon', 'workspace_id', 'owner_info', 'duplicated_template_id',
     'last_sync', 'updated_at', 'client_id', 'client_secret_id', 'client_secret_value'
   ] as const;
@@ -190,11 +194,14 @@ export type UserProfile = {
     refresh_script?: string;
     tools?: string[];
     integration_method?: string; // e.g. OAuth, External App, Internal App etc.
+    description?: string; // Detailed description of the service and its capabilities
+    tags?: string[]; // Array of tags for categorizing and filtering services
   };
 
   export const serviceFields = [
     'id', 'created_at', 'service_name', 'num_users', 'config_form_id',
-    'auth_script', 'refresh_script', 'tools', 'integration_method'
+    'auth_script', 'refresh_script', 'tools', 'integration_method',
+    'description', 'tags'
   ] as const;
   export type ServiceField = (typeof serviceFields)[number];
 

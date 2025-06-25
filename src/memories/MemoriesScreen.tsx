@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Act
 import { Ionicons } from '@expo/vector-icons';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
+import { TagSelector } from './components/TagSelector';
+import { MAX_MEMORY_TAGS } from './constants/tags';
 
 interface Memory {
   id: string;
@@ -21,9 +23,12 @@ export const MemoriesScreen: React.FC = () => {
   const [newMemory, setNewMemory] = useState({
     title: '',
     content: '',
-    tags: ''
+    tags: [] as string[]
   });
   const [saving, setSaving] = useState(false);
+  const [userTags, setUserTags] = useState<string[]>([]);
+  const [selectedFilterTags, setSelectedFilterTags] = useState<string[]>([]);
+  const [showFilterModal, setShowFilterModal] = useState(false);
 
   // Helper function to ensure memories have proper tags arrays
   const ensureMemoryTags = (memories: any[]): Memory[] => {
@@ -33,16 +38,22 @@ export const MemoriesScreen: React.FC = () => {
     }));
   };
 
-  // Load memories from database
+  // Load memories and user tags from database
   useEffect(() => {
-    const loadMemories = async () => {
+    const loadData = async () => {
       if (!user?.id) return;
       
       try {
         setLoading(true);
         setError(null);
         
-        const dbMemories = await DatabaseService.getMemories(user.id);
+        // Load both memories and user tags
+        const [dbMemories, userTagsData] = await Promise.all([
+          DatabaseService.getMemories(user.id),
+          DatabaseService.getUserTags(user.id)
+        ]);
+        
+        setUserTags(userTagsData);
         
         // Convert database memories to UI format
         const formattedMemories: Memory[] = dbMemories.map((memory: any) => ({
@@ -87,12 +98,17 @@ export const MemoriesScreen: React.FC = () => {
       }
     };
 
-    loadMemories();
+    loadData();
   }, [user?.id]);
 
   const handleAddMemory = async () => {
     if (!user?.id || !newMemory.content.trim()) {
       Alert.alert('Error', 'Please enter memory content');
+      return;
+    }
+
+    if (newMemory.tags.length > MAX_MEMORY_TAGS) {
+      Alert.alert('Error', `You can only select up to ${MAX_MEMORY_TAGS} tags per memory.`);
       return;
     }
 
@@ -106,7 +122,7 @@ export const MemoriesScreen: React.FC = () => {
         importance_score: 5,
         decay_factor: 1.0,
         auto_committed: false,
-        tags: newMemory.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0),
+        tags: newMemory.tags,
         last_accessed: new Date().toISOString()
       };
 
@@ -124,7 +140,7 @@ export const MemoriesScreen: React.FC = () => {
       setMemories(prev => ensureMemoryTags([formattedMemory, ...prev]));
       
       // Reset form
-      setNewMemory({ title: '', content: '', tags: '' });
+      setNewMemory({ title: '', content: '', tags: [] });
       setShowAddModal(false);
       
       Alert.alert('Success', 'Memory saved successfully');
@@ -160,7 +176,27 @@ export const MemoriesScreen: React.FC = () => {
     return grouped;
   };
 
-  const groupedMemories = groupMemoriesByDate(memories);
+  // Filter memories by selected tags
+  const filteredMemories = selectedFilterTags.length === 0 
+    ? memories 
+    : memories.filter(memory => 
+        selectedFilterTags.every(filterTag => 
+          memory.tags && memory.tags.includes(filterTag)
+        )
+      );
+
+  // Get all unique tags from memories for filter options
+  const getAllTagsFromMemories = () => {
+    const tagSet = new Set<string>();
+    memories.forEach(memory => {
+      if (memory.tags) {
+        memory.tags.forEach(tag => tagSet.add(tag));
+      }
+    });
+    return Array.from(tagSet).sort();
+  };
+
+  const groupedMemories = groupMemoriesByDate(filteredMemories);
   const sortedDates = Object.keys(groupedMemories).sort((a, b) => 
     new Date(groupedMemories[b][0].date).getTime() - new Date(groupedMemories[a][0].date).getTime()
   );
@@ -190,7 +226,6 @@ export const MemoriesScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          {/* <Text style={styles.title}>Memories</Text> */}
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => setShowAddModal(true)}
@@ -201,19 +236,46 @@ export const MemoriesScreen: React.FC = () => {
         </View>
 
         <View style={styles.instructionsSection}>
-          <Text style={styles.instructionsTitle}>How to Add Memories</Text>
+          {/* <Text style={styles.instructionsTitle}>How to Add Memories</Text> */}
           <Text style={styles.instructionsText}>
             Add a memory by telling your assistant e.g.{'\n'}
             "Remember these news sources for future reference."
             {'\n\n'}
-            Or use the + button to add a memory manually.  Use tags to help the assistant retrieve the memory.
+            Or use the + button above.  Adding tags helps the assistant retrieve the memory better.
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Memories</Text>
+          <View style={styles.memoriesHeader}>
+            <Text style={styles.sectionTitle}>Your Memories</Text>
+            <View style={styles.memoriesActions}>
+              {selectedFilterTags.length > 0 && (
+                <Text style={styles.filterStatus}>
+                  Showing {filteredMemories.length} of {memories.length} memories
+                </Text>
+              )}
+              <TouchableOpacity
+                style={styles.filterButton}
+                onPress={() => setShowFilterModal(true)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="funnel" size={18} color="#4A90E2" />
+                <Text style={styles.filterButtonText}>
+                  Filter {selectedFilterTags.length > 0 ? `(${selectedFilterTags.length})` : ''}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
           
-          {memories.length === 0 ? (
+          {filteredMemories.length === 0 && memories.length > 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="filter" size={48} color="#666666" />
+              <Text style={styles.emptyStateText}>No memories match your filters</Text>
+              <Text style={styles.emptyStateSubtext}>
+                Try removing some tags or clear all filters
+              </Text>
+            </View>
+          ) : memories.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="bulb-outline" size={48} color="#666666" />
               <Text style={styles.emptyStateText}>No memories saved yet</Text>
@@ -248,6 +310,81 @@ export const MemoriesScreen: React.FC = () => {
             ))
           )}
         </View>
+
+        {/* Filter Modal */}
+        <Modal
+          visible={showFilterModal}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setShowFilterModal(false)}
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setShowFilterModal(false)}>
+                <Text style={styles.modalCloseText}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Filter by Tags</Text>
+              <TouchableOpacity 
+                onPress={() => {
+                  setSelectedFilterTags([]);
+                  setShowFilterModal(false);
+                }}
+              >
+                <Text style={styles.modalCloseText}>Clear All</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalContent}>
+              <TagSelector
+                selectedTags={selectedFilterTags}
+                userTags={userTags}
+                onTagsChange={setSelectedFilterTags}
+                onAddUserTag={async (tag) => {
+                  try {
+                    const updatedTags = await DatabaseService.addUserTag(user!.id, tag);
+                    setUserTags(updatedTags);
+                  } catch (err) {
+                    console.error('Error adding user tag:', err);
+                    Alert.alert('Error', 'Failed to add tag');
+                  }
+                }}
+              />
+              
+              {getAllTagsFromMemories().length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Tags in Your Memories</Text>
+                  <View style={styles.tagsContainer}>
+                    {getAllTagsFromMemories().map((tag) => (
+                      <TouchableOpacity
+                        key={tag}
+                        style={[
+                          styles.filterTag,
+                          selectedFilterTags.includes(tag) && styles.filterTagSelected
+                        ]}
+                        onPress={() => {
+                          if (selectedFilterTags.includes(tag)) {
+                            setSelectedFilterTags(prev => prev.filter(t => t !== tag));
+                          } else {
+                            setSelectedFilterTags(prev => [...prev, tag]);
+                          }
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.filterTagText,
+                            selectedFilterTags.includes(tag) && styles.filterTagTextSelected
+                          ]}
+                        >
+                          {tag}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </ScrollView>
+          </SafeAreaView>
+        </Modal>
 
         {/* Add Memory Modal */}
         <Modal
@@ -296,23 +433,28 @@ export const MemoriesScreen: React.FC = () => {
                   style={[styles.textInput, styles.textArea]}
                   value={newMemory.content}
                   onChangeText={(text) => setNewMemory(prev => ({ ...prev, content: text }))}
-                  placeholder="What would you like to remember?"
+                  placeholder="I take bus 30 on Cap Metro every day at 10:00 AM"
                   placeholderTextColor="#666666"
                   multiline
                   numberOfLines={4}
                 />
               </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Tags (Optional)</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={newMemory.tags}
-                  onChangeText={(text) => setNewMemory(prev => ({ ...prev, tags: text }))}
-                  placeholder="Separate tags with commas"
-                  placeholderTextColor="#666666"
-                />
-              </View>
+              <TagSelector
+                selectedTags={newMemory.tags}
+                userTags={userTags}
+                onTagsChange={(tags) => setNewMemory(prev => ({ ...prev, tags }))}
+                onAddUserTag={async (tag) => {
+                  try {
+                    const updatedTags = await DatabaseService.addUserTag(user!.id, tag);
+                    setUserTags(updatedTags);
+                  } catch (err) {
+                    console.error('Error adding user tag:', err);
+                    Alert.alert('Error', 'Failed to add tag');
+                  }
+                }}
+                disabled={saving}
+              />
             </ScrollView>
           </SafeAreaView>
         </Modal>
@@ -331,7 +473,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     marginBottom: 24,
   },
@@ -339,6 +481,22 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E1E1E',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#4A90E2',
+  },
+  filterButtonText: {
+    color: '#4A90E2',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 6,
   },
   addButton: {
     backgroundColor: '#4A90E2',
@@ -372,7 +530,23 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '500',
     color: '#FFFFFF',
+    marginBottom: 0,
+  },
+  memoriesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
+  },
+  memoriesActions: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  filterStatus: {
+    fontSize: 12,
+    color: '#4A90E2',
+    fontWeight: '500',
   },
   dateSection: {
     marginBottom: 24,
@@ -522,5 +696,27 @@ const styles = StyleSheet.create({
   textArea: {
     height: 100,
     textAlignVertical: 'top',
+  },
+  filterTag: {
+    backgroundColor: '#2A2A2A',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#4A4A4A',
+  },
+  filterTagSelected: {
+    backgroundColor: '#4A90E2',
+    borderColor: '#4A90E2',
+  },
+  filterTagText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '500',
+  },
+  filterTagTextSelected: {
+    color: '#FFFFFF',
   },
 }); 

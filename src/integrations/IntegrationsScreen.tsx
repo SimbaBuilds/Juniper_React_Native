@@ -1,32 +1,279 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Modal, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useIntegrations } from './useIntegrations';
+import { useFocusEffect } from '@react-navigation/native';
+import { DatabaseService } from '../supabase/supabase';
+import { useAuth } from '../auth/AuthContext';
+import IntegrationService from './IntegrationService';
+import ApiKeyModal from './components/ApiKeyModal';
+import TwilioCredentialsModal from './components/TwilioCredentialsModal';
+
+interface ServiceWithStatus {
+  id: string;
+  service_name: string;
+  tags: string[];
+  description?: string;
+  isActive: boolean;
+  isConnected: boolean;
+  integration_id?: string;
+}
+
+interface TwilioCredentials {
+  accountSid: string;
+  apiKey: string;
+  apiSecret: string;
+  phoneNumber: string;
+}
 
 export const IntegrationsScreen: React.FC = () => {
-  const {
-    // State
-    integrations,
-    authReadyIntegrations,
-    formReadyIntegrations,
-    completedIntegrations,
-    loading,
-    error,
-    showIntegrationModal,
-    integrationInput,
-    isSubmitting,
+  const { user } = useAuth();
+  const [services, setServices] = useState<ServiceWithStatus[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [apiKeyModalVisible, setApiKeyModalVisible] = useState(false);
+  const [twilioModalVisible, setTwilioModalVisible] = useState(false);
+  const [selectedService, setSelectedService] = useState<ServiceWithStatus | null>(null);
+
+  // Helper function to get icon for integration type
+  const getIconForIntegrationType = (serviceName: string): keyof typeof Ionicons.glyphMap => {
+    switch (serviceName.toLowerCase()) {
+      case 'gmail':
+      case 'email':
+        return 'mail';
+      case 'microsoft outlook email':
+        return 'mail-outline';
+      case 'google calendar':
+      case 'microsoft outlook calendar':
+        return 'calendar';
+      case 'notion':
+        return 'document-text';
+      case 'slack':
+        return 'chatbubbles';
+      case 'microsoft teams':
+        return 'people';
+      case 'trello':
+        return 'grid';
+      case 'any.do':
+      case 'todoist':
+        return 'checkbox';
+      case 'zoom':
+      case 'google meet':
+        return 'videocam';
+      case 'whatsapp':
+        return 'chatbox';
+      case 'dropbox':
+        return 'cloud';
+      case 'perplexity':
+        return 'search';
+      case 'google sheets':
+      case 'microsoft excel online':
+        return 'grid';
+      case 'google docs':
+      case 'microsoft word online':
+        return 'document';
+      case 'twilio':
+        return 'chatbox-ellipses';
+      default:
+        return 'link';
+    }
+  };
+
+  // Load services and user integrations
+  const loadServicesWithStatus = async () => {
+    if (!user?.id) return;
     
-    // Functions
-    getIconForIntegrationType,
-    handleConnectNotion,
-    handleAddDifferentIntegration,
-    handleCloseIntegrationModal,
-    handleSubmitIntegration,
-    handleCompleteForm,
-    handleActivateIntegration,
-    handleAuthenticate,
-    setIntegrationInput,
-  } = useIntegrations();
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch all services and user integrations in parallel
+      const [allServices, userIntegrations] = await Promise.all([
+        DatabaseService.getAllServices(),
+        DatabaseService.getIntegrations(user.id)
+      ]);
+      
+      // Map services to their status
+      const servicesWithStatus: ServiceWithStatus[] = allServices.map((service: any) => {
+        const integration = userIntegrations.find(
+          (int: any) => int.service_id === service.id && int.is_active
+        );
+        
+        return {
+          id: service.id,
+          service_name: service.service_name,
+          tags: service.tags || [],
+          description: service.description,
+          isActive: !!integration,
+          isConnected: !!integration,
+          integration_id: integration?.id,
+        };
+      });
+      
+      setServices(servicesWithStatus);
+    } catch (err) {
+      console.error('Error loading services:', err);
+      setError('Failed to load services');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle connect button press
+  const handleConnect = async (service: ServiceWithStatus) => {
+    try {
+      if (!user?.id) {
+        Alert.alert('Error', 'User not authenticated. Please log in again.');
+        return;
+      }
+
+      console.log('🔗 Connecting to service:', service.service_name);
+      
+      // Check if this service uses API key authentication
+      if (service.service_name.toLowerCase() === 'perplexity') {
+        setSelectedService(service);
+        setApiKeyModalVisible(true);
+        return;
+      }
+
+      // Check if this service uses Twilio credentials
+      if (service.service_name.toLowerCase() === 'twilio') {
+        setSelectedService(service);
+        setTwilioModalVisible(true);
+        return;
+      }
+      
+      // Check if this is a supported OAuth service
+      const supportedServices = ['notion', 'slack', 'trello', 'zoom'];
+      const isSupported = supportedServices.includes(service.service_name.toLowerCase());
+
+      if (!isSupported) {
+        Alert.alert(
+          'Integration Not Available',
+          `Integration for ${service.service_name} is not yet implemented. Please check back later.`,
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Start the integration flow
+      const integrationService = IntegrationService.getInstance();
+      await integrationService.startIntegration({
+        serviceId: service.id,
+        serviceName: service.service_name,
+        userId: user.id
+      });
+
+      // Refresh the services list to show updated status
+      await loadServicesWithStatus();
+
+    } catch (error) {
+      console.error('Error connecting service:', error);
+      Alert.alert('Error', 'Failed to connect service. Please try again.');
+    }
+  };
+
+  // Handle API key submission
+  const handleApiKeySubmit = async (apiKey: string) => {
+    try {
+      if (!selectedService || !user?.id) {
+        throw new Error('Missing service or user information');
+      }
+
+      console.log('🔑 Submitting API key for:', selectedService.service_name);
+
+      const integrationService = IntegrationService.getInstance();
+      await integrationService.startApiKeyIntegration({
+        serviceId: selectedService.id,
+        serviceName: selectedService.service_name,
+        userId: user.id,
+        apiKey: apiKey
+      });
+
+      // Refresh the services list to show updated status
+      await loadServicesWithStatus();
+
+    } catch (error) {
+      console.error('Error submitting API key:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      Alert.alert('Error', `Failed to connect: ${errorMessage}`);
+      throw error; // Re-throw to let modal handle it
+    }
+  };
+
+  // Handle Twilio credentials submission
+  const handleTwilioCredentialsSubmit = async (credentials: TwilioCredentials) => {
+    try {
+      if (!selectedService || !user?.id) {
+        throw new Error('Missing service or user information');
+      }
+
+      console.log('🔑 Submitting Twilio credentials...');
+
+      const integrationService = IntegrationService.getInstance();
+      await integrationService.startTwilioIntegration({
+        serviceId: selectedService.id,
+        serviceName: selectedService.service_name,
+        userId: user.id,
+        credentials: credentials
+      });
+
+      // Refresh the services list to show updated status
+      await loadServicesWithStatus();
+
+    } catch (error) {
+      console.error('Error submitting Twilio credentials:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      Alert.alert('Error', `Failed to connect: ${errorMessage}`);
+      throw error; // Re-throw to let modal handle it
+    }
+  };
+
+  // Handle disconnect button press
+  const handleDisconnect = async (service: ServiceWithStatus) => {
+    try {
+      if (!service.integration_id) {
+        Alert.alert('Error', 'No integration ID found.');
+        return;
+      }
+
+      Alert.alert(
+        'Disconnect Integration',
+        `Are you sure you want to disconnect ${service.service_name}? This will revoke access and you'll need to reconnect to use this service again.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Disconnect', 
+            style: 'destructive',
+            onPress: async () => {
+              const integrationService = IntegrationService.getInstance();
+              await integrationService.disconnectIntegration(
+                service.integration_id!,
+                service.service_name
+              );
+              
+              // Refresh the services list
+              await loadServicesWithStatus();
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error disconnecting service:', error);
+      Alert.alert('Error', 'Failed to disconnect service. Please try again.');
+    }
+  };
+
+  // Effects
+  useEffect(() => {
+    loadServicesWithStatus();
+  }, [user?.id]);
+
+  // Refresh when screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      loadServicesWithStatus();
+    }, [user?.id])
+  );
 
   if (loading) {
     return (
@@ -44,6 +291,12 @@ export const IntegrationsScreen: React.FC = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={loadServicesWithStatus}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -52,197 +305,106 @@ export const IntegrationsScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.instructionsSection}>
-          <Text style={styles.instructionsTitle}>Adding Integrations</Text>
-          <Text style={styles.instructionsText}>
-            To add an integration, simply ask your assistant e.g. "Connect with Notion."
-            {'\n'}
-            Note: there is no pre-built set of integrations.  You can add any service you want, and we will guide you through set up.
+        <View style={styles.header}>
+          {/* <Text style={styles.title}>Integrations</Text> */}
+          <Text style={styles.subtitle}>
+            Connect your favorite services to unlock powerful automations
           </Text>
         </View>
 
-        {/* Form Ready Section */}
-        {formReadyIntegrations.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Complete Configuration</Text>
-            <Text style={styles.sectionSubtitle}>These integrations need configuration forms completed</Text>
-            <Text style={styles.emailNotice}>This form has also been emailed to you for easy desktop access</Text>
-            
-            {formReadyIntegrations.map((buildState) => (
-              <View key={buildState.id} style={styles.authReadyItem}>
-                <View style={styles.authReadyLeft}>
-                  <Ionicons name={getIconForIntegrationType(buildState.service_name)} size={24} color="#4CAF50" />
-                  <View style={styles.authReadyInfo}>
-                    <Text style={styles.authReadyName}>{buildState.service_name}</Text>
-                    <Text style={styles.authReadyDescription}>Complete configuration form</Text>
+        <View style={styles.servicesSection}>
+          {services.map((service) => (
+            <View key={service.id} style={styles.serviceCard}>
+              <View style={styles.serviceHeader}>
+                <View style={styles.serviceLeft}>
+                  <Ionicons 
+                    name={getIconForIntegrationType(service.service_name)} 
+                    size={24} 
+                    color={service.isConnected ? "#4CAF50" : "#666666"} 
+                  />
+                  <View style={styles.serviceInfo}>
+                    <Text style={styles.serviceName}>{service.service_name}</Text>
+                    {service.tags && service.tags.length > 0 && (
+                      <View style={styles.tagsContainer}>
+                        {service.tags.map((tag, index) => (
+                          <View key={index} style={styles.tag}>
+                            <Text style={styles.tagText}>{tag}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
                   </View>
                 </View>
-                <TouchableOpacity
-                  style={[styles.authButton, styles.formButton]}
-                  onPress={() => handleCompleteForm(buildState)}
-                >
-                  <Text style={styles.authButtonText}>Configure</Text>
-                  <Ionicons name="settings" size={16} color="#FFFFFF" />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Authentication Ready Section */}
-        {authReadyIntegrations.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Complete Authentication</Text>
-            <Text style={styles.sectionSubtitle}>These integrations are ready for authentication</Text>
-            
-            {authReadyIntegrations.map((buildState) => (
-              <View key={buildState.id} style={styles.authReadyItem}>
-                <View style={styles.authReadyLeft}>
-                  <Ionicons name={getIconForIntegrationType(buildState.service_name)} size={24} color="#FF9800" />
-                  <View style={styles.authReadyInfo}>
-                    <Text style={styles.authReadyName}>{buildState.service_name}</Text>
-                    <Text style={styles.authReadyDescription}>Complete authentication</Text>
-                  </View>
+                
+                <View style={styles.serviceRight}>
+                  {service.isConnected ? (
+                    <View style={styles.connectedContainer}>
+                      <View style={styles.connectedIndicator}>
+                        <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                        <Text style={styles.connectedText}>Connected</Text>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.disconnectButton}
+                        onPress={() => handleDisconnect(service)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.disconnectButtonText}>Disconnect</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.connectButton}
+                      onPress={() => handleConnect(service)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.connectButtonText}>Connect</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
-                <TouchableOpacity
-                  style={styles.authButton}
-                  onPress={() => handleAuthenticate(buildState)}
-                >
-                  <Text style={styles.authButtonText}>Authenticate</Text>
-                  <Ionicons name="key" size={16} color="#FFFFFF" />
-                </TouchableOpacity>
               </View>
-            ))}
-          </View>
-        )}
-
-        {/* Completed Integrations Section */}
-        {completedIntegrations.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ready to Activate</Text>
-            <Text style={styles.sectionSubtitle}>These integrations are configured and ready to use</Text>
-            
-            {completedIntegrations.map((buildState) => (
-              <View key={buildState.id} style={styles.authReadyItem}>
-                <View style={styles.authReadyLeft}>
-                  <Ionicons name={getIconForIntegrationType(buildState.service_name)} size={24} color="#4CAF50" />
-                  <View style={styles.authReadyInfo}>
-                    <Text style={styles.authReadyName}>{buildState.service_name}</Text>
-                    <Text style={styles.authReadyDescription}>
-                      {buildState.state_data?.auth_type === 'api_key' ? 'API key configured' : 
-                       buildState.state_data?.auth_type === 'app_password' ? 'App password configured' :
-                       'Credentials configured'}
-                    </Text>
-                  </View>
-                </View>
-                <TouchableOpacity
-                  style={[styles.authButton, styles.activateButton]}
-                  onPress={() => handleActivateIntegration(buildState)}
-                >
-                  <Text style={styles.authButtonText}>Activate</Text>
-                  <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Integrations</Text>
-          
-          <View style={styles.emptyIntegrationsContainer}>
-            <Ionicons name="apps-outline" size={48} color="#B0B0B0" />
-            <Text style={styles.emptyIntegrationsTitle}>No Integrations Yet</Text>
-            
-            <View style={styles.suggestionContainer}>
-              <Text style={styles.suggestionText}>
-                Notion is a great platform for your assistant to manage tasks and projects for yourself and your team; it even has email and calendar services. Start by{' '}
-                <Text 
-                  style={styles.clickableLink}
-                  onPress={handleConnectNotion}
-                >
-                  connecting with Notion
-                </Text>
-                {' '}in a few simple steps or by{' '}
-                <Text 
-                  style={styles.clickableLink}
-                  onPress={handleAddDifferentIntegration}
-                >
-                  connecting with a different service
-                </Text>
-                {' '}(e.g. Slack, Gmail, Amazon Echo, Cursor, Tesla etc.)
-              </Text>
             </View>
-          </View>
+          ))}
         </View>
+
+        {services.length === 0 && (
+          <View style={styles.emptyState}>
+            <Ionicons name="apps-outline" size={48} color="#666666" />
+            <Text style={styles.emptyStateText}>No services available</Text>
+            <Text style={styles.emptyStateSubtext}>
+              Services will appear here when they're added to the database
+            </Text>
+          </View>
+        )}
       </ScrollView>
 
-      {/* Integration Input Modal */}
-      <Modal
-        visible={showIntegrationModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={handleCloseIntegrationModal}
-      >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>New Integration</Text>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={handleCloseIntegrationModal}
-              disabled={isSubmitting}
-            >
-              <Ionicons name="close" size={24} color="#888888" />
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.modalContent}>
-            <Text style={styles.modalQuestion}>
-              What service do you want to integrate with and what do you want to use it for?
-            </Text>
-            
-            <TextInput
-              style={styles.modalTextInput}
-              value={integrationInput}
-              onChangeText={setIntegrationInput}
-              placeholder="e.g., I want to connect with Gmail to automatically sort and respond to emails based on priority..."
-              placeholderTextColor="#666666"
-              multiline
-              maxLength={1000}
-              editable={!isSubmitting}
-              textAlignVertical="top"
-            />
-            
-            <View style={styles.modalFooter}>
-              <Text style={styles.characterCount}>
-                {integrationInput.length}/1000 characters
-              </Text>
-              
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={handleCloseIntegrationModal}
-                  disabled={isSubmitting}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.submitButton, (!integrationInput.trim() || isSubmitting) && styles.submitButtonDisabled]}
-                  onPress={handleSubmitIntegration}
-                  disabled={!integrationInput.trim() || isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.submitButtonText}>Submit</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </SafeAreaView>
-      </Modal>
+      {/* API Key Modal for Perplexity */}
+      <ApiKeyModal
+        visible={apiKeyModalVisible}
+        serviceName={selectedService?.service_name || ''}
+        onClose={() => {
+          setApiKeyModalVisible(false);
+          setSelectedService(null);
+        }}
+        onSuccess={() => {
+          setApiKeyModalVisible(false);
+          setSelectedService(null);
+        }}
+        onSubmit={handleApiKeySubmit}
+      />
+
+      {/* Twilio Credentials Modal */}
+      <TwilioCredentialsModal
+        visible={twilioModalVisible}
+        onClose={() => {
+          setTwilioModalVisible(false);
+          setSelectedService(null);
+        }}
+        onSuccess={() => {
+          setTwilioModalVisible(false);
+          setSelectedService(null);
+        }}
+        onSubmit={handleTwilioCredentialsSubmit}
+      />
     </SafeAreaView>
   );
 };
@@ -262,163 +424,100 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
+    marginBottom: 8,
   },
-  instructionsSection: {
-    backgroundColor: '#1E1E1E',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 24,
-  },
-  instructionsTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    marginBottom: 12,
-  },
-  instructionsText: {
+  subtitle: {
+    fontSize: 16,
     color: '#B0B0B0',
-    fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 22,
   },
-  expandableSection: {
+  servicesSection: {
+    gap: 12,
+  },
+  serviceCard: {
     backgroundColor: '#1E1E1E',
-    borderRadius: 8,
-    marginBottom: 16,
-    overflow: 'hidden',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
   },
-  sectionHeader: {
+  serviceHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
+    alignItems: 'flex-start',
   },
-  sectionTitleRow: {
+  serviceLeft: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    flex: 1,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#FFFFFF',
+  serviceInfo: {
     marginLeft: 12,
+    flex: 1,
   },
-  sectionContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  servicesContainer: {
-    gap: 16,
-  },
-  serviceSection: {
-    backgroundColor: '#2A2A2A',
-    borderRadius: 8,
-    padding: 16,
-  },
-  serviceTitle: {
+  serviceName: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#FFFFFF',
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  unifiedConnectSection: {
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  tag: {
     backgroundColor: '#2A2A2A',
-    borderRadius: 8,
-    padding: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#4A90E2',
   },
-  unifiedTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 8,
+  tagText: {
+    fontSize: 12,
+    color: '#4A90E2',
+    fontWeight: '500',
   },
-  unifiedDescription: {
-    fontSize: 14,
-    color: '#B0B0B0',
-    lineHeight: 20,
-    marginBottom: 16,
+  serviceRight: {
+    alignItems: 'flex-end',
   },
-  unifiedConnectButton: {
-    backgroundColor: '#4A90E2',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-    borderRadius: 6,
+  connectedContainer: {
+    alignItems: 'flex-end',
     gap: 8,
   },
-  unifiedConnectText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  section: {
-    marginBottom: 24,
-  },
-  integrationCard: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-  },
-  integrationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  integrationTitleRow: {
+  connectedIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  integrationName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    marginLeft: 12,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    backgroundColor: '#2A2A2A',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '500',
+    gap: 6,
   },
   connectedText: {
+    fontSize: 14,
     color: '#4CAF50',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  disconnectedText: {
-    color: '#757575', // Changed from red to grey as requested
-  },
-  integrationDetails: {
-    marginBottom: 12,
-  },
-  detailLabel: {
-    fontSize: 14,
     fontWeight: '500',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  detailValue: {
-    fontSize: 14,
-    color: '#B0B0B0',
-    marginBottom: 8,
   },
   connectButton: {
     backgroundColor: '#4A90E2',
-    padding: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 6,
-    alignItems: 'center',
   },
   connectButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
+    fontWeight: '500',
+  },
+  disconnectButton: {
+    backgroundColor: '#2A2A2A',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#F44336',
+  },
+  disconnectButtonText: {
+    color: '#F44336',
+    fontSize: 12,
     fontWeight: '500',
   },
   loadingContainer: {
@@ -428,205 +527,48 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: 16,
     marginTop: 12,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 32,
   },
   errorText: {
     color: '#F44336',
-    fontSize: 18,
-    fontWeight: '500',
-    marginTop: 12,
-  },
-  emptyIntegrationsContainer: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 8,
-    padding: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyIntegrationsTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyIntegrationsText: {
-    fontSize: 14,
-    color: '#B0B0B0',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  connectedContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  disconnectButton: {
-    backgroundColor: '#F44336',
-  },
-  suggestionContainer: {
-    backgroundColor: '#2A2A2A',
-    borderRadius: 8,
-    padding: 16,
-    marginTop: 16,
-  },
-  suggestionText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  clickableLink: {
-    color: '#4A90E2',
-    fontWeight: '500',
-    textDecorationLine: 'underline',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#121212',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#FFFFFF',
-  },
-  modalCloseButton: {
-    padding: 8,
-  },
-  modalContent: {
-    padding: 16,
-  },
-  modalQuestion: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    marginBottom: 16,
-  },
-  modalTextInput: {
-    backgroundColor: '#2A2A2A',
-    borderRadius: 8,
-    padding: 12,
-    color: '#FFFFFF',
-    fontSize: 16,
-    height: 120,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#444444',
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  characterCount: {
-    color: '#888888',
-    fontSize: 12,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  modalButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 6,
-    minWidth: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#757575',
-  },
-  cancelButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  submitButton: {
-    backgroundColor: '#4A90E2',
-  },
-  submitButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  submitButtonDisabled: {
-    backgroundColor: '#757575',
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: '#B0B0B0',
-    marginBottom: 16,
-    marginTop: 4,
-  },
-  emailNotice: {
-    fontSize: 13,
-    color: '#4CAF50',
-    fontStyle: 'italic',
-    marginBottom: 16,
     textAlign: 'center',
+    marginBottom: 16,
   },
-  authReadyItem: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#4A90E2',
-  },
-  authReadyLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  authReadyInfo: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  authReadyName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  authReadyDescription: {
-    fontSize: 14,
-    color: '#B0B0B0',
-  },
-  authButton: {
+  retryButton: {
     backgroundColor: '#4A90E2',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
   },
-  formButton: {
-    backgroundColor: '#4CAF50',
-  },
-  activateButton: {
-    backgroundColor: '#4CAF50',
-  },
-  authButtonText: {
+  retryButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '500',
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: 32,
+    marginTop: 32,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    fontWeight: '500',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#B0B0B0',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 }); 

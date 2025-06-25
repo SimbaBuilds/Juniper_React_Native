@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Linking } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import { VoiceProvider, useVoice } from './src/voice/VoiceContext';
 import { WakeWordProvider } from './src/wakeword/WakeWordContext';
 import WakeWordService from './src/wakeword/WakeWordService';
@@ -181,7 +181,57 @@ export default function App() {
     <NavigationContainer ref={navigationRef}>
       <AuthProvider>
         <VoiceProvider>
-          <WakeWordProvider>
+          {Platform.OS === 'android' ? (
+            <WakeWordProvider>
+              <Stack.Navigator
+                screenOptions={{
+                  headerShown: false,
+                }}
+                initialRouteName={session ? "MainTabs" : "Login"}
+              >
+                {session ? (
+                  <>
+                    <Stack.Screen 
+                      name="MainTabs" 
+                      component={MainTabNavigator}
+                    />
+                    <Stack.Screen 
+                      name="OAuthCallback" 
+                      component={OAuthCallbackHandler}
+                      options={{
+                        title: 'Completing Integration...',
+                        headerShown: true,
+                      }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Stack.Screen 
+                      name="Login" 
+                      component={LoginPage}
+                      options={{
+                        title: 'Sign In',
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="SignUp" 
+                      component={SignUpPage}
+                      options={{
+                        title: 'Create Account',
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="PhoneSignUp" 
+                      component={PhoneSignUpPage}
+                      options={{
+                        title: 'Phone Sign Up',
+                      }}
+                    />
+                  </>
+                )}
+              </Stack.Navigator>
+            </WakeWordProvider>
+          ) : (
             <Stack.Navigator
               screenOptions={{
                 headerShown: false,
@@ -229,7 +279,7 @@ export default function App() {
                 </>
               )}
             </Stack.Navigator>
-          </WakeWordProvider>
+          )}
         </VoiceProvider>
       </AuthProvider>
     </NavigationContainer>

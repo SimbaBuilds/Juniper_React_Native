@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Platform } from 'react-native';
 import { WakeWordStatus } from './wakeword/components/WakeWordStatus';
 import { WakeWordToggle } from './wakeword/components/WakeWordToggle';
 import { VoiceAssistant } from './voice/components/VoiceAssistant';
 import { VoiceErrorBoundary } from './voice/ErrorBoundary/VoiceErrorBoundary';
+import { StartChatButton } from './voice/components/StartChatButton';
 import { useVoice } from './voice/VoiceContext';
 
 export const HomeScreen: React.FC = () => {
@@ -17,10 +18,20 @@ export const HomeScreen: React.FC = () => {
           </View>
         </View>
         
-        <View style={styles.settingsSection}>
-          <WakeWordToggle />
-          <WakeWordStatus />
-        </View>
+        {/* Wake word components - Android only */}
+        {Platform.OS === 'android' && (
+          <View style={styles.settingsSection}>
+            <WakeWordToggle />
+            <WakeWordStatus />
+          </View>
+        )}
+        
+        {/* Start Chat Button - iOS only */}
+        {Platform.OS === 'ios' && (
+          <View style={styles.settingsSection}>
+            <StartChatButton />
+          </View>
+        )}
         
         <VoiceErrorBoundary>
           <View style={styles.voiceAssistantContainer}>
