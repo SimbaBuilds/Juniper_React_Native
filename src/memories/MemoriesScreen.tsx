@@ -10,7 +10,7 @@ interface Memory {
   id: string;
   content: string;
   date: string;
-  tags: string[];
+  tags: any[]; // Array of tag objects with id and name
   title?: string;
 }
 
@@ -23,11 +23,10 @@ export const MemoriesScreen: React.FC = () => {
   const [newMemory, setNewMemory] = useState({
     title: '',
     content: '',
-    tags: [] as string[]
+    tags: [] as any[]
   });
   const [saving, setSaving] = useState(false);
-  const [userTags, setUserTags] = useState<string[]>([]);
-  const [selectedFilterTags, setSelectedFilterTags] = useState<string[]>([]);
+  const [selectedFilterTags, setSelectedFilterTags] = useState<any[]>([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
 
   // Helper function to ensure memories have proper tags arrays
@@ -38,7 +37,7 @@ export const MemoriesScreen: React.FC = () => {
     }));
   };
 
-  // Load memories and user tags from database
+  // Load memories from database
   useEffect(() => {
     const loadData = async () => {
       if (!user?.id) return;
@@ -47,22 +46,28 @@ export const MemoriesScreen: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Load both memories and user tags
-        const [dbMemories, userTagsData] = await Promise.all([
-          DatabaseService.getMemories(user.id),
-          DatabaseService.getUserTags(user.id)
-        ]);
+        // Load memories
+        const dbMemories = await DatabaseService.getMemories(user.id);
         
-        setUserTags(userTagsData);
-        
-        // Convert database memories to UI format
-        const formattedMemories: Memory[] = dbMemories.map((memory: any) => ({
-          id: memory.id,
-          content: memory.content,
-          title: memory.title,
-          date: new Date(memory.created_at).toISOString().split('T')[0],
-          tags: Array.isArray(memory.tags) ? memory.tags : []
-        }));
+        // Convert database memories to UI format with tag objects
+        const formattedMemories: Memory[] = dbMemories.map((memory: any) => {
+          // Collect tags from tag_1 through tag_5 columns
+          const tags = [
+            memory.tag_1,
+            memory.tag_2, 
+            memory.tag_3,
+            memory.tag_4,
+            memory.tag_5
+          ].filter(Boolean); // Remove null/undefined tags
+          
+          return {
+            id: memory.id,
+            content: memory.content,
+            title: memory.title,
+            date: new Date(memory.created_at).toISOString().split('T')[0],
+            tags: tags
+          };
+        });
 
         // Add default memories if none exist
         if (formattedMemories.length === 0) {
@@ -71,19 +76,19 @@ export const MemoriesScreen: React.FC = () => {
               id: '1',
               content: 'Favorite coffee shop is Blue Bottle Coffee on Market Street - they make excellent cortados',
               date: '2024-05-30',
-              tags: ['coffee', 'location', 'preferences'],
+              tags: [],
             },
             {
               id: '2',
               content: 'Meeting with design team every Tuesday at 2 PM in conference room B',
               date: '2024-05-29',
-              tags: ['meetings', 'schedule', 'work'],
+              tags: [],
             },
             {
               id: '3',
               content: 'Preferred news sources: TechCrunch, The Verge, Hacker News for tech updates',
               date: '2024-05-28',
-              tags: ['news', 'tech', 'preferences'],
+              tags: [],
             },
           ];
           setMemories(ensureMemoryTags(defaultMemories));
@@ -115,6 +120,9 @@ export const MemoriesScreen: React.FC = () => {
     try {
       setSaving(true);
       
+      // Extract tag IDs from tag objects
+      const tagIds = newMemory.tags.map(tag => tag.id);
+      
       const memoryData = {
         title: newMemory.title.trim() || null,
         content: newMemory.content.trim(),
@@ -122,11 +130,14 @@ export const MemoriesScreen: React.FC = () => {
         importance_score: 5,
         decay_factor: 1.0,
         auto_committed: false,
-        tags: newMemory.tags,
+        tags: tagIds,
         last_accessed: new Date().toISOString()
       };
 
       const savedMemory = await DatabaseService.createMemory(user.id, memoryData);
+      
+      // Get full tag details for UI display
+      const memoryTags = await DatabaseService.getMemoryTags(savedMemory.id);
       
       // Add to local state
       const formattedMemory: Memory = {
@@ -134,7 +145,7 @@ export const MemoriesScreen: React.FC = () => {
         content: savedMemory.content,
         title: savedMemory.title,
         date: new Date(savedMemory.created_at).toISOString().split('T')[0],
-        tags: Array.isArray(savedMemory.tags) ? savedMemory.tags : []
+        tags: memoryTags
       };
 
       setMemories(prev => ensureMemoryTags([formattedMemory, ...prev]));
@@ -176,24 +187,24 @@ export const MemoriesScreen: React.FC = () => {
     return grouped;
   };
 
-  // Filter memories by selected tags
+  // Filter memories by selected tags (AND logic - memory must have all selected tags)
   const filteredMemories = selectedFilterTags.length === 0 
     ? memories 
     : memories.filter(memory => 
         selectedFilterTags.every(filterTag => 
-          memory.tags && memory.tags.includes(filterTag)
+          memory.tags && memory.tags.some(tag => tag.id === filterTag.id)
         )
       );
 
   // Get all unique tags from memories for filter options
   const getAllTagsFromMemories = () => {
-    const tagSet = new Set<string>();
+    const tagMap = new Map<string, any>();
     memories.forEach(memory => {
       if (memory.tags) {
-        memory.tags.forEach(tag => tagSet.add(tag));
+        memory.tags.forEach(tag => tagMap.set(tag.id, tag));
       }
     });
-    return Array.from(tagSet).sort();
+    return Array.from(tagMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   };
 
   const groupedMemories = groupMemoriesByDate(filteredMemories);
@@ -236,7 +247,6 @@ export const MemoriesScreen: React.FC = () => {
         </View>
 
         <View style={styles.instructionsSection}>
-          {/* <Text style={styles.instructionsTitle}>How to Add Memories</Text> */}
           <Text style={styles.instructionsText}>
             Add a memory by telling your assistant e.g.{'\n'}
             "Remember these news sources for future reference."
@@ -298,8 +308,8 @@ export const MemoriesScreen: React.FC = () => {
                     {memory.tags && Array.isArray(memory.tags) && memory.tags.length > 0 && (
                       <View style={styles.tagsContainer}>
                         {(memory.tags || []).map((tag, index) => (
-                          <View key={index} style={styles.tag}>
-                            <Text style={styles.tagText}>{tag}</Text>
+                          <View key={tag.id || index} style={styles.tag}>
+                            <Text style={styles.tagText}>{tag.name || tag}</Text>
                           </View>
                         ))}
                       </View>
@@ -337,12 +347,12 @@ export const MemoriesScreen: React.FC = () => {
             <ScrollView style={styles.modalContent}>
               <TagSelector
                 selectedTags={selectedFilterTags}
-                userTags={userTags}
+                userId={user!.id}
                 onTagsChange={setSelectedFilterTags}
                 onAddUserTag={async (tag) => {
                   try {
-                    const updatedTags = await DatabaseService.addUserTag(user!.id, tag);
-                    setUserTags(updatedTags);
+                    // Tag is now already created in the database
+                    console.log('Tag added:', tag);
                   } catch (err) {
                     console.error('Error adding user tag:', err);
                     Alert.alert('Error', 'Failed to add tag');
@@ -356,14 +366,14 @@ export const MemoriesScreen: React.FC = () => {
                   <View style={styles.tagsContainer}>
                     {getAllTagsFromMemories().map((tag) => (
                       <TouchableOpacity
-                        key={tag}
+                        key={tag.id}
                         style={[
                           styles.filterTag,
-                          selectedFilterTags.includes(tag) && styles.filterTagSelected
+                          selectedFilterTags.some(t => t.id === tag.id) && styles.filterTagSelected
                         ]}
                         onPress={() => {
-                          if (selectedFilterTags.includes(tag)) {
-                            setSelectedFilterTags(prev => prev.filter(t => t !== tag));
+                          if (selectedFilterTags.some(t => t.id === tag.id)) {
+                            setSelectedFilterTags(prev => prev.filter(t => t.id !== tag.id));
                           } else {
                             setSelectedFilterTags(prev => [...prev, tag]);
                           }
@@ -372,10 +382,10 @@ export const MemoriesScreen: React.FC = () => {
                         <Text
                           style={[
                             styles.filterTagText,
-                            selectedFilterTags.includes(tag) && styles.filterTagTextSelected
+                            selectedFilterTags.some(t => t.id === tag.id) && styles.filterTagTextSelected
                           ]}
                         >
-                          {tag}
+                          {tag.name}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -404,14 +414,18 @@ export const MemoriesScreen: React.FC = () => {
               <Text style={styles.modalTitle}>Add Memory</Text>
               <TouchableOpacity
                 onPress={handleAddMemory}
-                style={[styles.modalSaveButton, saving && styles.modalSaveButtonDisabled]}
-                disabled={saving}
+                style={[
+                  styles.modalSaveButton,
+                  saving && styles.modalSaveButtonDisabled
+                ]}
+                disabled={saving || !newMemory.content.trim()}
               >
-                {saving ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.modalSaveText}>Save</Text>
-                )}
+                <Text style={[
+                  styles.modalSaveText,
+                  (!newMemory.content.trim() || saving) && styles.modalSaveTextDisabled
+                ]}>
+                  {saving ? 'Saving...' : 'Save'}
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -419,35 +433,37 @@ export const MemoriesScreen: React.FC = () => {
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Title (Optional)</Text>
                 <TextInput
-                  style={styles.textInput}
+                  style={styles.titleInput}
+                  placeholder="Add a title..."
                   value={newMemory.title}
                   onChangeText={(text) => setNewMemory(prev => ({ ...prev, title: text }))}
-                  placeholder="Enter a title for this memory"
-                  placeholderTextColor="#666666"
+                  editable={!saving}
+                  returnKeyType="next"
                 />
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Content *</Text>
+                <Text style={styles.inputLabel}>Memory Content *</Text>
                 <TextInput
-                  style={[styles.textInput, styles.textArea]}
+                  style={styles.contentInput}
+                  placeholder="What would you like to remember?"
                   value={newMemory.content}
                   onChangeText={(text) => setNewMemory(prev => ({ ...prev, content: text }))}
-                  placeholder="I take bus 30 on Cap Metro every day at 10:00 AM"
-                  placeholderTextColor="#666666"
                   multiline
                   numberOfLines={4}
+                  textAlignVertical="top"
+                  editable={!saving}
                 />
               </View>
 
               <TagSelector
                 selectedTags={newMemory.tags}
-                userTags={userTags}
+                userId={user!.id}
                 onTagsChange={(tags) => setNewMemory(prev => ({ ...prev, tags }))}
                 onAddUserTag={async (tag) => {
                   try {
-                    const updatedTags = await DatabaseService.addUserTag(user!.id, tag);
-                    setUserTags(updatedTags);
+                    // Tag is now already created in the database
+                    console.log('Tag added:', tag);
                   } catch (err) {
                     console.error('Error adding user tag:', err);
                     Alert.alert('Error', 'Failed to add tag');
@@ -469,106 +485,121 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
   },
   scrollContent: {
-    padding: 16,
+    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1E1E1E',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#4A90E2',
-  },
-  filterButtonText: {
-    color: '#4A90E2',
-    fontSize: 14,
-    fontWeight: '500',
-    marginLeft: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   addButton: {
     backgroundColor: '#4A90E2',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    borderRadius: 50,
+    width: 50,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   instructionsSection: {
-    backgroundColor: '#1E1E1E',
+    margin: 16,
     padding: 16,
-    borderRadius: 8,
-    marginBottom: 24,
-  },
-  instructionsTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    marginBottom: 12,
+    backgroundColor: '#1E1E1E',
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4A90E2',
   },
   instructionsText: {
-    color: '#B0B0B0',
     fontSize: 14,
+    color: '#B0B0B0',
     lineHeight: 20,
   },
   section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    marginBottom: 0,
+    margin: 16,
   },
   memoriesHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+    flexWrap: 'wrap',
   },
   memoriesActions: {
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-    gap: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   filterStatus: {
     fontSize: 12,
+    color: '#666666',
+    fontStyle: 'italic',
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#E3F2FD',
+    borderRadius: 20,
+  },
+  filterButtonText: {
     color: '#4A90E2',
+    fontSize: 14,
     fontWeight: '500',
+    marginLeft: 4,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    marginTop: 12,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#B0B0B0',
+    textAlign: 'center',
+    marginTop: 4,
+    paddingHorizontal: 20,
   },
   dateSection: {
     marginBottom: 24,
   },
   dateHeader: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#4A90E2',
     marginBottom: 12,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#3A3A3A',
+    paddingHorizontal: 4,
   },
   memoryCard: {
     backgroundColor: '#1E1E1E',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   memoryTitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 8,
   },
@@ -576,14 +607,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   memoryText: {
-    fontSize: 14,
+    fontSize: 15,
+    lineHeight: 22,
     color: '#FFFFFF',
-    lineHeight: 20,
   },
   tagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
   tag: {
     backgroundColor: '#2A2A2A',
@@ -596,21 +627,7 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 12,
     color: '#4A90E2',
-  },
-  emptyState: {
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyStateText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyStateSubtext: {
-    fontSize: 14,
-    color: '#B0B0B0',
-    textAlign: 'center',
+    fontWeight: '500',
   },
   loadingContainer: {
     flex: 1,
@@ -618,58 +635,58 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontSize: 16,
-    color: '#FFFFFF',
     marginTop: 16,
+    fontSize: 16,
+    color: '#666666',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   errorText: {
     fontSize: 16,
-    color: '#FFFFFF',
-    marginTop: 16,
+    color: '#E53E3E',
+    textAlign: 'center',
   },
-  // Modal styles
   modalContainer: {
     flex: 1,
     backgroundColor: '#121212',
   },
   modalHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#3A3A3A',
   },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
   modalCloseButton: {
-    padding: 8,
+    padding: 4,
   },
   modalCloseText: {
     color: '#4A90E2',
     fontSize: 16,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#FFFFFF',
-  },
   modalSaveButton: {
-    backgroundColor: '#4A90E2',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    padding: 4,
   },
   modalSaveButtonDisabled: {
     opacity: 0.5,
   },
   modalSaveText: {
-    color: '#FFFFFF',
+    color: '#4A90E2',
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
+  },
+  modalSaveTextDisabled: {
+    opacity: 0.5,
   },
   modalContent: {
     flex: 1,
@@ -679,28 +696,34 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   inputLabel: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 8,
   },
-  textInput: {
-    backgroundColor: '#1E1E1E',
+  titleInput: {
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+    backgroundColor: '#1E1E1E',
     color: '#FFFFFF',
+  },
+  contentInput: {
     borderWidth: 1,
     borderColor: '#3A3A3A',
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#1E1E1E',
+    color: '#FFFFFF',
+    minHeight: 100,
   },
   filterTag: {
     backgroundColor: '#2A2A2A',
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: 16,
     marginRight: 8,
     marginBottom: 8,
@@ -712,8 +735,8 @@ const styles = StyleSheet.create({
     borderColor: '#4A90E2',
   },
   filterTagText: {
-    fontSize: 14,
     color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '500',
   },
   filterTagTextSelected: {

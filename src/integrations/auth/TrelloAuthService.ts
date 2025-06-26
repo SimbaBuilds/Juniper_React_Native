@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform, Linking } from 'react-native';
 // Removed expo-web-browser import - using Linking API instead
-import api from '../../api/api';
+import { completeIntegration, createApiKeyAuthParams, disconnectIntegration } from '../../api/integration_api';
 
 interface TrelloAuthResult {
   token: string;
@@ -224,17 +224,20 @@ export class TrelloAuthService {
     try {
       console.log('🟠 Completing Trello integration with backend...');
 
-      const response = await api.post('/api/oauth/complete_integration', {
-        integration_id: integrationId,
-        service: 'trello',
-        token: authResult.token,
+      const authParams = createApiKeyAuthParams(authResult.token, {
         user_id: authResult.userId,
         user_name: authResult.userName,
-        user_email: authResult.userEmail,
-        oauth_result: authResult
+        user_email: authResult.userEmail
       });
 
-      console.log('🟠 Trello integration completed:', response.data);
+      await completeIntegration({
+        integration_id: integrationId,
+        service_name: 'trello',
+        service_type: 'api_key',
+        auth_params: authParams
+      });
+
+      console.log('🟠 Trello integration completed');
     } catch (error) {
       console.error('🔴 Error completing Trello integration:', error);
       // Don't throw here - the authentication was successful, backend completion is secondary
@@ -257,6 +260,12 @@ export class TrelloAuthService {
       } else {
         await AsyncStorage.removeItem(`trello_tokens_${integrationId}`);
       }
+
+      // Disconnect from backend
+      await disconnectIntegration({
+        integration_id: integrationId,
+        service_name: 'trello'
+      });
 
       console.log('🟠 Trello integration disconnected');
     } catch (error) {

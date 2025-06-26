@@ -2,7 +2,6 @@ export const SERVICES = [
   'Notion',
   'Slack', 
   'Trello',
-  'Any.do',
   'Zoom',
   'WhatsApp',
   'Dropbox',
@@ -14,10 +13,9 @@ export const SERVICES = [
   'Google Calendar',
   'Microsoft Excel Online',
   'Microsoft Word Online',
-  'MSFT Calendar',
-  'MSFT Email',
-  'MSFT Teams',
-  'Google Meet',
+  'Microsoft Calendar',
+  'Microsoft Email',
+  'Microsoft Teams',
   'Twilio'
 ] as const;
 

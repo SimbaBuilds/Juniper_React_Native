@@ -2,7 +2,7 @@ import { authorize, refresh, AuthConfiguration, AuthorizeResult, RefreshResult }
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import api from '../../api/api';
+import { completeIntegration, createOAuthAuthParams, disconnectIntegration } from '../../api/integration_api';
 
 interface NotionAuthResult {
   accessToken: string;
@@ -224,16 +224,16 @@ export class NotionAuthService {
     try {
       console.log('🟢 Completing Notion integration with backend...');
 
-      const response = await api.post('/api/oauth/complete_integration', {
+      const authParams = createOAuthAuthParams(result);
+
+      await completeIntegration({
         integration_id: integrationId,
-        service: 'notion',
-        access_token: result.accessToken,
-        refresh_token: result.refreshToken,
-        expires_at: result.accessTokenExpirationDate,
-        oauth_result: result
+        service_name: 'notion',
+        service_type: 'oauth',
+        auth_params: authParams
       });
 
-      console.log('🟢 Notion integration completed:', response.data);
+      console.log('🟢 Notion integration completed');
     } catch (error) {
       console.error('🔴 Error completing Notion integration:', error);
       // Don't throw here - the OAuth was successful, backend completion is secondary
@@ -253,6 +253,12 @@ export class NotionAuthService {
       } else {
         await AsyncStorage.removeItem(`notion_tokens_${integrationId}`);
       }
+
+      // Disconnect from backend
+      await disconnectIntegration({
+        integration_id: integrationId,
+        service_name: 'notion'
+      });
 
       console.log('🟢 Notion integration disconnected');
     } catch (error) {

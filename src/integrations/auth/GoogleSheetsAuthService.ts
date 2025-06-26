@@ -2,7 +2,7 @@ import { authorize, refresh, AuthConfiguration, AuthorizeResult, RefreshResult }
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import api from '../../api/api';
+import { completeIntegration, createOAuthAuthParams, disconnectIntegration } from '../../api/integration_api';
 
 interface GoogleSheetsAuthResult {
   accessToken: string;
@@ -220,19 +220,14 @@ export class GoogleSheetsAuthService {
    */
   private async completeIntegration(result: AuthorizeResult, integrationId: string): Promise<void> {
     try {
-      console.log('🟢 Completing Google Sheets integration with backend...');
+      const authParams = createOAuthAuthParams(result);
 
-      const response = await api.post('/api/oauth/complete_integration', {
+      await completeIntegration({
         integration_id: integrationId,
-        service: 'google-sheets',
-        access_token: result.accessToken,
-        refresh_token: result.refreshToken,
-        expires_at: result.accessTokenExpirationDate,
-        scope: result.scopes?.join(' '),
-        oauth_result: result
+        service_name: 'google-sheets',
+        service_type: 'oauth',
+        auth_params: authParams
       });
-
-      console.log('🟢 Google Sheets integration completed:', response.data);
     } catch (error) {
       console.error('🔴 Error completing Google Sheets integration:', error);
       // Don't throw here - the OAuth was successful, backend completion is secondary
@@ -270,6 +265,12 @@ export class GoogleSheetsAuthService {
       } else {
         await AsyncStorage.removeItem(`google_sheets_tokens_${integrationId}`);
       }
+
+      // Disconnect from backend
+      await disconnectIntegration({
+        integration_id: integrationId,
+        service_name: 'google-sheets'
+      });
 
       console.log('🟢 Google Sheets integration disconnected');
     } catch (error) {

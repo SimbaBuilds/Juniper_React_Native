@@ -2,7 +2,7 @@ import { authorize, refresh, AuthConfiguration, AuthorizeResult, RefreshResult }
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import api from '../../api/api';
+import { completeIntegration, createOAuthAuthParams, disconnectIntegration } from '../../api/integration_api';
 
 interface SlackAuthResult {
   accessToken: string;
@@ -249,17 +249,16 @@ export class SlackAuthService {
     try {
       console.log('🟣 Completing Slack integration with backend...');
 
-      const response = await api.post('/api/oauth/complete_integration', {
+      const authParams = createOAuthAuthParams(result);
+
+      await completeIntegration({
         integration_id: integrationId,
-        service: 'slack',
-        access_token: result.accessToken,
-        refresh_token: result.refreshToken,
-        expires_at: result.accessTokenExpirationDate,
-        scope: result.scopes?.join(' '),
-        oauth_result: result
+        service_name: 'slack',
+        service_type: 'oauth',
+        auth_params: authParams
       });
 
-      console.log('🟣 Slack integration completed:', response.data);
+      console.log('🟣 Slack integration completed');
     } catch (error) {
       console.error('🔴 Error completing Slack integration:', error);
       // Don't throw here - the OAuth was successful, backend completion is secondary

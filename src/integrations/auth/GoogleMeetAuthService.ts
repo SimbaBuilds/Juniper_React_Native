@@ -2,7 +2,7 @@ import { authorize, refresh, AuthConfiguration, AuthorizeResult, RefreshResult }
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import api from '../../api/api';
+import { completeIntegration, createOAuthAuthParams, disconnectIntegration } from '../../api/integration_api';
 
 interface GoogleMeetAuthResult {
   accessToken: string;
@@ -225,19 +225,14 @@ export class GoogleMeetAuthService {
    */
   private async completeIntegration(result: AuthorizeResult, integrationId: string): Promise<void> {
     try {
-      console.log('🎥 Completing Google Meet integration with backend...');
+      const authParams = createOAuthAuthParams(result);
 
-      const response = await api.post('/api/oauth/complete_integration', {
+      await completeIntegration({
         integration_id: integrationId,
-        service: 'google-meet',
-        access_token: result.accessToken,
-        refresh_token: result.refreshToken,
-        expires_at: result.accessTokenExpirationDate,
-        scope: result.scopes?.join(' '),
-        oauth_result: result
+        service_name: 'google-meet',
+        service_type: 'oauth',
+        auth_params: authParams
       });
-
-      console.log('🎥 Google Meet integration completed:', response.data);
     } catch (error) {
       console.error('🔴 Error completing Google Meet integration:', error);
       // Don't throw here - the OAuth was successful, backend completion is secondary

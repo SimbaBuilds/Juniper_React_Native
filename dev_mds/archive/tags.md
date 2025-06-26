@@ -26,9 +26,9 @@ Gmail: Email
 Google Calendar: Calendar
 Microsoft Excel Online: Cloud Spreadsheets
 Microsoft Word Online: Cloud Text Documents
-MSFT Calendar: Calendar
-MSFT Email: Email
-MSFT Teams: Team Communication
+Microsoft Calendar: Calendar
+Microsoft Email: Email
+Microsoft Teams: Team Communication
 Google Meet: Video Conferencing
 Twilio: SMS, Text Message
 ----

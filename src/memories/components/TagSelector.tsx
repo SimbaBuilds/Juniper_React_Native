@@ -11,19 +11,20 @@ import {
   SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SERVICES, SERVICE_TYPES, MAX_TAG_LENGTH, MAX_MEMORY_TAGS } from '../constants/tags';
+import { MAX_TAG_LENGTH, MAX_MEMORY_TAGS } from '../constants/tags';
+import { DatabaseService } from '../../supabase/supabase';
 
 interface TagSelectorProps {
-  selectedTags: string[];
-  userTags: string[];
-  onTagsChange: (tags: string[]) => void;
-  onAddUserTag?: (tag: string) => void;
+  selectedTags: any[]; // Array of tag objects
+  userId: string;
+  onTagsChange: (tags: any[]) => void;
+  onAddUserTag?: (tag: any) => void;
   disabled?: boolean;
 }
 
 export const TagSelector: React.FC<TagSelectorProps> = ({
   selectedTags,
-  userTags,
+  userId,
   onTagsChange,
   onAddUserTag,
   disabled = false
@@ -32,16 +33,50 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   const [showAddTagInput, setShowAddTagInput] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
   const [isAddingTag, setIsAddingTag] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  // Tag state from database
+  const [serviceTags, setServiceTags] = useState<any[]>([]);
+  const [serviceTypeTags, setServiceTypeTags] = useState<any[]>([]);
+  const [userTags, setUserTags] = useState<any[]>([]);
 
-  const allAvailableTags = [
-    ...SERVICES,
-    ...SERVICE_TYPES,
-    ...userTags
-  ];
+  // Load tags from database
+  useEffect(() => {
+    const loadTags = async () => {
+      if (!isModalVisible || !userId) return;
+      
+      try {
+        setLoading(true);
+        
+        // Initialize service tags if needed
+        await DatabaseService.initializeServiceTags();
+        
+        // Load all tag types
+        const [services, serviceTypes, userCreated] = await Promise.all([
+          DatabaseService.getTags(undefined, ['service']),
+          DatabaseService.getTags(undefined, ['service_type']),
+          DatabaseService.getUserTags(userId)
+        ]);
+        
+        setServiceTags(services);
+        setServiceTypeTags(serviceTypes);
+        setUserTags(userCreated);
+      } catch (error) {
+        console.error('Error loading tags:', error);
+        Alert.alert('Error', 'Failed to load tags');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleTagToggle = (tag: string) => {
-    if (selectedTags.includes(tag)) {
-      onTagsChange(selectedTags.filter(t => t !== tag));
+    loadTags();
+  }, [isModalVisible, userId]);
+
+  const handleTagToggle = (tag: any) => {
+    const isSelected = selectedTags.some(t => t.id === tag.id);
+    
+    if (isSelected) {
+      onTagsChange(selectedTags.filter(t => t.id !== tag.id));
     } else {
       if (selectedTags.length >= MAX_MEMORY_TAGS) {
         Alert.alert('Tag Limit', `You can only select up to ${MAX_MEMORY_TAGS} tags per memory.`);
@@ -64,21 +99,22 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
       return;
     }
     
-    if (allAvailableTags.includes(trimmedTag)) {
-      Alert.alert('Error', 'This tag already exists.');
-      return;
-    }
-    
     try {
       setIsAddingTag(true);
       
+      const newTag = await DatabaseService.addUserTag(userId, trimmedTag);
+      
+      // Update local user tags
+      setUserTags(prev => [...prev, newTag]);
+      
+      // Call parent callback
       if (onAddUserTag) {
-        await onAddUserTag(trimmedTag);
+        await onAddUserTag(newTag);
       }
       
       // Also add it to selected tags if under limit
       if (selectedTags.length < MAX_MEMORY_TAGS) {
-        onTagsChange([...selectedTags, trimmedTag]);
+        onTagsChange([...selectedTags, newTag]);
       }
       
       setNewTagInput('');
@@ -94,26 +130,26 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
     }
   };
 
-  const renderTagSection = (title: string, tags: string[], sectionKey: string) => (
+  const renderTagSection = (title: string, tags: any[], sectionKey: string) => (
     <View key={sectionKey} style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
       <View style={styles.tagGrid}>
         {tags.map((tag) => (
           <TouchableOpacity
-            key={tag}
+            key={tag.id}
             style={[
               styles.tagButton,
-              selectedTags.includes(tag) && styles.selectedTagButton
+              selectedTags.some(t => t.id === tag.id) && styles.selectedTagButton
             ]}
             onPress={() => handleTagToggle(tag)}
           >
             <Text
               style={[
                 styles.tagButtonText,
-                selectedTags.includes(tag) && styles.selectedTagButtonText
+                selectedTags.some(t => t.id === tag.id) && styles.selectedTagButtonText
               ]}
             >
-              {tag}
+              {tag.name}
             </Text>
           </TouchableOpacity>
         ))}
@@ -137,8 +173,8 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.selectedTagsRow}>
                 {selectedTags.map((tag) => (
-                  <View key={tag} style={styles.selectedTag}>
-                    <Text style={styles.selectedTagText}>{tag}</Text>
+                  <View key={tag.id} style={styles.selectedTag}>
+                    <Text style={styles.selectedTagText}>{tag.name}</Text>
                     <TouchableOpacity
                       onPress={() => handleTagToggle(tag)}
                       style={styles.removeTagButton}
@@ -172,53 +208,61 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
           </View>
 
           <ScrollView style={styles.modalContent} contentContainerStyle={styles.modalScrollContent}>
-            {renderTagSection('Services', [...SERVICES], 'services')}
-            {renderTagSection('Service Types', [...SERVICE_TYPES], 'types')}
-            {userTags.length > 0 && renderTagSection('My Tags', userTags, 'user')}
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Loading tags...</Text>
+              </View>
+            ) : (
+              <>
+                {renderTagSection('Services', serviceTags, 'services')}
+                {renderTagSection('Service Types', serviceTypeTags, 'types')}
+                {userTags.length > 0 && renderTagSection('My Tags', userTags, 'user')}
 
-            <View style={styles.addTagSection}>
-              <TouchableOpacity
-                style={styles.addTagButton}
-                onPress={() => {
-                  console.log('Add New Tag button pressed, current state:', showAddTagInput);
-                  setShowAddTagInput(!showAddTagInput);
-                }}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="add" size={20} color="#4A90E2" />
-                <Text style={styles.addTagButtonText}>
-                  {showAddTagInput ? 'Cancel' : 'Add New Tag'}
-                </Text>
-              </TouchableOpacity>
-
-              {showAddTagInput && (
-                <View style={styles.addTagInputContainer}>
-                  <TextInput
-                    style={styles.addTagInput}
-                    placeholder="Enter new tag..."
-                    value={newTagInput}
-                    onChangeText={setNewTagInput}
-                    maxLength={MAX_TAG_LENGTH}
-                    returnKeyType="done"
-                    onSubmitEditing={handleAddNewTag}
-                    editable={!isAddingTag}
-                    autoFocus
-                  />
+                <View style={styles.addTagSection}>
                   <TouchableOpacity
-                    style={[
-                      styles.addTagSubmitButton,
-                      isAddingTag && styles.addTagSubmitButtonDisabled
-                    ]}
-                    onPress={handleAddNewTag}
-                    disabled={isAddingTag}
+                    style={styles.addTagButton}
+                    onPress={() => {
+                      console.log('Add New Tag button pressed, current state:', showAddTagInput);
+                      setShowAddTagInput(!showAddTagInput);
+                    }}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.addTagSubmitText}>
-                      {isAddingTag ? 'Adding...' : 'Add'}
+                    <Ionicons name="add" size={20} color="#4A90E2" />
+                    <Text style={styles.addTagButtonText}>
+                      {showAddTagInput ? 'Cancel' : 'Add New Tag'}
                     </Text>
                   </TouchableOpacity>
+
+                  {showAddTagInput && (
+                    <View style={styles.addTagInputContainer}>
+                      <TextInput
+                        style={styles.addTagInput}
+                        placeholder="Enter new tag..."
+                        value={newTagInput}
+                        onChangeText={setNewTagInput}
+                        maxLength={MAX_TAG_LENGTH}
+                        returnKeyType="done"
+                        onSubmitEditing={handleAddNewTag}
+                        editable={!isAddingTag}
+                        autoFocus
+                      />
+                      <TouchableOpacity
+                        style={[
+                          styles.addTagSubmitButton,
+                          isAddingTag && styles.addTagSubmitButtonDisabled
+                        ]}
+                        onPress={handleAddNewTag}
+                        disabled={isAddingTag}
+                      >
+                        <Text style={styles.addTagSubmitText}>
+                          {isAddingTag ? 'Adding...' : 'Add'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
-              )}
-            </View>
+              </>
+            )}
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -311,6 +355,16 @@ const styles = StyleSheet.create({
   },
   modalScrollContent: {
     paddingBottom: 50,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#666666',
   },
   section: {
     marginBottom: 24,

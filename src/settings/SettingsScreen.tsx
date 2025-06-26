@@ -332,9 +332,11 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.section}>
             <Text style={styles.explanationText}>
                 The wakeword can be used even when the app is closed.
-              </Text>
-            <WakeWordToggle />
-            <WakeWordStatus />
+            </Text>
+            <View style={{ marginTop: 12 }}>
+              <WakeWordToggle />
+              <WakeWordStatus />
+            </View>
           </View>
         )}
         
@@ -392,10 +394,10 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Voice Settings Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Voice & AI Settings</Text>
+          {/* <Text style={styles.sectionTitle}>Voice & AI Settings</Text> */}
 
           <View style={styles.instructionsContainer}>
-            <SettingsTextInput
+            {/* <SettingsTextInput
               label="General Instructions"
               value={localGeneralInstructions}
               onChangeText={handleGeneralInstructionsChange}
@@ -403,7 +405,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               description="Custom instructions to guide the AI's behavior and responses"
               multiline={true}
               maxCharacters={1000}
-            />
+            /> */}
             
             {hasUnsavedChanges && (
               <View style={styles.unsavedChangesContainer}>

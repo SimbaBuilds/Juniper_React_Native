@@ -9,7 +9,8 @@ export default {
     newArchEnabled: true,
     scheme: "mobilejarvisnative",
     plugins: [
-      "./expo-plugins/withNativeModules"
+      "./expo-plugins/withNativeModules",
+      "expo-secure-store"
     ],
     splash: {
       image: "./assets/splash-icon.png",

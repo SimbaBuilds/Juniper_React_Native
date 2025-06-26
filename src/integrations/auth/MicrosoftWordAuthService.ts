@@ -2,6 +2,7 @@ import { authorize, refresh, AuthConfiguration, AuthorizeResult, RefreshResult }
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import { completeIntegration, createOAuthAuthParams, disconnectIntegration } from '../../api/integration_api';
 import api from '../../api/api';
 
 interface MicrosoftWordAuthResult {
@@ -228,15 +229,13 @@ export class MicrosoftWordAuthService {
     try {
       console.log('📝 Completing Microsoft Word integration on backend...');
       
-      const response = await api.post('/api/complete_integration', {
+      const authParams = createOAuthAuthParams(result);
+
+      await completeIntegration({
         integration_id: integrationId,
-        service: 'microsoft_word',
-        access_token: result.accessToken,
-        refresh_token: result.refreshToken,
-        expires_at: result.accessTokenExpirationDate,
-        scopes: result.scopes,
-        token_type: result.tokenType || 'Bearer',
-        id_token: result.idToken
+        service_name: 'microsoft-word',
+        service_type: 'oauth',
+        auth_params: authParams
       });
 
       console.log('📝 Microsoft Word integration completed on backend');
@@ -260,12 +259,11 @@ export class MicrosoftWordAuthService {
         await AsyncStorage.removeItem(`microsoft_word_tokens_${integrationId}`);
       }
 
-      // Call backend to clean up
-      try {
-        await api.delete(`/api/integrations/${integrationId}/disconnect`);
-      } catch (error) {
-        console.warn('⚠️ Failed to disconnect on backend:', error);
-      }
+      // Disconnect from backend
+      await disconnectIntegration({
+        integration_id: integrationId,
+        service_name: 'microsoft-word'
+      });
 
       console.log('📝 Microsoft Word integration disconnected');
     } catch (error) {

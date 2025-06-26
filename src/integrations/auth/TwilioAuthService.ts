@@ -1,3 +1,5 @@
+import { completeIntegration, createCredentialsAuthParams, disconnectIntegration } from '../../api/integration_api';
+
 interface TwilioCredentials {
   accountSid: string;
   apiKey: string;
@@ -24,7 +26,7 @@ export class TwilioAuthService {
   /**
    * Store Twilio API credentials
    */
-  public async storeCredentials(credentials: TwilioCredentials): Promise<TwilioAuthResult> {
+  public async storeCredentials(credentials: TwilioCredentials, integrationId: string): Promise<TwilioAuthResult> {
     try {
       console.log('🔵 Storing Twilio credentials...');
       
@@ -65,6 +67,9 @@ export class TwilioAuthService {
         phoneNumber: cleanedPhoneNumber
       };
 
+      // Complete integration with backend
+      await this.completeIntegration(cleanedCredentials, integrationId);
+
       console.log('✅ Twilio credentials validated and ready to store');
       
       return {
@@ -81,15 +86,39 @@ export class TwilioAuthService {
   }
 
   /**
+   * Complete integration by calling backend
+   */
+  private async completeIntegration(credentials: TwilioCredentials, integrationId: string): Promise<void> {
+    try {
+      const authParams = createCredentialsAuthParams({
+        account_sid: credentials.accountSid,
+        api_key: credentials.apiKey,
+        api_secret: credentials.apiSecret,
+        phone_number: credentials.phoneNumber
+      });
+
+      await completeIntegration({
+        integration_id: integrationId,
+        service_name: 'twilio',
+        service_type: 'credentials',
+        auth_params: authParams
+      });
+    } catch (error) {
+      console.error('🔴 Error completing Twilio integration:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Test Twilio credentials (future implementation)
    */
-  public async testCredentials(credentials: TwilioCredentials): Promise<boolean> {
+  public async testCredentials(credentials: TwilioCredentials, integrationId: string): Promise<boolean> {
     try {
       // This would make a test API call to Twilio to validate credentials
       // For now, just return true if basic validation passes
       console.log('🔵 Testing Twilio credentials (validation only)...');
       
-      const result = await this.storeCredentials(credentials);
+      const result = await this.storeCredentials(credentials, integrationId);
       return result.success;
     } catch (error) {
       console.error('❌ Error testing Twilio credentials:', error);
@@ -100,9 +129,16 @@ export class TwilioAuthService {
   /**
    * Disconnect Twilio integration
    */
-  public async disconnect(): Promise<void> {
+  public async disconnect(integrationId: string): Promise<void> {
     try {
       console.log('🔵 Disconnecting Twilio integration...');
+      
+      // Disconnect from backend
+      await disconnectIntegration({
+        integration_id: integrationId,
+        service_name: 'twilio'
+      });
+
       // Clear any locally stored credentials if needed
       console.log('✅ Twilio integration disconnected');
     } catch (error) {

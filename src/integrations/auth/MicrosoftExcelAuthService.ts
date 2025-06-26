@@ -2,7 +2,7 @@ import { authorize, refresh, AuthConfiguration, AuthorizeResult, RefreshResult }
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import api from '../../api/api';
+import { completeIntegration, createOAuthAuthParams, disconnectIntegration } from '../../api/integration_api';
 
 interface MicrosoftExcelAuthResult {
   accessToken: string;
@@ -226,20 +226,14 @@ export class MicrosoftExcelAuthService {
    */
   private async completeIntegration(result: AuthorizeResult, integrationId: string): Promise<void> {
     try {
-      console.log('📊 Completing Microsoft Excel integration on backend...');
-      
-      const response = await api.post('/api/complete_integration', {
-        integration_id: integrationId,
-        service: 'microsoft_excel',
-        access_token: result.accessToken,
-        refresh_token: result.refreshToken,
-        expires_at: result.accessTokenExpirationDate,
-        scopes: result.scopes,
-        token_type: result.tokenType || 'Bearer',
-        id_token: result.idToken
-      });
+      const authParams = createOAuthAuthParams(result);
 
-      console.log('📊 Microsoft Excel integration completed on backend');
+      await completeIntegration({
+        integration_id: integrationId,
+        service_name: 'microsoft-excel',
+        service_type: 'oauth',
+        auth_params: authParams
+      });
     } catch (error) {
       console.error('🔴 Error completing Microsoft Excel integration:', error);
       throw error;
@@ -260,12 +254,11 @@ export class MicrosoftExcelAuthService {
         await AsyncStorage.removeItem(`microsoft_excel_tokens_${integrationId}`);
       }
 
-      // Call backend to clean up
-      try {
-        await api.delete(`/api/integrations/${integrationId}/disconnect`);
-      } catch (error) {
-        console.warn('⚠️ Failed to disconnect on backend:', error);
-      }
+      // Disconnect from backend
+      await disconnectIntegration({
+        integration_id: integrationId,
+        service_name: 'microsoft-excel'
+      });
 
       console.log('📊 Microsoft Excel integration disconnected');
     } catch (error) {

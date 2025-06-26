@@ -2,7 +2,7 @@ import { authorize, refresh, AuthConfiguration, AuthorizeResult, RefreshResult }
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import api from '../../api/api';
+import { completeIntegration, createOAuthAuthParams, disconnectIntegration } from '../../api/integration_api';
 
 interface GmailAuthResult {
   accessToken: string;
@@ -225,19 +225,14 @@ export class GmailAuthService {
    */
   private async completeIntegration(result: AuthorizeResult, integrationId: string): Promise<void> {
     try {
-      console.log('📧 Completing Gmail integration with backend...');
+      const authParams = createOAuthAuthParams(result);
 
-      const response = await api.post('/api/oauth/complete_integration', {
+      await completeIntegration({
         integration_id: integrationId,
-        service: 'gmail',
-        access_token: result.accessToken,
-        refresh_token: result.refreshToken,
-        expires_at: result.accessTokenExpirationDate,
-        scope: result.scopes?.join(' '),
-        oauth_result: result
+        service_name: 'gmail',
+        service_type: 'oauth',
+        auth_params: authParams
       });
-
-      console.log('📧 Gmail integration completed:', response.data);
     } catch (error) {
       console.error('🔴 Error completing Gmail integration:', error);
       // Don't throw here - the OAuth was successful, backend completion is secondary
@@ -275,6 +270,12 @@ export class GmailAuthService {
       } else {
         await AsyncStorage.removeItem(`gmail_tokens_${integrationId}`);
       }
+
+      // Disconnect from backend
+      await disconnectIntegration({
+        integration_id: integrationId,
+        service_name: 'gmail'
+      });
 
       console.log('📧 Gmail integration disconnected');
     } catch (error) {

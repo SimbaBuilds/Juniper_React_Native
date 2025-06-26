@@ -176,44 +176,129 @@ export const DatabaseService = {
     return data;
   },
 
-  // User Tags Management
-  async getUserTags(userId: string): Promise<string[]> {
-    const profile = await this.getUserProfile(userId);
-    return profile?.user_tags || [];
+  // Tag Management (new schema)
+  async getTags(userId?: string, types?: string[]): Promise<any[]> {
+    let query = supabase.from('tags').select('*');
+    
+    if (types && types.length > 0) {
+      query = query.in('type', types);
+    }
+    
+    if (userId) {
+      query = query.or(`user_id.is.null,user_id.eq.${userId}`);
+    } else {
+      query = query.is('user_id', null);
+    }
+    
+    query = query.order('name');
+    
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
   },
 
-  async addUserTag(userId: string, tag: string): Promise<string[]> {
-    const profile = await this.getUserProfile(userId);
-    const currentTags = profile?.user_tags || [];
+  async getUserTags(userId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('tags')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('type', 'user_created')
+      .order('name');
     
-    // Check if tag already exists
-    if (currentTags.includes(tag)) {
-      return currentTags;
+    if (error) throw error;
+    return data || [];
+  },
+
+  async createTag(name: string, type: string, userId?: string): Promise<any> {
+    // Always create a new tag record (allow duplicates per user)
+    const tagData: any = {
+      name: name.trim(),
+      type,
+      created_at: new Date().toISOString()
+    };
+    
+    if (userId) {
+      tagData.user_id = userId;
     }
     
-    // Check max tags limit
-    if (currentTags.length >= 50) {
-      throw new Error('Maximum of 50 user tags allowed');
-    }
+    const { data, error } = await supabase
+      .from('tags')
+      .insert(tagData)
+      .select()
+      .single();
     
+    if (error) throw error;
+    return data;
+  },
+
+  async addUserTag(userId: string, tagName: string): Promise<any> {
     // Check tag length
-    if (tag.length > 25) {
+    if (tagName.length > 25) {
       throw new Error('Tag must be 25 characters or less');
     }
     
-    const newTags = [...currentTags, tag];
-    
-    await this.updateUserProfile(userId, { user_tags: newTags });
-    return newTags;
+    // Always create new user tag (duplicates allowed)
+    return await this.createTag(tagName, 'user_created', userId);
   },
 
-  async removeUserTag(userId: string, tag: string): Promise<string[]> {
-    const profile = await this.getUserProfile(userId);
-    const currentTags = profile?.user_tags || [];
-    const newTags = currentTags.filter((t: string) => t !== tag);
+  async removeUserTag(userId: string, tagId: string): Promise<void> {
+    const { error } = await supabase
+      .from('tags')
+      .delete()
+      .eq('id', tagId)
+      .eq('user_id', userId)
+      .eq('type', 'user_created');
     
-    await this.updateUserProfile(userId, { user_tags: newTags });
-    return newTags;
+    if (error) throw error;
+  },
+
+  // Migration helpers
+  async initializeServiceTags(): Promise<void> {
+    const services = [
+      'Notion', 'Slack', 'Trello', 'Any.do', 'Zoom', 'WhatsApp', 'Dropbox',
+      'Todoist', 'Perplexity', 'Google Sheets', 'Google Docs', 'Gmail',
+      'Google Calendar', 'Microsoft Excel Online', 'Microsoft Word Online',
+      'MSFT Calendar', 'MSFT Email', 'MSFT Teams', 'Google Meet', 'Twilio'
+    ];
+    
+    const serviceTypes = [
+      'Project Management', 'Task Management', 'Team Collaboration',
+      'Team Communication', 'Calendar Management', 'Reminders',
+      'Video Conferencing', 'Communication', 'Messaging', 'Cloud Storage',
+      'Task Scheduling', 'Search', 'AI', 'Research', 'Cloud Spreadsheets',
+      'Cloud Text Documents', 'Email', 'Calendar', 'SMS', 'Text Message'
+    ];
+    
+    // Check if service tags already exist
+    const existingServiceTags = await this.getTags(undefined, ['service']);
+    const existingServiceTypesTags = await this.getTags(undefined, ['service_type']);
+    
+    if (existingServiceTags.length === 0) {
+      for (const service of services) {
+        await this.createTag(service, 'service');
+      }
+    }
+    
+    if (existingServiceTypesTags.length === 0) {
+      for (const serviceType of serviceTypes) {
+        await this.createTag(serviceType, 'service_type');
+      }
+    }
+  },
+
+  async migrateUserProfileTags(userId: string): Promise<void> {
+    const profile = await this.getUserProfile(userId);
+    const oldTags = profile?.user_tags || [];
+    
+    if (oldTags.length === 0) return;
+    
+    // Create tag records for each user tag
+    for (const tagName of oldTags) {
+      await this.createTag(tagName, 'user_created', userId);
+    }
+    
+    // Clear old user_tags array
+    await this.updateUserProfile(userId, { user_tags: [] });
   },
 
   // Legacy methods for backward compatibility (deprecated)
@@ -231,7 +316,14 @@ export const DatabaseService = {
   async getMemories(userId: string) {
     const { data, error } = await supabase
       .from('memories')
-      .select('*')
+      .select(`
+        *,
+        tag_1:tags!memories_tag_1_id_fkey(*),
+        tag_2:tags!memories_tag_2_id_fkey(*),
+        tag_3:tags!memories_tag_3_id_fkey(*),
+        tag_4:tags!memories_tag_4_id_fkey(*),
+        tag_5:tags!memories_tag_5_id_fkey(*)
+      `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
     
@@ -240,19 +332,71 @@ export const DatabaseService = {
   },
 
   async createMemory(userId: string, memory: any) {
+    // Handle tags - convert tag names/IDs to proper tag references
+    const { tags, ...memoryData } = memory;
+    
     const { data, error } = await supabase
       .from('memories')
       .insert({
         user_id: userId,
-        ...memory,
+        ...memoryData,
+        tags: tags || [], // Store as array of tag IDs
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
-      .select()
+      .select(`
+        *,
+        memory_tags:tags!inner(*)
+      `)
       .single()
     
     if (error) throw error
     return data
+  },
+
+  async getMemoryTags(memoryId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('memories')
+      .select('tags')
+      .eq('id', memoryId)
+      .single();
+    
+    if (error) throw error;
+    
+    if (!data?.tags || data.tags.length === 0) return [];
+    
+    // Get tag details
+    const { data: tagData, error: tagError } = await supabase
+      .from('tags')
+      .select('*')
+      .in('id', data.tags);
+    
+    if (tagError) throw tagError;
+    return tagData || [];
+  },
+
+  async addMemoryTags(memoryId: string, tagIds: string[]): Promise<void> {
+    // Get current tags
+    const { data: memory, error: getError } = await supabase
+      .from('memories')
+      .select('tags')
+      .eq('id', memoryId)
+      .single();
+    
+    if (getError) throw getError;
+    
+    const currentTags = memory?.tags || [];
+    const newTags = [...new Set([...currentTags, ...tagIds])]; // Remove duplicates
+    
+    const { error } = await supabase
+      .from('memories')
+      .update({
+        tags: newTags,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', memoryId);
+    
+    if (error) throw error;
   },
 
   async updateMemory(memoryId: string, updates: any) {

@@ -2,7 +2,7 @@ import { authorize, refresh, AuthConfiguration, AuthorizeResult, RefreshResult }
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import api from '../../api/api';
+import { completeIntegration, createOAuthAuthParams, disconnectIntegration } from '../../api/integration_api';
 
 interface GoogleDocsAuthResult {
   accessToken: string;
@@ -222,19 +222,14 @@ export class GoogleDocsAuthService {
    */
   private async completeIntegration(result: AuthorizeResult, integrationId: string): Promise<void> {
     try {
-      console.log('📝 Completing Google Docs integration with backend...');
+      const authParams = createOAuthAuthParams(result);
 
-      const response = await api.post('/api/oauth/complete_integration', {
+      await completeIntegration({
         integration_id: integrationId,
-        service: 'google-docs',
-        access_token: result.accessToken,
-        refresh_token: result.refreshToken,
-        expires_at: result.accessTokenExpirationDate,
-        scope: result.scopes?.join(' '),
-        oauth_result: result
+        service_name: 'google-docs',
+        service_type: 'oauth',
+        auth_params: authParams
       });
-
-      console.log('📝 Google Docs integration completed:', response.data);
     } catch (error) {
       console.error('🔴 Error completing Google Docs integration:', error);
       // Don't throw here - the OAuth was successful, backend completion is secondary
@@ -272,6 +267,12 @@ export class GoogleDocsAuthService {
       } else {
         await AsyncStorage.removeItem(`google_docs_tokens_${integrationId}`);
       }
+
+      // Disconnect from backend
+      await disconnectIntegration({
+        integration_id: integrationId,
+        service_name: 'google-docs'
+      });
 
       console.log('📝 Google Docs integration disconnected');
     } catch (error) {

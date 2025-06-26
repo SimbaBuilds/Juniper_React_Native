@@ -49,7 +49,7 @@ export const IntegrationsScreen: React.FC = () => {
     }
     
     // Calendar
-    if (['google calendar', 'microsoft outlook calendar'].includes(name)) {
+    if (['google calendar', 'microsoft outlook calendar', 'microsoft calendar'].includes(name)) {
       return 'Calendar';
     }
     

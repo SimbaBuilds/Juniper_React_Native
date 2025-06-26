@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import api from '../../api/api';
+import { completeIntegration, createOAuthAuthParams, disconnectIntegration } from '../../api/integration_api';
 
 interface MicrosoftOutlookCalendarAuthResult {
   accessToken: string;
@@ -228,15 +229,13 @@ export class MicrosoftOutlookCalendarAuthService {
     try {
       console.log('📅 Completing Microsoft Outlook Calendar integration on backend...');
       
-      const response = await api.post('/api/complete_integration', {
+      const authParams = createOAuthAuthParams(result);
+
+      await completeIntegration({
         integration_id: integrationId,
-        service: 'microsoft_outlook_calendar',
-        access_token: result.accessToken,
-        refresh_token: result.refreshToken,
-        expires_at: result.accessTokenExpirationDate,
-        scopes: result.scopes,
-        token_type: result.tokenType || 'Bearer',
-        id_token: result.idToken
+        service_name: 'microsoft-outlook-calendar',
+        service_type: 'oauth',
+        auth_params: authParams
       });
 
       console.log('📅 Microsoft Outlook Calendar integration completed on backend');
@@ -260,12 +259,11 @@ export class MicrosoftOutlookCalendarAuthService {
         await AsyncStorage.removeItem(`microsoft_outlook_calendar_tokens_${integrationId}`);
       }
 
-      // Call backend to clean up
-      try {
-        await api.delete(`/api/integrations/${integrationId}/disconnect`);
-      } catch (error) {
-        console.warn('⚠️ Failed to disconnect on backend:', error);
-      }
+      // Disconnect from backend
+      await disconnectIntegration({
+        integration_id: integrationId,
+        service_name: 'microsoft-outlook-calendar'
+      });
 
       console.log('📅 Microsoft Outlook Calendar integration disconnected');
     } catch (error) {

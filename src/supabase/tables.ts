@@ -1,6 +1,11 @@
 export type UserProfile = {
     id: string;
     display_name?: string;
+    name?: string;
+    location?: string;
+    education?: string;
+    profession?: string;
+    language?: string;
     deepgram_enabled: boolean;
     base_language_model: string;
     general_instructions: string;
@@ -20,7 +25,7 @@ export type UserProfile = {
   };
   
   export const userProfileFields = [
-    'id', 'display_name', 'deepgram_enabled', 'base_language_model', 'general_instructions',
+    'id', 'display_name', 'name', 'location', 'education', 'profession', 'language', 'deepgram_enabled', 'base_language_model', 'general_instructions',
     'wake_word', 'wake_word_sensitivity', 'wake_word_detection_enabled', 'selected_deepgram_voice', 'timezone', 'preferences', 
     'xai_live_search_enabled', 'xai_live_search_safe_search', 'user_tags',
     'created_at', 'updated_at'
@@ -71,21 +76,27 @@ export type UserProfile = {
     category?: string;
     title: string;
     content: string;
-    tags: string[]; // Memory tags for categorization and retrieval (max 4 tags)
     importance_score: number;
     embedding?: number[];
     decay_factor: number;
     auto_committed: boolean;
     source_conversation_id?: string;
+    // Foreign key columns for tags (up to 5 tags per memory)
+    tag_1_id?: string; // Foreign key to Tag.id
+    tag_2_id?: string; // Foreign key to Tag.id
+    tag_3_id?: string; // Foreign key to Tag.id
+    tag_4_id?: string; // Foreign key to Tag.id
+    tag_5_id?: string; // Foreign key to Tag.id
     last_accessed: Date;
     created_at: Date;
     updated_at: Date;
   };
   
   export const memoryFields = [
-    'id', 'user_id', 'memory_type', 'category', 'title', 'content', 'tags',
+    'id', 'user_id', 'memory_type', 'category', 'title', 'content',
     'importance_score', 'embedding', 'decay_factor', 'auto_committed',
-    'source_conversation_id', 'last_accessed', 'created_at', 'updated_at'
+    'source_conversation_id', 'tag_1_id', 'tag_2_id', 'tag_3_id', 'tag_4_id', 'tag_5_id',
+    'last_accessed', 'created_at', 'updated_at'
   ] as const;
   export type MemoryField = (typeof memoryFields)[number];
 
@@ -103,6 +114,16 @@ export type UserProfile = {
     last_observed: Date;
     created_at: Date;
   };
+
+  export type TagType = 'general' | 'service' | 'service_type' | 'user_created';
+
+  export type Tag = {
+    id: string;
+    name: string;
+    type: TagType;
+    user_id?: string; // Optional for user created tags
+    created_at: Date;
+  };
   
   export const userHabitFields = [
     'id', 'user_id', 'habit_type', 'pattern', 'frequency_data',
@@ -110,6 +131,11 @@ export type UserProfile = {
     'last_observed', 'created_at'
   ] as const;
   export type UserHabitField = (typeof userHabitFields)[number];
+
+  export const tagFields = [
+    'id', 'name', 'type', 'user_id', 'created_at'
+  ] as const;
+  export type TagField = (typeof tagFields)[number];
   
   export type Automation = {
     id: string;
@@ -195,13 +221,18 @@ export type UserProfile = {
     tools?: string[];
     integration_method?: string; // e.g. OAuth, External App, Internal App etc.
     description?: string; // Detailed description of the service and its capabilities
-    tags?: string[]; // Array of tags for categorizing and filtering services
+    // Foreign key columns for tags (up to 5 tags per service)
+    tag_1_id?: string; // Foreign key to Tag.id
+    tag_2_id?: string; // Foreign key to Tag.id
+    tag_3_id?: string; // Foreign key to Tag.id
+    tag_4_id?: string; // Foreign key to Tag.id
+    tag_5_id?: string; // Foreign key to Tag.id
   };
 
   export const serviceFields = [
     'id', 'created_at', 'service_name', 'num_users', 'config_form_id',
     'auth_script', 'refresh_script', 'tools', 'integration_method',
-    'description', 'tags'
+    'description', 'tag_1_id', 'tag_2_id', 'tag_3_id', 'tag_4_id', 'tag_5_id'
   ] as const;
   export type ServiceField = (typeof serviceFields)[number];
 

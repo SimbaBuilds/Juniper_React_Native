@@ -2,7 +2,7 @@ import { authorize, refresh, AuthConfiguration, AuthorizeResult, RefreshResult }
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import api from '../../api/api';
+import { completeIntegration, createOAuthAuthParams, disconnectIntegration } from '../../api/integration_api';
 
 interface TodoistAuthResult {
   accessToken: string;
@@ -53,20 +53,27 @@ export class TodoistAuthService {
     this.isInitialized = true;
   }
 
-  async authenticate(): Promise<TodoistAuthResult> {
+  async authenticate(integrationId: string): Promise<TodoistAuthResult> {
     try {
       await this.initialize();
 
       console.log('📋 Starting Todoist OAuth flow...');
+      console.log('📋 Integration ID:', integrationId);
 
-      // Add state parameter for security
-      const state = Math.random().toString(36).substring(2, 15);
+      // Add integration ID to state for callback handling
+      const stateData = {
+        integration_id: integrationId,
+        service: 'todoist',
+        timestamp: Date.now()
+      };
+      const encodedState = Buffer.from(JSON.stringify(stateData)).toString('base64');
+
       const configWithState = {
         ...this.config,
         additionalParameters: {
           ...this.config.additionalParameters,
-          state,
-        },
+          state: encodedState
+        }
       };
 
       console.log('📋 Starting authorization with config:', {
@@ -97,10 +104,10 @@ export class TodoistAuthService {
       };
 
       // Store tokens securely
-      await this.storeTokens(authResult);
+      await this.storeTokens(authResult, integrationId);
 
       // Call backend to complete integration
-      await this.completeIntegration(authResult);
+      await this.completeIntegration(result, integrationId);
 
       console.log('📋 Todoist authentication completed successfully');
       return authResult;
@@ -111,17 +118,13 @@ export class TodoistAuthService {
     }
   }
 
-  async refreshToken(): Promise<TodoistAuthResult> {
+  async refreshToken(refreshToken: string, integrationId: string): Promise<TodoistAuthResult> {
     try {
-      const storedTokens = await this.getStoredTokens();
-      if (!storedTokens?.refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
+      const storedTokens = await this.getStoredTokens(integrationId);
       console.log('📋 Refreshing Todoist access token...');
 
       const result: RefreshResult = await refresh(this.config, {
-        refreshToken: storedTokens.refreshToken,
+        refreshToken: refreshToken,
       });
 
       const expiresIn = result.additionalParameters?.expires_in;
@@ -131,14 +134,14 @@ export class TodoistAuthService {
 
       const authResult: TodoistAuthResult = {
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken || storedTokens.refreshToken,
+        refreshToken: result.refreshToken || refreshToken,
         expiresAt,
-        scope: storedTokens.scope,
-        userId: storedTokens.userId
+        scope: storedTokens?.scope,
+        userId: storedTokens?.userId
       };
 
       // Update stored tokens
-      await this.storeTokens(authResult);
+      await this.storeTokens(authResult, integrationId);
 
       console.log('📋 Todoist token refreshed successfully');
       return authResult;
@@ -149,8 +152,8 @@ export class TodoistAuthService {
     }
   }
 
-  async getValidToken(): Promise<string> {
-    const tokens = await this.getStoredTokens();
+  async getValidToken(integrationId: string): Promise<string> {
+    const tokens = await this.getStoredTokens(integrationId);
     if (!tokens) {
       throw new Error('No Todoist tokens found. Please authenticate first.');
     }
@@ -158,36 +161,37 @@ export class TodoistAuthService {
     // Check if token is expired (with 5 minute buffer)
     if (tokens.expiresAt && tokens.expiresAt < Date.now() + (5 * 60 * 1000)) {
       console.log('📋 Todoist token expired, refreshing...');
-      const refreshedTokens = await this.refreshToken();
+      const refreshedTokens = await this.refreshToken(tokens.refreshToken, integrationId);
       return refreshedTokens.accessToken;
     }
 
     return tokens.accessToken;
   }
 
-  async isAuthenticated(): Promise<boolean> {
+  async isAuthenticated(integrationId: string): Promise<boolean> {
     try {
-      const tokens = await this.getStoredTokens();
+      const tokens = await this.getStoredTokens(integrationId);
       return !!(tokens?.accessToken);
     } catch {
       return false;
     }
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(integrationId: string): Promise<void> {
     try {
       console.log('📋 Disconnecting Todoist...');
       
       // Clear stored tokens
-      if (Platform.OS === 'ios') {
-        await SecureStore.deleteItemAsync('todoist_tokens');
+      if (Platform.OS !== 'web') {
+        await SecureStore.deleteItemAsync(`todoist_tokens_${integrationId}`);
       } else {
-        await AsyncStorage.removeItem('todoist_tokens');
+        await AsyncStorage.removeItem(`todoist_tokens_${integrationId}`);
       }
 
-      // Call backend to remove integration
-      await api.post('/integrations/disconnect', {
-        service: 'todoist'
+      // Disconnect from backend
+      await disconnectIntegration({
+        integration_id: integrationId,
+        service_name: 'todoist'
       });
 
       console.log('📋 Todoist disconnected successfully');
@@ -197,24 +201,24 @@ export class TodoistAuthService {
     }
   }
 
-  private async storeTokens(tokens: TodoistAuthResult): Promise<void> {
+  private async storeTokens(tokens: TodoistAuthResult, integrationId: string): Promise<void> {
     const tokenData = JSON.stringify(tokens);
     
-    if (Platform.OS === 'ios') {
-      await SecureStore.setItemAsync('todoist_tokens', tokenData);
+    if (Platform.OS !== 'web') {
+      await SecureStore.setItemAsync(`todoist_tokens_${integrationId}`, tokenData);
     } else {
-      await AsyncStorage.setItem('todoist_tokens', tokenData);
+      await AsyncStorage.setItem(`todoist_tokens_${integrationId}`, tokenData);
     }
   }
 
-  private async getStoredTokens(): Promise<TodoistAuthResult | null> {
+  private async getStoredTokens(integrationId: string): Promise<TodoistAuthResult | null> {
     try {
       let tokenData: string | null;
       
-      if (Platform.OS === 'ios') {
-        tokenData = await SecureStore.getItemAsync('todoist_tokens');
+      if (Platform.OS !== 'web') {
+        tokenData = await SecureStore.getItemAsync(`todoist_tokens_${integrationId}`);
       } else {
-        tokenData = await AsyncStorage.getItem('todoist_tokens');
+        tokenData = await AsyncStorage.getItem(`todoist_tokens_${integrationId}`);
       }
 
       return tokenData ? JSON.parse(tokenData) : null;
@@ -224,22 +228,19 @@ export class TodoistAuthService {
     }
   }
 
-  private async completeIntegration(authResult: TodoistAuthResult): Promise<void> {
+  private async completeIntegration(result: AuthorizeResult, integrationId: string): Promise<void> {
     try {
       console.log('📋 Completing Todoist integration with backend...');
       
-      await api.post('/api/complete_integration', {
-        service: 'todoist',
-        access_token: authResult.accessToken,
-        refresh_token: authResult.refreshToken,
-        expires_at: authResult.expiresAt,
-        scope: authResult.scope,
-        user_id: authResult.userId,
-        metadata: {
-          integration_type: 'oauth2',
-          platform: Platform.OS,
-          sdk_version: 'react-native-app-auth'
-        }
+      const authParams = createOAuthAuthParams(result, {
+        user_id: result.tokenAdditionalParameters?.user_id
+      });
+
+      await completeIntegration({
+        integration_id: integrationId,
+        service_name: 'todoist',
+        service_type: 'oauth',
+        auth_params: authParams
       });
 
       console.log('📋 Todoist integration completed with backend');

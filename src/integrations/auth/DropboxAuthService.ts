@@ -2,7 +2,7 @@ import { authorize, refresh, AuthConfiguration, AuthorizeResult, RefreshResult }
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import api from '../../api/api';
+import { completeIntegration, createOAuthAuthParams, disconnectIntegration } from '../../api/integration_api';
 
 interface DropboxAuthResult {
   accessToken: string;
@@ -232,20 +232,16 @@ export class DropboxAuthService {
    */
   private async completeIntegration(result: AuthorizeResult, integrationId: string): Promise<void> {
     try {
-      console.log('📦 Completing Dropbox integration with backend...');
-
-      const response = await api.post('/api/oauth/complete_integration', {
-        integration_id: integrationId,
-        service: 'dropbox',
-        access_token: result.accessToken,
-        refresh_token: result.refreshToken,
-        expires_at: result.accessTokenExpirationDate,
-        scope: result.scopes?.join(' '),
-        account_id: result.tokenAdditionalParameters?.account_id,
-        oauth_result: result
+      const authParams = createOAuthAuthParams(result, {
+        account_id: result.tokenAdditionalParameters?.account_id
       });
 
-      console.log('📦 Dropbox integration completed:', response.data);
+      await completeIntegration({
+        integration_id: integrationId,
+        service_name: 'dropbox',
+        service_type: 'oauth',
+        auth_params: authParams
+      });
     } catch (error) {
       console.error('🔴 Error completing Dropbox integration:', error);
       // Don't throw here - the OAuth was successful, backend completion is secondary
@@ -284,6 +280,12 @@ export class DropboxAuthService {
       } else {
         await AsyncStorage.removeItem(`dropbox_tokens_${integrationId}`);
       }
+
+      // Disconnect from backend
+      await disconnectIntegration({
+        integration_id: integrationId,
+        service_name: 'dropbox'
+      });
 
       console.log('📦 Dropbox integration disconnected');
     } catch (error) {

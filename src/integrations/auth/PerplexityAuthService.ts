@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import api from '../../api/api';
+import { completeIntegration, createApiKeyAuthParams, disconnectIntegration } from '../../api/integration_api';
 
 interface PerplexityAuthResult {
   apiKey: string;
@@ -183,23 +183,16 @@ export class PerplexityAuthService {
    */
   private async completeIntegration(authResult: PerplexityAuthResult, integrationId: string): Promise<void> {
     try {
-      console.log('🟠 Completing Perplexity integration...');
+      const authParams = createApiKeyAuthParams(authResult.apiKey);
 
-      const response = await api.post('/api/oauth/complete_integration', {
+      await completeIntegration({
         integration_id: integrationId,
-        service: 'perplexity',
-        auth_type: 'api_key',
-        api_key: authResult.apiKey,
+        service_name: 'perplexity',
+        service_type: 'api_key',
+        auth_params: authParams,
         status: 'connected',
-        connected_at: new Date().toISOString(),
+        connected_at: new Date().toISOString()
       });
-
-      if (response.status === 200) {
-        console.log('🟠 Perplexity integration completed successfully');
-      } else {
-        console.warn('🔴 Unexpected response from integration completion:', response.status);
-      }
-
     } catch (error) {
       console.error('🔴 Error completing Perplexity integration:', error);
       // Don't throw here - the API key is valid, just log the backend error
@@ -237,10 +230,10 @@ export class PerplexityAuthService {
         await AsyncStorage.removeItem(`perplexity_key_${integrationId}`);
       }
 
-      // Call backend to update integration status
-      await api.post('/integrations/disconnect', {
+      // Disconnect from backend
+      await disconnectIntegration({
         integration_id: integrationId,
-        service: 'perplexity',
+        service_name: 'perplexity'
       });
 
       console.log('🟠 Perplexity integration disconnected');
