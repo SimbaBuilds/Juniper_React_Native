@@ -107,7 +107,7 @@ export class ZoomAuthService {
         hasAccessToken: !!result.accessToken,
         hasRefreshToken: !!result.refreshToken,
         expiresAt: result.accessTokenExpirationDate,
-        scope: result.scopes
+        scope: result.scopes?.join(' ')
       });
 
       // Store tokens securely
@@ -165,7 +165,7 @@ export class ZoomAuthService {
         expiresAt: result.accessTokenExpirationDate,
         integrationId,
         service: 'zoom',
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         storedAt: new Date().toISOString()
       };
 
@@ -245,7 +245,7 @@ export class ZoomAuthService {
         access_token: result.accessToken,
         refresh_token: result.refreshToken,
         expires_at: result.accessTokenExpirationDate,
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         oauth_result: result
       });
 

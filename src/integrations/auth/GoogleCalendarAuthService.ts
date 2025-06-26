@@ -25,14 +25,14 @@ export class GoogleCalendarAuthService {
       access_type: 'offline',
       prompt: 'consent'
     },
+    serviceConfiguration: {
+      authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+      tokenEndpoint: 'https://oauth2.googleapis.com/token',
+    },
     customHeaders: {},
-    usesPkce: true,
-    usePkceCodeChallenge: true,
+    usePKCE: true,
     skipCodeExchange: false,
-    iosCustomBrowser: 'sfAuthenticationSession',
-    androidCustomBrowser: 'customTabs',
-    authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-    tokenEndpoint: 'https://oauth2.googleapis.com/token',
+    iosCustomBrowser: 'safari',
   };
 
   static getInstance(): GoogleCalendarAuthService {
@@ -85,12 +85,12 @@ export class GoogleCalendarAuthService {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken || '',
         expiresAt: new Date(result.accessTokenExpirationDate).getTime(),
-        scope: result.scopes
+        scope: result.scopes?.join(' ')
       };
 
     } catch (error) {
       console.error('🔴 Google Calendar OAuth error:', error);
-      throw new Error(`Google Calendar authentication failed: ${error.message}`);
+      throw new Error(`Google Calendar authentication failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -107,7 +107,7 @@ export class GoogleCalendarAuthService {
       };
     } catch (error) {
       console.error('🔴 Google Calendar token refresh error:', error);
-      throw new Error(`Google Calendar token refresh failed: ${error.message}`);
+      throw new Error(`Google Calendar token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -119,7 +119,7 @@ export class GoogleCalendarAuthService {
         expiresAt: result.accessTokenExpirationDate,
         integrationId,
         service: 'google-calendar',
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         storedAt: new Date().toISOString()
       };
 
@@ -185,7 +185,7 @@ export class GoogleCalendarAuthService {
         access_token: result.accessToken,
         refresh_token: result.refreshToken,
         expires_at: result.accessTokenExpirationDate,
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         oauth_result: result
       });
     } catch (error) {

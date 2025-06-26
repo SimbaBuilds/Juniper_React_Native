@@ -20,8 +20,10 @@ export class TodoistAuthService {
     issuer: 'https://todoist.com',
     clientId: process.env.EXPO_PUBLIC_TODOIST_CLIENT_ID || '',
     redirectUrl: 'mobilejarvisnative://oauth/callback/todoist',
-    authorizationEndpoint: 'https://todoist.com/oauth/authorize',
-    tokenEndpoint: 'https://todoist.com/oauth/access_token',
+    serviceConfiguration: {
+      authorizationEndpoint: 'https://todoist.com/oauth/authorize',
+      tokenEndpoint: 'https://todoist.com/oauth/access_token',
+    },
     scopes: [
       'data:read_write'  // Full read/write access for AI assistant
     ],
@@ -29,8 +31,7 @@ export class TodoistAuthService {
       token_access_type: 'offline'  // Request refresh token
     },
     customHeaders: {},
-    usesPKCE: true,  // Enable PKCE for mobile security
-    usePKCE: true,   // Fallback for different react-native-app-auth versions
+    usePKCE: true,   // Enable PKCE for mobile security
   };
 
   public static getInstance(): TodoistAuthService {
@@ -82,8 +83,9 @@ export class TodoistAuthService {
       });
 
       // Calculate expiration timestamp
-      const expiresAt = result.tokenAdditionalParameters?.expires_in 
-        ? Date.now() + (result.tokenAdditionalParameters.expires_in * 1000)
+      const expiresIn = result.tokenAdditionalParameters?.expires_in;
+      const expiresAt = (expiresIn && typeof expiresIn === 'number') 
+        ? Date.now() + (expiresIn * 1000)
         : Date.now() + (3600 * 1000); // Default 1 hour
 
       const authResult: TodoistAuthResult = {
@@ -122,8 +124,9 @@ export class TodoistAuthService {
         refreshToken: storedTokens.refreshToken,
       });
 
-      const expiresAt = result.tokenAdditionalParameters?.expires_in 
-        ? Date.now() + (result.tokenAdditionalParameters.expires_in * 1000)
+      const expiresIn = result.additionalParameters?.expires_in;
+      const expiresAt = (expiresIn && typeof expiresIn === 'number') 
+        ? Date.now() + (expiresIn * 1000)
         : Date.now() + (3600 * 1000);
 
       const authResult: TodoistAuthResult = {

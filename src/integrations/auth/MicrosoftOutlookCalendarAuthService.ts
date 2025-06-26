@@ -29,14 +29,14 @@ export class MicrosoftOutlookCalendarAuthService {
       access_type: 'offline',
       prompt: 'consent'
     },
+    serviceConfiguration: {
+      authorizationEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+      tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+    },
     customHeaders: {},
-    usesPkce: true,
-    usePkceCodeChallenge: true,
+    usePKCE: true,
     skipCodeExchange: false,
-    iosCustomBrowser: 'sfAuthenticationSession',
-    androidCustomBrowser: 'customTabs',
-    authorizationEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-    tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+    iosCustomBrowser: 'safari',
   };
 
   static getInstance(): MicrosoftOutlookCalendarAuthService {
@@ -109,12 +109,12 @@ export class MicrosoftOutlookCalendarAuthService {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken || '',
         expiresAt: new Date(result.accessTokenExpirationDate).getTime(),
-        scope: result.scopes
+        scope: result.scopes?.join(' ')
       };
 
     } catch (error) {
       console.error('🔴 Microsoft Outlook Calendar OAuth error:', error);
-      throw new Error(`Microsoft Outlook Calendar authentication failed: ${error.message}`);
+      throw new Error(`Microsoft Outlook Calendar authentication failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -139,7 +139,7 @@ export class MicrosoftOutlookCalendarAuthService {
 
     } catch (error) {
       console.error('🔴 Microsoft Outlook Calendar token refresh error:', error);
-      throw new Error(`Microsoft Outlook Calendar token refresh failed: ${error.message}`);
+      throw new Error(`Microsoft Outlook Calendar token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -154,7 +154,7 @@ export class MicrosoftOutlookCalendarAuthService {
         expiresAt: result.accessTokenExpirationDate,
         integrationId,
         service: 'microsoft_outlook_calendar',
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         storedAt: new Date().toISOString()
       };
 

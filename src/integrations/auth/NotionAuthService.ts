@@ -27,14 +27,14 @@ export class NotionAuthService {
     additionalParameters: {
       response_type: 'code'
     },
+    serviceConfiguration: {
+      authorizationEndpoint: 'https://api.notion.com/v1/oauth/authorize',
+      tokenEndpoint: 'https://api.notion.com/v1/oauth/token',
+    },
     customHeaders: {},
-    usesPkce: true,
-    usePkceCodeChallenge: true,
+    usePKCE: true,
     skipCodeExchange: false,
-    iosCustomBrowser: 'sfAuthenticationSession',
-    androidCustomBrowser: 'customTabs',
-    authorizationEndpoint: 'https://api.notion.com/v1/oauth/authorize',
-    tokenEndpoint: 'https://api.notion.com/v1/oauth/token',
+    iosCustomBrowser: 'safari',
   };
 
   static getInstance(): NotionAuthService {
@@ -112,7 +112,7 @@ export class NotionAuthService {
 
     } catch (error) {
       console.error('🔴 Notion OAuth error:', error);
-      throw new Error(`Notion authentication failed: ${error.message}`);
+      throw new Error(`Notion authentication failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -137,7 +137,7 @@ export class NotionAuthService {
 
     } catch (error) {
       console.error('🔴 Notion token refresh error:', error);
-      throw new Error(`Notion token refresh failed: ${error.message}`);
+      throw new Error(`Notion token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

@@ -26,11 +26,9 @@ export class GoogleSheetsAuthService {
       prompt: 'consent'
     },
     customHeaders: {},
-    usesPkce: true,
-    usePkceCodeChallenge: true,
+    usePKCE: true,
     skipCodeExchange: false,
-    iosCustomBrowser: 'sfAuthenticationSession',
-    androidCustomBrowser: 'customTabs',
+    iosCustomBrowser: 'safari',
     authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenEndpoint: 'https://oauth2.googleapis.com/token',
   } as any;
@@ -150,7 +148,7 @@ export class GoogleSheetsAuthService {
         expiresAt: result.accessTokenExpirationDate,
         integrationId,
         service: 'google-sheets',
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         storedAt: new Date().toISOString()
       };
 
@@ -230,7 +228,7 @@ export class GoogleSheetsAuthService {
         access_token: result.accessToken,
         refresh_token: result.refreshToken,
         expires_at: result.accessTokenExpirationDate,
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         oauth_result: result
       });
 

@@ -28,14 +28,14 @@ export class GoogleMeetAuthService {
       access_type: 'offline',
       prompt: 'consent'
     },
+    serviceConfiguration: {
+      authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+      tokenEndpoint: 'https://oauth2.googleapis.com/token',
+    },
     customHeaders: {},
-    usesPkce: true,
-    usePkceCodeChallenge: true,
+    usePKCE: true,
     skipCodeExchange: false,
-    iosCustomBrowser: 'sfAuthenticationSession',
-    androidCustomBrowser: 'customTabs',
-    authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-    tokenEndpoint: 'https://oauth2.googleapis.com/token',
+    iosCustomBrowser: 'safari',
   };
 
   static getInstance(): GoogleMeetAuthService {
@@ -108,12 +108,12 @@ export class GoogleMeetAuthService {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken || '',
         expiresAt: new Date(result.accessTokenExpirationDate).getTime(),
-        scope: result.scopes
+        scope: result.scopes?.join(' ')
       };
 
     } catch (error) {
       console.error('🔴 Google Meet OAuth error:', error);
-      throw new Error(`Google Meet authentication failed: ${error.message}`);
+      throw new Error(`Google Meet authentication failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -138,7 +138,7 @@ export class GoogleMeetAuthService {
 
     } catch (error) {
       console.error('🔴 Google Meet token refresh error:', error);
-      throw new Error(`Google Meet token refresh failed: ${error.message}`);
+      throw new Error(`Google Meet token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -153,7 +153,7 @@ export class GoogleMeetAuthService {
         expiresAt: result.accessTokenExpirationDate,
         integrationId,
         service: 'google-meet',
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         storedAt: new Date().toISOString()
       };
 
@@ -233,7 +233,7 @@ export class GoogleMeetAuthService {
         access_token: result.accessToken,
         refresh_token: result.refreshToken,
         expires_at: result.accessTokenExpirationDate,
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         oauth_result: result
       });
 

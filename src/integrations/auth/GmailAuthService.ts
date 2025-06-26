@@ -28,14 +28,14 @@ export class GmailAuthService {
       access_type: 'offline',
       prompt: 'consent'
     },
+    serviceConfiguration: {
+      authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+      tokenEndpoint: 'https://oauth2.googleapis.com/token',
+    },
     customHeaders: {},
-    usesPkce: true,
-    usePkceCodeChallenge: true,
+    usePKCE: true,
     skipCodeExchange: false,
-    iosCustomBrowser: 'sfAuthenticationSession',
-    androidCustomBrowser: 'customTabs',
-    authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-    tokenEndpoint: 'https://oauth2.googleapis.com/token',
+    iosCustomBrowser: 'safari',
   };
 
   static getInstance(): GmailAuthService {
@@ -108,12 +108,12 @@ export class GmailAuthService {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken || '',
         expiresAt: new Date(result.accessTokenExpirationDate).getTime(),
-        scope: result.scopes
+        scope: result.scopes?.join(' ')
       };
 
     } catch (error) {
       console.error('🔴 Gmail OAuth error:', error);
-      throw new Error(`Gmail authentication failed: ${error.message}`);
+      throw new Error(`Gmail authentication failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -138,7 +138,7 @@ export class GmailAuthService {
 
     } catch (error) {
       console.error('🔴 Gmail token refresh error:', error);
-      throw new Error(`Gmail token refresh failed: ${error.message}`);
+      throw new Error(`Gmail token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -153,7 +153,7 @@ export class GmailAuthService {
         expiresAt: result.accessTokenExpirationDate,
         integrationId,
         service: 'gmail',
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         storedAt: new Date().toISOString()
       };
 
@@ -233,7 +233,7 @@ export class GmailAuthService {
         access_token: result.accessToken,
         refresh_token: result.refreshToken,
         expires_at: result.accessTokenExpirationDate,
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         oauth_result: result
       });
 

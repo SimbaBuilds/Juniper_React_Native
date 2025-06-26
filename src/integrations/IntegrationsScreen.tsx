@@ -25,6 +25,11 @@ interface TwilioCredentials {
   phoneNumber: string;
 }
 
+interface ServiceCategory {
+  name: string;
+  services: ServiceWithStatus[];
+}
+
 export const IntegrationsScreen: React.FC = () => {
   const { user } = useAuth();
   const [services, setServices] = useState<ServiceWithStatus[]>([]);
@@ -34,6 +39,103 @@ export const IntegrationsScreen: React.FC = () => {
   const [twilioModalVisible, setTwilioModalVisible] = useState(false);
   const [selectedService, setSelectedService] = useState<ServiceWithStatus | null>(null);
 
+  // Define service categories
+  const getServiceCategory = (serviceName: string): string => {
+    const name = serviceName.toLowerCase();
+    
+    // Project/Task Management
+    if (['notion', 'trello', 'todoist', 'any.do'].includes(name)) {
+      return 'Project/Task Management';
+    }
+    
+    // Calendar
+    if (['google calendar', 'microsoft outlook calendar'].includes(name)) {
+      return 'Calendar';
+    }
+    
+    // Email
+    if (['gmail', 'microsoft outlook email', 'microsoft outlook mail'].includes(name)) {
+      return 'Email';
+    }
+    
+    // Video Conferencing
+    if (['zoom', 'google meet'].includes(name)) {
+      return 'Video Conferencing';
+    }
+    
+    // Research
+    if (['perplexity'].includes(name)) {
+      return 'Research';
+    }
+    
+    // Cloud Storage
+    if (['dropbox'].includes(name)) {
+      return 'Cloud Storage';
+    }
+    
+    // Cloud Text Documents
+    if (['google docs', 'microsoft word online'].includes(name)) {
+      return 'Cloud Text Documents';
+    }
+    
+    // Cloud Spreadsheets
+    if (['google sheets', 'microsoft excel online'].includes(name)) {
+      return 'Cloud Spreadsheets';
+    }
+    
+    // Team Communication
+    if (['slack', 'microsoft teams', 'twilio', 'whatsapp'].includes(name)) {
+      return 'Team Communication';
+    }
+    
+    // Default category for uncategorized services
+    return 'Other';
+  };
+
+  // Organize services into categories
+  const organizeServicesByCategory = (services: ServiceWithStatus[]): ServiceCategory[] => {
+    const categoryMap: { [key: string]: ServiceWithStatus[] } = {};
+    
+    services.forEach(service => {
+      const category = getServiceCategory(service.service_name);
+      if (!categoryMap[category]) {
+        categoryMap[category] = [];
+      }
+      categoryMap[category].push(service);
+    });
+    
+    // Define the order of categories
+    const categoryOrder = [
+      'Project/Task Management',
+      'Calendar',
+      'Email',
+      'Video Conferencing',
+      'Research',
+      'Cloud Storage',
+      'Cloud Text Documents',
+      'Cloud Spreadsheets',
+      'Team Communication',
+      'Other'
+    ];
+    
+    // Create sorted categories array
+    const categories: ServiceCategory[] = [];
+    categoryOrder.forEach(categoryName => {
+      if (categoryMap[categoryName] && categoryMap[categoryName].length > 0) {
+        // Sort services within each category alphabetically
+        const sortedServices = categoryMap[categoryName].sort((a, b) => 
+          a.service_name.localeCompare(b.service_name)
+        );
+        categories.push({
+          name: categoryName,
+          services: sortedServices
+        });
+      }
+    });
+    
+    return categories;
+  };
+
   // Helper function to get icon for integration type
   const getIconForIntegrationType = (serviceName: string): keyof typeof Ionicons.glyphMap => {
     switch (serviceName.toLowerCase()) {
@@ -41,6 +143,7 @@ export const IntegrationsScreen: React.FC = () => {
       case 'email':
         return 'mail';
       case 'microsoft outlook email':
+      case 'microsoft outlook mail':
         return 'mail-outline';
       case 'google calendar':
       case 'microsoft outlook calendar':
@@ -75,6 +178,32 @@ export const IntegrationsScreen: React.FC = () => {
         return 'chatbox-ellipses';
       default:
         return 'link';
+    }
+  };
+
+  // Helper function to get category icon
+  const getCategoryIcon = (categoryName: string): keyof typeof Ionicons.glyphMap => {
+    switch (categoryName) {
+      case 'Project/Task Management':
+        return 'checkbox-outline';
+      case 'Calendar':
+        return 'calendar-outline';
+      case 'Email':
+        return 'mail-outline';
+      case 'Video Conferencing':
+        return 'videocam-outline';
+      case 'Research':
+        return 'search-outline';
+      case 'Cloud Storage':
+        return 'cloud-outline';
+      case 'Cloud Text Documents':
+        return 'document-text-outline';
+      case 'Cloud Spreadsheets':
+        return 'grid-outline';
+      case 'Team Communication':
+        return 'chatbubbles-outline';
+      default:
+        return 'apps-outline';
     }
   };
 
@@ -302,6 +431,8 @@ export const IntegrationsScreen: React.FC = () => {
     );
   }
 
+  const categorizedServices = organizeServicesByCategory(services);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -313,54 +444,70 @@ export const IntegrationsScreen: React.FC = () => {
         </View>
 
         <View style={styles.servicesSection}>
-          {services.map((service) => (
-            <View key={service.id} style={styles.serviceCard}>
-              <View style={styles.serviceHeader}>
-                <View style={styles.serviceLeft}>
-                  <Ionicons 
-                    name={getIconForIntegrationType(service.service_name)} 
-                    size={24} 
-                    color={service.isConnected ? "#4CAF50" : "#666666"} 
-                  />
-                  <View style={styles.serviceInfo}>
-                    <Text style={styles.serviceName}>{service.service_name}</Text>
-                    {service.tags && service.tags.length > 0 && (
-                      <View style={styles.tagsContainer}>
-                        {service.tags.map((tag, index) => (
-                          <View key={index} style={styles.tag}>
-                            <Text style={styles.tagText}>{tag}</Text>
+          {categorizedServices.map((category) => (
+            <View key={category.name} style={styles.categorySection}>
+              <View style={styles.categoryHeader}>
+                <Ionicons 
+                  name={getCategoryIcon(category.name)} 
+                  size={20} 
+                  color="#4A90E2" 
+                />
+                <Text style={styles.categoryTitle}>{category.name}</Text>
+                <View style={styles.categoryDivider} />
+              </View>
+              
+              <View style={styles.categoryServices}>
+                {category.services.map((service) => (
+                  <View key={service.id} style={styles.serviceCard}>
+                    <View style={styles.serviceHeader}>
+                      <View style={styles.serviceLeft}>
+                        <Ionicons 
+                          name={getIconForIntegrationType(service.service_name)} 
+                          size={24} 
+                          color={service.isConnected ? "#4CAF50" : "#666666"} 
+                        />
+                        <View style={styles.serviceInfo}>
+                          <Text style={styles.serviceName}>{service.service_name}</Text>
+                          {service.tags && service.tags.length > 0 && (
+                            <View style={styles.tagsContainer}>
+                              {service.tags.map((tag, index) => (
+                                <View key={index} style={styles.tag}>
+                                  <Text style={styles.tagText}>{tag}</Text>
+                                </View>
+                              ))}
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                      
+                      <View style={styles.serviceRight}>
+                        {service.isConnected ? (
+                          <View style={styles.connectedContainer}>
+                            <View style={styles.connectedIndicator}>
+                              <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                              <Text style={styles.connectedText}>Connected</Text>
+                            </View>
+                            <TouchableOpacity
+                              style={styles.disconnectButton}
+                              onPress={() => handleDisconnect(service)}
+                              activeOpacity={0.7}
+                            >
+                              <Text style={styles.disconnectButtonText}>Disconnect</Text>
+                            </TouchableOpacity>
                           </View>
-                        ))}
+                        ) : (
+                          <TouchableOpacity
+                            style={styles.connectButton}
+                            onPress={() => handleConnect(service)}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={styles.connectButtonText}>Connect</Text>
+                          </TouchableOpacity>
+                        )}
                       </View>
-                    )}
-                  </View>
-                </View>
-                
-                <View style={styles.serviceRight}>
-                  {service.isConnected ? (
-                    <View style={styles.connectedContainer}>
-                      <View style={styles.connectedIndicator}>
-                        <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-                        <Text style={styles.connectedText}>Connected</Text>
-                      </View>
-                      <TouchableOpacity
-                        style={styles.disconnectButton}
-                        onPress={() => handleDisconnect(service)}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={styles.disconnectButtonText}>Disconnect</Text>
-                      </TouchableOpacity>
                     </View>
-                  ) : (
-                    <TouchableOpacity
-                      style={styles.connectButton}
-                      onPress={() => handleConnect(service)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.connectButtonText}>Connect</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
+                  </View>
+                ))}
               </View>
             </View>
           ))}
@@ -432,6 +579,30 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   servicesSection: {
+    gap: 24,
+  },
+  categorySection: {
+    marginBottom: 8,
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  categoryTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginLeft: 8,
+  },
+  categoryDivider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#2A2A2A',
+    marginLeft: 12,
+  },
+  categoryServices: {
     gap: 12,
   },
   serviceCard: {

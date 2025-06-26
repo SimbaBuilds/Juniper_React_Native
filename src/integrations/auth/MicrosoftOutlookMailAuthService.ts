@@ -30,14 +30,14 @@ export class MicrosoftOutlookMailAuthService {
       access_type: 'offline',
       prompt: 'consent'
     },
+    serviceConfiguration: {
+      authorizationEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+      tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+    },
     customHeaders: {},
-    usesPkce: true,
-    usePkceCodeChallenge: true,
+    usePKCE: true,
     skipCodeExchange: false,
-    iosCustomBrowser: 'sfAuthenticationSession',
-    androidCustomBrowser: 'customTabs',
-    authorizationEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-    tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+    iosCustomBrowser: 'safari',
   };
 
   static getInstance(): MicrosoftOutlookMailAuthService {
@@ -110,12 +110,12 @@ export class MicrosoftOutlookMailAuthService {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken || '',
         expiresAt: new Date(result.accessTokenExpirationDate).getTime(),
-        scope: result.scopes
+        scope: result.scopes?.join(' ')
       };
 
     } catch (error) {
       console.error('🔴 Microsoft Outlook Mail OAuth error:', error);
-      throw new Error(`Microsoft Outlook Mail authentication failed: ${error.message}`);
+      throw new Error(`Microsoft Outlook Mail authentication failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -140,7 +140,7 @@ export class MicrosoftOutlookMailAuthService {
 
     } catch (error) {
       console.error('🔴 Microsoft Outlook Mail token refresh error:', error);
-      throw new Error(`Microsoft Outlook Mail token refresh failed: ${error.message}`);
+      throw new Error(`Microsoft Outlook Mail token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -155,7 +155,7 @@ export class MicrosoftOutlookMailAuthService {
         expiresAt: result.accessTokenExpirationDate,
         integrationId,
         service: 'microsoft_outlook_mail',
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         storedAt: new Date().toISOString()
       };
 

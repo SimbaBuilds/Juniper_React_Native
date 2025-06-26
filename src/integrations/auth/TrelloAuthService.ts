@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform, Linking } from 'react-native';
-import * as WebBrowser from 'expo-web-browser';
+// Removed expo-web-browser import - using Linking API instead
 import api from '../../api/api';
 
 interface TrelloAuthResult {
@@ -53,29 +53,23 @@ export class TrelloAuthService {
       const authUrl = this.buildAuthUrl(integrationId);
       console.log('🟠 Authorization URL:', authUrl);
 
-      // Open WebBrowser for authentication
-      const result = await WebBrowser.openAuthSessionAsync(
-        authUrl,
-        this.redirectUrl,
-        {
-          showInRecents: false,
-          preferEphemeralSession: true,
-        }
-      );
-
-      console.log('🟠 WebBrowser result:', result.type);
-
-      if (result.type === 'success' && result.url) {
-        return await this.handleAuthCallback(result.url, integrationId);
-      } else if (result.type === 'cancel') {
-        throw new Error('User cancelled Trello authentication');
-      } else {
-        throw new Error('Trello authentication failed');
+      // Open external browser for authentication
+      const canOpen = await Linking.canOpenURL(authUrl);
+      if (!canOpen) {
+        throw new Error('Cannot open authentication URL');
       }
+
+      console.log('🟠 Opening Trello auth URL in external browser');
+      await Linking.openURL(authUrl);
+
+      // Note: For Trello's manual token authentication flow, 
+      // the user will need to copy the token manually from the browser
+      // This is different from OAuth flows that redirect back to the app
+      throw new Error('Manual token entry required. Please copy the token from the browser and enter it manually.');
 
     } catch (error) {
       console.error('🔴 Trello authentication error:', error);
-      throw new Error(`Trello authentication failed: ${error.message}`);
+      throw new Error(`Trello authentication failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

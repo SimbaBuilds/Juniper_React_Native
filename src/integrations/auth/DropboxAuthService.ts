@@ -36,11 +36,9 @@ export class DropboxAuthService {
       token_access_type: 'offline', // Required for refresh tokens
     },
     customHeaders: {},
-    usesPkce: true,
-    usePkceCodeChallenge: true,
+    usePKCE: true,
     skipCodeExchange: false,
-    iosCustomBrowser: 'sfAuthenticationSession',
-    androidCustomBrowser: 'customTabs',
+    iosCustomBrowser: 'safari',
   };
 
   static getInstance(): DropboxAuthService {
@@ -114,13 +112,13 @@ export class DropboxAuthService {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken || '',
         expiresAt: new Date(result.accessTokenExpirationDate).getTime(),
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         accountId: result.tokenAdditionalParameters?.account_id
       };
 
     } catch (error) {
       console.error('🔴 Dropbox OAuth error:', error);
-      throw new Error(`Dropbox authentication failed: ${error.message}`);
+      throw new Error(`Dropbox authentication failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -145,7 +143,7 @@ export class DropboxAuthService {
 
     } catch (error) {
       console.error('🔴 Dropbox token refresh error:', error);
-      throw new Error(`Dropbox token refresh failed: ${error.message}`);
+      throw new Error(`Dropbox token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -160,7 +158,7 @@ export class DropboxAuthService {
         expiresAt: result.accessTokenExpirationDate,
         integrationId,
         service: 'dropbox',
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         accountId: result.tokenAdditionalParameters?.account_id,
         storedAt: new Date().toISOString()
       };
@@ -242,7 +240,7 @@ export class DropboxAuthService {
         access_token: result.accessToken,
         refresh_token: result.refreshToken,
         expires_at: result.accessTokenExpirationDate,
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         account_id: result.tokenAdditionalParameters?.account_id,
         oauth_result: result
       });

@@ -32,14 +32,14 @@ export class MicrosoftTeamsAuthService {
       access_type: 'offline',
       prompt: 'consent'
     },
+    serviceConfiguration: {
+      authorizationEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+      tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+    },
     customHeaders: {},
-    usesPkce: true,
-    usePkceCodeChallenge: true,
+    usePKCE: true,
     skipCodeExchange: false,
-    iosCustomBrowser: 'sfAuthenticationSession',
-    androidCustomBrowser: 'customTabs',
-    authorizationEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-    tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+    iosCustomBrowser: 'safari',
   };
 
   static getInstance(): MicrosoftTeamsAuthService {
@@ -112,12 +112,12 @@ export class MicrosoftTeamsAuthService {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken || '',
         expiresAt: new Date(result.accessTokenExpirationDate).getTime(),
-        scope: result.scopes
+        scope: result.scopes?.join(' ')
       };
 
     } catch (error) {
       console.error('🔴 Microsoft Teams OAuth error:', error);
-      throw new Error(`Microsoft Teams authentication failed: ${error.message}`);
+      throw new Error(`Microsoft Teams authentication failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -142,7 +142,7 @@ export class MicrosoftTeamsAuthService {
 
     } catch (error) {
       console.error('🔴 Microsoft Teams token refresh error:', error);
-      throw new Error(`Microsoft Teams token refresh failed: ${error.message}`);
+      throw new Error(`Microsoft Teams token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -157,7 +157,7 @@ export class MicrosoftTeamsAuthService {
         expiresAt: result.accessTokenExpirationDate,
         integrationId,
         service: 'microsoft_teams',
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         storedAt: new Date().toISOString()
       };
 

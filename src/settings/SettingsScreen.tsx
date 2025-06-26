@@ -330,6 +330,9 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         {/* Wake Word Section - Android only */}
         {Platform.OS === 'android' && (
           <View style={styles.section}>
+            <Text style={styles.explanationText}>
+                The wakeword can be used even when the app is closed.
+              </Text>
             <WakeWordToggle />
             <WakeWordStatus />
           </View>

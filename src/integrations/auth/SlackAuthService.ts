@@ -47,14 +47,14 @@ export class SlackAuthService {
     additionalParameters: {
       response_type: 'code'
     },
+    serviceConfiguration: {
+      authorizationEndpoint: 'https://slack.com/oauth/v2/authorize',
+      tokenEndpoint: 'https://slack.com/api/oauth.v2.access',
+    },
     customHeaders: {},
-    usesPkce: true,
-    usePkceCodeChallenge: true,
+    usePKCE: true,
     skipCodeExchange: false,
-    iosCustomBrowser: 'sfAuthenticationSession',
-    androidCustomBrowser: 'customTabs',
-    authorizationEndpoint: 'https://slack.com/oauth/v2/authorize',
-    tokenEndpoint: 'https://slack.com/api/oauth.v2.access',
+    iosCustomBrowser: 'safari',
   };
 
   static getInstance(): SlackAuthService {
@@ -117,7 +117,7 @@ export class SlackAuthService {
         hasAccessToken: !!result.accessToken,
         hasRefreshToken: !!result.refreshToken,
         expiresAt: result.accessTokenExpirationDate,
-        scope: result.scopes
+        scope: result.scopes?.join(' ')
       });
 
       // Store tokens securely
@@ -130,12 +130,12 @@ export class SlackAuthService {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken || '',
         expiresAt: new Date(result.accessTokenExpirationDate).getTime(),
-        scope: result.scopes
+        scope: result.scopes?.join(' ')
       };
 
     } catch (error) {
       console.error('🔴 Slack OAuth error:', error);
-      throw new Error(`Slack authentication failed: ${error.message}`);
+      throw new Error(`Slack authentication failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -160,7 +160,7 @@ export class SlackAuthService {
 
     } catch (error) {
       console.error('🔴 Slack token refresh error:', error);
-      throw new Error(`Slack token refresh failed: ${error.message}`);
+      throw new Error(`Slack token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -175,7 +175,7 @@ export class SlackAuthService {
         expiresAt: result.accessTokenExpirationDate,
         integrationId,
         service: 'slack',
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         storedAt: new Date().toISOString()
       };
 
@@ -255,7 +255,7 @@ export class SlackAuthService {
         access_token: result.accessToken,
         refresh_token: result.refreshToken,
         expires_at: result.accessTokenExpirationDate,
-        scope: result.scopes,
+        scope: result.scopes?.join(' '),
         oauth_result: result
       });
 
