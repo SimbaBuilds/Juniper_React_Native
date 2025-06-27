@@ -5,10 +5,7 @@ export interface OAuthServiceConfig {
   serviceName: string;
   clientId: string;
   scopes: string[];
-  redirectUri: {
-    android: string;
-    ios: string;
-  };
+  redirectUri: string;
   authEndpoint: string;
   tokenEndpoint: string;
   revokeEndpoint?: string;
@@ -18,6 +15,21 @@ export interface OAuthServiceConfig {
     tokenEndpoint: string;
   };
 }
+
+// Helper function to get site URL
+const getSiteUrl = (): string => {
+  const siteUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_SITE_URL || process.env.EXPO_PUBLIC_SITE_URL;
+  if (!siteUrl) {
+    console.warn('EXPO_PUBLIC_SITE_URL not configured, using placeholder');
+    return 'https://hightower-ai.com';
+  }
+  return siteUrl;
+};
+
+// Helper function to generate HTTPS redirect URI
+const generateRedirectUri = (serviceName: string): string => {
+  return `${getSiteUrl()}/oauth/${serviceName}/callback`;
+};
 
 // Helper function to get Google Client ID
 const getGoogleClientId = (): string => {
@@ -53,10 +65,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     serviceName: 'google-calendar',
     clientId: getGoogleClientId(),
     scopes: ['https://www.googleapis.com/auth/calendar'],
-    redirectUri: {
-      android: `com.googleusercontent.apps.${getGoogleClientId()}:/oauth2redirect/calendar`,
-      ios: `com.googleusercontent.apps.${getGoogleClientId()}:/oauth2redirect/calendar`
-    },
+    redirectUri: generateRedirectUri('google-calendar'),
     authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenEndpoint: 'https://oauth2.googleapis.com/token',
     revokeEndpoint: 'https://oauth2.googleapis.com/revoke',
@@ -70,10 +79,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     serviceName: 'gmail',
     clientId: getGoogleClientId(),
     scopes: ['https://www.googleapis.com/auth/gmail.modify'],
-    redirectUri: {
-      android: `com.googleusercontent.apps.${getGoogleClientId()}:/oauth2redirect/gmail`,
-      ios: `com.googleusercontent.apps.${getGoogleClientId()}:/oauth2redirect/gmail`
-    },
+    redirectUri: generateRedirectUri('gmail'),
     authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenEndpoint: 'https://oauth2.googleapis.com/token',
     revokeEndpoint: 'https://oauth2.googleapis.com/revoke',
@@ -87,10 +93,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     serviceName: 'google-docs',
     clientId: getGoogleClientId(),
     scopes: ['https://www.googleapis.com/auth/documents'],
-    redirectUri: {
-      android: `com.googleusercontent.apps.${getGoogleClientId()}:/oauth2redirect/docs`,
-      ios: `com.googleusercontent.apps.${getGoogleClientId()}:/oauth2redirect/docs`
-    },
+    redirectUri: generateRedirectUri('google-docs'),
     authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenEndpoint: 'https://oauth2.googleapis.com/token',
     revokeEndpoint: 'https://oauth2.googleapis.com/revoke',
@@ -104,10 +107,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     serviceName: 'google-sheets',
     clientId: getGoogleClientId(),
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    redirectUri: {
-      android: `com.googleusercontent.apps.${getGoogleClientId()}:/oauth2redirect/sheets`,
-      ios: `com.googleusercontent.apps.${getGoogleClientId()}:/oauth2redirect/sheets`
-    },
+    redirectUri: generateRedirectUri('google-sheets'),
     authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenEndpoint: 'https://oauth2.googleapis.com/token',
     revokeEndpoint: 'https://oauth2.googleapis.com/revoke',
@@ -124,10 +124,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
       'https://www.googleapis.com/auth/meetings',
       'https://www.googleapis.com/auth/calendar.events'
     ],
-    redirectUri: {
-      android: `com.googleusercontent.apps.${getGoogleClientId()}:/oauth2redirect/meet`,
-      ios: `com.googleusercontent.apps.${getGoogleClientId()}:/oauth2redirect/meet`
-    },
+    redirectUri: generateRedirectUri('google-meet'),
     authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenEndpoint: 'https://oauth2.googleapis.com/token',
     revokeEndpoint: 'https://oauth2.googleapis.com/revoke',
@@ -146,10 +143,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
       'https://graph.microsoft.com/User.Read',
       'offline_access'
     ],
-    redirectUri: {
-      android: `msauth.com.anonymous.MobileJarvisNative://com.microsoft.identity.client.sample.local`,
-      ios: `msauth.com.anonymous.MobileJarvisNative://auth`
-    },
+    redirectUri: generateRedirectUri('outlook-mail'),
     authEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
     additionalParameters: {
@@ -165,10 +159,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
       'https://graph.microsoft.com/User.Read',
       'offline_access'
     ],
-    redirectUri: {
-      android: `msauth.com.anonymous.MobileJarvisNative://com.microsoft.identity.client.sample.local`,
-      ios: `msauth.com.anonymous.MobileJarvisNative://auth`
-    },
+    redirectUri: generateRedirectUri('outlook-calendar'),
     authEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
     additionalParameters: {
@@ -187,10 +178,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
       'https://graph.microsoft.com/User.Read',
       'offline_access'
     ],
-    redirectUri: {
-      android: `msauth.com.anonymous.MobileJarvisNative://com.microsoft.identity.client.sample.local`,
-      ios: `msauth.com.anonymous.MobileJarvisNative://auth`
-    },
+    redirectUri: generateRedirectUri('microsoft-teams'),
     authEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
     additionalParameters: {
@@ -206,10 +194,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
       'https://graph.microsoft.com/Sites.ReadWrite.All',
       'offline_access'
     ],
-    redirectUri: {
-      android: `msauth.com.anonymous.MobileJarvisNative://com.microsoft.identity.client.sample.local`,
-      ios: `msauth.com.anonymous.MobileJarvisNative://auth`
-    },
+    redirectUri: generateRedirectUri('microsoft-excel'),
     authEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
     additionalParameters: {
@@ -225,10 +210,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
       'https://graph.microsoft.com/Sites.ReadWrite.All',
       'offline_access'
     ],
-    redirectUri: {
-      android: `msauth.com.anonymous.MobileJarvisNative://com.microsoft.identity.client.sample.local`,
-      ios: `msauth.com.anonymous.MobileJarvisNative://auth`
-    },
+    redirectUri: generateRedirectUri('microsoft-word'),
     authEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
     additionalParameters: {
@@ -245,10 +227,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
       'users:read',
       'team:read'
     ],
-    redirectUri: {
-      android: 'slack://oauth/callback',
-      ios: 'slack://oauth/callback'
-    },
+    redirectUri: generateRedirectUri('slack'),
     authEndpoint: 'https://slack.com/oauth/v2/authorize',
     tokenEndpoint: 'https://slack.com/api/oauth.v2.access'
   },
@@ -257,10 +236,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     serviceName: 'notion',
     clientId: getServiceClientId('NOTION'),
     scopes: [],
-    redirectUri: {
-      android: 'notion://oauth/callback',
-      ios: 'notion://oauth/callback'
-    },
+    redirectUri: generateRedirectUri('notion'),
     authEndpoint: 'https://api.notion.com/v1/oauth/authorize',
     tokenEndpoint: 'https://api.notion.com/v1/oauth/token',
     additionalParameters: {
@@ -278,10 +254,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
       'files.content.read',
       'files.content.write'
     ],
-    redirectUri: {
-      android: `db-${getServiceClientId('DROPBOX')}://oauth/callback`,
-      ios: `db-${getServiceClientId('DROPBOX')}://oauth/callback`
-    },
+    redirectUri: generateRedirectUri('dropbox'),
     authEndpoint: 'https://www.dropbox.com/oauth2/authorize',
     tokenEndpoint: 'https://www.dropbox.com/oauth2/token',
     additionalParameters: {
@@ -293,10 +266,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     serviceName: 'todoist',
     clientId: getServiceClientId('TODOIST'),
     scopes: ['data:read_write'],
-    redirectUri: {
-      android: 'todoist://oauth/callback',
-      ios: 'todoist://oauth/callback'
-    },
+    redirectUri: generateRedirectUri('todoist'),
     authEndpoint: 'https://todoist.com/oauth/authorize',
     tokenEndpoint: 'https://todoist.com/oauth/access_token'
   },
@@ -305,10 +275,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     serviceName: 'trello',
     clientId: getServiceClientId('TRELLO'),
     scopes: ['read', 'write'],
-    redirectUri: {
-      android: 'trello://oauth/callback',
-      ios: 'trello://oauth/callback'
-    },
+    redirectUri: generateRedirectUri('trello'),
     authEndpoint: 'https://trello.com/1/authorize',
     tokenEndpoint: 'https://trello.com/1/OAuthGetAccessToken'
   },
@@ -323,10 +290,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
       'webinar:read',
       'user:read'
     ],
-    redirectUri: {
-      android: 'zoom://oauth/callback',
-      ios: 'zoom://oauth/callback'
-    },
+    redirectUri: generateRedirectUri('zoom'),
     authEndpoint: 'https://zoom.us/oauth/authorize',
     tokenEndpoint: 'https://zoom.us/oauth/token'
   }
@@ -344,11 +308,11 @@ export const getOAuthConfig = (serviceName: string): OAuthServiceConfig => {
 };
 
 /**
- * Get platform-specific redirect URI for a service
+ * Get redirect URI for a service (now returns the single HTTPS URI)
  */
 export const getRedirectUri = (serviceName: string): string => {
   const config = getOAuthConfig(serviceName);
-  return Platform.OS === 'ios' ? config.redirectUri.ios : config.redirectUri.android;
+  return config.redirectUri;
 };
 
 /**
@@ -359,7 +323,7 @@ export const buildAuthUrl = (serviceName: string, integrationId: string): string
   
   const params = new URLSearchParams({
     client_id: config.clientId,
-    redirect_uri: getRedirectUri(serviceName),
+    redirect_uri: config.redirectUri,
     response_type: 'code',
     scope: config.scopes.join(' '),
     state: integrationId,

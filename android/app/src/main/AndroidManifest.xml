@@ -36,90 +36,21 @@
         <data android:scheme="com.anonymous.MobileJarvisNative"/>
         <data android:scheme="exp+mobilejarvisnative"/>
       </intent-filter>
-      <!-- Google OAuth redirect intent filter -->
+      
+      <!-- HTTPS App Links for OAuth redirects -->
       <intent-filter android:autoVerify="true">
         <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="com.googleusercontent.apps.66333577628-jr6ag67m9spk0f96l61moim1jjaus4n7"/>
-      </intent-filter>
-      <!-- Additional intent filter for oauth2redirect path -->
-      <intent-filter android:autoVerify="true">
-        <action android:name="android.intent.action.VIEW"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-        <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="com.googleusercontent.apps.66333577628-jr6ag67m9spk0f96l61moim1jjaus4n7"
-              android:host="oauth2redirect"/>
+        <data android:scheme="https"
+              android:host="hightower-ai.com"
+              android:pathPrefix="/oauth/"/>
       </intent-filter>
       
-      <!-- Microsoft OAuth -->
-      <intent-filter android:autoVerify="true">
-        <action android:name="android.intent.action.VIEW"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-        <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="msauth"
-              android:host="com.anonymous.MobileJarvisNative"/>
-      </intent-filter>
-      
-      <!-- Slack OAuth -->
-      <intent-filter android:autoVerify="true">
-        <action android:name="android.intent.action.VIEW"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-        <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="slack"/>
-      </intent-filter>
-      
-      <!-- Notion OAuth -->
-      <intent-filter android:autoVerify="true">
-        <action android:name="android.intent.action.VIEW"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-        <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="notion"/>
-      </intent-filter>
-      
-      <!-- Dropbox OAuth -->
-      <intent-filter android:autoVerify="true">
-        <action android:name="android.intent.action.VIEW"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-        <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="db-YOUR_DROPBOX_APP_KEY"/>
-      </intent-filter>
-      
-      <!-- Todoist OAuth -->
-      <intent-filter android:autoVerify="true">
-        <action android:name="android.intent.action.VIEW"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-        <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="todoist"/>
-      </intent-filter>
-      
-      <!-- Trello OAuth -->
-      <intent-filter android:autoVerify="true">
-        <action android:name="android.intent.action.VIEW"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-        <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="trello"/>
-      </intent-filter>
-      
-      <!-- Zoom OAuth -->
-      <intent-filter android:autoVerify="true">
-        <action android:name="android.intent.action.VIEW"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-        <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="zoom"/>
-      </intent-filter>
+      <!-- NOTE: Custom scheme OAuth handlers removed - now using HTTPS App Links only -->
     </activity>
     
-    <!-- Microsoft OAuth Browser Activity -->
-    <activity android:name="com.microsoft.identity.client.BrowserTabActivity">
-      <intent-filter>
-        <action android:name="android.intent.action.VIEW"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-        <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="msauth"
-              android:host="com.anonymous.MobileJarvisNative"/>
-      </intent-filter>
-    </activity>
+    <!-- NOTE: Microsoft OAuth Browser Activity removed - now using HTTPS App Links -->
     
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" android:exported="false"/>
     

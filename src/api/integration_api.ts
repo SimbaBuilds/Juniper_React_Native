@@ -79,15 +79,12 @@ export async function disconnectIntegration(request: DisconnectIntegrationReques
 
 /**
  * Helper function to create OAuth auth params from AuthorizeResult
+ * Note: Token params removed - backend will fetch fresh tokens from DB
  */
 export function createOAuthAuthParams(result: any, additionalParams?: Record<string, any>): IntegrationAuthParams {
   return {
-    access_token: result.accessToken,
-    refresh_token: result.refreshToken,
-    expires_at: result.accessTokenExpirationDate,
+    // Only include metadata, not tokens - backend fetches fresh tokens from DB
     scope: Array.isArray(result.scopes) ? result.scopes.join(' ') : result.scopes,
-    token_type: result.tokenType || 'Bearer',
-    id_token: result.idToken,
     ...additionalParams
   };
 }

@@ -281,6 +281,116 @@ export default function App() {
     }
   };
 
+  const handleHttpsOAuthCallback = (url: string) => {
+    console.log('=== HANDLING HTTPS OAUTH CALLBACK ===');
+    console.log('URL:', url);
+    
+    // Extract service name from URL path: /oauth/{serviceName}/callback
+    const pathMatch = url.match(/\/oauth\/([^\/]+)\/callback/);
+    if (!pathMatch) {
+      console.error('❌ Could not extract service name from HTTPS callback URL');
+      return;
+    }
+    
+    const serviceName = pathMatch[1];
+    console.log('📝 Detected service:', serviceName);
+    
+    const queryString = url.split('?')[1];
+    if (!queryString) {
+      console.error('❌ No query parameters in HTTPS callback URL');
+      return;
+    }
+    
+    const urlParams = new URLSearchParams(queryString);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    const error = urlParams.get('error');
+    
+    if (error) {
+      console.error(`❌ ${serviceName} OAuth error:`, error);
+      return;
+    }
+    
+    if (!code || !state) {
+      console.error(`❌ Missing code or state in ${serviceName} callback`);
+      return;
+    }
+    
+    console.log(`✅ Processing ${serviceName} HTTPS callback with code and state`);
+    
+    // Route to appropriate service handler based on service name
+    try {
+      switch (serviceName) {
+        case 'google-calendar':
+          const GoogleCalendarAuthService = require('./src/integrations/auth/GoogleCalendarAuthService').default;
+          GoogleCalendarAuthService.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'gmail':
+          const GmailAuthService = require('./src/integrations/auth/GmailAuthService').default;
+          GmailAuthService.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'google-docs':
+          const GoogleDocsAuthService = require('./src/integrations/auth/GoogleDocsAuthService').default;
+          GoogleDocsAuthService.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'google-sheets':
+          const GoogleSheetsAuthService = require('./src/integrations/auth/GoogleSheetsAuthService').default;
+          GoogleSheetsAuthService.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'google-meet':
+          const GoogleMeetAuthService = require('./src/integrations/auth/GoogleMeetAuthService').default;
+          GoogleMeetAuthService.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'outlook-mail':
+        case 'outlook-calendar':
+        case 'microsoft-teams':
+        case 'microsoft-excel':
+        case 'microsoft-word':
+          // Route Microsoft services to appropriate handlers when available
+          if (navigationRef.current && session) {
+            navigationRef.current.navigate('OAuthCallback', { url });
+          }
+          break;
+        case 'slack':
+          const SlackAuthService = require('./src/integrations/auth/SlackAuthService').default;
+          SlackAuthService.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'notion':
+          const NotionAuthService = require('./src/integrations/auth/NotionAuthService').default;
+          NotionAuthService.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'dropbox':
+          const DropboxAuthService = require('./src/integrations/auth/DropboxAuthService').default;
+          DropboxAuthService.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'todoist':
+          const TodoistAuthService = require('./src/integrations/auth/TodoistAuthService').default;
+          TodoistAuthService.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'trello':
+          const TrelloAuthService = require('./src/integrations/auth/TrelloAuthService').default;
+          TrelloAuthService.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'zoom':
+          const ZoomAuthService = require('./src/integrations/auth/ZoomAuthService').default;
+          ZoomAuthService.getInstance().handleAuthCallback(code, state);
+          break;
+        default:
+          console.warn(`❌ Unknown service in HTTPS callback: ${serviceName}`);
+          // Fall back to legacy handler
+          if (navigationRef.current && session) {
+            navigationRef.current.navigate('OAuthCallback', { url });
+          }
+      }
+    } catch (serviceError) {
+      console.error(`❌ Error handling ${serviceName} service callback:`, serviceError);
+      // Fall back to legacy handler on service error
+      if (navigationRef.current && session) {
+        navigationRef.current.navigate('OAuthCallback', { url });
+      }
+    }
+  };
+
   // Handle OAuth deep links with new callback routing system
   useEffect(() => {
     console.log('Setting up deep link handlers...');
@@ -303,14 +413,20 @@ export default function App() {
                             url.startsWith('db-') ||
                             url.startsWith('todoist://oauth/callback') ||
                             url.startsWith('trello://oauth/callback') ||
-                            url.startsWith('zoom://oauth/callback');
+                            url.startsWith('zoom://oauth/callback') ||
+                            // HTTPS callback URLs
+                            (url.startsWith('https://') && url.includes('/oauth/'));
       
       if (isOAuthCallback) {
         console.log('✅ Detected OAuth callback - using new OAuth routing system');
         
         try {
+          // Handle HTTPS OAuth callbacks (NEW HTTPS REDIRECT SYSTEM)
+          if (url.startsWith('https://') && url.includes('/oauth/')) {
+            handleHttpsOAuthCallback(url);
+          }
           // Handle Google services (existing working pattern)
-          if (url.includes('oauth2redirect') || url.includes('com.googleusercontent.apps')) {
+          else if (url.includes('oauth2redirect') || url.includes('com.googleusercontent.apps')) {
             handleGoogleCallback(url);
           }
           // Handle Microsoft services

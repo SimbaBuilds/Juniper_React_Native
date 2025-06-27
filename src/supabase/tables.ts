@@ -20,6 +20,10 @@ export type UserProfile = {
     xai_live_search_safe_search?: boolean;
     // User-defined tags for categorization and organization (max 50 tags)
     user_tags: string[];
+    // Usage tracking
+    requests_today: number;
+    requests_week: number;
+    requests_month: number;
     created_at: Date;
     updated_at: Date;
   };
@@ -28,7 +32,7 @@ export type UserProfile = {
     'id', 'display_name', 'name', 'location', 'education', 'profession', 'language', 'deepgram_enabled', 'base_language_model', 'general_instructions',
     'wake_word', 'wake_word_sensitivity', 'wake_word_detection_enabled', 'selected_deepgram_voice', 'timezone', 'preferences', 
     'xai_live_search_enabled', 'xai_live_search_safe_search', 'user_tags',
-    'created_at', 'updated_at'
+    'requests_today', 'requests_week', 'requests_month', 'created_at', 'updated_at'
   ] as const;
   export type UserProfileField = (typeof userProfileFields)[number];
   
@@ -227,12 +231,17 @@ export type UserProfile = {
     tag_3_id?: string; // Foreign key to Tag.id
     tag_4_id?: string; // Foreign key to Tag.id
     tag_5_id?: string; // Foreign key to Tag.id
+    // Interaction tracking
+    interactions_day: number;
+    interactions_week: number;
+    interactions_month: number;
   };
 
   export const serviceFields = [
     'id', 'created_at', 'service_name', 'num_users', 'config_form_id',
     'auth_script', 'refresh_script', 'tools', 'integration_method',
-    'description', 'tag_1_id', 'tag_2_id', 'tag_3_id', 'tag_4_id', 'tag_5_id'
+    'description', 'tag_1_id', 'tag_2_id', 'tag_3_id', 'tag_4_id', 'tag_5_id',
+    'interactions_day', 'interactions_week', 'interactions_month'
   ] as const;
   export type ServiceField = (typeof serviceFields)[number];
 
