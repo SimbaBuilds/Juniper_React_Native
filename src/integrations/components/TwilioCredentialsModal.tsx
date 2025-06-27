@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import TwilioAuthService from '../auth/TwilioAuthService';
+import IntegrationEmailService from '../../services/IntegrationEmailService';
+import { useAuth } from '../../auth/AuthContext';
 
 interface TwilioCredentials {
   accountSid: string;
@@ -22,17 +24,22 @@ interface TwilioCredentials {
 
 interface TwilioCredentialsModalProps {
   visible: boolean;
+  integrationId?: string;
   onClose: () => void;
   onSuccess: () => void;
   onSubmit: (credentials: TwilioCredentials) => Promise<void>;
+  onEmailSent?: () => void; // Called when email is sent
 }
 
 const TwilioCredentialsModal: React.FC<TwilioCredentialsModalProps> = ({
   visible,
+  integrationId,
   onClose,
   onSuccess,
   onSubmit,
+  onEmailSent,
 }) => {
+  const { user } = useAuth();
   const [credentials, setCredentials] = useState<TwilioCredentials>({
     accountSid: '',
     apiKey: '',
@@ -40,6 +47,7 @@ const TwilioCredentialsModal: React.FC<TwilioCredentialsModalProps> = ({
     phoneNumber: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [showSecrets, setShowSecrets] = useState(false);
 
   const handleSubmit = async () => {
@@ -98,6 +106,47 @@ const TwilioCredentialsModal: React.FC<TwilioCredentialsModalProps> = ({
            credentials.apiKey.trim() && 
            credentials.apiSecret.trim() && 
            credentials.phoneNumber.trim();
+  };
+
+  const handleSendEmail = async () => {
+    if (!user?.id || !user?.email || !integrationId) {
+      Alert.alert('Error', 'Missing user information or integration ID.');
+      return;
+    }
+
+    setIsEmailLoading(true);
+    try {
+      const emailService = IntegrationEmailService.getInstance();
+      const result = await emailService.sendSetupEmail({
+        userId: user.id,
+        integrationId,
+        serviceName: 'Twilio',
+        userEmail: user.email
+      });
+
+      if (result.success) {
+        Alert.alert(
+          'Email Sent! 📧',
+          'We\'ve sent you a setup link. Check your email and complete the setup on desktop, then return here to finalize the integration.',
+          [
+            {
+              text: 'Got it',
+              onPress: () => {
+                onEmailSent?.();
+                handleClose();
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert('Error', result.message || 'Failed to send setup email.');
+      }
+    } catch (error) {
+      console.error('Error sending setup email:', error);
+      Alert.alert('Error', 'Failed to send setup email. Please try again.');
+    } finally {
+      setIsEmailLoading(false);
+    }
   };
 
   return (
@@ -212,6 +261,37 @@ const TwilioCredentialsModal: React.FC<TwilioCredentialsModalProps> = ({
             <Text style={styles.pricingText}>
               Note: Twilio charges ~$1/month for phone numbers + SMS usage fees.
             </Text>
+          </View>
+
+          {/* Divider and Email Option */}
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.divider} />
+          </View>
+
+          <View style={styles.emailOptionContainer}>
+            <View style={styles.emailOptionHeader}>
+              <Ionicons name="desktop-outline" size={20} color="#4A90E2" />
+              <Text style={styles.emailOptionTitle}>Complete on Desktop</Text>
+            </View>
+            <Text style={styles.emailOptionDescription}>
+              Get a setup link sent to your email. Complete the form on desktop with all your Twilio credentials, then return here to finalize.
+            </Text>
+            <TouchableOpacity
+              style={[styles.emailButton, isEmailLoading && styles.disabledButton]}
+              onPress={handleSendEmail}
+              disabled={isEmailLoading || !integrationId}
+            >
+              {isEmailLoading ? (
+                <ActivityIndicator color="#4A90E2" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="mail-outline" size={16} color="#4A90E2" />
+                  <Text style={styles.emailButtonText}>Send Setup Link</Text>
+                </>
+              )}
+            </TouchableOpacity>
           </View>
         </ScrollView>
 
@@ -383,6 +463,64 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#CCCCCC',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E0E0E0',
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+    color: '#999',
+    fontWeight: '500',
+  },
+  emailOptionContainer: {
+    backgroundColor: '#F8F9FF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E8EBFF',
+  },
+  emailOptionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  emailOptionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4A90E2',
+  },
+  emailOptionDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  emailButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#4A90E2',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  emailButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4A90E2',
   },
 });
 

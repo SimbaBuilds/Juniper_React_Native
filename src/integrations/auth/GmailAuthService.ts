@@ -1,286 +1,289 @@
-import { authorize, refresh, AuthConfiguration, AuthorizeResult, RefreshResult } from 'react-native-app-auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
-import { completeIntegration, createOAuthAuthParams, disconnectIntegration } from '../../api/integration_api';
+import { Linking } from 'react-native';
+import { BaseOAuthService, AuthResult } from './BaseOAuthService';
+import { supabase } from '../../supabase/supabase';
 
-interface GmailAuthResult {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
-  scope?: string;
-}
-
-export class GmailAuthService {
+export class GmailAuthService extends BaseOAuthService {
   private static instance: GmailAuthService;
-  private isInitialized = false;
-
-  private readonly config: AuthConfiguration = {
-    issuer: 'https://accounts.google.com',
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '',
-    redirectUrl: 'mobilejarvisnative://oauth/callback/gmail',
-    scopes: [
-      'https://www.googleapis.com/auth/gmail.modify',
-      'https://www.googleapis.com/auth/gmail.send'
-    ],
-    additionalParameters: {
-      response_type: 'code',
-      access_type: 'offline',
-      prompt: 'consent'
-    },
-    serviceConfiguration: {
-      authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-      tokenEndpoint: 'https://oauth2.googleapis.com/token',
-    },
-    customHeaders: {},
-    usePKCE: true,
-    skipCodeExchange: false,
-    iosCustomBrowser: 'safari',
-  };
+  private authCallbacks: Array<(integrationId: string, isAuthenticated: boolean) => void> = [];
 
   static getInstance(): GmailAuthService {
     if (!GmailAuthService.instance) {
-      GmailAuthService.instance = new GmailAuthService();
+      GmailAuthService.instance = new GmailAuthService('gmail');
     }
     return GmailAuthService.instance;
   }
 
-  async initialize(): Promise<void> {
-    if (this.isInitialized) return;
+  private constructor(serviceName: string) {
+    super(serviceName);
+  }
 
-    if (!this.config.clientId) {
-      throw new Error('Gmail client ID not configured. Please set EXPO_PUBLIC_GOOGLE_CLIENT_ID environment variable.');
+  /**
+   * Add a callback to be notified when authentication status changes
+   */
+  public addAuthCallback(callback: (integrationId: string, isAuthenticated: boolean) => void): void {
+    this.authCallbacks.push(callback);
+  }
+
+  /**
+   * Remove an authentication callback
+   */
+  public removeAuthCallback(callback: (integrationId: string, isAuthenticated: boolean) => void): void {
+    const index = this.authCallbacks.indexOf(callback);
+    if (index > -1) {
+      this.authCallbacks.splice(index, 1);
     }
+  }
 
-    console.log('📧 Gmail OAuth Service initialized');
-    this.isInitialized = true;
+  /**
+   * Notify all callbacks of authentication status change
+   */
+  private async notifyAuthCallbacks(integrationId: string): Promise<void> {
+    const isAuth = await this.isAuthenticated(integrationId);
+    this.authCallbacks.forEach(callback => {
+      try {
+        callback(integrationId, isAuth);
+      } catch (error) {
+        console.error('Error in auth callback:', error);
+      }
+    });
   }
 
   /**
    * Start OAuth authentication flow
    */
-  async authenticate(integrationId: string): Promise<GmailAuthResult> {
+  async authenticate(integrationId: string): Promise<AuthResult> {
     try {
       if (!this.isInitialized) {
         await this.initialize();
       }
 
+      const authUrl = this.buildAuthUrl(integrationId);
+      
       console.log('📧 Starting Gmail OAuth flow...');
       console.log('📧 Integration ID:', integrationId);
-      console.log('📧 Redirect URL:', this.config.redirectUrl);
-
-      // Add integration ID to state for callback handling
-      const stateData = {
-        integration_id: integrationId,
-        service: 'gmail',
-        timestamp: Date.now()
-      };
-      const encodedState = Buffer.from(JSON.stringify(stateData)).toString('base64');
-
-      const configWithState = {
-        ...this.config,
-        additionalParameters: {
-          ...this.config.additionalParameters,
-          state: encodedState
-        }
-      };
-
-      console.log('📧 Starting authorization with config:', {
-        ...configWithState,
-        clientId: '[REDACTED]'
-      });
-
-      const result: AuthorizeResult = await authorize(configWithState);
+      console.log('📧 Opening OAuth URL:', authUrl);
       
-      console.log('📧 Gmail OAuth successful:', {
-        hasAccessToken: !!result.accessToken,
-        hasRefreshToken: !!result.refreshToken,
-        expiresAt: result.accessTokenExpirationDate
-      });
-
-      // Store tokens securely
-      await this.storeTokens(result, integrationId);
-
-      // Call backend to complete integration
-      await this.completeIntegration(result, integrationId);
-
-      return {
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken || '',
-        expiresAt: new Date(result.accessTokenExpirationDate).getTime(),
-        scope: result.scopes?.join(' ')
-      };
-
+      const supported = await Linking.canOpenURL(authUrl);
+      if (supported) {
+        console.log('✅ Opening OAuth URL in browser...');
+        await Linking.openURL(authUrl);
+        console.log('✅ OAuth URL opened successfully');
+        
+        // Return a placeholder - actual token exchange happens in callback
+        return {
+          accessToken: 'pending',
+          refreshToken: 'pending',
+          expiresAt: Date.now(),
+          scope: this.config.scopes.join(' ')
+        };
+      } else {
+        throw new Error('Cannot open OAuth URL - URL not supported');
+      }
     } catch (error) {
-      console.error('🔴 Gmail OAuth error:', error);
-      throw new Error(`Gmail authentication failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('❌ Error during Gmail authentication:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle OAuth callback
+   */
+  async handleAuthCallback(code: string, integrationId: string): Promise<boolean> {
+    try {
+      console.log('📧 Handling Gmail OAuth callback...');
+      console.log('📧 Integration ID:', integrationId);
+      
+      if (!code) {
+        throw new Error('No authorization code provided');
+      }
+      
+      console.log('🔄 Exchanging code for tokens...');
+      const tokenData = await this.exchangeCodeForToken(code);
+      
+      console.log('✅ Token exchange successful');
+      
+      // Store tokens using base class method
+      await this.storeTokens(tokenData, integrationId);
+      await this.saveIntegrationToSupabase(tokenData, integrationId);
+      await this.completeIntegration(tokenData, integrationId);
+      
+      console.log('✅ Gmail authentication successful');
+      await this.notifyAuthCallbacks(integrationId);
+      return true;
+    } catch (error) {
+      console.error('❌ Error handling Gmail auth callback:', error);
+      return false;
     }
   }
 
   /**
    * Refresh access token using refresh token
    */
-  async refreshToken(refreshToken: string): Promise<GmailAuthResult> {
+  async refreshToken(refreshToken: string, integrationId: string): Promise<AuthResult> {
     try {
       console.log('📧 Refreshing Gmail token...');
 
-      const result: RefreshResult = await refresh(this.config, {
-        refreshToken: refreshToken,
-      });
+      const requestBody = new URLSearchParams();
+      requestBody.append('client_id', this.config.clientId);
+      requestBody.append('refresh_token', refreshToken);
+      requestBody.append('grant_type', 'refresh_token');
+      
+      const tokenData = await this.makeTokenRequest(requestBody, 'token refresh');
+      
+      // Update stored tokens
+      await this.storeTokens({
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token || refreshToken,
+        expires_in: tokenData.expires_in,
+        scope: tokenData.scope
+      }, integrationId);
 
-      console.log('📧 Gmail token refresh successful');
+      await this.updateTokensInSupabase(tokenData, integrationId);
+      
+      console.log('✅ Access token refreshed successfully');
 
       return {
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken || refreshToken,
-        expiresAt: new Date(result.accessTokenExpirationDate).getTime(),
-      };
-
-    } catch (error) {
-      console.error('🔴 Gmail token refresh error:', error);
-      throw new Error(`Gmail token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
-  /**
-   * Store tokens securely
-   */
-  private async storeTokens(result: AuthorizeResult, integrationId: string): Promise<void> {
-    try {
-      const tokenData = {
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-        expiresAt: result.accessTokenExpirationDate,
-        integrationId,
-        service: 'gmail',
-        scope: result.scopes?.join(' '),
-        storedAt: new Date().toISOString()
-      };
-
-      if (Platform.OS !== 'web') {
-        await SecureStore.setItemAsync(
-          `gmail_tokens_${integrationId}`,
-          JSON.stringify(tokenData)
-        );
-      } else {
-        await AsyncStorage.setItem(
-          `gmail_tokens_${integrationId}`,
-          JSON.stringify(tokenData)
-        );
-      }
-
-      console.log('📧 Gmail tokens stored securely');
-    } catch (error) {
-      console.error('🔴 Error storing Gmail tokens:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Retrieve stored tokens
-   */
-  async getStoredTokens(integrationId: string): Promise<GmailAuthResult | null> {
-    try {
-      let tokenDataStr: string | null;
-
-      if (Platform.OS !== 'web') {
-        tokenDataStr = await SecureStore.getItemAsync(`gmail_tokens_${integrationId}`);
-      } else {
-        tokenDataStr = await AsyncStorage.getItem(`gmail_tokens_${integrationId}`);
-      }
-
-      if (!tokenDataStr) return null;
-
-      const tokenData = JSON.parse(tokenDataStr);
-      
-      // Check if token is expired
-      const now = new Date().getTime();
-      const expiresAt = new Date(tokenData.expiresAt).getTime();
-      
-      if (now >= expiresAt - 300000) { // Refresh 5 minutes before expiry
-        console.log('📧 Gmail token expired, attempting refresh...');
-        if (tokenData.refreshToken) {
-          return await this.refreshToken(tokenData.refreshToken);
-        } else {
-          console.log('🔴 No refresh token available');
-          return null;
-        }
-      }
-
-      return {
-        accessToken: tokenData.accessToken,
-        refreshToken: tokenData.refreshToken,
-        expiresAt,
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token || refreshToken,
+        expiresAt: Date.now() + (tokenData.expires_in * 1000),
         scope: tokenData.scope
       };
-
     } catch (error) {
-      console.error('🔴 Error retrieving Gmail tokens:', error);
-      return null;
+      console.error('❌ Token refresh failed:', error);
+      throw new Error(`Failed to refresh authentication. Please try signing in again.`);
     }
   }
 
   /**
-   * Call backend to complete integration setup
+   * Exchange authorization code for tokens
    */
-  private async completeIntegration(result: AuthorizeResult, integrationId: string): Promise<void> {
-    try {
-      const authParams = createOAuthAuthParams(result);
+  private async exchangeCodeForToken(code: string): Promise<any> {
+    const requestBody = new URLSearchParams();
+    requestBody.append('client_id', this.config.clientId);
+    requestBody.append('code', code);
+    requestBody.append('grant_type', 'authorization_code');
+    requestBody.append('redirect_uri', this.getRedirectUri());
+    
+    return this.makeTokenRequest(requestBody, 'token exchange');
+  }
 
-      await completeIntegration({
-        integration_id: integrationId,
-        service_name: 'gmail',
-        service_type: 'oauth',
-        auth_params: authParams
-      });
+  /**
+   * Save integration to Supabase
+   */
+  private async saveIntegrationToSupabase(tokenData: any, integrationId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated with Supabase');
+      }
+
+      const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+      
+      const { error } = await supabase
+        .from('integrations')
+        .update({
+          access_token: tokenData.access_token,
+          refresh_token: tokenData.refresh_token,
+          expires_at: expiresAt.toISOString(),
+          scope: tokenData.scope || this.config.scopes.join(' '),
+          is_active: true,
+          configuration: {
+            scopes: this.config.scopes,
+          },
+        })
+        .eq('id', integrationId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ Gmail integration saved to Supabase');
     } catch (error) {
-      console.error('🔴 Error completing Gmail integration:', error);
-      // Don't throw here - the OAuth was successful, backend completion is secondary
+      console.error('❌ Error saving Gmail integration to Supabase:', error);
     }
   }
 
   /**
-   * Revoke tokens and clear stored data
+   * Update tokens in Supabase
+   */
+  private async updateTokensInSupabase(tokenData: any, integrationId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.warn('User not authenticated with Supabase during token refresh');
+        return;
+      }
+
+      const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+      
+      const updateData: any = {
+        access_token: tokenData.access_token,
+        expires_at: expiresAt.toISOString(),
+      };
+
+      if (tokenData.refresh_token) {
+        updateData.refresh_token = tokenData.refresh_token;
+      }
+
+      const { error } = await supabase
+        .from('integrations')
+        .update(updateData)
+        .eq('id', integrationId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ Gmail tokens updated in Supabase');
+    } catch (error) {
+      console.error('❌ Error updating Gmail tokens in Supabase:', error);
+    }
+  }
+
+  /**
+   * Disconnect and deactivate integration
    */
   async disconnect(integrationId: string): Promise<void> {
     try {
-      console.log('📧 Disconnecting Gmail integration...');
-
-      const tokens = await this.getStoredTokens(integrationId);
-      
-      // Revoke token with Google
-      if (tokens) {
-        try {
-          await fetch('https://oauth2.googleapis.com/revoke', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `token=${tokens.accessToken}`
-          });
-          console.log('📧 Gmail token revoked');
-        } catch (revokeError) {
-          console.warn('🟡 Could not revoke Gmail token:', revokeError);
-        }
-      }
-
-      // Clear stored tokens
-      if (Platform.OS !== 'web') {
-        await SecureStore.deleteItemAsync(`gmail_tokens_${integrationId}`);
-      } else {
-        await AsyncStorage.removeItem(`gmail_tokens_${integrationId}`);
-      }
-
-      // Disconnect from backend
-      await disconnectIntegration({
-        integration_id: integrationId,
-        service_name: 'gmail'
-      });
-
-      console.log('📧 Gmail integration disconnected');
+      await super.disconnect(integrationId);
+      await this.deactivateIntegrationInSupabase(integrationId);
+      await this.notifyAuthCallbacks(integrationId);
     } catch (error) {
-      console.error('🔴 Error disconnecting Gmail:', error);
+      console.error('❌ Error during Gmail disconnect:', error);
+      await this.notifyAuthCallbacks(integrationId);
       throw error;
+    }
+  }
+
+  /**
+   * Deactivate integration in Supabase
+   */
+  private async deactivateIntegrationInSupabase(integrationId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.warn('User not authenticated with Supabase during sign out');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('integrations')
+        .update({ is_active: false })
+        .eq('id', integrationId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ Gmail integration deactivated in Supabase');
+    } catch (error) {
+      console.error('❌ Error deactivating Gmail integration in Supabase:', error);
     }
   }
 
@@ -288,15 +291,12 @@ export class GmailAuthService {
    * Make authenticated API call to Gmail
    */
   async makeApiCall(endpoint: string, options: RequestInit = {}, integrationId: string): Promise<any> {
-    const tokens = await this.getStoredTokens(integrationId);
-    if (!tokens) {
-      throw new Error('No valid Gmail tokens available');
-    }
+    const accessToken = await this.getAccessToken(integrationId);
 
-    const response = await fetch(`https://gmail.googleapis.com/gmail/v1${endpoint}`, {
+    const response = await fetch(`https://www.googleapis.com/gmail/v1${endpoint}`, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${tokens.accessToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
         ...options.headers,
       },
@@ -319,45 +319,10 @@ export class GmailAuthService {
       return {
         emailAddress: profile.emailAddress,
         messagesTotal: profile.messagesTotal,
-        threadsTotal: profile.threadsTotal,
-        historyId: profile.historyId
+        threadsTotal: profile.threadsTotal
       };
     } catch (error) {
       console.error('🔴 Gmail connection test failed:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Send an email
-   */
-  async sendEmail(emailData: {
-    to: string;
-    subject: string;
-    body: string;
-    cc?: string;
-    bcc?: string;
-  }, integrationId: string): Promise<any> {
-    try {
-      const email = [
-        `To: ${emailData.to}`,
-        emailData.cc ? `Cc: ${emailData.cc}` : '',
-        emailData.bcc ? `Bcc: ${emailData.bcc}` : '',
-        `Subject: ${emailData.subject}`,
-        '',
-        emailData.body
-      ].filter(Boolean).join('\n');
-
-      const base64Email = Buffer.from(email).toString('base64url');
-
-      return await this.makeApiCall('/users/me/messages/send', {
-        method: 'POST',
-        body: JSON.stringify({
-          raw: base64Email
-        })
-      }, integrationId);
-    } catch (error) {
-      console.error('🔴 Error sending email:', error);
       throw error;
     }
   }

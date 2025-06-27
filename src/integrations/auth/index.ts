@@ -1,3 +1,10 @@
+// Base OAuth system
+export { BaseOAuthService } from './BaseOAuthService';
+export { OAUTH_CONFIGS, getOAuthConfig, getRedirectUri, buildAuthUrl } from './OAuthConfig';
+export type { OAuthServiceConfig } from './OAuthConfig';
+export type { AuthResult, StoredTokenData } from './BaseOAuthService';
+
+// OAuth Service implementations
 export { default as NotionAuthService } from './NotionAuthService';
 export { default as SlackAuthService } from './SlackAuthService';
 export { default as TrelloAuthService } from './TrelloAuthService';

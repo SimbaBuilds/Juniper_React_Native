@@ -83,7 +83,205 @@ export default function App() {
     initializeApp();
   }, []);
 
-  // Handle OAuth deep links with hybrid callback system
+  // OAuth callback handlers for each service type
+  const handleGoogleCallback = (url: string) => {
+    // Extract service from redirect path
+    const servicePath = url.match(/oauth2redirect\/(.+)/)?.[1];
+    const queryString = url.split('?')[1] || url.split('#')[1];
+    
+    if (queryString) {
+      const urlParams = new URLSearchParams(queryString);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Google OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        switch (servicePath) {
+          case 'calendar':
+            const GoogleCalendarAuthService = require('./src/integrations/auth/GoogleCalendarAuthService').default;
+            GoogleCalendarAuthService.getInstance().handleAuthCallback(code, state);
+            break;
+          case 'gmail':
+            const GmailAuthService = require('./src/integrations/auth/GmailAuthService').default;
+            GmailAuthService.getInstance().handleAuthCallback(code, state);
+            break;
+          case 'docs':
+            const GoogleDocsAuthService = require('./src/integrations/auth/GoogleDocsAuthService').default;
+            GoogleDocsAuthService.getInstance().handleAuthCallback(code, state);
+            break;
+          case 'sheets':
+            const GoogleSheetsAuthService = require('./src/integrations/auth/GoogleSheetsAuthService').default;
+            GoogleSheetsAuthService.getInstance().handleAuthCallback(code, state);
+            break;
+          case 'meet':
+            const GoogleMeetAuthService = require('./src/integrations/auth/GoogleMeetAuthService').default;
+            GoogleMeetAuthService.getInstance().handleAuthCallback(code, state);
+            break;
+          default:
+            console.warn(`❌ Unknown Google service: ${servicePath}`);
+            // Fall back to legacy Google auth for login
+            GoogleAuthService.getInstance().handleAuthCallback(code);
+        }
+      }
+    }
+  };
+
+  const handleMicrosoftCallback = (url: string) => {
+    const queryString = url.split('?')[1] || url.split('#')[1];
+    
+    if (queryString) {
+      const urlParams = new URLSearchParams(queryString);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Microsoft OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        // Determine service from state parameter
+        // For now, route to legacy handler or implement service-specific handlers
+        if (navigationRef.current && session) {
+          navigationRef.current.navigate('OAuthCallback', { url });
+        }
+      }
+    }
+  };
+
+  const handleSlackCallback = (url: string) => {
+    const queryString = url.split('?')[1];
+    
+    if (queryString) {
+      const urlParams = new URLSearchParams(queryString);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Slack OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        const SlackAuthService = require('./src/integrations/auth/SlackAuthService').default;
+        SlackAuthService.getInstance().handleAuthCallback(code, state);
+      }
+    }
+  };
+
+  const handleNotionCallback = (url: string) => {
+    const queryString = url.split('?')[1];
+    
+    if (queryString) {
+      const urlParams = new URLSearchParams(queryString);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Notion OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        const NotionAuthService = require('./src/integrations/auth/NotionAuthService').default;
+        NotionAuthService.getInstance().handleAuthCallback(code, state);
+      }
+    }
+  };
+
+  const handleDropboxCallback = (url: string) => {
+    const queryString = url.split('?')[1];
+    
+    if (queryString) {
+      const urlParams = new URLSearchParams(queryString);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Dropbox OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        const DropboxAuthService = require('./src/integrations/auth/DropboxAuthService').default;
+        DropboxAuthService.getInstance().handleAuthCallback(code, state);
+      }
+    }
+  };
+
+  const handleTodoistCallback = (url: string) => {
+    const queryString = url.split('?')[1];
+    
+    if (queryString) {
+      const urlParams = new URLSearchParams(queryString);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Todoist OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        const TodoistAuthService = require('./src/integrations/auth/TodoistAuthService').default;
+        TodoistAuthService.getInstance().handleAuthCallback(code, state);
+      }
+    }
+  };
+
+  const handleTrelloCallback = (url: string) => {
+    const queryString = url.split('?')[1];
+    
+    if (queryString) {
+      const urlParams = new URLSearchParams(queryString);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Trello OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        const TrelloAuthService = require('./src/integrations/auth/TrelloAuthService').default;
+        TrelloAuthService.getInstance().handleAuthCallback(code, state);
+      }
+    }
+  };
+
+  const handleZoomCallback = (url: string) => {
+    const queryString = url.split('?')[1];
+    
+    if (queryString) {
+      const urlParams = new URLSearchParams(queryString);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Zoom OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        const ZoomAuthService = require('./src/integrations/auth/ZoomAuthService').default;
+        ZoomAuthService.getInstance().handleAuthCallback(code, state);
+      }
+    }
+  };
+
+  // Handle OAuth deep links with new callback routing system
   useEffect(() => {
     console.log('Setting up deep link handlers...');
     
@@ -98,48 +296,61 @@ export default function App() {
                             url.startsWith('mobilejarvisnative://oauth/callback') ||
                             url.includes('/oauth/callback') ||
                             url.includes('code=') ||
-                            url.includes('error=');
+                            url.includes('error=') ||
+                            url.startsWith('msauth.com.anonymous.MobileJarvisNative') ||
+                            url.startsWith('slack://oauth/callback') ||
+                            url.startsWith('notion://oauth/callback') ||
+                            url.startsWith('db-') ||
+                            url.startsWith('todoist://oauth/callback') ||
+                            url.startsWith('trello://oauth/callback') ||
+                            url.startsWith('zoom://oauth/callback');
       
       if (isOAuthCallback) {
-        console.log('✅ Detected OAuth callback - using hybrid processing system');
+        console.log('✅ Detected OAuth callback - using new OAuth routing system');
         
-        // Navigate to OAuthCallback screen with URL for processing
-        // This will use our hybrid mapping system in the backend
-        if (navigationRef.current && session) {
-          console.log('✅ Navigating to OAuthCallback screen for hybrid processing');
-          navigationRef.current.navigate('OAuthCallback', { url });
-        } else {
-          // Fallback: If navigation not available or user not logged in, process here
-          console.log('⚠️ Navigation not available or user not logged in, processing callback inline');
-          
-          // For legacy Google Calendar integration compatibility
+        try {
+          // Handle Google services (existing working pattern)
           if (url.includes('oauth2redirect') || url.includes('com.googleusercontent.apps')) {
-            try {
-              let queryString = '';
-              if (url.includes('?')) {
-                queryString = url.split('?')[1];
-              } else if (url.includes('#')) {
-                queryString = url.split('#')[1];
-              }
-              
-              if (queryString) {
-                const urlParams = new URLSearchParams(queryString);
-                const code = urlParams.get('code');
-                const error = urlParams.get('error');
-                
-                if (error) {
-                  console.error('❌ OAuth error:', error);
-                  return;
-                }
-                
-                if (code) {
-                  console.log('✅ Processing Google OAuth callback with legacy handler');
-                  GoogleAuthService.getInstance().handleAuthCallback(code);
-                }
-              }
-            } catch (error) {
-                             console.error('❌ Error processing legacy OAuth callback:', error);
-            }
+            handleGoogleCallback(url);
+          }
+          // Handle Microsoft services
+          else if (url.includes('msauth.com.anonymous.MobileJarvisNative')) {
+            handleMicrosoftCallback(url);
+          }
+          // Handle Slack
+          else if (url.startsWith('slack://oauth/callback')) {
+            handleSlackCallback(url);
+          }
+          // Handle Notion
+          else if (url.startsWith('notion://oauth/callback')) {
+            handleNotionCallback(url);
+          }
+          // Handle Dropbox
+          else if (url.startsWith('db-')) {
+            handleDropboxCallback(url);
+          }
+          // Handle Todoist
+          else if (url.startsWith('todoist://oauth/callback')) {
+            handleTodoistCallback(url);
+          }
+          // Handle Trello
+          else if (url.startsWith('trello://oauth/callback')) {
+            handleTrelloCallback(url);
+          }
+          // Handle Zoom
+          else if (url.startsWith('zoom://oauth/callback')) {
+            handleZoomCallback(url);
+          }
+          // Legacy callback handling
+          else if (navigationRef.current && session) {
+            console.log('✅ Navigating to OAuthCallback screen for backend processing');
+            navigationRef.current.navigate('OAuthCallback', { url });
+          }
+        } catch (error) {
+          console.error('❌ Error processing OAuth callback:', error);
+          // Fall back to old system on error
+          if (navigationRef.current && session) {
+            navigationRef.current.navigate('OAuthCallback', { url });
           }
         }
       } else {

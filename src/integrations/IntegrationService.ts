@@ -152,7 +152,7 @@ export class IntegrationService {
   /**
    * Create integration record in database
    */
-  private async createIntegrationRecord(serviceId: string, userId: string): Promise<any> {
+  async createIntegrationRecord(serviceId: string, userId: string): Promise<any> {
     try {
       const integrationData = {
         user_id: userId,
@@ -283,7 +283,7 @@ export class IntegrationService {
   /**
    * Update integration status in database
    */
-  private async updateIntegrationStatus(integrationId: string, status: string, isActive: boolean): Promise<void> {
+  async updateIntegrationStatus(integrationId: string, status: string, isActive: boolean): Promise<void> {
     try {
       await DatabaseService.updateIntegration(integrationId, {
         status,

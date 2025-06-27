@@ -1,307 +1,225 @@
-import { authorize, refresh, AuthConfiguration, AuthorizeResult, RefreshResult } from 'react-native-app-auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
-import { completeIntegration, createOAuthAuthParams, disconnectIntegration } from '../../api/integration_api';
+import { Linking } from 'react-native';
+import { BaseOAuthService, AuthResult } from './BaseOAuthService';
+import { supabase } from '../../supabase/supabase';
 
-interface SlackAuthResult {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
-  teamId?: string;
-  teamName?: string;
-  userId?: string;
-  userName?: string;
-  scope?: string;
-}
-
-export class SlackAuthService {
+export class SlackAuthService extends BaseOAuthService {
   private static instance: SlackAuthService;
-  private isInitialized = false;
-
-  private readonly config: AuthConfiguration = {
-    issuer: 'https://slack.com',
-    clientId: process.env.EXPO_PUBLIC_SLACK_CLIENT_ID || '',
-    redirectUrl: 'mobilejarvisnative://oauth/callback/slack',
-    scopes: [
-      'channels:read',
-      'channels:write',
-      'chat:write',
-      'chat:write.public',
-      'files:read',
-      'files:write',
-      'groups:read',
-      'groups:write',
-      'im:read',
-      'im:write',
-      'mpim:read',
-      'mpim:write',
-      'users:read',
-      'users:read.email',
-      'team:read',
-      'channels:history',
-      'groups:history',
-      'im:history',
-      'mpim:history'
-    ],
-    additionalParameters: {
-      response_type: 'code'
-    },
-    serviceConfiguration: {
-      authorizationEndpoint: 'https://slack.com/oauth/v2/authorize',
-      tokenEndpoint: 'https://slack.com/api/oauth.v2.access',
-    },
-    customHeaders: {},
-    usePKCE: true,
-    skipCodeExchange: false,
-    iosCustomBrowser: 'safari',
-  };
+  private authCallbacks: Array<(integrationId: string, isAuthenticated: boolean) => void> = [];
 
   static getInstance(): SlackAuthService {
     if (!SlackAuthService.instance) {
-      SlackAuthService.instance = new SlackAuthService();
+      SlackAuthService.instance = new SlackAuthService('slack');
     }
     return SlackAuthService.instance;
   }
 
-  async initialize(): Promise<void> {
-    if (this.isInitialized) return;
+  private constructor(serviceName: string) {
+    super(serviceName);
+  }
 
-    if (!this.config.clientId) {
-      throw new Error('Slack client ID not configured. Please set EXPO_PUBLIC_SLACK_CLIENT_ID environment variable.');
+  /**
+   * Add a callback to be notified when authentication status changes
+   */
+  public addAuthCallback(callback: (integrationId: string, isAuthenticated: boolean) => void): void {
+    this.authCallbacks.push(callback);
+  }
+
+  /**
+   * Remove an authentication callback
+   */
+  public removeAuthCallback(callback: (integrationId: string, isAuthenticated: boolean) => void): void {
+    const index = this.authCallbacks.indexOf(callback);
+    if (index > -1) {
+      this.authCallbacks.splice(index, 1);
     }
+  }
 
-    console.log('🟣 Slack OAuth Service initialized');
-    this.isInitialized = true;
+  /**
+   * Notify all callbacks of authentication status change
+   */
+  private async notifyAuthCallbacks(integrationId: string): Promise<void> {
+    const isAuth = await this.isAuthenticated(integrationId);
+    this.authCallbacks.forEach(callback => {
+      try {
+        callback(integrationId, isAuth);
+      } catch (error) {
+        console.error('Error in auth callback:', error);
+      }
+    });
   }
 
   /**
    * Start OAuth authentication flow
    */
-  async authenticate(integrationId: string): Promise<SlackAuthResult> {
+  async authenticate(integrationId: string): Promise<AuthResult> {
     try {
       if (!this.isInitialized) {
         await this.initialize();
       }
 
-      console.log('🟣 Starting Slack OAuth flow...');
-      console.log('🟣 Integration ID:', integrationId);
-      console.log('🟣 Redirect URL:', this.config.redirectUrl);
-
-      // Add integration ID to state for callback handling
-      const stateData = {
-        integration_id: integrationId,
-        service: 'slack',
-        timestamp: Date.now()
-      };
-      const encodedState = Buffer.from(JSON.stringify(stateData)).toString('base64');
-
-      const configWithState = {
-        ...this.config,
-        additionalParameters: {
-          ...this.config.additionalParameters,
-          state: encodedState,
-          user_scope: 'identify' // Additional user permissions
-        }
-      };
-
-      console.log('🟣 Starting authorization with config:', {
-        ...configWithState,
-        clientId: '[REDACTED]',
-        scopes: this.config.scopes
-      });
-
-      const result: AuthorizeResult = await authorize(configWithState);
+      const authUrl = this.buildAuthUrl(integrationId);
       
-      console.log('🟣 Slack OAuth successful:', {
-        hasAccessToken: !!result.accessToken,
-        hasRefreshToken: !!result.refreshToken,
-        expiresAt: result.accessTokenExpirationDate,
-        scope: result.scopes?.join(' ')
-      });
-
-      // Store tokens securely
-      await this.storeTokens(result, integrationId);
-
-      // Call backend to complete integration
-      await this.completeIntegration(result, integrationId);
-
-      return {
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken || '',
-        expiresAt: new Date(result.accessTokenExpirationDate).getTime(),
-        scope: result.scopes?.join(' ')
-      };
-
-    } catch (error) {
-      console.error('🔴 Slack OAuth error:', error);
-      throw new Error(`Slack authentication failed: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
-  /**
-   * Refresh access token using refresh token
-   */
-  async refreshToken(refreshToken: string): Promise<SlackAuthResult> {
-    try {
-      console.log('🟣 Refreshing Slack token...');
-
-      const result: RefreshResult = await refresh(this.config, {
-        refreshToken: refreshToken,
-      });
-
-      console.log('🟣 Slack token refresh successful');
-
-      return {
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken || refreshToken,
-        expiresAt: new Date(result.accessTokenExpirationDate).getTime(),
-      };
-
-    } catch (error) {
-      console.error('🔴 Slack token refresh error:', error);
-      throw new Error(`Slack token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
-  /**
-   * Store tokens securely
-   */
-  private async storeTokens(result: AuthorizeResult, integrationId: string): Promise<void> {
-    try {
-      const tokenData = {
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-        expiresAt: result.accessTokenExpirationDate,
-        integrationId,
-        service: 'slack',
-        scope: result.scopes?.join(' '),
-        storedAt: new Date().toISOString()
-      };
-
-      if (Platform.OS !== 'web') {
-        await SecureStore.setItemAsync(
-          `slack_tokens_${integrationId}`,
-          JSON.stringify(tokenData)
-        );
+      console.log('📱 Starting Slack OAuth flow...');
+      console.log('📱 Integration ID:', integrationId);
+      console.log('📱 Opening OAuth URL:', authUrl);
+      
+      const supported = await Linking.canOpenURL(authUrl);
+      if (supported) {
+        console.log('✅ Opening OAuth URL in browser...');
+        await Linking.openURL(authUrl);
+        console.log('✅ OAuth URL opened successfully');
+        
+        // Return a placeholder - actual token exchange happens in callback
+        return {
+          accessToken: 'pending',
+          refreshToken: 'pending',
+          expiresAt: Date.now(),
+          scope: this.config.scopes.join(' ')
+        };
       } else {
-        await AsyncStorage.setItem(
-          `slack_tokens_${integrationId}`,
-          JSON.stringify(tokenData)
-        );
+        throw new Error('Cannot open OAuth URL - URL not supported');
       }
-
-      console.log('🟣 Slack tokens stored securely');
     } catch (error) {
-      console.error('🔴 Error storing Slack tokens:', error);
+      console.error('❌ Error during Slack authentication:', error);
       throw error;
     }
   }
 
   /**
-   * Retrieve stored tokens
+   * Handle OAuth callback
    */
-  async getStoredTokens(integrationId: string): Promise<SlackAuthResult | null> {
+  async handleAuthCallback(code: string, integrationId: string): Promise<boolean> {
     try {
-      let tokenDataStr: string | null;
-
-      if (Platform.OS !== 'web') {
-        tokenDataStr = await SecureStore.getItemAsync(`slack_tokens_${integrationId}`);
-      } else {
-        tokenDataStr = await AsyncStorage.getItem(`slack_tokens_${integrationId}`);
-      }
-
-      if (!tokenDataStr) return null;
-
-      const tokenData = JSON.parse(tokenDataStr);
+      console.log('📱 Handling Slack OAuth callback...');
+      console.log('📱 Integration ID:', integrationId);
       
-      // Check if token is expired
-      const now = new Date().getTime();
-      const expiresAt = new Date(tokenData.expiresAt).getTime();
-      
-      if (now >= expiresAt - 300000) { // Refresh 5 minutes before expiry
-        console.log('🟣 Slack token expired, attempting refresh...');
-        if (tokenData.refreshToken) {
-          return await this.refreshToken(tokenData.refreshToken);
-        } else {
-          console.log('🔴 No refresh token available');
-          return null;
-        }
+      if (!code) {
+        throw new Error('No authorization code provided');
       }
-
-      return {
-        accessToken: tokenData.accessToken,
-        refreshToken: tokenData.refreshToken,
-        expiresAt,
-        scope: tokenData.scope
-      };
-
+      
+      console.log('🔄 Exchanging code for tokens...');
+      const tokenData = await this.exchangeCodeForToken(code);
+      
+      console.log('✅ Token exchange successful');
+      
+      // Store tokens using base class method
+      await this.storeTokens(tokenData, integrationId);
+      await this.saveIntegrationToSupabase(tokenData, integrationId);
+      await this.completeIntegration(tokenData, integrationId);
+      
+      console.log('✅ Slack authentication successful');
+      await this.notifyAuthCallbacks(integrationId);
+      return true;
     } catch (error) {
-      console.error('🔴 Error retrieving Slack tokens:', error);
-      return null;
+      console.error('❌ Error handling Slack auth callback:', error);
+      return false;
     }
   }
 
   /**
-   * Call backend to complete integration setup
+   * Refresh access token (Slack tokens are long-lived)
    */
-  private async completeIntegration(result: AuthorizeResult, integrationId: string): Promise<void> {
+  async refreshToken(refreshToken: string, integrationId: string): Promise<AuthResult> {
+    // Slack tokens are typically long-lived and don't require refresh
+    // Just return the stored tokens
+    const tokens = await this.getStoredTokens(integrationId);
+    if (!tokens) {
+      throw new Error('No stored tokens available for Slack');
+    }
+    return tokens;
+  }
+
+  /**
+   * Exchange authorization code for tokens
+   */
+  private async exchangeCodeForToken(code: string): Promise<any> {
+    const requestBody = new URLSearchParams();
+    requestBody.append('client_id', this.config.clientId);
+    requestBody.append('client_secret', process.env.SLACK_CLIENT_SECRET || '');
+    requestBody.append('code', code);
+    requestBody.append('redirect_uri', this.getRedirectUri());
+    
+    return this.makeTokenRequest(requestBody, 'token exchange');
+  }
+
+  /**
+   * Save integration to Supabase
+   */
+  private async saveIntegrationToSupabase(tokenData: any, integrationId: string): Promise<void> {
     try {
-      console.log('🟣 Completing Slack integration with backend...');
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated with Supabase');
+      }
 
-      const authParams = createOAuthAuthParams(result);
+      const { error } = await supabase
+        .from('integrations')
+        .update({
+          access_token: tokenData.access_token,
+          refresh_token: tokenData.refresh_token || '',
+          scope: tokenData.scope || this.config.scopes.join(','),
+          is_active: true,
+          configuration: {
+            scopes: this.config.scopes,
+            teamId: tokenData.team?.id,
+            teamName: tokenData.team?.name,
+            botUserId: tokenData.bot_user_id,
+          },
+        })
+        .eq('id', integrationId)
+        .eq('user_id', user.id);
 
-      await completeIntegration({
-        integration_id: integrationId,
-        service_name: 'slack',
-        service_type: 'oauth',
-        auth_params: authParams
-      });
+      if (error) {
+        throw error;
+      }
 
-      console.log('🟣 Slack integration completed');
+      console.log('✅ Slack integration saved to Supabase');
     } catch (error) {
-      console.error('🔴 Error completing Slack integration:', error);
-      // Don't throw here - the OAuth was successful, backend completion is secondary
+      console.error('❌ Error saving Slack integration to Supabase:', error);
     }
   }
 
   /**
-   * Revoke tokens and clear stored data
+   * Disconnect and deactivate integration
    */
   async disconnect(integrationId: string): Promise<void> {
     try {
-      console.log('🟣 Disconnecting Slack integration...');
-
-      const tokens = await this.getStoredTokens(integrationId);
-      
-      // Revoke token with Slack
-      if (tokens) {
-        try {
-          await fetch('https://slack.com/api/auth.revoke', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${tokens.accessToken}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `token=${tokens.accessToken}`
-          });
-          console.log('🟣 Slack token revoked');
-        } catch (revokeError) {
-          console.warn('🟡 Could not revoke Slack token:', revokeError);
-        }
-      }
-
-      // Clear stored tokens
-      if (Platform.OS !== 'web') {
-        await SecureStore.deleteItemAsync(`slack_tokens_${integrationId}`);
-      } else {
-        await AsyncStorage.removeItem(`slack_tokens_${integrationId}`);
-      }
-
-      console.log('🟣 Slack integration disconnected');
+      await super.disconnect(integrationId);
+      await this.deactivateIntegrationInSupabase(integrationId);
+      await this.notifyAuthCallbacks(integrationId);
     } catch (error) {
-      console.error('🔴 Error disconnecting Slack:', error);
+      console.error('❌ Error during Slack disconnect:', error);
+      await this.notifyAuthCallbacks(integrationId);
       throw error;
+    }
+  }
+
+  /**
+   * Deactivate integration in Supabase
+   */
+  private async deactivateIntegrationInSupabase(integrationId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.warn('User not authenticated with Supabase during sign out');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('integrations')
+        .update({ is_active: false })
+        .eq('id', integrationId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ Slack integration deactivated in Supabase');
+    } catch (error) {
+      console.error('❌ Error deactivating Slack integration in Supabase:', error);
     }
   }
 
@@ -309,15 +227,12 @@ export class SlackAuthService {
    * Make authenticated API call to Slack
    */
   async makeApiCall(endpoint: string, options: RequestInit = {}, integrationId: string): Promise<any> {
-    const tokens = await this.getStoredTokens(integrationId);
-    if (!tokens) {
-      throw new Error('No valid Slack tokens available');
-    }
+    const accessToken = await this.getAccessToken(integrationId);
 
-    const response = await fetch(`https://slack.com/api/${endpoint}`, {
+    const response = await fetch(`https://slack.com/api${endpoint}`, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${tokens.accessToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
         ...options.headers,
       },
@@ -329,30 +244,43 @@ export class SlackAuthService {
 
     const data = await response.json();
     
-    // Check for Slack API errors
     if (!data.ok) {
-      throw new Error(`Slack API error: ${data.error || 'Unknown error'}`);
+      throw new Error(`Slack API error: ${data.error}`);
     }
 
     return data;
   }
 
   /**
-   * Test the connection by getting basic team info
+   * Test the connection by getting user info
    */
   async testConnection(integrationId: string): Promise<any> {
     try {
-      const teamInfo = await this.makeApiCall('team.info', {}, integrationId);
-      const authInfo = await this.makeApiCall('auth.test', {}, integrationId);
+      const result = await this.makeApiCall('/auth.test', {}, integrationId);
       
       return {
-        team: teamInfo.team,
-        user: authInfo
+        teamId: result.team_id,
+        teamName: result.team,
+        userId: result.user_id,
+        user: result.user
       };
     } catch (error) {
       console.error('🔴 Slack connection test failed:', error);
       throw error;
     }
+  }
+
+  /**
+   * Extract additional token data specific to Slack
+   */
+  protected extractAdditionalTokenData(result: any): Record<string, any> {
+    return {
+      teamId: result.team?.id,
+      teamName: result.team?.name,
+      botUserId: result.bot_user_id,
+      appId: result.app_id,
+      authedUser: result.authed_user
+    };
   }
 }
 

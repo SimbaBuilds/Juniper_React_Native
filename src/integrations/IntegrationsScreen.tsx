@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
 import IntegrationService from './IntegrationService';
+import IntegrationEmailService from '../services/IntegrationEmailService';
 import ApiKeyModal from './components/ApiKeyModal';
 import TwilioCredentialsModal from './components/TwilioCredentialsModal';
 
@@ -16,6 +17,8 @@ interface ServiceWithStatus {
   isActive: boolean;
   isConnected: boolean;
   integration_id?: string;
+  status?: string; // pending, active, etc.
+  isPendingSetup?: boolean; // Waiting for online form completion
 }
 
 interface TwilioCredentials {
@@ -222,21 +225,40 @@ export const IntegrationsScreen: React.FC = () => {
       ]);
       
       // Map services to their status
-      const servicesWithStatus: ServiceWithStatus[] = allServices.map((service: any) => {
-        const integration = userIntegrations.find(
-          (int: any) => int.service_id === service.id && int.is_active
-        );
-        
-        return {
-          id: service.id,
-          service_name: service.service_name,
-          tags: service.tags || [],
-          description: service.description,
-          isActive: !!integration,
-          isConnected: !!integration,
-          integration_id: integration?.id,
-        };
-      });
+      const servicesWithStatus: ServiceWithStatus[] = await Promise.all(
+        allServices.map(async (service: any) => {
+          const integration = userIntegrations.find(
+            (int: any) => int.service_id === service.id
+          );
+          
+          const isActive = integration?.is_active;
+          let isPendingSetup = false;
+
+          // For API key integrations (Perplexity, Twilio), check if setup is pending
+          if (integration && !isActive && 
+              ['perplexity', 'twilio'].includes(service.service_name.toLowerCase())) {
+            try {
+              const emailService = IntegrationEmailService.getInstance();
+              const integrationStatus = await emailService.getIntegrationStatus(integration.id);
+              isPendingSetup = integrationStatus.hasPendingToken || false;
+            } catch (error) {
+              console.error('Error checking integration status:', error);
+            }
+          }
+          
+          return {
+            id: service.id,
+            service_name: service.service_name,
+            tags: service.tags || [],
+            description: service.description,
+            isActive: !!isActive,
+            isConnected: !!isActive,
+            integration_id: integration?.id,
+            status: integration?.status,
+            isPendingSetup,
+          };
+        })
+      );
       
       setServices(servicesWithStatus);
     } catch (err) {
@@ -257,8 +279,16 @@ export const IntegrationsScreen: React.FC = () => {
 
       console.log('🔗 Connecting to service:', service.service_name);
       
+      // Initialize integration service
+      const integrationService = IntegrationService.getInstance();
+      
       // Check if this service uses API key authentication
       if (service.service_name.toLowerCase() === 'perplexity') {
+        // Create integration record first if it doesn't exist
+        if (!service.integration_id) {
+          const integration = await integrationService.createIntegrationRecord(service.id, user.id);
+          service.integration_id = integration.id;
+        }
         setSelectedService(service);
         setApiKeyModalVisible(true);
         return;
@@ -266,6 +296,11 @@ export const IntegrationsScreen: React.FC = () => {
 
       // Check if this service uses Twilio credentials
       if (service.service_name.toLowerCase() === 'twilio') {
+        // Create integration record first if it doesn't exist
+        if (!service.integration_id) {
+          const integration = await integrationService.createIntegrationRecord(service.id, user.id);
+          service.integration_id = integration.id;
+        }
         setSelectedService(service);
         setTwilioModalVisible(true);
         return;
@@ -285,7 +320,6 @@ export const IntegrationsScreen: React.FC = () => {
       }
 
       // Start the integration flow
-      const integrationService = IntegrationService.getInstance();
       await integrationService.startIntegration({
         serviceId: service.id,
         serviceName: service.service_name,
@@ -354,6 +388,48 @@ export const IntegrationsScreen: React.FC = () => {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       Alert.alert('Error', `Failed to connect: ${errorMessage}`);
       throw error; // Re-throw to let modal handle it
+    }
+  };
+
+  // Handle finalize integration
+  const handleFinalizeIntegration = async (service: ServiceWithStatus) => {
+    try {
+      if (!service.integration_id) {
+        Alert.alert('Error', 'No integration ID found.');
+        return;
+      }
+
+      // Check if the integration is ready for finalization
+      const emailService = IntegrationEmailService.getInstance();
+      const isReady = await emailService.checkIntegrationReadyForFinalization(service.integration_id);
+
+      if (!isReady) {
+        Alert.alert(
+          'Setup Not Complete',
+          'Please complete the setup form that was sent to your email first, then try again.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Complete the integration
+      const integrationService = IntegrationService.getInstance();
+      
+      // Update integration status to active
+      await integrationService.updateIntegrationStatus(service.integration_id, 'active', true);
+
+      Alert.alert(
+        'Integration Complete! ✅',
+        `Your ${service.service_name} integration is now active and ready to use.`,
+        [{ text: 'Great!' }]
+      );
+
+      // Refresh the services list
+      await loadServicesWithStatus();
+
+    } catch (error) {
+      console.error('Error finalizing integration:', error);
+      Alert.alert('Error', 'Failed to finalize integration. Please try again.');
     }
   };
 
@@ -495,6 +571,20 @@ export const IntegrationsScreen: React.FC = () => {
                               <Text style={styles.disconnectButtonText}>Disconnect</Text>
                             </TouchableOpacity>
                           </View>
+                        ) : service.isPendingSetup ? (
+                          <View style={styles.pendingContainer}>
+                            <View style={styles.pendingIndicator}>
+                              <Ionicons name="hourglass" size={16} color="#FF9800" />
+                              <Text style={styles.pendingText}>Setup In Progress</Text>
+                            </View>
+                            <TouchableOpacity
+                              style={styles.finalizeButton}
+                              onPress={() => handleFinalizeIntegration(service)}
+                              activeOpacity={0.7}
+                            >
+                              <Text style={styles.finalizeButtonText}>Finalize Integration</Text>
+                            </TouchableOpacity>
+                          </View>
                         ) : (
                           <TouchableOpacity
                             style={styles.connectButton}
@@ -528,6 +618,7 @@ export const IntegrationsScreen: React.FC = () => {
       <ApiKeyModal
         visible={apiKeyModalVisible}
         serviceName={selectedService?.service_name || ''}
+        integrationId={selectedService?.integration_id}
         onClose={() => {
           setApiKeyModalVisible(false);
           setSelectedService(null);
@@ -537,11 +628,16 @@ export const IntegrationsScreen: React.FC = () => {
           setSelectedService(null);
         }}
         onSubmit={handleApiKeySubmit}
+        onEmailSent={() => {
+          // Handle email sent - set service to pending setup state
+          loadServicesWithStatus();
+        }}
       />
 
       {/* Twilio Credentials Modal */}
       <TwilioCredentialsModal
         visible={twilioModalVisible}
+        integrationId={selectedService?.integration_id}
         onClose={() => {
           setTwilioModalVisible(false);
           setSelectedService(null);
@@ -551,6 +647,10 @@ export const IntegrationsScreen: React.FC = () => {
           setSelectedService(null);
         }}
         onSubmit={handleTwilioCredentialsSubmit}
+        onEmailSent={() => {
+          // Handle email sent - set service to pending setup state
+          loadServicesWithStatus();
+        }}
       />
     </SafeAreaView>
   );
@@ -741,5 +841,30 @@ const styles = StyleSheet.create({
     color: '#B0B0B0',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  pendingContainer: {
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  pendingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  pendingText: {
+    fontSize: 14,
+    color: '#FF9800',
+    fontWeight: '500',
+  },
+  finalizeButton: {
+    backgroundColor: '#FF9800',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  finalizeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
   },
 }); 

@@ -300,5 +300,22 @@ export type UserProfile = {
   ] as const;
   export type IntegrationBuildStateField = (typeof integrationBuildStateFields)[number];
 
+  export type IntegrationSetupToken = {
+    id: string;
+    user_id: string;
+    integration_id: string;
+    service_name: string;
+    token: string;
+    expires_at: Date;
+    is_used: boolean;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const integrationSetupTokenFields = [
+    'id', 'user_id', 'integration_id', 'service_name', 'token', 'expires_at', 'is_used', 'created_at', 'updated_at'
+  ] as const;
+  export type IntegrationSetupTokenField = (typeof integrationSetupTokenFields)[number];
+
 
 

@@ -45,3 +45,5 @@ app.config.js
 tests/
 
 .cursor/
+
+.env
