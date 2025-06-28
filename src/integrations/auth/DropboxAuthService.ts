@@ -18,7 +18,7 @@ export class DropboxAuthService {
 
   private readonly config: AuthConfiguration = {
     issuer: 'https://www.dropbox.com',
-    clientId: process.env.EXPO_PUBLIC_DROPBOX_CLIENT_ID || '',
+    clientId: process.env.EXPO_PUBLIC_YOUR_DROPBOX_APP_KEY || '',
     redirectUrl: 'mobilejarvisnative://oauth/callback/dropbox',
     scopes: [
       'account_info.read',

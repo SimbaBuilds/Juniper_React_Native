@@ -8,7 +8,6 @@ import { StartChatButton } from './voice/components/StartChatButton';
 import { useVoice } from './voice/VoiceContext';
 
 export const HomeScreen: React.FC = () => {
-  const { chatHistory, clearChatHistory } = useVoice();
   
   return (
     <SafeAreaView style={styles.container}>
