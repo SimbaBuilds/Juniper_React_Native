@@ -43,8 +43,9 @@ const getGoogleClientId = (): string => {
 // Helper function to get Microsoft Client ID  
 const getMicrosoftClientId = (): string => {
   const clientId = Constants.expoConfig?.extra?.MICROSOFT_CLIENT_ID;
-  if (!clientId) {
-    throw new Error('MICROSOFT_CLIENT_ID not configured in environment');
+  if (!clientId || clientId.includes('your_microsoft_app_client_id')) {
+    console.warn('MICROSOFT_CLIENT_ID not configured, using placeholder');
+    return 'placeholder-microsoft-client-id';
   }
   return clientId;
 };

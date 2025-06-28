@@ -4,6 +4,8 @@ import { getAuthService } from './auth';
 import PerplexityAuthService from './auth/PerplexityAuthService';
 import TwilioAuthService from './auth/TwilioAuthService';
 import { Alert } from 'react-native';
+import { supabase } from '../supabase/supabase';
+import { Integration } from '../supabase/tables';
 
 interface StartIntegrationParams {
   serviceId: string;
@@ -24,6 +26,14 @@ interface TwilioCredentials {
 
 interface StartTwilioIntegrationParams extends StartIntegrationParams {
   credentials: TwilioCredentials;
+}
+
+// Helper function to safely get error message
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
 }
 
 export class IntegrationService {
@@ -75,7 +85,7 @@ export class IntegrationService {
       console.error(`❌ Error starting ${serviceName} integration:`, error);
       Alert.alert(
         'Integration Error',
-        `Failed to start ${serviceName} integration: ${error.message}`,
+        `Failed to start ${serviceName} integration: ${getErrorMessage(error)}`,
         [{ text: 'OK' }]
       );
     }
@@ -92,7 +102,6 @@ export class IntegrationService {
       const supportedServices = [
         'notion', 
         'slack', 
-        'trello',
         'todoist',
         'dropbox', 
         'google-sheets', 
@@ -143,7 +152,7 @@ export class IntegrationService {
       console.error(`❌ Error starting ${serviceName} integration:`, error);
       Alert.alert(
         'Integration Error',
-        `Failed to start ${serviceName} integration: ${error.message}`,
+        `Failed to start ${serviceName} integration: ${getErrorMessage(error)}`,
         [{ text: 'OK' }]
       );
     }
@@ -165,8 +174,14 @@ export class IntegrationService {
         updated_at: new Date().toISOString(),
       };
 
-      const result = await DatabaseService.createIntegration(integrationData);
-      return result;
+      const { data, error } = await supabase
+        .from('integrations')
+        .insert(integrationData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     } catch (error) {
       console.error('❌ Error creating integration record:', error);
       throw new Error('Failed to create integration record');
@@ -206,7 +221,7 @@ export class IntegrationService {
 
       Alert.alert(
         'Authentication Failed',
-        `Failed to connect to ${serviceName}: ${error.message}`,
+        `Failed to connect to ${serviceName}: ${getErrorMessage(error)}`,
         [{ text: 'OK' }]
       );
     }
@@ -229,7 +244,7 @@ export class IntegrationService {
       console.error(`❌ Error reconnecting ${serviceName}:`, error);
       Alert.alert(
         'Reconnection Failed',
-        `Failed to reconnect ${serviceName}: ${error.message}`,
+        `Failed to reconnect ${serviceName}: ${getErrorMessage(error)}`,
         [{ text: 'OK' }]
       );
     }
@@ -245,19 +260,23 @@ export class IntegrationService {
       // Get the appropriate auth service
       const authService = getAuthService(serviceName);
 
-      // Start authentication
-      const result = await authService.authenticate(integrationId);
-      
-      console.log(`✅ ${serviceName} OAuth completed successfully`);
-      
-      // Update integration status to active
-      await this.updateIntegrationStatus(integrationId, 'active', true);
+      // Check if authenticate method exists and start authentication
+      if ('authenticate' in authService && typeof authService.authenticate === 'function') {
+        const result = await authService.authenticate(integrationId);
+        
+        console.log(`✅ ${serviceName} OAuth completed successfully`);
+        
+        // Update integration status to active
+        await this.updateIntegrationStatus(integrationId, 'active', true);
 
-      Alert.alert(
-        'Integration Successful!',
-        `Your ${serviceName} account has been successfully connected.`,
-        [{ text: 'OK' }]
-      );
+        Alert.alert(
+          'Integration Successful!',
+          `Your ${serviceName} account has been successfully connected.`,
+          [{ text: 'OK' }]
+        );
+      } else {
+        throw new Error(`OAuth authentication not supported for ${serviceName}`);
+      }
 
     } catch (error) {
       console.error(`❌ OAuth flow failed for ${serviceName}:`, error);
@@ -266,7 +285,8 @@ export class IntegrationService {
       await this.updateIntegrationStatus(integrationId, 'failed', false);
 
       // Handle user cancellation differently from errors
-      if (error.message.includes('cancel') || error.message.includes('dismissed')) {
+      const errorMessage = getErrorMessage(error);
+      if (errorMessage.includes('cancel') || errorMessage.includes('dismissed')) {
         console.log(`ℹ️ User cancelled ${serviceName} OAuth flow`);
         // Don't show error for user cancellation
         return;
@@ -274,7 +294,7 @@ export class IntegrationService {
 
       Alert.alert(
         'Authentication Failed',
-        `Failed to connect to ${serviceName}: ${error.message}`,
+        `Failed to connect to ${serviceName}: ${errorMessage}`,
         [{ text: 'OK' }]
       );
     }
@@ -285,12 +305,17 @@ export class IntegrationService {
    */
   async updateIntegrationStatus(integrationId: string, status: string, isActive: boolean): Promise<void> {
     try {
-      await DatabaseService.updateIntegration(integrationId, {
-        status,
-        is_active: isActive,
-        updated_at: new Date().toISOString(),
-        ...(isActive && { last_used: new Date().toISOString() })
-      });
+      const { error } = await supabase
+        .from('integrations')
+        .update({
+          status,
+          is_active: isActive,
+          updated_at: new Date().toISOString(),
+          ...(isActive && { last_used: new Date().toISOString() })
+        })
+        .eq('id', integrationId);
+
+      if (error) throw error;
       console.log(`✅ Integration ${integrationId} status updated to: ${status}`);
     } catch (error) {
       console.error('❌ Error updating integration status:', error);
@@ -315,7 +340,7 @@ export class IntegrationService {
       console.error(`❌ Error reconnecting ${serviceName}:`, error);
       Alert.alert(
         'Reconnection Failed',
-        `Failed to reconnect ${serviceName}: ${error.message}`,
+        `Failed to reconnect ${serviceName}: ${getErrorMessage(error)}`,
         [{ text: 'OK' }]
       );
     }
@@ -328,9 +353,11 @@ export class IntegrationService {
     try {
       console.log(`🔌 Disconnecting ${serviceName} integration...`);
 
-      // Get the auth service and disconnect
+      // Get the auth service and disconnect if it supports it
       const authService = getAuthService(serviceName);
-      await authService.disconnect(integrationId);
+      if ('disconnect' in authService && typeof authService.disconnect === 'function') {
+        await authService.disconnect(integrationId);
+      }
 
       // Update integration status
       await this.updateIntegrationStatus(integrationId, 'inactive', false);
@@ -345,7 +372,7 @@ export class IntegrationService {
       console.error(`❌ Error disconnecting ${serviceName}:`, error);
       Alert.alert(
         'Disconnect Error',
-        `Failed to disconnect ${serviceName}: ${error.message}`,
+        `Failed to disconnect ${serviceName}: ${getErrorMessage(error)}`,
         [{ text: 'OK' }]
       );
     }
@@ -359,10 +386,13 @@ export class IntegrationService {
       console.log(`🧪 Testing ${serviceName} integration...`);
 
       const authService = getAuthService(serviceName);
-      const result = await authService.testConnection(integrationId);
-
-      console.log(`✅ ${serviceName} integration test successful`);
-      return result;
+      if ('testConnection' in authService && typeof authService.testConnection === 'function') {
+        const result = await authService.testConnection(integrationId);
+        console.log(`✅ ${serviceName} integration test successful`);
+        return result;
+      } else {
+        throw new Error(`Test connection not supported for ${serviceName}`);
+      }
 
     } catch (error) {
       console.error(`❌ ${serviceName} integration test failed:`, error);
@@ -375,9 +405,12 @@ export class IntegrationService {
    */
   async hasValidTokens(integrationId: string, serviceName: string): Promise<boolean> {
     try {
-      const authService = getAuthService(serviceName);
-      const tokens = await authService.getStoredTokens(integrationId);
-      return !!tokens;
+      const authService: any = getAuthService(serviceName);
+      if ('getStoredTokens' in authService && typeof authService.getStoredTokens === 'function') {
+        const tokens = await authService.getStoredTokens(integrationId);
+        return !!tokens;
+      }
+      return false;
     } catch (error) {
       console.error(`❌ Error checking tokens for ${serviceName}:`, error);
       return false;
@@ -423,7 +456,7 @@ export class IntegrationService {
       console.error(`❌ Error starting Twilio integration:`, error);
       Alert.alert(
         'Integration Error',
-        `Failed to start Twilio integration: ${error.message}`,
+        `Failed to start Twilio integration: ${getErrorMessage(error)}`,
         [{ text: 'OK' }]
       );
     }
@@ -437,7 +470,7 @@ export class IntegrationService {
       console.log(`🔑 Starting Twilio authentication...`);
 
       const twilioService = TwilioAuthService.getInstance();
-      const result = await twilioService.storeCredentials(credentials);
+      const result = await twilioService.storeCredentials(credentials, integrationId);
       
       if (!result.success) {
         throw new Error(result.error || 'Failed to validate Twilio credentials');
@@ -462,7 +495,7 @@ export class IntegrationService {
 
       Alert.alert(
         'Authentication Failed',
-        `Failed to connect to Twilio: ${error.message}`,
+        `Failed to connect to Twilio: ${getErrorMessage(error)}`,
         [{ text: 'OK' }]
       );
     }
@@ -485,7 +518,7 @@ export class IntegrationService {
       console.error(`❌ Error reconnecting Twilio integration:`, error);
       Alert.alert(
         'Reconnection Failed',
-        `Failed to reconnect Twilio integration: ${error.message}`,
+        `Failed to reconnect Twilio integration: ${getErrorMessage(error)}`,
         [{ text: 'OK' }]
       );
     }

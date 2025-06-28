@@ -239,26 +239,7 @@ export default function App() {
     }
   };
 
-  const handleTrelloCallback = (url: string) => {
-    const queryString = url.split('?')[1];
-    
-    if (queryString) {
-      const urlParams = new URLSearchParams(queryString);
-      const code = urlParams.get('code');
-      const state = urlParams.get('state');
-      const error = urlParams.get('error');
-      
-      if (error) {
-        console.error('❌ Trello OAuth error:', error);
-        return;
-      }
-      
-      if (code && state) {
-        const TrelloAuthService = require('./src/integrations/auth/TrelloAuthService').default;
-        TrelloAuthService.getInstance().handleAuthCallback(code, state);
-      }
-    }
-  };
+
 
   const handleZoomCallback = (url: string) => {
     const queryString = url.split('?')[1];
@@ -367,10 +348,6 @@ export default function App() {
           const TodoistAuthService = require('./src/integrations/auth/TodoistAuthService').default;
           TodoistAuthService.getInstance().handleAuthCallback(code, state);
           break;
-        case 'trello':
-          const TrelloAuthService = require('./src/integrations/auth/TrelloAuthService').default;
-          TrelloAuthService.getInstance().handleAuthCallback(code, state);
-          break;
         case 'zoom':
           const ZoomAuthService = require('./src/integrations/auth/ZoomAuthService').default;
           ZoomAuthService.getInstance().handleAuthCallback(code, state);
@@ -412,7 +389,6 @@ export default function App() {
                             url.startsWith('notion://oauth/callback') ||
                             url.startsWith('db-') ||
                             url.startsWith('todoist://oauth/callback') ||
-                            url.startsWith('trello://oauth/callback') ||
                             url.startsWith('zoom://oauth/callback') ||
                             // HTTPS callback URLs
                             (url.startsWith('https://') && url.includes('/oauth/'));
@@ -448,10 +424,6 @@ export default function App() {
           // Handle Todoist
           else if (url.startsWith('todoist://oauth/callback')) {
             handleTodoistCallback(url);
-          }
-          // Handle Trello
-          else if (url.startsWith('trello://oauth/callback')) {
-            handleTrelloCallback(url);
           }
           // Handle Zoom
           else if (url.startsWith('zoom://oauth/callback')) {

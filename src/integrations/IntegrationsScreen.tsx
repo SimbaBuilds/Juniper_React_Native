@@ -47,7 +47,7 @@ export const IntegrationsScreen: React.FC = () => {
     const name = serviceName.toLowerCase();
     
     // Project/Task Management
-    if (['notion', 'trello', 'todoist', 'any.do'].includes(name)) {
+    if (['notion', 'todoist', 'any.do'].includes(name)) {
       return 'Project/Task Management';
     }
     

@@ -319,7 +319,7 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     fun getAvailableWakeWords(promise: Promise) {
         try {
             val wakeWords = Arguments.createArray()
-            WakeWordService.AVAILABLE_WAKE_WORDS.keys.forEach { wakeWord ->
+            WakeWordService.AVAILABLE_WAKE_WORDS.forEach { wakeWord ->
                 wakeWords.pushString(wakeWord)
             }
             
@@ -345,12 +345,12 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         
         try {
             Log.i(TAG, "🎯 WAKEWORD_SELECTION: ========== VALIDATING WAKE WORD ==========")
-            Log.i(TAG, "🎯 WAKEWORD_SELECTION: Available wake words: ${WakeWordService.AVAILABLE_WAKE_WORDS.keys.toList()}")
+            Log.i(TAG, "🎯 WAKEWORD_SELECTION: Available wake words: ${WakeWordService.AVAILABLE_WAKE_WORDS.toList()}")
             Log.i(TAG, "🎯 WAKEWORD_SELECTION: Checking if '$wakeWord' is valid...")
             
-            if (!WakeWordService.AVAILABLE_WAKE_WORDS.containsKey(wakeWord)) {
+            if (!WakeWordService.AVAILABLE_WAKE_WORDS.contains(wakeWord)) {
                 Log.e(TAG, "🎯 WAKEWORD_SELECTION: ❌ Invalid wake word '$wakeWord'")
-                Log.e(TAG, "🎯 WAKEWORD_SELECTION: Available wake words: ${WakeWordService.AVAILABLE_WAKE_WORDS.keys}")
+                Log.e(TAG, "🎯 WAKEWORD_SELECTION: Available wake words: ${WakeWordService.AVAILABLE_WAKE_WORDS}")
                 promise.reject("INVALID_WAKE_WORD", "Wake word '$wakeWord' is not available")
                 return
             }

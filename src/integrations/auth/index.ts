@@ -7,7 +7,6 @@ export type { AuthResult, StoredTokenData } from './BaseOAuthService';
 // OAuth Service implementations
 export { default as NotionAuthService } from './NotionAuthService';
 export { default as SlackAuthService } from './SlackAuthService';
-export { default as TrelloAuthService } from './TrelloAuthService';
 export { default as PerplexityAuthService } from './PerplexityAuthService';
 export { default as TodoistAuthService } from './TodoistAuthService';
 export { default as DropboxAuthService } from './DropboxAuthService';
@@ -27,7 +26,6 @@ export { default as MicrosoftTeamsAuthService } from './MicrosoftTeamsAuthServic
 // Import services for use in getAuthService
 import NotionAuthService from './NotionAuthService';
 import SlackAuthService from './SlackAuthService';
-import TrelloAuthService from './TrelloAuthService';
 import PerplexityAuthService from './PerplexityAuthService';
 import TodoistAuthService from './TodoistAuthService';
 import DropboxAuthService from './DropboxAuthService';
@@ -47,7 +45,6 @@ import MicrosoftTeamsAuthService from './MicrosoftTeamsAuthService';
 // Export types for external use
 export type { NotionAuthService as NotionAuthServiceType } from './NotionAuthService';
 export type { SlackAuthService as SlackAuthServiceType } from './SlackAuthService';
-export type { TrelloAuthService as TrelloAuthServiceType } from './TrelloAuthService';
 export type { PerplexityAuthService as PerplexityAuthServiceType } from './PerplexityAuthService';
 export type { DropboxAuthService as DropboxAuthServiceType } from './DropboxAuthService';
 export type { GoogleSheetsAuthService as GoogleSheetsAuthServiceType } from './GoogleSheetsAuthService';
@@ -70,8 +67,6 @@ export const getAuthService = (serviceName: string) => {
       return NotionAuthService.getInstance();
     case 'slack':
       return SlackAuthService.getInstance();
-    case 'trello':
-      return TrelloAuthService.getInstance();
     case 'perplexity':
       return PerplexityAuthService.getInstance();
     case 'todoist':

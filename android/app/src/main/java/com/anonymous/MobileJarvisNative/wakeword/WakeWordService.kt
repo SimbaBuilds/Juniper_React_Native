@@ -62,8 +62,8 @@ class WakeWordService : Service() {
         @Volatile
         private var instance: WakeWordService? = null
         
-        // Available wake words
-        val AVAILABLE_WAKE_WORDS = mapOf(
+        // Built-in wake words from Picovoice
+        val BUILTIN_WAKE_WORDS = mapOf(
             "BUMBLEBEE" to Porcupine.BuiltInKeyword.BUMBLEBEE,
             "GRASSHOPPER" to Porcupine.BuiltInKeyword.GRASSHOPPER,
             "JARVIS" to Porcupine.BuiltInKeyword.JARVIS,
@@ -71,6 +71,15 @@ class WakeWordService : Service() {
             "PORCUPINE" to Porcupine.BuiltInKeyword.PORCUPINE,
             "TERMINATOR" to Porcupine.BuiltInKeyword.TERMINATOR
         )
+        
+        // Custom wake words with their .ppn file names
+        val CUSTOM_WAKE_WORDS = mapOf(
+            "JUNIPER" to "Juniper_en_android_v3_0_0.ppn"
+        )
+        
+        // Combined available wake words for external access
+        val AVAILABLE_WAKE_WORDS: Set<String>
+            get() = BUILTIN_WAKE_WORDS.keys + CUSTOM_WAKE_WORDS.keys
     }
     
     override fun onCreate() {
@@ -325,7 +334,7 @@ class WakeWordService : Service() {
             Log.i(TAG, "🎯 WAKEWORD_SETUP: ======= Wake Word Configuration =======")
             Log.i(TAG, "🎯 WAKEWORD_SETUP: Selected wake word: '$selectedWakeWord'")
             Log.i(TAG, "🎯 WAKEWORD_SETUP: Sensitivity level: $sensitivity (${(sensitivity * 100).toInt()}%)")
-            Log.i(TAG, "🎯 WAKEWORD_SETUP: Available wake words: ${AVAILABLE_WAKE_WORDS.keys}")
+            Log.i(TAG, "🎯 WAKEWORD_SETUP: Available wake words: ${AVAILABLE_WAKE_WORDS}")
             Log.i(TAG, "🎯 WAKEWORD_SETUP: =======================================")
             
             // Keyword callback
@@ -340,23 +349,38 @@ class WakeWordService : Service() {
                 }
             }
             
-            // Get the selected keyword from available options
-            val selectedKeyword = AVAILABLE_WAKE_WORDS[selectedWakeWord] ?: Porcupine.BuiltInKeyword.JARVIS
-            val keywords = arrayOf(selectedKeyword)
-            Log.i(TAG, "🎯 WAKEWORD_SETUP: Mapped '$selectedWakeWord' to Porcupine keyword: ${selectedKeyword.name}")
-            Log.i(TAG, "🎯 WAKEWORD_SETUP: Setting up detection with sensitivity: $sensitivity")
-            
             // Sensitivity (0.0-1.0), higher means more sensitive but more false positives
             val sensitivities = floatArrayOf(sensitivity)
             
             try {
                 Log.d(TAG, "Creating PorcupineManager...")
-                // Initialize porcupine manager
-                porcupineManager = PorcupineManager.Builder()
+                
+                // Check if this is a built-in or custom wake word
+                val porcupineBuilder = PorcupineManager.Builder()
                     .setAccessKey(accessKey)
-                    .setKeywords(keywords)
                     .setSensitivities(sensitivities)
-                    .build(this, porcupineCallback)
+                
+                if (BUILTIN_WAKE_WORDS.containsKey(selectedWakeWord)) {
+                    // Use built-in keyword
+                    val builtInKeyword = BUILTIN_WAKE_WORDS[selectedWakeWord] ?: Porcupine.BuiltInKeyword.JARVIS
+                    val keywords = arrayOf(builtInKeyword)
+                    Log.i(TAG, "🎯 WAKEWORD_SETUP: Using built-in keyword: ${builtInKeyword.name}")
+                    porcupineBuilder.setKeywords(keywords)
+                } else if (CUSTOM_WAKE_WORDS.containsKey(selectedWakeWord)) {
+                    // Use custom keyword file (path relative to assets folder)
+                    val keywordFileName = CUSTOM_WAKE_WORDS[selectedWakeWord]!!
+                    Log.i(TAG, "🎯 WAKEWORD_SETUP: Using custom keyword file: $keywordFileName")
+                    Log.i(TAG, "🎯 WAKEWORD_SETUP: Keyword path (relative to assets): $keywordFileName")
+                    porcupineBuilder.setKeywordPaths(arrayOf(keywordFileName))
+                } else {
+                    // Fallback to default built-in keyword
+                    Log.w(TAG, "🎯 WAKEWORD_SETUP: Unknown wake word '$selectedWakeWord', falling back to JARVIS")
+                    val keywords = arrayOf(Porcupine.BuiltInKeyword.JARVIS)
+                    porcupineBuilder.setKeywords(keywords)
+                }
+                
+                // Initialize porcupine manager
+                porcupineManager = porcupineBuilder.build(this, porcupineCallback)
                 
                 Log.d(TAG, "🚀 PorcupineManager created successfully! Starting detection...")
                 // Start listening for wake word

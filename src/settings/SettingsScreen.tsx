@@ -33,11 +33,12 @@ export interface VoiceSettings {
   xaiLiveSearchSafeSearch: boolean;
 }
 
-// Available wake words from Picovoice
+// Available wake words from Picovoice (built-in + custom)
 const AVAILABLE_WAKE_WORDS = [
   { label: 'Bumblebee', value: 'BUMBLEBEE' },
   { label: 'Grasshopper', value: 'GRASSHOPPER' },
   { label: 'Jarvis', value: 'JARVIS' },
+  { label: 'Juniper', value: 'JUNIPER' },
   { label: 'Picovoice', value: 'PICOVOICE' },
   { label: 'Porcupine', value: 'PORCUPINE' },
   { label: 'Terminator', value: 'TERMINATOR' },
