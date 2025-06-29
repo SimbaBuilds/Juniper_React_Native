@@ -29,8 +29,8 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
       
       // Show success message
       Alert.alert(
-        'Account Created!', 
-        'Please check your email to verify your account before signing in.',
+        'Success!',
+        '',
         [
           {
             text: 'OK',

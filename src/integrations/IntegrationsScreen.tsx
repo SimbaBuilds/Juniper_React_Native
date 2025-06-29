@@ -269,6 +269,29 @@ export const IntegrationsScreen: React.FC = () => {
     }
   };
 
+  // Helper function to map service names (same as in IntegrationService)
+  const mapServiceName = (dbServiceName: string): string => {
+    const serviceMap: Record<string, string> = {
+      'Notion': 'notion',
+      'Slack': 'slack',
+      'Zoom': 'zoom',
+      'Perplexity': 'perplexity',
+      'Google Sheets': 'google-sheets',
+      'Google Docs': 'google-docs',
+      'Gmail': 'gmail',
+      'Google Calendar': 'google-calendar',
+      'Microsoft Excel Online': 'microsoft-excel',
+      'Microsoft Word Online': 'microsoft-word',
+      'Microsoft Outlook Calendar': 'microsoft-outlook-calendar',
+      'Microsoft Outlook Mail': 'microsoft-outlook-mail',
+      'Microsoft Teams': 'microsoft-teams',
+      'Twilio': 'twilio',
+      'Todoist': 'todoist'
+    };
+    
+    return serviceMap[dbServiceName] || dbServiceName.toLowerCase().replace(/\s+/g, '-');
+  };
+
   // Handle connect button press
   const handleConnect = async (service: ServiceWithStatus) => {
     try {
@@ -279,11 +302,15 @@ export const IntegrationsScreen: React.FC = () => {
 
       console.log('🔗 Connecting to service:', service.service_name);
       
+      // Map service name to internal format
+      const internalServiceName = mapServiceName(service.service_name);
+      console.log('🔗 Mapped service name:', internalServiceName);
+      
       // Initialize integration service
       const integrationService = IntegrationService.getInstance();
       
       // Check if this service uses API key authentication
-      if (service.service_name.toLowerCase() === 'perplexity') {
+      if (internalServiceName === 'perplexity') {
         // Create integration record first if it doesn't exist
         if (!service.integration_id) {
           const integration = await integrationService.createIntegrationRecord(service.id, user.id);
@@ -295,7 +322,7 @@ export const IntegrationsScreen: React.FC = () => {
       }
 
       // Check if this service uses Twilio credentials
-      if (service.service_name.toLowerCase() === 'twilio') {
+      if (internalServiceName === 'twilio') {
         // Create integration record first if it doesn't exist
         if (!service.integration_id) {
           const integration = await integrationService.createIntegrationRecord(service.id, user.id);
@@ -306,19 +333,7 @@ export const IntegrationsScreen: React.FC = () => {
         return;
       }
       
-      // Check if this is a supported OAuth service
-      const supportedServices = ['notion', 'slack', 'trello', 'zoom'];
-      const isSupported = supportedServices.includes(service.service_name.toLowerCase());
-
-      if (!isSupported) {
-        Alert.alert(
-          'Integration Not Available',
-          `Integration for ${service.service_name} is not yet implemented. Please check back later.`,
-          [{ text: 'OK' }]
-        );
-        return;
-      }
-
+      // All other services use OAuth - the IntegrationService will handle the supported check
       // Start the integration flow
       await integrationService.startIntegration({
         serviceId: service.id,

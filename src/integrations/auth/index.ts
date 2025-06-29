@@ -5,60 +5,54 @@ export type { OAuthServiceConfig } from './OAuthConfig';
 export type { AuthResult, StoredTokenData } from './BaseOAuthService';
 
 // OAuth Service implementations
-export { default as NotionAuthService } from './NotionAuthService';
-export { default as SlackAuthService } from './SlackAuthService';
-export { default as PerplexityAuthService } from './PerplexityAuthService';
-export { default as TodoistAuthService } from './TodoistAuthService';
-export { default as DropboxAuthService } from './DropboxAuthService';
-export { default as GoogleSheetsAuthService } from './GoogleSheetsAuthService';
-export { default as GoogleDocsAuthService } from './GoogleDocsAuthService';
-export { default as GmailAuthService } from './GmailAuthService';
-export { default as GoogleCalendarAuthService } from './GoogleCalendarAuthService';
-export { default as GoogleMeetAuthService } from './GoogleMeetAuthService';
-export { default as ZoomAuthService } from './ZoomAuthService';
-export { default as TwilioAuthService } from './TwilioAuthService';
-export { default as MicrosoftExcelAuthService } from './MicrosoftExcelAuthService';
-export { default as MicrosoftWordAuthService } from './MicrosoftWordAuthService';
-export { default as MicrosoftOutlookCalendarAuthService } from './MicrosoftOutlookCalendarAuthService';
-export { default as MicrosoftOutlookMailAuthService } from './MicrosoftOutlookMailAuthService';
-export { default as MicrosoftTeamsAuthService } from './MicrosoftTeamsAuthService';
+export { default as NotionAuthService } from './services/NotionAuthService';
+export { default as SlackAuthService } from './services/SlackAuthService';
+export { default as PerplexityAuthService } from './services/PerplexityAuthService';
+export { default as TodoistAuthService } from './services/TodoistAuthService';
+export { default as GoogleSheetsAuthService } from './services/GoogleSheetsAuthService';
+export { default as GoogleDocsAuthService } from './services/GoogleDocsAuthService';
+export { default as GmailAuthService } from './services/GmailAuthService';
+export { default as GoogleCalendarAuthService } from './services/GoogleCalendarAuthService';
+export { default as ZoomAuthService } from './services/ZoomAuthService';
+export { default as TwilioAuthService } from './services/TwilioAuthService';
+export { default as MicrosoftExcelAuthService } from './services/MicrosoftExcelAuthService';
+export { default as MicrosoftWordAuthService } from './services/MicrosoftWordAuthService';
+export { default as MicrosoftOutlookCalendarAuthService } from './services/MicrosoftOutlookCalendarAuthService';
+export { default as MicrosoftOutlookMailAuthService } from './services/MicrosoftOutlookMailAuthService';
+export { default as MicrosoftTeamsAuthService } from './services/MicrosoftTeamsAuthService';
 
 // Import services for use in getAuthService
-import NotionAuthService from './NotionAuthService';
-import SlackAuthService from './SlackAuthService';
-import PerplexityAuthService from './PerplexityAuthService';
-import TodoistAuthService from './TodoistAuthService';
-import DropboxAuthService from './DropboxAuthService';
-import GoogleSheetsAuthService from './GoogleSheetsAuthService';
-import GoogleDocsAuthService from './GoogleDocsAuthService';
-import GmailAuthService from './GmailAuthService';
-import GoogleCalendarAuthService from './GoogleCalendarAuthService';
-import GoogleMeetAuthService from './GoogleMeetAuthService';
-import ZoomAuthService from './ZoomAuthService';
-import TwilioAuthService from './TwilioAuthService';
-import MicrosoftExcelAuthService from './MicrosoftExcelAuthService';
-import MicrosoftWordAuthService from './MicrosoftWordAuthService';
-import MicrosoftOutlookCalendarAuthService from './MicrosoftOutlookCalendarAuthService';
-import MicrosoftOutlookMailAuthService from './MicrosoftOutlookMailAuthService';
-import MicrosoftTeamsAuthService from './MicrosoftTeamsAuthService';
+import NotionAuthService from './services/NotionAuthService';
+import SlackAuthService from './services/SlackAuthService';
+import PerplexityAuthService from './services/PerplexityAuthService';
+import TodoistAuthService from './services/TodoistAuthService';
+import GoogleSheetsAuthService from './services/GoogleSheetsAuthService';
+import GoogleDocsAuthService from './services/GoogleDocsAuthService';
+import GmailAuthService from './services/GmailAuthService';
+import GoogleCalendarAuthService from './services/GoogleCalendarAuthService';
+import ZoomAuthService from './services/ZoomAuthService';
+import TwilioAuthService from './services/TwilioAuthService';
+import MicrosoftExcelAuthService from './services/MicrosoftExcelAuthService';
+import MicrosoftWordAuthService from './services/MicrosoftWordAuthService';
+import MicrosoftOutlookCalendarAuthService from './services/MicrosoftOutlookCalendarAuthService';
+import MicrosoftOutlookMailAuthService from './services/MicrosoftOutlookMailAuthService';
+import MicrosoftTeamsAuthService from './services/MicrosoftTeamsAuthService';
 
 // Export types for external use
-export type { NotionAuthService as NotionAuthServiceType } from './NotionAuthService';
-export type { SlackAuthService as SlackAuthServiceType } from './SlackAuthService';
-export type { PerplexityAuthService as PerplexityAuthServiceType } from './PerplexityAuthService';
-export type { DropboxAuthService as DropboxAuthServiceType } from './DropboxAuthService';
-export type { GoogleSheetsAuthService as GoogleSheetsAuthServiceType } from './GoogleSheetsAuthService';
-export type { GoogleDocsAuthService as GoogleDocsAuthServiceType } from './GoogleDocsAuthService';
-export type { GmailAuthService as GmailAuthServiceType } from './GmailAuthService';
-export type { GoogleCalendarAuthService as GoogleCalendarAuthServiceType } from './GoogleCalendarAuthService';
-export type { GoogleMeetAuthService as GoogleMeetAuthServiceType } from './GoogleMeetAuthService';
-export type { ZoomAuthService as ZoomAuthServiceType } from './ZoomAuthService';
-export type { TwilioAuthService as TwilioAuthServiceType } from './TwilioAuthService';
-export type { MicrosoftExcelAuthService as MicrosoftExcelAuthServiceType } from './MicrosoftExcelAuthService';
-export type { MicrosoftWordAuthService as MicrosoftWordAuthServiceType } from './MicrosoftWordAuthService';
-export type { MicrosoftOutlookCalendarAuthService as MicrosoftOutlookCalendarAuthServiceType } from './MicrosoftOutlookCalendarAuthService';
-export type { MicrosoftOutlookMailAuthService as MicrosoftOutlookMailAuthServiceType } from './MicrosoftOutlookMailAuthService';
-export type { MicrosoftTeamsAuthService as MicrosoftTeamsAuthServiceType } from './MicrosoftTeamsAuthService';
+export type { NotionAuthService as NotionAuthServiceType } from './services/NotionAuthService';
+export type { SlackAuthService as SlackAuthServiceType } from './services/SlackAuthService';
+export type { PerplexityAuthService as PerplexityAuthServiceType } from './services/PerplexityAuthService';
+export type { GoogleSheetsAuthService as GoogleSheetsAuthServiceType } from './services/GoogleSheetsAuthService';
+export type { GoogleDocsAuthService as GoogleDocsAuthServiceType } from './services/GoogleDocsAuthService';
+export type { GmailAuthService as GmailAuthServiceType } from './services/GmailAuthService';
+export type { GoogleCalendarAuthService as GoogleCalendarAuthServiceType } from './services/GoogleCalendarAuthService';
+export type { ZoomAuthService as ZoomAuthServiceType } from './services/ZoomAuthService';
+export type { TwilioAuthService as TwilioAuthServiceType } from './services/TwilioAuthService';
+export type { MicrosoftExcelAuthService as MicrosoftExcelAuthServiceType } from './services/MicrosoftExcelAuthService';
+export type { MicrosoftWordAuthService as MicrosoftWordAuthServiceType } from './services/MicrosoftWordAuthService';
+export type { MicrosoftOutlookCalendarAuthService as MicrosoftOutlookCalendarAuthServiceType } from './services/MicrosoftOutlookCalendarAuthService';
+export type { MicrosoftOutlookMailAuthService as MicrosoftOutlookMailAuthServiceType } from './services/MicrosoftOutlookMailAuthService';
+export type { MicrosoftTeamsAuthService as MicrosoftTeamsAuthServiceType } from './services/MicrosoftTeamsAuthService';
 
 // Service factory function for easier access
 export const getAuthService = (serviceName: string) => {
@@ -71,8 +65,6 @@ export const getAuthService = (serviceName: string) => {
       return PerplexityAuthService.getInstance();
     case 'todoist':
       return TodoistAuthService.getInstance();
-    case 'dropbox':
-      return DropboxAuthService.getInstance();
     case 'google-sheets':
       return GoogleSheetsAuthService.getInstance();
     case 'google-docs':
@@ -81,8 +73,6 @@ export const getAuthService = (serviceName: string) => {
       return GmailAuthService.getInstance();
     case 'google-calendar':
       return GoogleCalendarAuthService.getInstance();
-    case 'google-meet':
-      return GoogleMeetAuthService.getInstance();
     case 'zoom':
       return ZoomAuthService.getInstance();
     case 'twilio':

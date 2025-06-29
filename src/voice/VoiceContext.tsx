@@ -251,13 +251,13 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           deepgramEnabled: voiceSettings.deepgram_enabled,
           baseLanguageModel: voiceSettings.base_language_model,
           generalInstructions: generalInstructions,
-          wakeWord: voiceSettings.selectedWakeWord || 'Jarvis',
-          selectedWakeWord: voiceSettings.selectedWakeWord || 'JARVIS',
+          wakeWord: voiceSettings.selectedWakeWord || 'Juniper',
+          selectedWakeWord: voiceSettings.selectedWakeWord || 'JUNIPER',
           wakeWordSensitivity: voiceSettings.wake_word_sensitivity ?? 0.3,
-          wakeWordDetectionEnabled: voiceSettings.wake_word_detection_enabled ?? false,
+          wakeWordDetectionEnabled: voiceSettings.wake_word_detection_enabled ?? true,
           selectedDeepgramVoice: voiceSettings.selected_deepgram_voice || 'aura-2-mars-en',
           // XAI LiveSearch settings
-          xaiLiveSearchEnabled: voiceSettings.xai_live_search_enabled ?? false,
+          xaiLiveSearchEnabled: voiceSettings.xai_live_search_enabled ?? true,
           xaiLiveSearchSafeSearch: voiceSettings.xai_live_search_safe_search ?? true,
         };
         

@@ -1,16 +1,16 @@
 import { Linking } from 'react-native';
-import { BaseOAuthService, AuthResult } from './BaseOAuthService';
-import { supabase } from '../../supabase/supabase';
+import { BaseOAuthService, AuthResult } from '../BaseOAuthService';
+import { supabase } from '../../../supabase/supabase';
 
-export class GmailAuthService extends BaseOAuthService {
-  private static instance: GmailAuthService;
+export class ZoomAuthService extends BaseOAuthService {
+  private static instance: ZoomAuthService;
   private authCallbacks: Array<(integrationId: string, isAuthenticated: boolean) => void> = [];
 
-  static getInstance(): GmailAuthService {
-    if (!GmailAuthService.instance) {
-      GmailAuthService.instance = new GmailAuthService('gmail');
+  static getInstance(): ZoomAuthService {
+    if (!ZoomAuthService.instance) {
+      ZoomAuthService.instance = new ZoomAuthService('zoom');
     }
-    return GmailAuthService.instance;
+    return ZoomAuthService.instance;
   }
 
   private constructor(serviceName: string) {
@@ -59,9 +59,9 @@ export class GmailAuthService extends BaseOAuthService {
 
       const authUrl = this.buildAuthUrl(integrationId);
       
-      console.log('📧 Starting Gmail OAuth flow...');
-      console.log('📧 Integration ID:', integrationId);
-      console.log('📧 Opening OAuth URL:', authUrl);
+      console.log('🎥 Starting Zoom OAuth flow...');
+      console.log('🎥 Integration ID:', integrationId);
+      console.log('🎥 Opening OAuth URL:', authUrl);
       
       const supported = await Linking.canOpenURL(authUrl);
       if (supported) {
@@ -80,7 +80,7 @@ export class GmailAuthService extends BaseOAuthService {
         throw new Error('Cannot open OAuth URL - URL not supported');
       }
     } catch (error) {
-      console.error('❌ Error during Gmail authentication:', error);
+      console.error('❌ Error during Zoom authentication:', error);
       throw error;
     }
   }
@@ -90,8 +90,8 @@ export class GmailAuthService extends BaseOAuthService {
    */
   async handleAuthCallback(code: string, integrationId: string): Promise<boolean> {
     try {
-      console.log('📧 Handling Gmail OAuth callback...');
-      console.log('📧 Integration ID:', integrationId);
+      console.log('🎥 Handling Zoom OAuth callback...');
+      console.log('🎥 Integration ID:', integrationId);
       
       if (!code) {
         throw new Error('No authorization code provided');
@@ -107,11 +107,11 @@ export class GmailAuthService extends BaseOAuthService {
       await this.saveIntegrationToSupabase(tokenData, integrationId);
       await this.completeIntegration(tokenData, integrationId);
       
-      console.log('✅ Gmail authentication successful');
+      console.log('✅ Zoom authentication successful');
       await this.notifyAuthCallbacks(integrationId);
       return true;
     } catch (error) {
-      console.error('❌ Error handling Gmail auth callback:', error);
+      console.error('❌ Error handling Zoom auth callback:', error);
       return false;
     }
   }
@@ -121,7 +121,7 @@ export class GmailAuthService extends BaseOAuthService {
    */
   async refreshToken(refreshToken: string, integrationId: string): Promise<AuthResult> {
     try {
-      console.log('📧 Refreshing Gmail token...');
+      console.log('🎥 Refreshing Zoom token...');
 
       const requestBody = new URLSearchParams();
       requestBody.append('client_id', this.config.clientId);
@@ -199,9 +199,10 @@ export class GmailAuthService extends BaseOAuthService {
         throw error;
       }
 
-      console.log('✅ Gmail integration saved to Supabase');
+      console.log('🎥 Zoom integration saved to Supabase');
     } catch (error) {
-      console.error('❌ Error saving Gmail integration to Supabase:', error);
+      console.error('🔴 Error saving Zoom integration to Supabase:', error);
+      throw error;
     }
   }
 
@@ -211,41 +212,31 @@ export class GmailAuthService extends BaseOAuthService {
   private async updateTokensInSupabase(tokenData: any, integrationId: string): Promise<void> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        console.warn('User not authenticated with Supabase during token refresh');
-        return;
-      }
+      if (!user) throw new Error('User not authenticated');
 
       const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
-      
-      const updateData: any = {
-        access_token: tokenData.access_token,
-        expires_at: expiresAt.toISOString(),
-      };
-
-      if (tokenData.refresh_token) {
-        updateData.refresh_token = tokenData.refresh_token;
-      }
 
       const { error } = await supabase
         .from('integrations')
-        .update(updateData)
+        .update({
+          access_token: tokenData.access_token,
+          refresh_token: tokenData.refresh_token,
+          expires_at: expiresAt.toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', integrationId)
         .eq('user_id', user.id);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('✅ Gmail tokens updated in Supabase');
+      console.log('🎥 Zoom tokens updated in Supabase');
     } catch (error) {
-      console.error('❌ Error updating Gmail tokens in Supabase:', error);
+      console.error('🔴 Error updating Zoom tokens in Supabase:', error);
     }
   }
 
   /**
-   * Disconnect and deactivate integration
+   * Disconnect integration
    */
   async disconnect(integrationId: string): Promise<void> {
     try {
@@ -253,8 +244,7 @@ export class GmailAuthService extends BaseOAuthService {
       await this.deactivateIntegrationInSupabase(integrationId);
       await this.notifyAuthCallbacks(integrationId);
     } catch (error) {
-      console.error('❌ Error during Gmail disconnect:', error);
-      await this.notifyAuthCallbacks(integrationId);
+      console.error('🔴 Error disconnecting Zoom:', error);
       throw error;
     }
   }
@@ -265,67 +255,59 @@ export class GmailAuthService extends BaseOAuthService {
   private async deactivateIntegrationInSupabase(integrationId: string): Promise<void> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        console.warn('User not authenticated with Supabase during sign out');
-        return;
-      }
+      if (!user) throw new Error('User not authenticated');
 
       const { error } = await supabase
         .from('integrations')
-        .update({ is_active: false })
+        .update({
+          is_active: false,
+          access_token: null,
+          refresh_token: null,
+          expires_at: null,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', integrationId)
         .eq('user_id', user.id);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('✅ Gmail integration deactivated in Supabase');
+      console.log('🎥 Zoom integration deactivated in Supabase');
     } catch (error) {
-      console.error('❌ Error deactivating Gmail integration in Supabase:', error);
+      console.error('🔴 Error deactivating Zoom integration:', error);
     }
   }
 
   /**
-   * Make authenticated API call to Gmail
+   * Make API call to Zoom
    */
   async makeApiCall(endpoint: string, options: RequestInit = {}, integrationId: string): Promise<any> {
-    const accessToken = await this.getAccessToken(integrationId);
+    const tokens = await this.getStoredTokens(integrationId);
+    if (!tokens) {
+      throw new Error('Not authenticated with Zoom');
+    }
 
-    const response = await fetch(`https://www.googleapis.com/gmail/v1${endpoint}`, {
+    const response = await fetch(endpoint, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${tokens.accessToken}`,
         'Content-Type': 'application/json',
         ...options.headers,
       },
     });
 
     if (!response.ok) {
-      throw new Error(`Gmail API error: ${response.status} ${response.statusText}`);
+      throw new Error(`Zoom API request failed: ${response.statusText}`);
     }
 
     return response.json();
   }
 
   /**
-   * Test the connection by getting user's profile
+   * Test connection
    */
   async testConnection(integrationId: string): Promise<any> {
-    try {
-      const profile = await this.makeApiCall('/users/me/profile', {}, integrationId);
-      
-      return {
-        emailAddress: profile.emailAddress,
-        messagesTotal: profile.messagesTotal,
-        threadsTotal: profile.threadsTotal
-      };
-    } catch (error) {
-      console.error('🔴 Gmail connection test failed:', error);
-      throw error;
-    }
+    return this.makeApiCall('https://api.zoom.us/v2/users/me', {}, integrationId);
   }
 }
 
-export default GmailAuthService; 
+export default ZoomAuthService; 

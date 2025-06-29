@@ -187,6 +187,7 @@ export type UserProfile = {
     access_token?: string;
     refresh_token?: string;
     expires_at?: Date;
+    scope?: string; // OAuth scopes (space-separated string)
     // API key authentication (alternative to OAuth)
     api_key?: string;
     // Email specific fields
@@ -208,7 +209,7 @@ export type UserProfile = {
   
   export const integrationFields = [
     'id', 'user_id', 'service_id', 'notes', 'is_active', 'status', 'last_used', 'created_at',
-    'access_token', 'refresh_token', 'expires_at', 'api_key', 'email_address',
+    'access_token', 'refresh_token', 'expires_at', 'scope', 'api_key', 'email_address',
     'bot_id', 'workspace_name', 'workspace_icon', 'workspace_id', 'owner_info', 'duplicated_template_id',
     'last_sync', 'updated_at', 'client_id', 'client_secret_id', 'client_secret_value'
   ] as const;

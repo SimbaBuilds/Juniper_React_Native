@@ -1,23 +1,21 @@
 import { Linking } from 'react-native';
-import { BaseOAuthService, AuthResult } from './BaseOAuthService';
-import { supabase } from '../../supabase/supabase';
+import { BaseOAuthService, AuthResult } from '../BaseOAuthService';
+import { supabase } from '../../../supabase/supabase';
 
-export class GoogleCalendarAuthService extends BaseOAuthService {
-  private static instance: GoogleCalendarAuthService;
+export class NotionAuthService extends BaseOAuthService {
+  private static instance: NotionAuthService;
   private authCallbacks: Array<(integrationId: string, isAuthenticated: boolean) => void> = [];
 
-  static getInstance(): GoogleCalendarAuthService {
-    if (!GoogleCalendarAuthService.instance) {
-      GoogleCalendarAuthService.instance = new GoogleCalendarAuthService('google-calendar');
+  static getInstance(): NotionAuthService {
+    if (!NotionAuthService.instance) {
+      NotionAuthService.instance = new NotionAuthService('notion');
     }
-    return GoogleCalendarAuthService.instance;
+    return NotionAuthService.instance;
   }
 
   private constructor(serviceName: string) {
     super(serviceName);
   }
-
-
 
   /**
    * Add a callback to be notified when authentication status changes
@@ -50,8 +48,6 @@ export class GoogleCalendarAuthService extends BaseOAuthService {
     });
   }
 
-
-
   /**
    * Start OAuth authentication flow
    */
@@ -63,9 +59,9 @@ export class GoogleCalendarAuthService extends BaseOAuthService {
 
       const authUrl = this.buildAuthUrl(integrationId);
       
-      console.log('📅 Starting Google Calendar OAuth flow...');
-      console.log('📅 Integration ID:', integrationId);
-      console.log('📅 Opening OAuth URL:', authUrl);
+      console.log('📝 Starting Notion OAuth flow...');
+      console.log('📝 Integration ID:', integrationId);
+      console.log('📝 Opening OAuth URL:', authUrl);
       
       const supported = await Linking.canOpenURL(authUrl);
       if (supported) {
@@ -84,7 +80,7 @@ export class GoogleCalendarAuthService extends BaseOAuthService {
         throw new Error('Cannot open OAuth URL - URL not supported');
       }
     } catch (error) {
-      console.error('❌ Error during Google Calendar authentication:', error);
+      console.error('❌ Error during Notion authentication:', error);
       throw error;
     }
   }
@@ -94,8 +90,8 @@ export class GoogleCalendarAuthService extends BaseOAuthService {
    */
   async handleAuthCallback(code: string, integrationId: string): Promise<boolean> {
     try {
-      console.log('📅 Handling Google Calendar OAuth callback...');
-      console.log('📅 Integration ID:', integrationId);
+      console.log('📝 Handling Notion OAuth callback...');
+      console.log('📝 Integration ID:', integrationId);
       
       if (!code) {
         throw new Error('No authorization code provided');
@@ -111,47 +107,28 @@ export class GoogleCalendarAuthService extends BaseOAuthService {
       await this.saveIntegrationToSupabase(tokenData, integrationId);
       await this.completeIntegration(tokenData, integrationId);
       
-      console.log('✅ Google Calendar authentication successful');
+      console.log('✅ Notion authentication successful');
       await this.notifyAuthCallbacks(integrationId);
       return true;
     } catch (error) {
-      console.error('❌ Error handling Google Calendar auth callback:', error);
+      console.error('❌ Error handling Notion auth callback:', error);
       return false;
     }
   }
 
   /**
-   * Refresh access token using refresh token
+   * Refresh access token (Notion tokens typically don't expire)
    */
   async refreshToken(refreshToken: string, integrationId: string): Promise<AuthResult> {
     try {
-      console.log('📅 Refreshing Google Calendar token...');
-
-      const requestBody = new URLSearchParams();
-      requestBody.append('client_id', this.config.clientId);
-      requestBody.append('refresh_token', refreshToken);
-      requestBody.append('grant_type', 'refresh_token');
+      console.log('📝 Notion tokens typically do not expire, returning current token...');
       
-      const tokenData = await this.makeTokenRequest(requestBody, 'token refresh');
-      
-      // Update stored tokens
-      await this.storeTokens({
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token || refreshToken,
-        expires_in: tokenData.expires_in,
-        scope: tokenData.scope
-      }, integrationId);
+      const tokens = await this.getStoredTokens(integrationId);
+      if (!tokens) {
+        throw new Error('No stored tokens available');
+      }
 
-      await this.updateTokensInSupabase(tokenData, integrationId);
-      
-      console.log('✅ Access token refreshed successfully');
-
-      return {
-        accessToken: tokenData.access_token,
-        refreshToken: tokenData.refresh_token || refreshToken,
-        expiresAt: Date.now() + (tokenData.expires_in * 1000),
-        scope: tokenData.scope
-      };
+      return tokens;
     } catch (error) {
       console.error('❌ Token refresh failed:', error);
       throw new Error(`Failed to refresh authentication. Please try signing in again.`);
@@ -163,12 +140,30 @@ export class GoogleCalendarAuthService extends BaseOAuthService {
    */
   private async exchangeCodeForToken(code: string): Promise<any> {
     const requestBody = new URLSearchParams();
-    requestBody.append('client_id', this.config.clientId);
-    requestBody.append('code', code);
     requestBody.append('grant_type', 'authorization_code');
+    requestBody.append('code', code);
     requestBody.append('redirect_uri', this.getRedirectUri());
     
-    return this.makeTokenRequest(requestBody, 'token exchange');
+    // Notion uses Basic Auth for token exchange
+    const clientSecret = process.env.NOTION_CLIENT_SECRET || '';
+    const credentials = btoa(`${this.config.clientId}:${clientSecret}`);
+    
+    const response = await fetch(this.config.tokenEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: requestBody.toString(),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Token exchange failed:', response.status, errorText);
+      throw new Error(`Token exchange failed: ${response.statusText}`);
+    }
+
+    return response.json();
   }
 
   /**
@@ -182,7 +177,8 @@ export class GoogleCalendarAuthService extends BaseOAuthService {
         throw new Error('User not authenticated with Supabase');
       }
 
-      const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+      // Notion tokens typically don't expire
+      const expiresAt = new Date(Date.now() + (365 * 24 * 60 * 60 * 1000)); // 1 year from now
       
       const { error } = await supabase
         .from('integrations')
@@ -194,6 +190,10 @@ export class GoogleCalendarAuthService extends BaseOAuthService {
           is_active: true,
           configuration: {
             scopes: this.config.scopes,
+            workspace_id: tokenData.workspace_id,
+            workspace_name: tokenData.workspace_name,
+            workspace_icon: tokenData.workspace_icon,
+            bot_id: tokenData.bot_id,
           },
         })
         .eq('id', integrationId)
@@ -203,9 +203,10 @@ export class GoogleCalendarAuthService extends BaseOAuthService {
         throw error;
       }
 
-      console.log('✅ Google Calendar integration saved to Supabase');
+      console.log('📝 Notion integration saved to Supabase');
     } catch (error) {
-      console.error('❌ Error saving Google Calendar integration to Supabase:', error);
+      console.error('🔴 Error saving Notion integration to Supabase:', error);
+      throw error;
     }
   }
 
@@ -215,41 +216,31 @@ export class GoogleCalendarAuthService extends BaseOAuthService {
   private async updateTokensInSupabase(tokenData: any, integrationId: string): Promise<void> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        console.warn('User not authenticated with Supabase during token refresh');
-        return;
-      }
+      if (!user) throw new Error('User not authenticated');
 
-      const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
-      
-      const updateData: any = {
-        access_token: tokenData.access_token,
-        expires_at: expiresAt.toISOString(),
-      };
-
-      if (tokenData.refresh_token) {
-        updateData.refresh_token = tokenData.refresh_token;
-      }
+      const expiresAt = new Date(Date.now() + (365 * 24 * 60 * 60 * 1000)); // 1 year from now
 
       const { error } = await supabase
         .from('integrations')
-        .update(updateData)
+        .update({
+          access_token: tokenData.access_token,
+          refresh_token: tokenData.refresh_token,
+          expires_at: expiresAt.toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', integrationId)
         .eq('user_id', user.id);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('✅ Google Calendar tokens updated in Supabase');
+      console.log('📝 Notion tokens updated in Supabase');
     } catch (error) {
-      console.error('❌ Error updating Google Calendar tokens in Supabase:', error);
+      console.error('🔴 Error updating Notion tokens in Supabase:', error);
     }
   }
 
   /**
-   * Disconnect and deactivate integration
+   * Disconnect integration
    */
   async disconnect(integrationId: string): Promise<void> {
     try {
@@ -257,8 +248,7 @@ export class GoogleCalendarAuthService extends BaseOAuthService {
       await this.deactivateIntegrationInSupabase(integrationId);
       await this.notifyAuthCallbacks(integrationId);
     } catch (error) {
-      console.error('❌ Error during Google Calendar disconnect:', error);
-      await this.notifyAuthCallbacks(integrationId);
+      console.error('🔴 Error disconnecting Notion:', error);
       throw error;
     }
   }
@@ -269,66 +259,60 @@ export class GoogleCalendarAuthService extends BaseOAuthService {
   private async deactivateIntegrationInSupabase(integrationId: string): Promise<void> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        console.warn('User not authenticated with Supabase during sign out');
-        return;
-      }
+      if (!user) throw new Error('User not authenticated');
 
       const { error } = await supabase
         .from('integrations')
-        .update({ is_active: false })
+        .update({
+          is_active: false,
+          access_token: null,
+          refresh_token: null,
+          expires_at: null,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', integrationId)
         .eq('user_id', user.id);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('✅ Google Calendar integration deactivated in Supabase');
+      console.log('📝 Notion integration deactivated in Supabase');
     } catch (error) {
-      console.error('❌ Error deactivating Google Calendar integration in Supabase:', error);
+      console.error('🔴 Error deactivating Notion integration:', error);
     }
   }
 
   /**
-   * Make authenticated API call to Google Calendar
+   * Make API call to Notion
    */
   async makeApiCall(endpoint: string, options: RequestInit = {}, integrationId: string): Promise<any> {
-    const accessToken = await this.getAccessToken(integrationId);
+    const tokens = await this.getStoredTokens(integrationId);
+    if (!tokens) {
+      throw new Error('Not authenticated with Notion');
+    }
 
-    const response = await fetch(`https://www.googleapis.com/calendar/v3${endpoint}`, {
+    const response = await fetch(endpoint, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${tokens.accessToken}`,
         'Content-Type': 'application/json',
+        'Notion-Version': '2022-06-28',
         ...options.headers,
       },
     });
 
     if (!response.ok) {
-      throw new Error(`Google Calendar API error: ${response.status} ${response.statusText}`);
+      throw new Error(`Notion API request failed: ${response.statusText}`);
     }
 
     return response.json();
   }
 
   /**
-   * Test the connection by getting user's calendars
+   * Test connection
    */
   async testConnection(integrationId: string): Promise<any> {
-    try {
-      const calendars = await this.makeApiCall('/users/me/calendarList', {}, integrationId);
-      
-      return {
-        calendarCount: calendars.items?.length || 0,
-        calendars: calendars.items?.slice(0, 5)
-      };
-    } catch (error) {
-      console.error('🔴 Google Calendar connection test failed:', error);
-      throw error;
-    }
+    return this.makeApiCall('https://api.notion.com/v1/users/me', {}, integrationId);
   }
 }
 
-export default GoogleCalendarAuthService;
+export default NotionAuthService; 

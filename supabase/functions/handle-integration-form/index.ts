@@ -312,14 +312,23 @@ function generateFormPage(token: string, service: string, serviceName: string): 
 
         ${isPerplexity ? `
         <div class="instructions">
-          <h3>📝 Instructions</h3>
+          <h3>📝 Getting your Perplexity API Key</h3>
           <ol>
-            <li>Go to <a href="https://www.perplexity.ai/settings/api" target="_blank">perplexity.ai/settings/api</a></li>
-            <li>Sign in and navigate to the API section</li>
-            <li>Click "Generate API Key"</li>
-            <li>Copy the API key and paste it below</li>
-            <li>Note: You'll need billing info on your Perplexity account to use the API</li>
+            <li><strong>Create Account:</strong> Visit <a href="https://www.perplexity.ai/settings/api" target="_blank">perplexity.ai/settings/api</a></li>
+            <li><strong>Add Billing:</strong> You'll need to provide billing information to access the API</li>
+            <li><strong>Generate Key:</strong> Click "Generate API Key" and copy it (starts with "pplx-")</li>
+            <li><strong>Store Securely:</strong> You won't be able to see the key again</li>
           </ol>
+          
+          <h4>💰 Personal Usage Estimates:</h4>
+          <ul>
+            <li><strong>Light use:</strong> ~10 queries/day = $3-6/month</li>
+            <li><strong>Moderate use:</strong> ~25 queries/day = $8-15/month</li>
+            <li><strong>Heavy use:</strong> ~50 queries/day = $15-30/month</li>
+            <li><strong>Cost per query:</strong> ~$0.01-0.05 (varies by model and response length)</li>
+          </ul>
+          
+          <p><strong>For Mobile Jarvis:</strong> Your AI assistant will use this API key to answer research questions and provide real-time information.</p>
         </div>
 
         <form id="setupForm">

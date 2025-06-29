@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import TwilioAuthService from '../auth/TwilioAuthService';
+import TwilioAuthService from '../auth/services/TwilioAuthService';
 import IntegrationEmailService from '../../services/IntegrationEmailService';
 import { useAuth } from '../../auth/AuthContext';
 

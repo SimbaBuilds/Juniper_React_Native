@@ -84,7 +84,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Mobile Jarvis <integrations@yourdomain.com>', // Update with your domain
+        from: 'Mobile Jarvis <integrations@hightower-ai.com>', // Update with your domain
         to: [user_email],
         subject: emailContent.subject,
         html: emailContent.html,

@@ -1,4 +1,4 @@
-import { completeIntegration, createCredentialsAuthParams, disconnectIntegration } from '../../api/integration_api';
+import { completeIntegration, createCredentialsAuthParams, disconnectIntegration } from '../../../api/integration_api';
 
 interface TwilioCredentials {
   accountSid: string;

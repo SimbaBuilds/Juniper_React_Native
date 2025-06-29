@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 export interface OAuthServiceConfig {
   serviceName: string;
   clientId: string;
+  clientSecret?: string;
   scopes: string[];
   redirectUri: string;
   authEndpoint: string;
@@ -40,6 +41,15 @@ const getGoogleClientId = (): string => {
   return clientId;
 };
 
+// Helper function to get Google Client Secret
+const getGoogleClientSecret = (): string => {
+  const clientSecret = Constants.expoConfig?.extra?.GOOGLE_CLIENT_SECRET;
+  if (!clientSecret) {
+    throw new Error('GOOGLE_CLIENT_SECRET not configured in environment');
+  }
+  return clientSecret;
+};
+
 // Helper function to get Microsoft Client ID  
 const getMicrosoftClientId = (): string => {
   const clientId = Constants.expoConfig?.extra?.MICROSOFT_CLIENT_ID;
@@ -48,6 +58,16 @@ const getMicrosoftClientId = (): string => {
     return 'placeholder-microsoft-client-id';
   }
   return clientId;
+};
+
+// Helper function to get Microsoft Client Secret
+const getMicrosoftClientSecret = (): string => {
+  const clientSecret = Constants.expoConfig?.extra?.MICROSOFT_CLIENT_SECRET;
+  if (!clientSecret || clientSecret.includes('your_microsoft_app_client_secret')) {
+    console.warn('MICROSOFT_CLIENT_SECRET not configured, using placeholder');
+    return 'placeholder-microsoft-client-secret';
+  }
+  return clientSecret;
 };
 
 // Helper function to get other service client IDs
@@ -65,6 +85,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'google-calendar': {
     serviceName: 'google-calendar',
     clientId: getGoogleClientId(),
+    clientSecret: getGoogleClientSecret(),
     scopes: ['https://www.googleapis.com/auth/calendar'],
     redirectUri: generateRedirectUri('google-calendar'),
     authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -79,6 +100,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'gmail': {
     serviceName: 'gmail',
     clientId: getGoogleClientId(),
+    clientSecret: getGoogleClientSecret(),
     scopes: ['https://www.googleapis.com/auth/gmail.modify'],
     redirectUri: generateRedirectUri('gmail'),
     authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -93,6 +115,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'google-docs': {
     serviceName: 'google-docs',
     clientId: getGoogleClientId(),
+    clientSecret: getGoogleClientSecret(),
     scopes: ['https://www.googleapis.com/auth/documents'],
     redirectUri: generateRedirectUri('google-docs'),
     authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -107,6 +130,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'google-sheets': {
     serviceName: 'google-sheets',
     clientId: getGoogleClientId(),
+    clientSecret: getGoogleClientSecret(),
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     redirectUri: generateRedirectUri('google-sheets'),
     authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -121,6 +145,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'google-meet': {
     serviceName: 'google-meet',
     clientId: getGoogleClientId(),
+    clientSecret: getGoogleClientSecret(),
     scopes: [
       'https://www.googleapis.com/auth/meetings',
       'https://www.googleapis.com/auth/calendar.events'
@@ -138,6 +163,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'outlook-mail': {
     serviceName: 'outlook-mail',
     clientId: getMicrosoftClientId(),
+    clientSecret: getMicrosoftClientSecret(),
     scopes: [
       'https://graph.microsoft.com/Mail.ReadWrite',
       'https://graph.microsoft.com/Mail.Send',
@@ -155,6 +181,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'outlook-calendar': {
     serviceName: 'outlook-calendar',
     clientId: getMicrosoftClientId(),
+    clientSecret: getMicrosoftClientSecret(),
     scopes: [
       'https://graph.microsoft.com/Calendars.ReadWrite',
       'https://graph.microsoft.com/User.Read',
@@ -171,6 +198,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'microsoft-teams': {
     serviceName: 'microsoft-teams',
     clientId: getMicrosoftClientId(),
+    clientSecret: getMicrosoftClientSecret(),
     scopes: [
       'https://graph.microsoft.com/Chat.ReadWrite',
       'https://graph.microsoft.com/Team.ReadBasic.All',
@@ -190,6 +218,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'microsoft-excel': {
     serviceName: 'microsoft-excel',
     clientId: getMicrosoftClientId(),
+    clientSecret: getMicrosoftClientSecret(),
     scopes: [
       'https://graph.microsoft.com/Files.ReadWrite',
       'https://graph.microsoft.com/Sites.ReadWrite.All',
@@ -206,6 +235,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'microsoft-word': {
     serviceName: 'microsoft-word',
     clientId: getMicrosoftClientId(),
+    clientSecret: getMicrosoftClientSecret(),
     scopes: [
       'https://graph.microsoft.com/Files.ReadWrite',
       'https://graph.microsoft.com/Sites.ReadWrite.All',
@@ -245,24 +275,6 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     }
   },
 
-  'dropbox': {
-    serviceName: 'dropbox',
-    clientId: getServiceClientId('DROPBOX'),
-    scopes: [
-      'account_info.read',
-      'files.metadata.read',
-      'files.metadata.write',
-      'files.content.read',
-      'files.content.write'
-    ],
-    redirectUri: generateRedirectUri('dropbox'),
-    authEndpoint: 'https://www.dropbox.com/oauth2/authorize',
-    tokenEndpoint: 'https://www.dropbox.com/oauth2/token',
-    additionalParameters: {
-      token_access_type: 'offline'
-    }
-  },
-
   'todoist': {
     serviceName: 'todoist',
     clientId: getServiceClientId('TODOIST'),
@@ -270,15 +282,6 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     redirectUri: generateRedirectUri('todoist'),
     authEndpoint: 'https://todoist.com/oauth/authorize',
     tokenEndpoint: 'https://todoist.com/oauth/access_token'
-  },
-
-  'trello': {
-    serviceName: 'trello',
-    clientId: getServiceClientId('TRELLO'),
-    scopes: ['read', 'write'],
-    redirectUri: generateRedirectUri('trello'),
-    authEndpoint: 'https://trello.com/1/authorize',
-    tokenEndpoint: 'https://trello.com/1/OAuthGetAccessToken'
   },
 
   'zoom': {

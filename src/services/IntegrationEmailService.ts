@@ -111,7 +111,7 @@ export class IntegrationEmailService {
         console.error('🔴 Error checking setup tokens:', tokenError);
       }
 
-      const hasPendingToken = tokens && tokens.length > 0;
+      const hasPendingToken = !!(tokens && tokens.length > 0);
 
       return {
         status: 'pending',

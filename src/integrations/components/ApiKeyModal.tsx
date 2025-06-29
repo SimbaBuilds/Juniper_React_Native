@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import PerplexityAuthService from '../auth/PerplexityAuthService';
+import PerplexityAuthService from '../auth/services/PerplexityAuthService';
 import IntegrationEmailService from '../../services/IntegrationEmailService';
 import { useAuth } from '../../auth/AuthContext';
 

@@ -1,21 +1,23 @@
 import { Linking } from 'react-native';
-import { BaseOAuthService, AuthResult } from './BaseOAuthService';
-import { supabase } from '../../supabase/supabase';
+import { BaseOAuthService, AuthResult } from '../BaseOAuthService';
+import { supabase } from '../../../supabase/supabase';
 
-export class SlackAuthService extends BaseOAuthService {
-  private static instance: SlackAuthService;
+export class GoogleCalendarAuthService extends BaseOAuthService {
+  private static instance: GoogleCalendarAuthService;
   private authCallbacks: Array<(integrationId: string, isAuthenticated: boolean) => void> = [];
 
-  static getInstance(): SlackAuthService {
-    if (!SlackAuthService.instance) {
-      SlackAuthService.instance = new SlackAuthService('slack');
+  static getInstance(): GoogleCalendarAuthService {
+    if (!GoogleCalendarAuthService.instance) {
+      GoogleCalendarAuthService.instance = new GoogleCalendarAuthService('google-calendar');
     }
-    return SlackAuthService.instance;
+    return GoogleCalendarAuthService.instance;
   }
 
   private constructor(serviceName: string) {
     super(serviceName);
   }
+
+
 
   /**
    * Add a callback to be notified when authentication status changes
@@ -48,6 +50,8 @@ export class SlackAuthService extends BaseOAuthService {
     });
   }
 
+
+
   /**
    * Start OAuth authentication flow
    */
@@ -59,9 +63,9 @@ export class SlackAuthService extends BaseOAuthService {
 
       const authUrl = this.buildAuthUrl(integrationId);
       
-      console.log('📱 Starting Slack OAuth flow...');
-      console.log('📱 Integration ID:', integrationId);
-      console.log('📱 Opening OAuth URL:', authUrl);
+      console.log('📅 Starting Google Calendar OAuth flow...');
+      console.log('📅 Integration ID:', integrationId);
+      console.log('📅 Opening OAuth URL:', authUrl);
       
       const supported = await Linking.canOpenURL(authUrl);
       if (supported) {
@@ -80,7 +84,7 @@ export class SlackAuthService extends BaseOAuthService {
         throw new Error('Cannot open OAuth URL - URL not supported');
       }
     } catch (error) {
-      console.error('❌ Error during Slack authentication:', error);
+      console.error('❌ Error during Google Calendar authentication:', error);
       throw error;
     }
   }
@@ -90,8 +94,8 @@ export class SlackAuthService extends BaseOAuthService {
    */
   async handleAuthCallback(code: string, integrationId: string): Promise<boolean> {
     try {
-      console.log('📱 Handling Slack OAuth callback...');
-      console.log('📱 Integration ID:', integrationId);
+      console.log('📅 Handling Google Calendar OAuth callback...');
+      console.log('📅 Integration ID:', integrationId);
       
       if (!code) {
         throw new Error('No authorization code provided');
@@ -107,26 +111,51 @@ export class SlackAuthService extends BaseOAuthService {
       await this.saveIntegrationToSupabase(tokenData, integrationId);
       await this.completeIntegration(tokenData, integrationId);
       
-      console.log('✅ Slack authentication successful');
+      console.log('✅ Google Calendar authentication successful');
       await this.notifyAuthCallbacks(integrationId);
       return true;
     } catch (error) {
-      console.error('❌ Error handling Slack auth callback:', error);
+      console.error('❌ Error handling Google Calendar auth callback:', error);
       return false;
     }
   }
 
   /**
-   * Refresh access token (Slack tokens are long-lived)
+   * Refresh access token using refresh token
    */
   async refreshToken(refreshToken: string, integrationId: string): Promise<AuthResult> {
-    // Slack tokens are typically long-lived and don't require refresh
-    // Just return the stored tokens
-    const tokens = await this.getStoredTokens(integrationId);
-    if (!tokens) {
-      throw new Error('No stored tokens available for Slack');
+    try {
+      console.log('📅 Refreshing Google Calendar token...');
+
+      const requestBody = new URLSearchParams();
+      requestBody.append('client_id', this.config.clientId);
+      requestBody.append('refresh_token', refreshToken);
+      requestBody.append('grant_type', 'refresh_token');
+      
+      const tokenData = await this.makeTokenRequest(requestBody, 'token refresh');
+      
+      // Update stored tokens
+      await this.storeTokens({
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token || refreshToken,
+        expires_in: tokenData.expires_in,
+        scope: tokenData.scope
+      }, integrationId);
+
+      await this.updateTokensInSupabase(tokenData, integrationId);
+      
+      console.log('✅ Access token refreshed successfully');
+
+      return {
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token || refreshToken,
+        expiresAt: Date.now() + (tokenData.expires_in * 1000),
+        scope: tokenData.scope
+      };
+    } catch (error) {
+      console.error('❌ Token refresh failed:', error);
+      throw new Error(`Failed to refresh authentication. Please try signing in again.`);
     }
-    return tokens;
   }
 
   /**
@@ -135,8 +164,11 @@ export class SlackAuthService extends BaseOAuthService {
   private async exchangeCodeForToken(code: string): Promise<any> {
     const requestBody = new URLSearchParams();
     requestBody.append('client_id', this.config.clientId);
-    requestBody.append('client_secret', process.env.SLACK_CLIENT_SECRET || '');
+    if (this.config.clientSecret) {
+      requestBody.append('client_secret', this.config.clientSecret);
+    }
     requestBody.append('code', code);
+    requestBody.append('grant_type', 'authorization_code');
     requestBody.append('redirect_uri', this.getRedirectUri());
     
     return this.makeTokenRequest(requestBody, 'token exchange');
@@ -153,18 +185,18 @@ export class SlackAuthService extends BaseOAuthService {
         throw new Error('User not authenticated with Supabase');
       }
 
+      const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+      
       const { error } = await supabase
         .from('integrations')
         .update({
           access_token: tokenData.access_token,
-          refresh_token: tokenData.refresh_token || '',
-          scope: tokenData.scope || this.config.scopes.join(','),
+          refresh_token: tokenData.refresh_token,
+          expires_at: expiresAt.toISOString(),
+          scope: tokenData.scope || this.config.scopes.join(' '),
           is_active: true,
           configuration: {
             scopes: this.config.scopes,
-            teamId: tokenData.team?.id,
-            teamName: tokenData.team?.name,
-            botUserId: tokenData.bot_user_id,
           },
         })
         .eq('id', integrationId)
@@ -174,9 +206,48 @@ export class SlackAuthService extends BaseOAuthService {
         throw error;
       }
 
-      console.log('✅ Slack integration saved to Supabase');
+      console.log('✅ Google Calendar integration saved to Supabase');
     } catch (error) {
-      console.error('❌ Error saving Slack integration to Supabase:', error);
+      console.error('❌ Error saving Google Calendar integration to Supabase:', error);
+    }
+  }
+
+  /**
+   * Update tokens in Supabase
+   */
+  private async updateTokensInSupabase(tokenData: any, integrationId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.warn('User not authenticated with Supabase during token refresh');
+        return;
+      }
+
+      const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+      
+      const updateData: any = {
+        access_token: tokenData.access_token,
+        expires_at: expiresAt.toISOString(),
+      };
+
+      if (tokenData.refresh_token) {
+        updateData.refresh_token = tokenData.refresh_token;
+      }
+
+      const { error } = await supabase
+        .from('integrations')
+        .update(updateData)
+        .eq('id', integrationId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ Google Calendar tokens updated in Supabase');
+    } catch (error) {
+      console.error('❌ Error updating Google Calendar tokens in Supabase:', error);
     }
   }
 
@@ -189,7 +260,7 @@ export class SlackAuthService extends BaseOAuthService {
       await this.deactivateIntegrationInSupabase(integrationId);
       await this.notifyAuthCallbacks(integrationId);
     } catch (error) {
-      console.error('❌ Error during Slack disconnect:', error);
+      console.error('❌ Error during Google Calendar disconnect:', error);
       await this.notifyAuthCallbacks(integrationId);
       throw error;
     }
@@ -217,19 +288,19 @@ export class SlackAuthService extends BaseOAuthService {
         throw error;
       }
 
-      console.log('✅ Slack integration deactivated in Supabase');
+      console.log('✅ Google Calendar integration deactivated in Supabase');
     } catch (error) {
-      console.error('❌ Error deactivating Slack integration in Supabase:', error);
+      console.error('❌ Error deactivating Google Calendar integration in Supabase:', error);
     }
   }
 
   /**
-   * Make authenticated API call to Slack
+   * Make authenticated API call to Google Calendar
    */
   async makeApiCall(endpoint: string, options: RequestInit = {}, integrationId: string): Promise<any> {
     const accessToken = await this.getAccessToken(integrationId);
 
-    const response = await fetch(`https://slack.com/api${endpoint}`, {
+    const response = await fetch(`https://www.googleapis.com/calendar/v3${endpoint}`, {
       ...options,
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -239,49 +310,28 @@ export class SlackAuthService extends BaseOAuthService {
     });
 
     if (!response.ok) {
-      throw new Error(`Slack API error: ${response.status} ${response.statusText}`);
+      throw new Error(`Google Calendar API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
-    
-    if (!data.ok) {
-      throw new Error(`Slack API error: ${data.error}`);
-    }
-
-    return data;
+    return response.json();
   }
 
   /**
-   * Test the connection by getting user info
+   * Test the connection by getting user's calendars
    */
   async testConnection(integrationId: string): Promise<any> {
     try {
-      const result = await this.makeApiCall('/auth.test', {}, integrationId);
+      const calendars = await this.makeApiCall('/users/me/calendarList', {}, integrationId);
       
       return {
-        teamId: result.team_id,
-        teamName: result.team,
-        userId: result.user_id,
-        user: result.user
+        calendarCount: calendars.items?.length || 0,
+        calendars: calendars.items?.slice(0, 5)
       };
     } catch (error) {
-      console.error('🔴 Slack connection test failed:', error);
+      console.error('🔴 Google Calendar connection test failed:', error);
       throw error;
     }
   }
-
-  /**
-   * Extract additional token data specific to Slack
-   */
-  protected extractAdditionalTokenData(result: any): Record<string, any> {
-    return {
-      teamId: result.team?.id,
-      teamName: result.team?.name,
-      botUserId: result.bot_user_id,
-      appId: result.app_id,
-      authedUser: result.authed_user
-    };
-  }
 }
 
-export default SlackAuthService; 
+export default GoogleCalendarAuthService;

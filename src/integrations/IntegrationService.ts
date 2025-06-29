@@ -1,8 +1,8 @@
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
 import { getAuthService } from './auth';
-import PerplexityAuthService from './auth/PerplexityAuthService';
-import TwilioAuthService from './auth/TwilioAuthService';
+import PerplexityAuthService from './auth/services/PerplexityAuthService';
+import TwilioAuthService from './auth/services/TwilioAuthService';
 import { Alert } from 'react-native';
 import { supabase } from '../supabase/supabase';
 import { Integration } from '../supabase/tables';
@@ -34,6 +34,31 @@ function getErrorMessage(error: unknown): string {
     return error.message;
   }
   return String(error);
+}
+
+/**
+ * Map database service names to internal service names
+ */
+function mapServiceName(dbServiceName: string): string {
+  const serviceMap: Record<string, string> = {
+    'Notion': 'notion',
+    'Slack': 'slack',
+    'Zoom': 'zoom',
+    'Perplexity': 'perplexity',
+    'Google Sheets': 'google-sheets',
+    'Google Docs': 'google-docs',
+    'Gmail': 'gmail',
+    'Google Calendar': 'google-calendar',
+    'Microsoft Excel Online': 'microsoft-excel',
+    'Microsoft Word Online': 'microsoft-word',
+    'Microsoft Outlook Calendar': 'microsoft-outlook-calendar',
+    'Microsoft Outlook Mail': 'microsoft-outlook-mail',
+    'Microsoft Teams': 'microsoft-teams',
+    'Twilio': 'twilio',
+    'Todoist': 'todoist'
+  };
+  
+  return serviceMap[dbServiceName] || dbServiceName.toLowerCase().replace(/\s+/g, '-');
 }
 
 export class IntegrationService {
@@ -98,20 +123,28 @@ export class IntegrationService {
     try {
       console.log(`🚀 Starting integration for ${serviceName}...`);
 
+      // Map database service name to internal service name
+      const internalServiceName = mapServiceName(serviceName);
+      console.log(`🔗 Mapped ${serviceName} to ${internalServiceName}`);
+
       // Check if service supports OAuth
       const supportedServices = [
         'notion', 
         'slack', 
         'todoist',
-        'dropbox', 
         'google-sheets', 
         'google-docs', 
         'gmail', 
         'google-calendar', 
         'google-meet',
-        'zoom'
+        'zoom',
+        'microsoft-excel',
+        'microsoft-word',
+        'microsoft-outlook-calendar',
+        'microsoft-outlook-mail',
+        'microsoft-teams'
       ];
-      if (!supportedServices.includes(serviceName.toLowerCase())) {
+      if (!supportedServices.includes(internalServiceName)) {
         Alert.alert(
           'Integration Not Available',
           `OAuth integration for ${serviceName} is not yet implemented. Please check back later.`,
@@ -146,7 +179,7 @@ export class IntegrationService {
       console.log(`✅ Integration record created with ID: ${integration.id}`);
 
       // Start OAuth flow
-      await this.startOAuthFlow(serviceName, integration.id);
+      await this.startOAuthFlow(internalServiceName, integration.id);
 
     } catch (error) {
       console.error(`❌ Error starting ${serviceName} integration:`, error);
@@ -330,11 +363,15 @@ export class IntegrationService {
     try {
       console.log(`🔄 Reconnecting ${serviceName} integration...`);
 
+      // Map service name to internal format
+      const internalServiceName = mapServiceName(serviceName);
+      console.log(`🔗 Mapped ${serviceName} to ${internalServiceName} for reconnection`);
+
       // Update status to pending
       await this.updateIntegrationStatus(integrationId, 'pending', false);
 
       // Start OAuth flow with existing integration ID
-      await this.startOAuthFlow(serviceName, integrationId);
+      await this.startOAuthFlow(internalServiceName, integrationId);
 
     } catch (error) {
       console.error(`❌ Error reconnecting ${serviceName}:`, error);
@@ -353,8 +390,12 @@ export class IntegrationService {
     try {
       console.log(`🔌 Disconnecting ${serviceName} integration...`);
 
+      // Map service name to internal format
+      const internalServiceName = mapServiceName(serviceName);
+      console.log(`🔗 Mapped ${serviceName} to ${internalServiceName} for disconnection`);
+
       // Get the auth service and disconnect if it supports it
-      const authService = getAuthService(serviceName);
+      const authService = getAuthService(internalServiceName);
       if ('disconnect' in authService && typeof authService.disconnect === 'function') {
         await authService.disconnect(integrationId);
       }
@@ -385,7 +426,11 @@ export class IntegrationService {
     try {
       console.log(`🧪 Testing ${serviceName} integration...`);
 
-      const authService = getAuthService(serviceName);
+      // Map service name to internal format
+      const internalServiceName = mapServiceName(serviceName);
+      console.log(`🔗 Mapped ${serviceName} to ${internalServiceName} for testing`);
+
+      const authService = getAuthService(internalServiceName);
       if ('testConnection' in authService && typeof authService.testConnection === 'function') {
         const result = await authService.testConnection(integrationId);
         console.log(`✅ ${serviceName} integration test successful`);
@@ -405,7 +450,10 @@ export class IntegrationService {
    */
   async hasValidTokens(integrationId: string, serviceName: string): Promise<boolean> {
     try {
-      const authService: any = getAuthService(serviceName);
+      // Map service name to internal format
+      const internalServiceName = mapServiceName(serviceName);
+      
+      const authService: any = getAuthService(internalServiceName);
       if ('getStoredTokens' in authService && typeof authService.getStoredTokens === 'function') {
         const tokens = await authService.getStoredTokens(integrationId);
         return !!tokens;

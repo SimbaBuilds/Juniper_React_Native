@@ -66,6 +66,8 @@ supabase login
 # Link your project
 supabase link --project-ref your-project-ref
 
+Run Docker Desktop
+
 # Deploy functions
 supabase functions deploy send-integration-setup-email
 supabase functions deploy handle-integration-form

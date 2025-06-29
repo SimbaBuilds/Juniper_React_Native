@@ -19,7 +19,6 @@ import LoginPage from './src/auth/LoginPage';
 import SignUpPage from './src/auth/SignUpPage';
 import PhoneSignUpPage from './src/auth/PhoneSignUpPage';
 import { AuthProvider } from './src/auth/AuthContext';
-import OAuthCallbackHandler from './src/integrations/OAuthCallbackHandler';
 
 type RootStackParamList = {
   MainTabs: undefined;
@@ -103,23 +102,23 @@ export default function App() {
       if (code && state) {
         switch (servicePath) {
           case 'calendar':
-            const GoogleCalendarAuthService = require('./src/integrations/auth/GoogleCalendarAuthService').default;
+            const GoogleCalendarAuthService = require('./src/integrations/auth/services/GoogleCalendarAuthService').default;
             GoogleCalendarAuthService.getInstance().handleAuthCallback(code, state);
             break;
           case 'gmail':
-            const GmailAuthService = require('./src/integrations/auth/GmailAuthService').default;
+            const GmailAuthService = require('./src/integrations/auth/services/GmailAuthService').default;
             GmailAuthService.getInstance().handleAuthCallback(code, state);
             break;
           case 'docs':
-            const GoogleDocsAuthService = require('./src/integrations/auth/GoogleDocsAuthService').default;
+            const GoogleDocsAuthService = require('./src/integrations/auth/services/GoogleDocsAuthService').default;
             GoogleDocsAuthService.getInstance().handleAuthCallback(code, state);
             break;
           case 'sheets':
-            const GoogleSheetsAuthService = require('./src/integrations/auth/GoogleSheetsAuthService').default;
+            const GoogleSheetsAuthService = require('./src/integrations/auth/services/GoogleSheetsAuthService').default;
             GoogleSheetsAuthService.getInstance().handleAuthCallback(code, state);
             break;
           case 'meet':
-            const GoogleMeetAuthService = require('./src/integrations/auth/GoogleMeetAuthService').default;
+            const GoogleMeetAuthService = require('./src/integrations/auth/services/GoogleMeetAuthService').default;
             GoogleMeetAuthService.getInstance().handleAuthCallback(code, state);
             break;
           default:
@@ -170,7 +169,7 @@ export default function App() {
       }
       
       if (code && state) {
-        const SlackAuthService = require('./src/integrations/auth/SlackAuthService').default;
+        const SlackAuthService = require('./src/integrations/auth/services/SlackAuthService').default;
         SlackAuthService.getInstance().handleAuthCallback(code, state);
       }
     }
@@ -191,29 +190,8 @@ export default function App() {
       }
       
       if (code && state) {
-        const NotionAuthService = require('./src/integrations/auth/NotionAuthService').default;
+        const NotionAuthService = require('./src/integrations/auth/services/NotionAuthService').default;
         NotionAuthService.getInstance().handleAuthCallback(code, state);
-      }
-    }
-  };
-
-  const handleDropboxCallback = (url: string) => {
-    const queryString = url.split('?')[1];
-    
-    if (queryString) {
-      const urlParams = new URLSearchParams(queryString);
-      const code = urlParams.get('code');
-      const state = urlParams.get('state');
-      const error = urlParams.get('error');
-      
-      if (error) {
-        console.error('❌ Dropbox OAuth error:', error);
-        return;
-      }
-      
-      if (code && state) {
-        const DropboxAuthService = require('./src/integrations/auth/DropboxAuthService').default;
-        DropboxAuthService.getInstance().handleAuthCallback(code, state);
       }
     }
   };
@@ -233,13 +211,11 @@ export default function App() {
       }
       
       if (code && state) {
-        const TodoistAuthService = require('./src/integrations/auth/TodoistAuthService').default;
+        const TodoistAuthService = require('./src/integrations/auth/services/TodoistAuthService').default;
         TodoistAuthService.getInstance().handleAuthCallback(code, state);
       }
     }
   };
-
-
 
   const handleZoomCallback = (url: string) => {
     const queryString = url.split('?')[1];
@@ -256,7 +232,7 @@ export default function App() {
       }
       
       if (code && state) {
-        const ZoomAuthService = require('./src/integrations/auth/ZoomAuthService').default;
+        const ZoomAuthService = require('./src/integrations/auth/services/ZoomAuthService').default;
         ZoomAuthService.getInstance().handleAuthCallback(code, state);
       }
     }
@@ -300,57 +276,53 @@ export default function App() {
     console.log(`✅ Processing ${serviceName} HTTPS callback with code and state`);
     
     // Route to appropriate service handler based on service name
+    // To add a new service, add a new case below with the correct import path
     try {
       switch (serviceName) {
         case 'google-calendar':
-          const GoogleCalendarAuthService = require('./src/integrations/auth/GoogleCalendarAuthService').default;
-          GoogleCalendarAuthService.getInstance().handleAuthCallback(code, state);
+          require('./src/integrations/auth/services/GoogleCalendarAuthService').default.getInstance().handleAuthCallback(code, state);
           break;
         case 'gmail':
-          const GmailAuthService = require('./src/integrations/auth/GmailAuthService').default;
-          GmailAuthService.getInstance().handleAuthCallback(code, state);
+          require('./src/integrations/auth/services/GmailAuthService').default.getInstance().handleAuthCallback(code, state);
           break;
         case 'google-docs':
-          const GoogleDocsAuthService = require('./src/integrations/auth/GoogleDocsAuthService').default;
-          GoogleDocsAuthService.getInstance().handleAuthCallback(code, state);
+          require('./src/integrations/auth/services/GoogleDocsAuthService').default.getInstance().handleAuthCallback(code, state);
           break;
         case 'google-sheets':
-          const GoogleSheetsAuthService = require('./src/integrations/auth/GoogleSheetsAuthService').default;
-          GoogleSheetsAuthService.getInstance().handleAuthCallback(code, state);
+          require('./src/integrations/auth/services/GoogleSheetsAuthService').default.getInstance().handleAuthCallback(code, state);
           break;
         case 'google-meet':
-          const GoogleMeetAuthService = require('./src/integrations/auth/GoogleMeetAuthService').default;
-          GoogleMeetAuthService.getInstance().handleAuthCallback(code, state);
+          require('./src/integrations/auth/services/GoogleMeetAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'google':
+          require('./src/auth/GoogleAuthService').GoogleAuthService.getInstance().handleAuthCallback(code);
           break;
         case 'outlook-mail':
+          require('./src/integrations/auth/services/MicrosoftOutlookMailAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
         case 'outlook-calendar':
+          require('./src/integrations/auth/services/MicrosoftOutlookCalendarAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
         case 'microsoft-teams':
+          require('./src/integrations/auth/services/MicrosoftTeamsAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
         case 'microsoft-excel':
+          require('./src/integrations/auth/services/MicrosoftExcelAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
         case 'microsoft-word':
-          // Route Microsoft services to appropriate handlers when available
-          if (navigationRef.current && session) {
-            navigationRef.current.navigate('OAuthCallback', { url });
-          }
+          require('./src/integrations/auth/services/MicrosoftWordAuthService').default.getInstance().handleAuthCallback(code, state);
           break;
         case 'slack':
-          const SlackAuthService = require('./src/integrations/auth/SlackAuthService').default;
-          SlackAuthService.getInstance().handleAuthCallback(code, state);
+          require('./src/integrations/auth/services/SlackAuthService').default.getInstance().handleAuthCallback(code, state);
           break;
         case 'notion':
-          const NotionAuthService = require('./src/integrations/auth/NotionAuthService').default;
-          NotionAuthService.getInstance().handleAuthCallback(code, state);
-          break;
-        case 'dropbox':
-          const DropboxAuthService = require('./src/integrations/auth/DropboxAuthService').default;
-          DropboxAuthService.getInstance().handleAuthCallback(code, state);
+          require('./src/integrations/auth/services/NotionAuthService').default.getInstance().handleAuthCallback(code, state);
           break;
         case 'todoist':
-          const TodoistAuthService = require('./src/integrations/auth/TodoistAuthService').default;
-          TodoistAuthService.getInstance().handleAuthCallback(code, state);
+          require('./src/integrations/auth/services/TodoistAuthService').default.getInstance().handleAuthCallback(code, state);
           break;
         case 'zoom':
-          const ZoomAuthService = require('./src/integrations/auth/ZoomAuthService').default;
-          ZoomAuthService.getInstance().handleAuthCallback(code, state);
+          require('./src/integrations/auth/services/ZoomAuthService').default.getInstance().handleAuthCallback(code, state);
           break;
         default:
           console.warn(`❌ Unknown service in HTTPS callback: ${serviceName}`);
@@ -376,6 +348,8 @@ export default function App() {
       const url = event.url;
       console.log('=== DEEP LINK RECEIVED ===');
       console.log('Full URL:', url);
+      console.log('URL starts with https://', url.startsWith('https://'));
+      console.log('URL includes /oauth/', url.includes('/oauth/'));
       
       // Check if this is an OAuth callback URL
       const isOAuthCallback = url.includes('oauth2redirect') || 
@@ -416,10 +390,6 @@ export default function App() {
           // Handle Notion
           else if (url.startsWith('notion://oauth/callback')) {
             handleNotionCallback(url);
-          }
-          // Handle Dropbox
-          else if (url.startsWith('db-')) {
-            handleDropboxCallback(url);
           }
           // Handle Todoist
           else if (url.startsWith('todoist://oauth/callback')) {
@@ -494,14 +464,6 @@ export default function App() {
                       name="MainTabs" 
                       component={MainTabNavigator}
                     />
-                    <Stack.Screen 
-                      name="OAuthCallback" 
-                      component={OAuthCallbackHandler}
-                      options={{
-                        title: 'Completing Integration...',
-                        headerShown: true,
-                      }}
-                    />
                   </>
                 ) : (
                   <>
@@ -542,14 +504,6 @@ export default function App() {
                   <Stack.Screen 
                     name="MainTabs" 
                     component={MainTabNavigator}
-                  />
-                  <Stack.Screen 
-                    name="OAuthCallback" 
-                    component={OAuthCallbackHandler}
-                    options={{
-                      title: 'Completing Integration...',
-                      headerShown: true,
-                    }}
                   />
                 </>
               ) : (

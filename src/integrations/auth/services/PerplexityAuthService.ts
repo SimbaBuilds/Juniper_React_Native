@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import { completeIntegration, createApiKeyAuthParams, disconnectIntegration } from '../../api/integration_api';
+import { completeIntegration, createApiKeyAuthParams, disconnectIntegration } from '../../../api/integration_api';
 
 interface PerplexityAuthResult {
   apiKey: string;
@@ -295,17 +295,36 @@ export class PerplexityAuthService {
    * Get API key setup instructions
    */
   static getApiKeyInstructions(): string {
-    return `To connect Perplexity AI:
+    return `
+**Getting your Perplexity API Key:**
 
-1. Go to https://www.perplexity.ai/settings/api
-2. Sign up or log in to your Perplexity account
-3. Navigate to the API section
-4. Click "Generate API Key"
-5. Copy the API key and paste it below
+1. **Create Account**
+   - Visit perplexity.ai and sign up for an account
+   - You'll need to provide billing information to access the API
 
-Your API key should start with "pplx-" and be about 40-50 characters long.
+2. **Navigate to API Settings**
+   - Go to perplexity.ai/settings/api
+   - You may need to wait for API access approval
 
-Note: You'll need to add billing information to your Perplexity account to use the API.`;
+3. **Generate API Key**
+   - Click "Generate API Key"
+   - Copy the key (starts with "pplx-")
+   - Store it securely - you won't be able to see it again
+
+4. **Important Notes**
+   - API access requires a paid account with billing info
+   - Usage is charged per request based on model and tokens
+   - Monitor your usage to avoid unexpected charges
+
+**Personal Usage Estimates:**
+- Light use: ~4 queries/day = $1-2/month
+- Moderate use: ~10 queries/day = $5-10/month
+- Heavy use: ~50 queries/day = $15-30/month
+- Cost: ~$0.01-0.05 per query (varies by model and response length)
+
+**For Mobile Jarvis:**
+Your AI assistant will use this API key to answer research questions and provide real-time information.
+    `.trim();
   }
 }
 
