@@ -403,9 +403,12 @@ export class IntegrationService {
       // Update integration status
       await this.updateIntegrationStatus(integrationId, 'inactive', false);
 
+      // Delete the integration record from Supabase
+      await DatabaseService.deleteIntegration(integrationId);
+
       Alert.alert(
         'Integration Disconnected',
-        `Your ${serviceName} integration has been disconnected.`,
+        `Your ${serviceName} integration has been disconnected and removed from your account.`,
         [{ text: 'OK' }]
       );
 

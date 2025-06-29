@@ -570,5 +570,14 @@ export const DatabaseService = {
       throw error;
     }
   },
+
+  // Integrations
+  async deleteIntegration(integrationId: string): Promise<void> {
+    const { error } = await supabase
+      .from('integrations')
+      .delete()
+      .eq('id', integrationId);
+    if (error) throw error;
+  },
 }
         

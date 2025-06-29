@@ -135,7 +135,9 @@ export class SlackAuthService extends BaseOAuthService {
   private async exchangeCodeForToken(code: string): Promise<any> {
     const requestBody = new URLSearchParams();
     requestBody.append('client_id', this.config.clientId);
-    requestBody.append('client_secret', process.env.SLACK_CLIENT_SECRET || '');
+    if (this.config.clientSecret) {
+      requestBody.append('client_secret', this.config.clientSecret);
+    }
     requestBody.append('code', code);
     requestBody.append('redirect_uri', this.getRedirectUri());
     
@@ -156,15 +158,23 @@ export class SlackAuthService extends BaseOAuthService {
       const { error } = await supabase
         .from('integrations')
         .update({
+          // OAuth fields
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token || '',
           scope: tokenData.scope || this.config.scopes.join(','),
           is_active: true,
+          // Use existing dedicated fields for Slack data
+          bot_id: tokenData.bot_user_id,
+          workspace_name: tokenData.team?.name,
+          workspace_id: tokenData.team?.id,
+          // Store additional Slack metadata in configuration
           configuration: {
-            scopes: this.config.scopes,
-            teamId: tokenData.team?.id,
-            teamName: tokenData.team?.name,
-            botUserId: tokenData.bot_user_id,
+            appId: tokenData.app_id,
+            authedUser: tokenData.authed_user,
+            tokenType: tokenData.token_type,
+            isEnterpriseInstall: tokenData.is_enterprise_install,
+            enterprise: tokenData.enterprise,
+            scopes: this.config.scopes
           },
         })
         .eq('id', integrationId)
@@ -274,13 +284,18 @@ export class SlackAuthService extends BaseOAuthService {
    * Extract additional token data specific to Slack
    */
   protected extractAdditionalTokenData(result: any): Record<string, any> {
-    return {
-      teamId: result.team?.id,
-      teamName: result.team?.name,
-      botUserId: result.bot_user_id,
-      appId: result.app_id,
-      authedUser: result.authed_user
+    console.log(`🔍 Slack extractAdditionalTokenData - raw result:`, JSON.stringify(result, null, 2));
+    
+    const additionalData = {
+      teamId: result?.team?.id || null,
+      teamName: result?.team?.name || null,
+      botUserId: result?.bot_user_id || null,
+      appId: result?.app_id || null,
+      authedUser: result?.authed_user || null
     };
+
+    console.log(`🔍 Slack extractAdditionalTokenData - processed:`, JSON.stringify(additionalData, null, 2));
+    return additionalData;
   }
 }
 

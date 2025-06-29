@@ -46,6 +46,11 @@ export const IntegrationsScreen: React.FC = () => {
   const getServiceCategory = (serviceName: string): string => {
     const name = serviceName.toLowerCase();
     
+    // Communications
+    if (['slack', 'microsoft teams', 'twilio'].includes(name)) {
+      return 'Communications';
+    }
+    
     // Project/Task Management
     if (['notion', 'todoist', 'any.do'].includes(name)) {
       return 'Project/Task Management';
@@ -85,11 +90,7 @@ export const IntegrationsScreen: React.FC = () => {
     if (['google sheets', 'microsoft excel online'].includes(name)) {
       return 'Cloud Spreadsheets';
     }
-    
-    // Team Communication
-    if (['slack', 'microsoft teams', 'twilio', 'whatsapp'].includes(name)) {
-      return 'Team Communication';
-    }
+  
     
     // Default category for uncategorized services
     return 'Other';
@@ -109,6 +110,7 @@ export const IntegrationsScreen: React.FC = () => {
     
     // Define the order of categories
     const categoryOrder = [
+      'Communications',
       'Project/Task Management',
       'Calendar',
       'Email',
@@ -117,7 +119,6 @@ export const IntegrationsScreen: React.FC = () => {
       'Cloud Storage',
       'Cloud Text Documents',
       'Cloud Spreadsheets',
-      'Team Communication',
       'Other'
     ];
     
@@ -203,7 +204,7 @@ export const IntegrationsScreen: React.FC = () => {
         return 'document-text-outline';
       case 'Cloud Spreadsheets':
         return 'grid-outline';
-      case 'Team Communication':
+      case 'Communications':
         return 'chatbubbles-outline';
       default:
         return 'apps-outline';

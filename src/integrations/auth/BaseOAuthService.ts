@@ -156,19 +156,28 @@ export abstract class BaseOAuthService {
    */
   protected async completeIntegration(result: any, integrationId: string): Promise<void> {
     try {
-      const authParams = createOAuthAuthParams(result, this.extractAdditionalTokenData(result));
+      const additionalData = this.extractAdditionalTokenData(result);
+      const authParams = createOAuthAuthParams(result, additionalData);
 
-      await completeIntegration({
+      const requestPayload = {
         integration_id: integrationId,
         service_name: this.config.serviceName,
         service_type: 'oauth',
         auth_params: authParams
-      });
+      };
 
-      console.log(`✅ ${this.config.serviceName} integration completed`);
+      console.log(`🔍 ${this.config.serviceName} backend request payload:`, JSON.stringify(requestPayload, null, 2));
+      console.log(`🔍 ${this.config.serviceName} original result:`, JSON.stringify(result, null, 2));
+      console.log(`🔍 ${this.config.serviceName} additional data:`, JSON.stringify(additionalData, null, 2));
+
+      await completeIntegration(requestPayload);
+
+      console.log(`✅ ${this.config.serviceName} integration completed with backend`);
     } catch (error) {
-      console.error(`🔴 Error completing ${this.config.serviceName} integration:`, error);
-      // Don't throw here - the OAuth was successful, backend completion is secondary
+      console.warn(`⚠️ ${this.config.serviceName} backend integration completion failed (expected - endpoint not implemented yet):`, error?.message || error);
+      console.log(`ℹ️ ${this.config.serviceName} OAuth was successful - tokens stored locally in database`);
+      // Don't throw here - the OAuth was successful and tokens are stored locally
+      // Backend completion is optional and not yet implemented
     }
   }
 

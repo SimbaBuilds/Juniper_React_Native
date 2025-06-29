@@ -81,6 +81,17 @@ const getServiceClientId = (service: string): string => {
   return clientId;
 };
 
+// Helper function to get other service client secrets
+const getServiceClientSecret = (service: string): string | undefined => {
+  const envKey = `${service.toUpperCase()}_CLIENT_SECRET`;
+  const clientSecret = Constants.expoConfig?.extra?.[envKey] || process.env[`EXPO_PUBLIC_${envKey}`];
+  if (!clientSecret) {
+    console.warn(`${envKey} not configured, client secret will be undefined`);
+    return undefined;
+  }
+  return clientSecret;
+};
+
 export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'google-calendar': {
     serviceName: 'google-calendar',
@@ -220,7 +231,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     clientId: getMicrosoftClientId(),
     clientSecret: getMicrosoftClientSecret(),
     scopes: [
-      'https://graph.microsoft.com/Files.ReadWrite',
+      'https://graph.microsoft.com/Files.ReadWrite.All',
       'https://graph.microsoft.com/Sites.ReadWrite.All',
       'offline_access'
     ],
@@ -237,7 +248,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     clientId: getMicrosoftClientId(),
     clientSecret: getMicrosoftClientSecret(),
     scopes: [
-      'https://graph.microsoft.com/Files.ReadWrite',
+      'https://graph.microsoft.com/Files.ReadWrite.All',
       'https://graph.microsoft.com/Sites.ReadWrite.All',
       'offline_access'
     ],
@@ -252,11 +263,37 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'slack': {
     serviceName: 'slack',
     clientId: getServiceClientId('SLACK'),
+    clientSecret: getServiceClientSecret('SLACK'),
     scopes: [
       'channels:read',
       'chat:write',
       'users:read',
-      'team:read'
+      'team:read',
+      "assistant:write", 
+      "channels:history", 
+      "channels:read", 
+      "chat:write", 
+      "chat:write.public", 
+      "files:read", 
+      "files:write", 
+      "groups:history", 
+      "groups:read", 
+      "groups:write", 
+      "im:history", 
+      "im:read", 
+      "im:write", 
+      "mpim:history", 
+      "mpim:read", 
+      "mpim:write", 
+      "team:read", 
+      "users:read", 
+      "users:read.email",
+      "reactions:read",
+      "reactions:write",
+      "channels:join",
+      "channels:manage",
+      "channels:write.topic",
+      "groups:write.topic"
     ],
     redirectUri: generateRedirectUri('slack'),
     authEndpoint: 'https://slack.com/oauth/v2/authorize',
@@ -266,6 +303,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'notion': {
     serviceName: 'notion',
     clientId: getServiceClientId('NOTION'),
+    clientSecret: getServiceClientSecret('NOTION'),
     scopes: [],
     redirectUri: generateRedirectUri('notion'),
     authEndpoint: 'https://api.notion.com/v1/oauth/authorize',
@@ -278,6 +316,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'todoist': {
     serviceName: 'todoist',
     clientId: getServiceClientId('TODOIST'),
+    clientSecret: getServiceClientSecret('TODOIST'),
     scopes: ['data:read_write'],
     redirectUri: generateRedirectUri('todoist'),
     authEndpoint: 'https://todoist.com/oauth/authorize',
@@ -287,6 +326,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
   'zoom': {
     serviceName: 'zoom',
     clientId: getServiceClientId('ZOOM'),
+    clientSecret: getServiceClientSecret('ZOOM'),
     scopes: [
       'meeting:write',
       'meeting:read',

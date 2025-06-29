@@ -205,13 +205,15 @@ export type UserProfile = {
     client_id?: string;
     client_secret_id?: string;
     client_secret_value?: string;
+    configuration?: Record<string, any>; // New field for integration configuration
   };
   
   export const integrationFields = [
     'id', 'user_id', 'service_id', 'notes', 'is_active', 'status', 'last_used', 'created_at',
     'access_token', 'refresh_token', 'expires_at', 'scope', 'api_key', 'email_address',
     'bot_id', 'workspace_name', 'workspace_icon', 'workspace_id', 'owner_info', 'duplicated_template_id',
-    'last_sync', 'updated_at', 'client_id', 'client_secret_id', 'client_secret_value'
+    'last_sync', 'updated_at', 'client_id', 'client_secret_id', 'client_secret_value',
+    'configuration' // New field
   ] as const;
   export type IntegrationField = (typeof integrationFields)[number];
 
