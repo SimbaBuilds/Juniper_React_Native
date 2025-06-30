@@ -21,7 +21,7 @@ export const SERVICES = [
 
 export const SERVICE_TYPES = [
   'Project Management',
-  'Task Management', 
+  'Note-Taking', 
   'Team Collaboration',
   'Team Communication',
   'Calendar Management',

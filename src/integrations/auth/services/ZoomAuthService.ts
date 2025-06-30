@@ -92,6 +92,7 @@ export class ZoomAuthService extends BaseOAuthService {
     try {
       console.log('🎥 Handling Zoom OAuth callback...');
       console.log('🎥 Integration ID:', integrationId);
+      console.log('🎥 Authorization code:', code ? `${code.substring(0, 10)}...` : 'MISSING');
       
       if (!code) {
         throw new Error('No authorization code provided');
@@ -101,6 +102,14 @@ export class ZoomAuthService extends BaseOAuthService {
       const tokenData = await this.exchangeCodeForToken(code);
       
       console.log('✅ Token exchange successful');
+      console.log('🎥 Token data received:', {
+        hasAccessToken: !!tokenData.access_token,
+        hasRefreshToken: !!tokenData.refresh_token,
+        expiresIn: tokenData.expires_in,
+        scope: tokenData.scope,
+        tokenType: tokenData.token_type,
+        fullPayload: tokenData
+      });
       
       // Store tokens using base class method
       await this.storeTokens(tokenData, integrationId);
@@ -125,6 +134,9 @@ export class ZoomAuthService extends BaseOAuthService {
 
       const requestBody = new URLSearchParams();
       requestBody.append('client_id', this.config.clientId);
+      if (this.config.clientSecret) {
+        requestBody.append('client_secret', this.config.clientSecret);
+      }
       requestBody.append('refresh_token', refreshToken);
       requestBody.append('grant_type', 'refresh_token');
       
@@ -160,6 +172,9 @@ export class ZoomAuthService extends BaseOAuthService {
   private async exchangeCodeForToken(code: string): Promise<any> {
     const requestBody = new URLSearchParams();
     requestBody.append('client_id', this.config.clientId);
+    if (this.config.clientSecret) {
+      requestBody.append('client_secret', this.config.clientSecret);
+    }
     requestBody.append('code', code);
     requestBody.append('grant_type', 'authorization_code');
     requestBody.append('redirect_uri', this.getRedirectUri());

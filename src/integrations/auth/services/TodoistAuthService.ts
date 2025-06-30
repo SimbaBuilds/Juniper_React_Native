@@ -1,6 +1,7 @@
 import { Linking } from 'react-native';
 import { BaseOAuthService, AuthResult } from '../BaseOAuthService';
 import { supabase } from '../../../supabase/supabase';
+import { calculateExpirationDate, safeToISOString, calculateExpirationTimestamp } from '../DateUtils';
 
 export class TodoistAuthService extends BaseOAuthService {
   private static instance: TodoistAuthService;
@@ -128,6 +129,11 @@ export class TodoistAuthService extends BaseOAuthService {
       requestBody.append('refresh_token', refreshToken);
       requestBody.append('grant_type', 'refresh_token');
       
+      // Include client_secret for Todoist refresh token requests (this was missing!)
+      if (this.config.clientSecret) {
+        requestBody.append('client_secret', this.config.clientSecret);
+      }
+      
       const tokenData = await this.makeTokenRequest(requestBody, 'token refresh');
       
       // Update stored tokens
@@ -145,7 +151,7 @@ export class TodoistAuthService extends BaseOAuthService {
       return {
         accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token || refreshToken,
-        expiresAt: Date.now() + (tokenData.expires_in * 1000),
+        expiresAt: calculateExpirationTimestamp(tokenData.expires_in),
         scope: tokenData.scope
       };
     } catch (error) {
@@ -159,10 +165,15 @@ export class TodoistAuthService extends BaseOAuthService {
    */
   private async exchangeCodeForToken(code: string): Promise<any> {
     const requestBody = new URLSearchParams();
-    requestBody.append('client_id', this.config.clientId);
-    requestBody.append('code', code);
     requestBody.append('grant_type', 'authorization_code');
+    requestBody.append('code', code);
     requestBody.append('redirect_uri', this.getRedirectUri());
+    requestBody.append('client_id', this.config.clientId);
+    
+    // Include client_secret for Todoist OAuth
+    if (this.config.clientSecret) {
+      requestBody.append('client_secret', this.config.clientSecret);
+    }
     
     return this.makeTokenRequest(requestBody, 'token exchange');
   }
@@ -178,14 +189,22 @@ export class TodoistAuthService extends BaseOAuthService {
         throw new Error('User not authenticated with Supabase');
       }
 
-      const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+      console.log('🔍 Todoist token data for Supabase save:', {
+        expires_in: tokenData.expires_in,
+        expires_in_type: typeof tokenData.expires_in,
+        has_access_token: !!tokenData.access_token,
+        has_refresh_token: !!tokenData.refresh_token
+      });
+      
+      const expiresAt = calculateExpirationDate(tokenData.expires_in);
+      console.log('✅ Calculated safe expiration date:', safeToISOString(expiresAt));
       
       const { error } = await supabase
         .from('integrations')
         .update({
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
-          expires_at: expiresAt.toISOString(),
+          expires_at: safeToISOString(expiresAt),
           scope: tokenData.scope || this.config.scopes.join(' '),
           is_active: true,
           configuration: {
@@ -196,12 +215,19 @@ export class TodoistAuthService extends BaseOAuthService {
         .eq('user_id', user.id);
 
       if (error) {
+        console.error('🔴 Supabase integration save error details:', {
+          error: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
         throw error;
       }
 
       console.log('✅ Todoist integration saved to Supabase');
     } catch (error) {
       console.error('🔴 Error saving Todoist integration to Supabase:', error);
+      console.error('🔴 Full error details:', JSON.stringify(error, null, 2));
       throw error;
     }
   }
@@ -214,14 +240,19 @@ export class TodoistAuthService extends BaseOAuthService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+      console.log('🔍 Todoist token data for update:', {
+        expires_in: tokenData.expires_in,
+        expires_in_type: typeof tokenData.expires_in
+      });
+
+      const expiresAt = calculateExpirationDate(tokenData.expires_in);
 
       const { error } = await supabase
         .from('integrations')
         .update({
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
-          expires_at: expiresAt.toISOString(),
+          expires_at: safeToISOString(expiresAt),
           updated_at: new Date().toISOString(),
         })
         .eq('id', integrationId)

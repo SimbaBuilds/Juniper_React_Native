@@ -262,7 +262,7 @@ export const DatabaseService = {
     ];
     
     const serviceTypes = [
-      'Project Management', 'Task Management', 'Team Collaboration',
+      'Project Management', 'Note-Taking', 'Team Collaboration',
       'Team Communication', 'Calendar Management', 'Reminders',
       'Video Conferencing', 'Communication', 'Messaging', 'Cloud Storage',
       'Task Scheduling', 'Search', 'AI', 'Research', 'Cloud Spreadsheets',
@@ -523,6 +523,41 @@ export const DatabaseService = {
     
     if (error) throw error
     return data || []
+  },
+
+  // Get all available services with their tag names
+  async getAllServicesWithTags() {
+    const { data, error } = await supabase
+      .from('services')
+      .select(`
+        *,
+        tag_1:tags!services_tag_1_id_fkey(name),
+        tag_2:tags!services_tag_2_id_fkey(name),
+        tag_3:tags!services_tag_3_id_fkey(name),
+        tag_4:tags!services_tag_4_id_fkey(name),
+        tag_5:tags!services_tag_5_id_fkey(name)
+      `)
+      .order('service_name')
+    
+    if (error) throw error
+    
+    // Transform the data to include tagNames array
+    const servicesWithTags = (data || []).map(service => {
+      const tagNames = [
+        service.tag_1?.name,
+        service.tag_2?.name,
+        service.tag_3?.name,
+        service.tag_4?.name,
+        service.tag_5?.name
+      ].filter(Boolean) // Remove null/undefined values
+      
+      return {
+        ...service,
+        tagNames
+      }
+    })
+    
+    return servicesWithTags
   },
 
   // Get config form by service ID

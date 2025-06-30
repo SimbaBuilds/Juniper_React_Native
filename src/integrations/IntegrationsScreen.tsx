@@ -51,9 +51,9 @@ export const IntegrationsScreen: React.FC = () => {
       return 'Communications';
     }
     
-    // Project/Task Management
+    // Productivity and Task Management
     if (['notion', 'todoist', 'any.do'].includes(name)) {
-      return 'Project/Task Management';
+      return 'Productivity and Task Management';
     }
     
     // Calendar
@@ -67,7 +67,7 @@ export const IntegrationsScreen: React.FC = () => {
     }
     
     // Video Conferencing
-    if (['zoom', 'google meet'].includes(name)) {
+    if (['google meet'].includes(name)) {
       return 'Video Conferencing';
     }
     
@@ -111,7 +111,7 @@ export const IntegrationsScreen: React.FC = () => {
     // Define the order of categories
     const categoryOrder = [
       'Communications',
-      'Project/Task Management',
+      'Productivity and Task Management',
       'Calendar',
       'Email',
       'Video Conferencing',
@@ -163,7 +163,6 @@ export const IntegrationsScreen: React.FC = () => {
       case 'any.do':
       case 'todoist':
         return 'checkbox';
-      case 'zoom':
       case 'google meet':
         return 'videocam';
       case 'whatsapp':
@@ -188,7 +187,7 @@ export const IntegrationsScreen: React.FC = () => {
   // Helper function to get category icon
   const getCategoryIcon = (categoryName: string): keyof typeof Ionicons.glyphMap => {
     switch (categoryName) {
-      case 'Project/Task Management':
+      case 'Productivity and Task Management':
         return 'checkbox-outline';
       case 'Calendar':
         return 'calendar-outline';
@@ -221,7 +220,7 @@ export const IntegrationsScreen: React.FC = () => {
       
       // Fetch all services and user integrations in parallel
       const [allServices, userIntegrations] = await Promise.all([
-        DatabaseService.getAllServices(),
+        DatabaseService.getAllServicesWithTags(),
         DatabaseService.getIntegrations(user.id)
       ]);
       
@@ -250,7 +249,7 @@ export const IntegrationsScreen: React.FC = () => {
           return {
             id: service.id,
             service_name: service.service_name,
-            tags: service.tags || [],
+            tags: service.tagNames || [],
             description: service.description,
             isActive: !!isActive,
             isConnected: !!isActive,
@@ -275,7 +274,6 @@ export const IntegrationsScreen: React.FC = () => {
     const serviceMap: Record<string, string> = {
       'Notion': 'notion',
       'Slack': 'slack',
-      'Zoom': 'zoom',
       'Perplexity': 'perplexity',
       'Google Sheets': 'google-sheets',
       'Google Docs': 'google-docs',

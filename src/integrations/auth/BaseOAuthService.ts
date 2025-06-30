@@ -2,7 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { getOAuthConfig, getRedirectUri, buildAuthUrl, OAuthServiceConfig } from './OAuthConfig';
-import { completeIntegration, createOAuthAuthParams, disconnectIntegration } from '../../api/integration_api';
+import { completeIntegration, createOAuthAuthParams, disconnectIntegration, CompleteIntegrationRequest } from '../../api/integration_api';
+import { calculateExpirationDate, safeToISOString, safeParseDateString, isValidDate } from './DateUtils';
+import { createBasicAuthHeader } from '../../utils/base64';
 
 export interface AuthResult {
   accessToken: string;
@@ -61,11 +63,24 @@ export abstract class BaseOAuthService {
    */
   protected async storeTokens(result: any, integrationId: string): Promise<void> {
     try {
+      console.log(`🔍 Storing ${this.config.serviceName} tokens for integration:`, integrationId);
+      console.log(`🔍 Token result keys:`, Object.keys(result));
+      
+      // Use safe date calculation for expires_in
+      let expiresAtISO: string;
+      if (result.accessTokenExpirationDate) {
+        // Use provided expiration date if available
+        expiresAtISO = result.accessTokenExpirationDate;
+      } else {
+        // Calculate expiration date safely from expires_in
+        const expirationDate = calculateExpirationDate(result.expires_in);
+        expiresAtISO = safeToISOString(expirationDate);
+      }
+
       const tokenData: StoredTokenData = {
         accessToken: result.accessToken || result.access_token,
         refreshToken: result.refreshToken || result.refresh_token || '',
-        expiresAt: result.accessTokenExpirationDate || 
-                   (result.expires_in ? new Date(Date.now() + (result.expires_in * 1000)).toISOString() : new Date(Date.now() + 3600000).toISOString()),
+        expiresAt: expiresAtISO,
         integrationId,
         service: this.config.serviceName,
         scope: Array.isArray(result.scopes) ? result.scopes.join(' ') : (result.scope || this.config.scopes.join(' ')),
@@ -74,6 +89,8 @@ export abstract class BaseOAuthService {
       };
 
       const storageKey = `${this.config.serviceName.replace('-', '_')}_tokens_${integrationId}`;
+      console.log(`🔍 Storage key:`, storageKey);
+      console.log(`🔍 Token data to store:`, JSON.stringify(tokenData, null, 2));
 
       if (Platform.OS !== 'web') {
         await SecureStore.setItemAsync(storageKey, JSON.stringify(tokenData));
@@ -106,9 +123,16 @@ export abstract class BaseOAuthService {
 
       const tokenData: StoredTokenData = JSON.parse(tokenDataStr);
       
-      // Check if token is expired
+      // Check if token is expired using safe date parsing
       const now = new Date().getTime();
-      const expiresAt = new Date(tokenData.expiresAt).getTime();
+      const expiresAtDate = safeParseDateString(tokenData.expiresAt);
+      
+      if (!expiresAtDate || !isValidDate(expiresAtDate)) {
+        console.warn(`🔴 Invalid expiration date for ${this.config.serviceName} tokens:`, tokenData.expiresAt);
+        return null;
+      }
+      
+      const expiresAt = expiresAtDate.getTime();
       
       if (now >= expiresAt - 300000) { // Refresh 5 minutes before expiry
         console.log(`🔄 ${this.config.serviceName} token expired, attempting refresh...`);
@@ -159,10 +183,10 @@ export abstract class BaseOAuthService {
       const additionalData = this.extractAdditionalTokenData(result);
       const authParams = createOAuthAuthParams(result, additionalData);
 
-      const requestPayload = {
+      const requestPayload: CompleteIntegrationRequest = {
         integration_id: integrationId,
         service_name: this.config.serviceName,
-        service_type: 'oauth',
+        service_type: 'oauth' as const,
         auth_params: authParams
       };
 
@@ -174,7 +198,7 @@ export abstract class BaseOAuthService {
 
       console.log(`✅ ${this.config.serviceName} integration completed with backend`);
     } catch (error) {
-      console.warn(`⚠️ ${this.config.serviceName} backend integration completion failed (expected - endpoint not implemented yet):`, error?.message || error);
+      console.warn(`⚠️ ${this.config.serviceName} backend integration completion failed (expected - endpoint not implemented yet):`, (error as any)?.message || error);
       console.log(`ℹ️ ${this.config.serviceName} OAuth was successful - tokens stored locally in database`);
       // Don't throw here - the OAuth was successful and tokens are stored locally
       // Backend completion is optional and not yet implemented
@@ -241,16 +265,24 @@ export abstract class BaseOAuthService {
   /**
    * Make token request (exchange code or refresh)
    */
-  protected async makeTokenRequest(requestBody: URLSearchParams, operation: string): Promise<any> {
+  protected async makeTokenRequest(requestBody: URLSearchParams, operation: string, useBasicAuth: boolean = false): Promise<any> {
     console.log(`🔄 Making ${this.config.serviceName} ${operation} request...`);
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Accept': 'application/json',
+      'User-Agent': 'MobileJarvisNative/1.0',
+    };
+
+    // Add HTTP Basic Authentication if requested
+    if (useBasicAuth && this.config.clientId && this.config.clientSecret) {
+      const encodedCredentials = createBasicAuthHeader(this.config.clientId, this.config.clientSecret);
+      headers['Authorization'] = `Basic ${encodedCredentials}`;
+    }
     
     const response = await fetch(this.config.tokenEndpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json',
-        'User-Agent': 'MobileJarvisNative/1.0',
-      },
+      headers,
       body: requestBody.toString(),
     });
 
