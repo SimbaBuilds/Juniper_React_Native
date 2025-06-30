@@ -9,7 +9,6 @@ type RootStackParamList = {
   Settings: undefined;
   Login: undefined;
   SignUp: undefined;
-  PhoneSignUp: undefined;
 };
 
 type SignUpPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'SignUp'>;
@@ -63,10 +62,6 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
     navigation.navigate('Login');
   };
 
-  const handleNavigateToPhoneSignup = () => {
-    navigation.navigate('PhoneSignUp');
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -95,10 +90,6 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
             <Text style={styles.dividerText}>OR</Text>
             <View style={styles.divider} />
           </View>
-
-          <TouchableOpacity onPress={handleNavigateToPhoneSignup} style={styles.phoneButton}>
-            <Text style={styles.phoneButtonText}>Sign up with Phone</Text>
-          </TouchableOpacity>
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
