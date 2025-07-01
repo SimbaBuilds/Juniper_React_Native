@@ -18,7 +18,7 @@ interface SignUpPageProps {
 }
 
 const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
-  const { register, isLoading } = useAuth();
+  const { register, loginWithGoogle, isLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
   const handleSignUp = async (email: string, password: string, name: string) => {
@@ -58,6 +58,21 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
     }
   };
 
+  const handleGoogleSignUp = async () => {
+    try {
+      setError(null);
+      await loginWithGoogle();
+    } catch (err) {
+      let errorMessage = 'Google sign-up failed. Please try again.';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+    }
+  };
+
   const handleNavigateToLogin = () => {
     navigation.navigate('Login');
   };
@@ -90,6 +105,14 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
             <Text style={styles.dividerText}>OR</Text>
             <View style={styles.divider} />
           </View>
+
+          <TouchableOpacity 
+            style={styles.googleButton} 
+            onPress={handleGoogleSignUp}
+            disabled={isLoading}
+          >
+            <Text style={styles.googleButtonText}>Sign up with Google</Text>
+          </TouchableOpacity>
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
@@ -174,6 +197,21 @@ const styles = StyleSheet.create({
   },
   phoneButtonText: {
     color: '#3498db',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  googleButton: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginBottom: 16,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  googleButtonText: {
+    color: '#333',
     fontSize: 16,
     fontWeight: '600',
   },

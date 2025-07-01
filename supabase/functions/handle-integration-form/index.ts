@@ -314,16 +314,18 @@ function generateFormPage(token: string, service: string, serviceName: string): 
         <div class="instructions">
           <h3>📝 Getting your Perplexity API Key</h3>
           <ol>
-            <li><strong>Create Account:</strong> Visit <a href="https://www.perplexity.ai/settings/api" target="_blank">perplexity.ai/settings/api</a></li>
-            <li><strong>Add Billing:</strong> You'll need to provide billing information to access the API</li>
-            <li><strong>Generate Key:</strong> Click "Generate API Key" and copy it (starts with "pplx-")</li>
-            <li><strong>Store Securely:</strong> You won't be able to see the key again</li>
+            <li><strong>Create an account</strong></li>
+            <li><strong>Go to <a href="https://www.perplexity.ai/account/api/group" target="_blank">perplexity.ai/account</a></strong></li>
+            <li><strong>Create a group</strong></li>
+            <li><strong>Go to API Billing and enter info</strong></li>
+            <li><strong>Purchase credits</strong></li>
+            <li><strong>Go to API Keys and generate a key.</strong> It might take a second for the credits to propagate.</li>
           </ol>
           
           <h4>💰 Personal Usage Estimates:</h4>
           <ul>
-            <li><strong>Light use:</strong> ~10 queries/day = $3-6/month</li>
-            <li><strong>Moderate use:</strong> ~25 queries/day = $8-15/month</li>
+            <li><strong>Light use:</strong> ~4 queries/day = $1-2/month</li>
+            <li><strong>Moderate use:</strong> ~10 queries/day = $5-10/month</li>
             <li><strong>Heavy use:</strong> ~50 queries/day = $15-30/month</li>
             <li><strong>Cost per query:</strong> ~$0.01-0.05 (varies by model and response length)</li>
           </ul>

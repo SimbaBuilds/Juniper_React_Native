@@ -337,6 +337,21 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     redirectUri: generateRedirectUri('zoom'),
     authEndpoint: 'https://zoom.us/oauth/authorize',
     tokenEndpoint: 'https://zoom.us/oauth/token'
+  },
+
+  'google': {
+    serviceName: 'google',
+    clientId: getGoogleClientId(),
+    clientSecret: getGoogleClientSecret(),
+    scopes: ['openid', 'email', 'profile'],
+    redirectUri: generateRedirectUri('google'),
+    authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+    tokenEndpoint: 'https://oauth2.googleapis.com/token',
+    revokeEndpoint: 'https://oauth2.googleapis.com/revoke',
+    additionalParameters: {
+      access_type: 'offline',
+      prompt: 'consent'
+    }
   }
 };
 

@@ -22,7 +22,7 @@ import WakeWordService from '../wakeword/WakeWordService';
 // Voice Settings interface
 export interface VoiceSettings {
   deepgramEnabled: boolean;
-  baseLanguageModel: 'grok-3' | 'grok-3.5' | 'gpt-4o' | 'claude-3-5-sonnet-20241022';
+  baseLanguageModel: 'grok-3' | 'grok-3.5' | 'gpt-4o' | 'claude-sonnet-4-20250514';
   generalInstructions: string;
   selectedWakeWord: string;
   wakeWordSensitivity: number;
@@ -80,7 +80,7 @@ const MODEL_DISPLAY_NAMES = {
   'grok-3': 'Grok 3',
   'grok-3.5': 'Grok 3.5', 
   'gpt-4o': 'GPT 4o',
-  'claude-3-5-sonnet-20241022': 'Claude Sonnet 3.5'
+  'claude-sonnet-4-20250514': 'Claude Sonnet 4'
 } as const;
 
 type RootStackParamList = {

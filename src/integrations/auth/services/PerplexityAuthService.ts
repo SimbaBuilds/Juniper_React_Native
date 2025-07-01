@@ -298,23 +298,12 @@ export class PerplexityAuthService {
     return `
 **Getting your Perplexity API Key:**
 
-1. **Create Account**
-   - Visit perplexity.ai and sign up for an account
-   - You'll need to provide billing information to access the API
-
-2. **Navigate to API Settings**
-   - Go to perplexity.ai/settings/api
-   - You may need to wait for API access approval
-
-3. **Generate API Key**
-   - Click "Generate API Key"
-   - Copy the key (starts with "pplx-")
-   - Store it securely - you won't be able to see it again
-
-4. **Important Notes**
-   - API access requires a paid account with billing info
-   - Usage is charged per request based on model and tokens
-   - Monitor your usage to avoid unexpected charges
+1. Create an account
+2. Go to perplexity.ai/account (direct link: perplexity.ai/account/api/group)
+3. Create a group
+4. Go to API Billing and enter info
+5. Purchase credits
+6. Go to API Keys and generate a key. It might take a second for the credits to propagate.
 
 **Personal Usage Estimates:**
 - Light use: ~4 queries/day = $1-2/month

@@ -166,7 +166,45 @@ export class GoogleAuthService {
         throw new Error('No authorization code provided');
       }
       
-      return await this.exchangeCodeAndSaveTokens(code);
+      // Exchange code for tokens first
+      const tokenData = await this.exchangeCodeForToken(code);
+      
+      // Get user info from Google
+      const userInfo = await this.getGoogleUserInfo(tokenData.access_token);
+      
+      // Try using the ID token for Supabase auth
+      if (tokenData.id_token) {
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: tokenData.id_token,
+        });
+        
+        if (error) {
+          console.error('❌ Error creating Supabase session with ID token:', error);
+          throw error;
+        }
+        
+        if (data.user) {
+          console.log('✅ Google authentication successful - Supabase session created');
+          
+          // Store additional auth data locally
+          this.authData = {
+            accessToken: tokenData.access_token,
+            refreshToken: tokenData.refresh_token,
+            expiresAt: Date.now() + (tokenData.expires_in * 1000),
+            scope: tokenData.scope || GOOGLE_CONFIG.SCOPES,
+          };
+          
+          await this.saveAuthData();
+          this.notifyAuthCallbacks();
+          return true;
+        }
+      } else {
+        console.warn('❌ No ID token received from Google');
+        throw new Error('No ID token received from Google OAuth response');
+      }
+      
+      return false;
     } catch (error) {
       console.error('❌ Error handling HTTPS auth callback:', error);
       return false;
@@ -505,6 +543,33 @@ export class GoogleAuthService {
       }
     } catch (error) {
       console.warn('⚠️ Error during token revocation:', error);
+    }
+  }
+
+  private async getGoogleUserInfo(accessToken: string): Promise<any> {
+    try {
+      const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get user info: ${response.status} ${response.statusText}`);
+      }
+
+      const userInfo = await response.json();
+      console.log('📋 Google user info retrieved:', {
+        id: userInfo.id,
+        email: userInfo.email,
+        name: userInfo.name,
+        verified_email: userInfo.verified_email
+      });
+
+      return userInfo;
+    } catch (error) {
+      console.error('❌ Error getting Google user info:', error);
+      throw error;
     }
   }
 

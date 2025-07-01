@@ -295,7 +295,8 @@ export default function App() {
           require('./src/integrations/auth/services/GoogleMeetAuthService').default.getInstance().handleAuthCallback(code, state);
           break;
         case 'google':
-          require('./src/auth/GoogleAuthService').GoogleAuthService.getInstance().handleAuthCallback(code);
+          const { GoogleAuthService } = require('./src/auth/GoogleAuthService');
+          GoogleAuthService.getInstance().handleAuthCallback(code);
           break;
         case 'outlook-mail':
           require('./src/integrations/auth/services/MicrosoftOutlookMailAuthService').default.getInstance().handleAuthCallback(code, state);

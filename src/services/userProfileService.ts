@@ -11,7 +11,7 @@ export class UserProfileService {
         id: userId,
         display_name: displayName,
         deepgram_enabled: false,
-        base_language_model: 'claude-3-5-sonnet-20241022',
+        base_language_model: 'claude-sonnet-4-20250514',
         general_instructions: '',
         wake_word: 'Juniper',
         wake_word_sensitivity: 0.3,
