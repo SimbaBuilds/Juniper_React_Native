@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { completeIntegration, createApiKeyAuthParams, disconnectIntegration } from '../../../api/integration_api';
+import { supabase } from '../../../supabase/supabase';
 
 interface PerplexityAuthResult {
   apiKey: string;
@@ -62,6 +63,9 @@ export class PerplexityAuthService {
       // Store API key securely
       await this.storeApiKey(trimmedApiKey, integrationId);
 
+      // Store API key in database integration record
+      await this.updateIntegrationWithApiKey(trimmedApiKey, integrationId);
+
       // Call backend to complete integration
       await this.completeIntegration(authResult, integrationId);
 
@@ -120,6 +124,35 @@ export class PerplexityAuthService {
       console.error('🔴 Error validating Perplexity API key:', error);
       // Network errors shouldn't fail validation
       return true;
+    }
+  }
+
+  /**
+   * Update integration record with API key
+   */
+  private async updateIntegrationWithApiKey(apiKey: string, integrationId: string): Promise<void> {
+    try {
+      console.log('🟠 Updating integration record with API key...');
+      
+      const { error } = await supabase
+        .from('integrations')
+        .update({
+          api_key: apiKey,
+          is_active: true,
+          status: 'active',
+          updated_at: new Date().toISOString(),
+          last_used: new Date().toISOString()
+        })
+        .eq('id', integrationId);
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('🟠 Integration record updated successfully');
+    } catch (error) {
+      console.error('🔴 Error updating integration record with API key:', error);
+      throw error;
     }
   }
 
@@ -217,6 +250,34 @@ export class PerplexityAuthService {
   }
 
   /**
+   * Clear API key from database integration record
+   */
+  private async clearApiKeyFromDatabase(integrationId: string): Promise<void> {
+    try {
+      console.log('🟠 Clearing API key from database...');
+      
+      const { error } = await supabase
+        .from('integrations')
+        .update({
+          api_key: null,
+          is_active: false,
+          status: 'inactive',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', integrationId);
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('🟠 API key cleared from database successfully');
+    } catch (error) {
+      console.error('🔴 Error clearing API key from database:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Disconnect integration
    */
   async disconnect(integrationId: string): Promise<void> {
@@ -229,6 +290,9 @@ export class PerplexityAuthService {
       } else {
         await AsyncStorage.removeItem(`perplexity_key_${integrationId}`);
       }
+
+      // Clear API key from database
+      await this.clearApiKeyFromDatabase(integrationId);
 
       // Disconnect from backend
       await disconnectIntegration({
@@ -309,10 +373,6 @@ export class PerplexityAuthService {
 - Light use: ~4 queries/day = $1-2/month
 - Moderate use: ~10 queries/day = $5-10/month
 - Heavy use: ~50 queries/day = $15-30/month
-- Cost: ~$0.01-0.05 per query (varies by model and response length)
-
-**For Mobile Jarvis:**
-Your AI assistant will use this API key to answer research questions and provide real-time information.
     `.trim();
   }
 }

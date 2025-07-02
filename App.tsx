@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Linking, Platform } from 'react-native';
@@ -19,6 +19,7 @@ import LoginPage from './src/auth/LoginPage';
 import SignUpPage from './src/auth/SignUpPage';
 import PhoneSignUpPage from './src/auth/PhoneSignUpPage';
 import { AuthProvider } from './src/auth/AuthContext';
+import IntegrationCompletionService from './src/integrations/IntegrationCompletionService';
 
 type RootStackParamList = {
   MainTabs: undefined;
@@ -541,7 +542,20 @@ export default function App() {
 }
 
 function MainTabNavigator() {
-  const { integrationInProgress } = useVoice();
+  const { integrationInProgress, sendTextMessage } = useVoice();
+  const navigation = useNavigation();
+  
+  // Set up integration completion handler
+  useEffect(() => {
+    IntegrationCompletionService.getInstance().setHandler({
+      sendTextMessage: async (message: string) => {
+        await sendTextMessage(message);
+      },
+      navigateToHome: () => {
+        navigation.navigate('Home' as never);
+      }
+    });
+  }, [sendTextMessage, navigation]);
   
   return (
     <Tab.Navigator

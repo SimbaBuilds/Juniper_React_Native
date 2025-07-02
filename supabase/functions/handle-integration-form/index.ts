@@ -4,17 +4,27 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
+// Validate environment variables
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('❌ Missing required environment variables:', {
+    SUPABASE_URL: !!SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY
+  })
+}
+
 interface FormSubmissionRequest {
   token: string
   service: string
   formData: {
     // Perplexity
-    apiKey?: string
+    perplexityApiKey?: string
     // Twilio
     accountSid?: string
-    apiKey?: string
+    twilioApiKey?: string
     apiSecret?: string
     phoneNumber?: string
+    // Generic API key field
+    apiKey?: string
   }
 }
 
@@ -23,17 +33,26 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
-  try {
-    // Initialize Supabase client
-    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!)
+  console.log('🔵 handle-integration-form request:', req.method, req.url)
 
+  try {
     if (req.method === 'GET') {
+      // Handle GET requests (serve form) - no authentication required for serving HTML
+      console.log('🔵 Handling GET request to serve form...')
+      
+      // Initialize Supabase client with anon key for public access
+      const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
       // Serve the form page
       const url = new URL(req.url)
       const token = url.searchParams.get('token')
@@ -49,7 +68,8 @@ serve(async (req) => {
         )
       }
 
-      // Validate token
+      // Validate token (bypass RLS for service role)
+      console.log('🔍 Validating GET token:', token.substring(0, 8) + '...')
       const { data: tokenData, error: tokenError } = await supabase
         .from('integration_setup_tokens')
         .select('*')
@@ -57,6 +77,12 @@ serve(async (req) => {
         .eq('is_used', false)
         .gt('expires_at', new Date().toISOString())
         .single()
+      
+      console.log('🔍 GET token validation result:', { 
+        found: !!tokenData, 
+        error: tokenError?.message,
+        errorCode: tokenError?.code 
+      })
 
       if (tokenError || !tokenData) {
         return new Response(
@@ -77,7 +103,17 @@ serve(async (req) => {
     }
 
     if (req.method === 'POST') {
-      // Handle form submission
+      // Handle form submission with service role authentication
+      console.log('🔵 Handling POST request for form submission...')
+      
+      // Initialize Supabase client with service role for data modifications
+      const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+
       const body: FormSubmissionRequest = await req.json()
       const { token, service, formData } = body
 
@@ -88,7 +124,8 @@ serve(async (req) => {
         )
       }
 
-      // Validate token
+      // Validate token (bypass RLS for service role)
+      console.log('🔍 Validating POST token:', token.substring(0, 8) + '...')
       const { data: tokenData, error: tokenError } = await supabase
         .from('integration_setup_tokens')
         .select('*')
@@ -96,6 +133,12 @@ serve(async (req) => {
         .eq('is_used', false)
         .gt('expires_at', new Date().toISOString())
         .single()
+      
+      console.log('🔍 POST token validation result:', { 
+        found: !!tokenData, 
+        error: tokenError?.message,
+        errorCode: tokenError?.code 
+      })
 
       if (tokenError || !tokenData) {
         return new Response(
@@ -138,7 +181,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             success: true, 
-            message: 'Setup completed successfully! Return to your mobile app and tap "Finalize Integration".' 
+            message: 'Setup completed successfully! Your integration is now active and ready to use.' 
           }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
@@ -155,9 +198,19 @@ serve(async (req) => {
       { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
-    console.error('Error in handle-integration-form function:', error)
+    console.error('❌ Error in handle-integration-form function:', error)
+    console.error('Error type:', typeof error)
+    console.error('Error details:', error instanceof Error ? {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    } : String(error))
+    
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : String(error)
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
@@ -188,15 +241,15 @@ async function processPerplexitySetup(apiKey: string, tokenData: any, supabase: 
     const isValid = response.status !== 401
 
     if (isValid) {
-      // Store in integration via the API key auth params format
-      const authParams = JSON.stringify({ api_key: apiKey })
-      
+      // Store API key in the same format as mobile app
       await supabase
         .from('integrations')
         .update({
-          auth_params: authParams,
-          status: 'ready',
-          updated_at: new Date().toISOString()
+          api_key: apiKey,
+          is_active: true,
+          status: 'active',
+          updated_at: new Date().toISOString(),
+          last_used: new Date().toISOString()
         })
         .eq('id', tokenData.integration_id)
     }
@@ -223,20 +276,20 @@ async function processTwilioSetup(formData: any, tokenData: any, supabase: any):
       return false
     }
 
-    // Store credentials
-    const authParams = JSON.stringify({
-      account_sid: accountSid,
-      api_key: apiKey,
-      api_secret: apiSecret,
-      phone_number: cleanedPhoneNumber
-    })
-    
+    // Store credentials in the same format as mobile app
     await supabase
       .from('integrations')
       .update({
-        auth_params: authParams,
-        status: 'ready',
-        updated_at: new Date().toISOString()
+        configuration: {
+          account_sid: accountSid,
+          api_key: apiKey,
+          api_secret: apiSecret,
+          phone_number: cleanedPhoneNumber
+        },
+        is_active: true,
+        status: 'active',
+        updated_at: new Date().toISOString(),
+        last_used: new Date().toISOString()
       })
       .eq('id', tokenData.integration_id)
 
@@ -307,7 +360,7 @@ function generateFormPage(token: string, service: string, serviceName: string): 
       <div class="container">
         <div class="header">
           <h1>${serviceName} Integration Setup</h1>
-          <p>Complete your integration setup for Mobile Jarvis</p>
+          <p>Complete your integration setup for Juniper</p>
         </div>
 
         ${isPerplexity ? `
@@ -327,16 +380,14 @@ function generateFormPage(token: string, service: string, serviceName: string): 
             <li><strong>Light use:</strong> ~4 queries/day = $1-2/month</li>
             <li><strong>Moderate use:</strong> ~10 queries/day = $5-10/month</li>
             <li><strong>Heavy use:</strong> ~50 queries/day = $15-30/month</li>
-            <li><strong>Cost per query:</strong> ~$0.01-0.05 (varies by model and response length)</li>
           </ul>
           
-          <p><strong>For Mobile Jarvis:</strong> Your AI assistant will use this API key to answer research questions and provide real-time information.</p>
         </div>
 
         <form id="setupForm">
           <div class="form-group">
             <label for="apiKey">Perplexity API Key</label>
-            <input type="password" id="apiKey" name="apiKey" placeholder="pplx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
+            <input type="password" id="apiKey" name="apiKey" placeholder="pplx-" required>
           </div>
           <button type="submit" class="submit-btn">Complete Setup</button>
         </form>
@@ -381,8 +432,8 @@ function generateFormPage(token: string, service: string, serviceName: string): 
 
         <div class="success" id="success">
           <h3>✅ Setup Complete!</h3>
-          <p>Your ${serviceName} integration has been configured successfully.</p>
-          <p><strong>Next step:</strong> Return to your Mobile Jarvis app and tap "Finalize Integration" to complete the process.</p>
+          <p>Your ${serviceName} integration has been configured successfully and is now active.</p>
+          <p><strong>Next step:</strong> Return to your Juniper app - your integration is ready to use!</p>
         </div>
 
         <div class="error" id="error">

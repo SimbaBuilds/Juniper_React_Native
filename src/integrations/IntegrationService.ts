@@ -99,12 +99,25 @@ export class IntegrationService {
         return;
       }
 
-      // Create a new integration record
-      const integration = await this.createIntegrationRecord(serviceId, userId);
-      console.log(`✅ Integration record created with ID: ${integration.id}`);
+      // Find any existing integration (active or inactive) for this service
+      const anyExistingIntegration = existingIntegrations.find(
+        (integration: any) => integration.service_id === serviceId
+      );
+
+      let integrationId: string;
+      if (anyExistingIntegration) {
+        // Use existing integration record (could be inactive)
+        integrationId = anyExistingIntegration.id;
+        console.log(`✅ Using existing integration record with ID: ${integrationId}`);
+      } else {
+        // Create a new integration record (shouldn't happen since modal creates one)
+        const integration = await this.createIntegrationRecord(serviceId, userId);
+        integrationId = integration.id;
+        console.log(`✅ Integration record created with ID: ${integrationId}`);
+      }
 
       // Start API key authentication
-      await this.startApiKeyAuth(serviceName, integration.id, apiKey);
+      await this.startApiKeyAuth(serviceName, integrationId, apiKey);
 
     } catch (error) {
       console.error(`❌ Error starting ${serviceName} integration:`, error);

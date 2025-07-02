@@ -167,9 +167,41 @@ const TwilioCredentialsModal: React.FC<TwilioCredentialsModalProps> = ({
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Complete on Desktop Option - Moved to Top */}
+          <View style={styles.emailOptionContainer}>
+            <View style={styles.emailOptionHeader}>
+              <Ionicons name="desktop-outline" size={20} color="#4A90E2" />
+              <Text style={styles.emailOptionTitle}>Complete on Desktop (Recommended)</Text>
+            </View>
+            <Text style={styles.emailOptionDescription}>
+              Get a setup link sent to your email. Complete the comprehensive setup guide on desktop, then return here to finalize.
+            </Text>
+            <TouchableOpacity
+              style={[styles.emailButton, isEmailLoading && styles.disabledButton]}
+              onPress={handleSendEmail}
+              disabled={isEmailLoading || !integrationId}
+            >
+              {isEmailLoading ? (
+                <ActivityIndicator color="#4A90E2" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="mail-outline" size={16} color="#4A90E2" />
+                  <Text style={styles.emailButtonText}>Send Setup Link</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Divider */}
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <Text style={styles.dividerText}>or enter credentials manually below</Text>
+            <View style={styles.divider} />
+          </View>
+
           {/* Instructions */}
           <View style={styles.instructionsContainer}>
-            <Text style={styles.instructionsTitle}>Setup Instructions</Text>
+            <Text style={styles.instructionsTitle}>Manual Setup Instructions</Text>
             <Text style={styles.instructionsText}>{TwilioAuthService.getUserGuide()}</Text>
           </View>
 
@@ -247,52 +279,7 @@ const TwilioCredentialsModal: React.FC<TwilioCredentialsModalProps> = ({
             />
           </View>
 
-          {/* Security Note */}
-          <View style={styles.securityNote}>
-            <Ionicons name="shield-checkmark" size={16} color="#4CAF50" />
-            <Text style={styles.securityText}>
-              Your credentials are stored securely and encrypted on your device.
-            </Text>
-          </View>
 
-          {/* Pricing Info */}
-          <View style={styles.pricingNote}>
-            <Ionicons name="information-circle" size={16} color="#FF9800" />
-            <Text style={styles.pricingText}>
-              Note: Twilio charges ~$1/month for phone numbers + SMS usage fees.
-            </Text>
-          </View>
-
-          {/* Divider and Email Option */}
-          <View style={styles.dividerContainer}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.divider} />
-          </View>
-
-          <View style={styles.emailOptionContainer}>
-            <View style={styles.emailOptionHeader}>
-              <Ionicons name="desktop-outline" size={20} color="#4A90E2" />
-              <Text style={styles.emailOptionTitle}>Complete on Desktop</Text>
-            </View>
-            <Text style={styles.emailOptionDescription}>
-              Get a setup link sent to your email. Complete the form on desktop with all your Twilio credentials, then return here to finalize.
-            </Text>
-            <TouchableOpacity
-              style={[styles.emailButton, isEmailLoading && styles.disabledButton]}
-              onPress={handleSendEmail}
-              disabled={isEmailLoading || !integrationId}
-            >
-              {isEmailLoading ? (
-                <ActivityIndicator color="#4A90E2" size="small" />
-              ) : (
-                <>
-                  <Ionicons name="mail-outline" size={16} color="#4A90E2" />
-                  <Text style={styles.emailButtonText}>Send Setup Link</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
         </ScrollView>
 
         {/* Footer */}

@@ -5,6 +5,7 @@ import { getOAuthConfig, getRedirectUri, buildAuthUrl, OAuthServiceConfig } from
 import { completeIntegration, createOAuthAuthParams, disconnectIntegration, CompleteIntegrationRequest } from '../../api/integration_api';
 import { calculateExpirationDate, safeToISOString, safeParseDateString, isValidDate } from './DateUtils';
 import { createBasicAuthHeader } from '../../utils/base64';
+import IntegrationCompletionService from '../IntegrationCompletionService';
 
 export interface AuthResult {
   accessToken: string;
@@ -180,28 +181,16 @@ export abstract class BaseOAuthService {
    */
   protected async completeIntegration(result: any, integrationId: string): Promise<void> {
     try {
-      const additionalData = this.extractAdditionalTokenData(result);
-      const authParams = createOAuthAuthParams(result, additionalData);
-
-      const requestPayload: CompleteIntegrationRequest = {
-        integration_id: integrationId,
-        service_name: this.config.serviceName,
-        service_type: 'oauth' as const,
-        auth_params: authParams
-      };
-
-      console.log(`🔍 ${this.config.serviceName} backend request payload:`, JSON.stringify(requestPayload, null, 2));
-      console.log(`🔍 ${this.config.serviceName} original result:`, JSON.stringify(result, null, 2));
-      console.log(`🔍 ${this.config.serviceName} additional data:`, JSON.stringify(additionalData, null, 2));
-
-      await completeIntegration(requestPayload);
-
-      console.log(`✅ ${this.config.serviceName} integration completed with backend`);
+      console.log(`🔍 ${this.config.serviceName} completing integration flow...`);
+      
+      // Instead of calling the API endpoint, trigger the voice message and navigation
+      await IntegrationCompletionService.getInstance().completeIntegration(this.config.serviceName);
+      
+      console.log(`✅ ${this.config.serviceName} integration completion flow triggered`);
     } catch (error) {
-      console.warn(`⚠️ ${this.config.serviceName} backend integration completion failed (expected - endpoint not implemented yet):`, (error as any)?.message || error);
-      console.log(`ℹ️ ${this.config.serviceName} OAuth was successful - tokens stored locally in database`);
+      console.warn(`⚠️ ${this.config.serviceName} integration completion flow failed:`, (error as any)?.message || error);
+      console.log(`ℹ️ ${this.config.serviceName} OAuth was successful - tokens stored locally`);
       // Don't throw here - the OAuth was successful and tokens are stored locally
-      // Backend completion is optional and not yet implemented
     }
   }
 

@@ -310,7 +310,7 @@ export const IntegrationsScreen: React.FC = () => {
       
       // Check if this service uses API key authentication
       if (internalServiceName === 'perplexity') {
-        // Create integration record first if it doesn't exist
+        // Ensure integration record exists for email functionality
         if (!service.integration_id) {
           const integration = await integrationService.createIntegrationRecord(service.id, user.id);
           service.integration_id = integration.id;
@@ -322,7 +322,7 @@ export const IntegrationsScreen: React.FC = () => {
 
       // Check if this service uses Twilio credentials
       if (internalServiceName === 'twilio') {
-        // Create integration record first if it doesn't exist
+        // Ensure integration record exists for email functionality
         if (!service.integration_id) {
           const integration = await integrationService.createIntegrationRecord(service.id, user.id);
           service.integration_id = integration.id;
