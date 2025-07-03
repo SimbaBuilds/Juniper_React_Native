@@ -127,7 +127,7 @@ const TwilioCredentialsModal: React.FC<TwilioCredentialsModalProps> = ({
       if (result.success) {
         Alert.alert(
           'Email Sent! 📧',
-          'We\'ve sent you a setup link. Check your email and complete the setup on desktop, then return here to finalize the integration.',
+          'We\'ve sent you a setup link. Please check your email and complete the setup on desktop; then return here to finalize the integration.',
           [
             {
               text: 'Got it',
@@ -222,7 +222,7 @@ const TwilioCredentialsModal: React.FC<TwilioCredentialsModalProps> = ({
 
           {/* API Key Input */}
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>API Key</Text>
+            <Text style={styles.inputLabel}>API Key SID</Text>
             <TextInput
               style={styles.textInput}
               value={credentials.apiKey}
@@ -237,7 +237,7 @@ const TwilioCredentialsModal: React.FC<TwilioCredentialsModalProps> = ({
 
           {/* API Secret Input */}
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>API Secret</Text>
+            <Text style={styles.inputLabel}>API Key Secret</Text>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.textInput}

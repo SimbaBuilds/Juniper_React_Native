@@ -2,10 +2,9 @@ import { completeIntegration, createCredentialsAuthParams, disconnectIntegration
 import { supabase } from '../../../supabase/supabase';
 
 interface TwilioCredentials {
-  accountSid: string;
-  apiKey: string;
-  apiSecret: string;
-  phoneNumber: string;
+  account_sid: string;
+  auth_token: string;
+  phone_number: string;
 }
 
 interface TwilioAuthResult {
@@ -32,30 +31,30 @@ export class TwilioAuthService {
       console.log('🔵 Storing Twilio credentials...');
       
       // Validate required fields
-      if (!credentials.accountSid || !credentials.apiKey || !credentials.apiSecret || !credentials.phoneNumber) {
+      if (!credentials.account_sid || !credentials.auth_token || !credentials.phone_number) {
         return {
           success: false,
-          error: 'All fields are required: Account SID, API Key, API Secret, and Phone Number'
+          error: 'All fields are required: Account SID, Auth Token, and Phone Number'
         };
       }
 
       // Basic format validation
-      if (!credentials.accountSid.startsWith('AC')) {
+      if (!credentials.account_sid.startsWith('AC')) {
         return {
           success: false,
           error: 'Account SID should start with "AC"'
         };
       }
 
-      if (!credentials.apiKey.startsWith('SK')) {
+      if (credentials.auth_token.length < 32) {
         return {
           success: false,
-          error: 'API Key should start with "SK"'
+          error: 'Auth Token appears to be invalid (too short)'
         };
       }
 
       // Clean phone number (remove non-digits)
-      const cleanedPhoneNumber = credentials.phoneNumber.replace(/[^\d]/g, '');
+      const cleanedPhoneNumber = credentials.phone_number.replace(/[^\d]/g, '');
       if (cleanedPhoneNumber.length < 10) {
         return {
           success: false,
@@ -65,7 +64,7 @@ export class TwilioAuthService {
 
       const cleanedCredentials = {
         ...credentials,
-        phoneNumber: cleanedPhoneNumber
+        phone_number: cleanedPhoneNumber
       };
 
       // Store credentials in database
@@ -101,10 +100,9 @@ export class TwilioAuthService {
         .update({
           // Store credentials in configuration field as JSON
           configuration: {
-            account_sid: credentials.accountSid,
-            api_key: credentials.apiKey,
-            api_secret: credentials.apiSecret,
-            phone_number: credentials.phoneNumber
+            account_sid: credentials.account_sid,
+            auth_token: credentials.auth_token,
+            phone_number: credentials.phone_number
           },
           is_active: true,
           status: 'active',
@@ -130,10 +128,9 @@ export class TwilioAuthService {
   private async completeIntegration(credentials: TwilioCredentials, integrationId: string): Promise<void> {
     try {
       const authParams = createCredentialsAuthParams({
-        account_sid: credentials.accountSid,
-        api_key: credentials.apiKey,
-        api_secret: credentials.apiSecret,
-        phone_number: credentials.phoneNumber
+        account_sid: credentials.account_sid,
+        auth_token: credentials.auth_token,
+        phone_number: credentials.phone_number
       });
 
       await completeIntegration({
@@ -237,9 +234,9 @@ Step 1: Create Your Account
 
 Step 2: Get Your API Credentials  
 ⏱️ 2 minutes
-1. Go to **Console** → **Account** → **API keys & tokens**
-2. Copy your **Account SID** (starts with \`AC...\`)
-3. Create new **API Key** (starts with \`SK...\`) + **Secret**
+1. Go to "Console" → "Account" (scroll down)
+2. Copy your "Account SID" (starts with \`AC...\`)
+3. Copy your "Auth Token" (click "Show" to reveal)
 4. Save these credentials securely
 
 ---
@@ -253,9 +250,11 @@ Best for most users - simple & clean separation
 
 ⚡ Setup Time: 2 minutes
 🕐 Live Time: Instant
-💵 Monthly Cost: $1.15 - $3.25
+💵 Monthly Cost: $1.15 - $3.25/month
 📱 SMS Included: 20-300 messages
 ✅ Benefits: Keep personal number private, professional setup
+
+Steps: Console → Phone Numbers → Manage → Buy a number → Select type (local/toll-free) → Purchase → Copy number
 
 🟡 Option B: Port Your Personal Number  
 For users who want AI to text as "them"
@@ -266,21 +265,15 @@ For users who want AI to text as "them"
 📱 SMS Included: 20-300 messages
 ⚠️ Note: AI sends as you from your known number
 
+Steps: Console → Phone Numbers → Port and Host → Enter your number → Upload carrier info → Pay $2 → Wait 2-4 weeks
+
 ---
-
-💰 Cost Breakdown
-
-Monthly Usage Estimates:
-Usage Level | SMS Volume | SMS Cost | Number Cost | **Total/Month**
-🟢 Light | ~20 messages | ~$1.15
-🟡 Moderate | ~100 messages | ~$1.75
-🔴 Heavy | ~300 messages | ~$3.25
 
 Call Pricing:
 📞 Voice calls: $0.0085/minute
 💡 Example: 5-minute call = $0.04
 
-Ready to get started? Choose your option above and let's connect your AI! 🚀
+Ready to get started? Choose your option above and let's connect your assistant! 🚀
     `.trim();
   }
 }

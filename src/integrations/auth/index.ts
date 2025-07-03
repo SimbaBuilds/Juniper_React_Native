@@ -15,6 +15,7 @@ export { default as GmailAuthService } from './services/GmailAuthService';
 export { default as GoogleCalendarAuthService } from './services/GoogleCalendarAuthService';
 export { default as ZoomAuthService } from './services/ZoomAuthService';
 export { default as TwilioAuthService } from './services/TwilioAuthService';
+export { default as TextbeltAuthService } from './services/TextbeltAuthService';
 export { default as MicrosoftExcelAuthService } from './services/MicrosoftExcelAuthService';
 export { default as MicrosoftWordAuthService } from './services/MicrosoftWordAuthService';
 export { default as MicrosoftOutlookCalendarAuthService } from './services/MicrosoftOutlookCalendarAuthService';
@@ -32,6 +33,7 @@ import GmailAuthService from './services/GmailAuthService';
 import GoogleCalendarAuthService from './services/GoogleCalendarAuthService';
 import ZoomAuthService from './services/ZoomAuthService';
 import TwilioAuthService from './services/TwilioAuthService';
+import TextbeltAuthService from './services/TextbeltAuthService';
 import MicrosoftExcelAuthService from './services/MicrosoftExcelAuthService';
 import MicrosoftWordAuthService from './services/MicrosoftWordAuthService';
 import MicrosoftOutlookCalendarAuthService from './services/MicrosoftOutlookCalendarAuthService';
@@ -48,6 +50,7 @@ export type { GmailAuthService as GmailAuthServiceType } from './services/GmailA
 export type { GoogleCalendarAuthService as GoogleCalendarAuthServiceType } from './services/GoogleCalendarAuthService';
 export type { ZoomAuthService as ZoomAuthServiceType } from './services/ZoomAuthService';
 export type { TwilioAuthService as TwilioAuthServiceType } from './services/TwilioAuthService';
+export type { TextbeltAuthService as TextbeltAuthServiceType } from './services/TextbeltAuthService';
 export type { MicrosoftExcelAuthService as MicrosoftExcelAuthServiceType } from './services/MicrosoftExcelAuthService';
 export type { MicrosoftWordAuthService as MicrosoftWordAuthServiceType } from './services/MicrosoftWordAuthService';
 export type { MicrosoftOutlookCalendarAuthService as MicrosoftOutlookCalendarAuthServiceType } from './services/MicrosoftOutlookCalendarAuthService';
@@ -77,6 +80,8 @@ export const getAuthService = (serviceName: string) => {
       return ZoomAuthService.getInstance();
     case 'twilio':
       return TwilioAuthService.getInstance();
+    case 'textbelt':
+      return TextbeltAuthService.getInstance();
     case 'microsoft-excel':
     case 'microsoft_excel':
       return MicrosoftExcelAuthService.getInstance();

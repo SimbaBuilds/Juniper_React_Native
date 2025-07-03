@@ -244,35 +244,22 @@ function getServiceEmailContent(serviceName: string, setupUrl: string): { subjec
         <div class="container">
           <div class="header">
             <h1>🔗 Complete Your Perplexity AI Setup</h1>
-            <p>You're one step away from connecting Perplexity AI to your Mobile Jarvis assistant!</p>
+            <p>You're one step away from connecting Perplexity AI to your Juniper assistant!</p>
           </div>
           <div class="content">
-            <p>Hi there!</p>
-            <p>You started setting up your Perplexity AI integration. Complete the setup using the button below:</p>
-            
+        
             <div style="text-align: center;">
               <a href="${setupUrl}" class="button">Complete Perplexity Setup</a>
             </div>
 
-            <div class="instructions">
-              <h3>📝 What you'll need:</h3>
-              <ol>
-                <li><strong>Perplexity API Key</strong> - Get this from <a href="https://www.perplexity.ai/settings/api">perplexity.ai/settings/api</a></li>
-                <li>Your API key should start with "pplx-" and be about 40-50 characters long</li>
-                <li>You'll need to add billing information to your Perplexity account to use the API</li>
-              </ol>
-            </div>
-
             <div class="warning">
-              <strong>⏰ Important:</strong> This setup link expires in 24 hours for security. If you need a new link, just try connecting again in the Mobile Jarvis app.
+              This setup link expires in 24 hours for security. If you need a new link, just try connecting again in the Juniper app.
             </div>
 
             <p><strong>After completing the form:</strong></p>
             <p>Return to your Juniper app and tap "Finalize Integration" to complete the setup process.</p>
 
             <div class="footer">
-              <p>Need help? Contact support or check our documentation.</p>
-              <p>This email was sent because you requested to set up a Perplexity AI integration.</p>
             </div>
           </div>
         </div>
@@ -280,159 +267,27 @@ function getServiceEmailContent(serviceName: string, setupUrl: string): { subjec
     }
   } else if (serviceLower === 'twilio') {
     return {
-      subject: '📱 Complete Your Twilio Integration Setup - SMS & Voice for Your AI',
+      subject: '📱 Complete Your Twilio Integration Setup',
       html: `
         ${baseStyles}
-        <style>
-          .option-card { background: white; border: 2px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 15px 0; }
-          .option-recommended { border-color: #28a745; background: #f8fff9; }
-          .option-advanced { border-color: #ffc107; background: #fffdf7; }
-          .option-complex { border-color: #fd7e14; background: #fff8f3; }
-          .cost-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-          .cost-table th, .cost-table td { padding: 8px 12px; border: 1px solid #dee2e6; text-align: left; }
-          .cost-table th { background: #f8f9fa; font-weight: bold; }
-          .feature-list { list-style: none; padding: 0; }
-          .feature-list li { padding: 5px 0; }
-          .feature-list li:before { content: "✅ "; color: #28a745; }
-          .why-section { background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; }
-          .recommendation-box { background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 25px; border-radius: 10px; margin: 20px 0; text-align: center; }
-        </style>
         <div class="container">
           <div class="header">
-            <h1>📱 Twilio Setup Guide</h1>
-            <p><em>Get your AI assistant connected to SMS and voice calls in minutes</em></p>
+            <h1>📱 Complete Your Twilio Setup</h1>
+            <p>You're one step away from connecting Twilio to your Juniper assistant!</p>
           </div>
           <div class="content">
-            <p>Hi there!</p>
-            <p>You started setting up your Twilio integration. Complete the setup using the button below, but first - here's your complete setup guide!</p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${setupUrl}" class="button" style="font-size: 18px; padding: 20px 40px;">🚀 Complete Twilio Setup</a>
-            </div>
-
-            <h2>🚀 Quick Start (7 minutes total)</h2>
-            
-            <div class="instructions">
-              <h3>Step 1: Create Your Account</h3>
-              <p><strong>⏱️ 5 minutes</strong></p>
-              <ul>
-                <li>🌐 Visit <a href="https://twilio.com">twilio.com</a> and create account</li>
-                <li>💰 <strong>$15 free credit</strong> included - no payment required initially</li>
-                <li>✅ Verify your email address</li>
-              </ul>
-
-              <h3>Step 2: Get Your API Credentials</h3>
-              <p><strong>⏱️ 2 minutes</strong></p>
-              <ol>
-                <li>📊 Go to <strong>Console</strong> → <strong>Account</strong> → <strong>API keys & tokens</strong></li>
-                <li>📋 Copy your <strong>Account SID</strong> (starts with <code>AC...</code>)</li>
-                <li>🔑 Create new <strong>API Key</strong> (starts with <code>SK...</code>) + <strong>Secret</strong></li>
-                <li>💾 Save these credentials securely</li>
-              </ol>
-            </div>
-
-            <h2>📞 Phone Number Options</h2>
-            <p><em>Choose the option that best fits your needs:</em></p>
-
-            <div class="option-card option-recommended">
-              <h3>🟢 Option A: Buy New Number (Recommended)</h3>
-              <p><strong>Best for most users - simple & clean separation</strong></p>
-              <table class="cost-table">
-                <tr><th>Aspect</th><th>Details</th></tr>
-                <tr><td>⚡ Setup Time</td><td>2 minutes</td></tr>
-                <tr><td>🕐 Live Time</td><td>Instant</td></tr>
-                <tr><td>💵 Monthly Cost</td><td>$1.15 - $3.25</td></tr>
-                <tr><td>📱 SMS Included</td><td>20-300 messages</td></tr>
-                <tr><td>✅ Benefits</td><td>Keep personal number private, professional setup</td></tr>
-              </table>
-            </div>
-
-            <div class="option-card option-advanced">
-              <h3>🟡 Option B: Port Your Personal Number</h3>
-              <p><strong>For users who want AI to text as "them"</strong></p>
-              <table class="cost-table">
-                <tr><th>Aspect</th><th>Details</th></tr>
-                <tr><td>⚡ Setup Time</td><td>5 minutes</td></tr>
-                <tr><td>🕐 Live Time</td><td>2-4 weeks</td></tr>
-                <tr><td>💵 Cost</td><td>$2 setup + $1.15-3.25/month</td></tr>
-                <tr><td>📱 SMS Included</td><td>20-300 messages</td></tr>
-                <tr><td>⚠️ Note</td><td>AI sends as you from your known number</td></tr>
-              </table>
-            </div>
-
-            <div class="option-card option-complex">
-              <h3>🟠 Option C: Forwarding Integration</h3>
-              <p><strong>Advanced setup - forwards to your personal phone</strong></p>
-              <table class="cost-table">
-                <tr><th>Aspect</th><th>Details</th></tr>
-                <tr><td>⚡ Setup Time</td><td>10 minutes</td></tr>
-                <tr><td>🕐 Live Time</td><td>Instant</td></tr>
-                <tr><td>💵 Monthly Cost</td><td>$1.30 - $5.50</td></tr>
-                <tr><td>📱 SMS Cost</td><td>Double charges (both directions)</td></tr>
-                <tr><td>🛠️ Complexity</td><td>Requires Twilio Functions/Studio</td></tr>
-              </table>
-              
-              <h4>Forwarding Features:</h4>
-              <ul>
-                <li>📨 <strong>SMS</strong>: Auto-forward to personal phone with sender info</li>
-                <li>📞 <strong>Calls</strong>: Ring your personal phone directly</li>
-                <li>📤 <strong>Send</strong>: Text <code>"To +1234567890: message"</code> to Twilio number</li>
-                <li>⚙️ <strong>Setup</strong>: Uses Twilio Functions/Studio (5 min configuration)</li>
-              </ul>
-            </div>
-
-            <h2>💰 Cost Breakdown</h2>
-            <h3>Monthly Usage Estimates:</h3>
-            <table class="cost-table">
-              <tr><th>Usage Level</th><th>SMS Volume</th><th>SMS Cost</th><th>Number Cost</th><th><strong>Total/Month</strong></th></tr>
-              <tr><td>🟢 Light</td><td>~20 messages</td><td>$0.15</td><td>$1.00</td><td><strong>$1.15</strong></td></tr>
-              <tr><td>🟡 Moderate</td><td>~100 messages</td><td>$0.75</td><td>$1.00</td><td><strong>$1.75</strong></td></tr>
-              <tr><td>🔴 Heavy</td><td>~300 messages</td><td>$2.25</td><td>$1.00</td><td><strong>$3.25</strong></td></tr>
-            </table>
-
-            <h3>Call Pricing:</h3>
-            <ul>
-              <li>📞 <strong>Voice calls</strong>: $0.0085/minute</li>
-              <li>💡 <strong>Example</strong>: 5-minute call = $0.04</li>
-            </ul>
-
-            <div class="why-section">
-              <h2>🤖 Why Your AI Needs This</h2>
-              <p>Your AI assistant uses your phone number to:</p>
-              <ul class="feature-list">
-                <li><strong>Send reminders</strong> for important tasks</li>
-                <li><strong>Respond to contacts</strong> on your behalf</li>
-                <li><strong>Handle notifications</strong> when you're busy</li>
-                <li><strong>Coordinate schedules</strong> via text</li>
-                <li><strong>Alert you</strong> about urgent matters</li>
-              </ul>
-            </div>
-
-            <div class="recommendation-box">
-              <h2>🎯 Our Recommendation</h2>
-              <h3>🏆 Option A: Buy New Number</h3>
-              <p><strong>Why it's the best choice:</strong></p>
-              <ul class="feature-list" style="text-align: left; display: inline-block;">
-                <li><strong>Simplest setup</strong> - just 2 minutes</li>
-                <li><strong>Instant activation</strong> - works immediately</li>
-                <li><strong>Clear separation</strong> - keep personal number private</li>
-                <li><strong>Lowest total cost</strong> - most economical option</li>
-                <li><strong>Professional appearance</strong> - dedicated business line</li>
-              </ul>
-              <p><strong>Perfect for:</strong> Most users who want a clean, simple setup</p>
+            <div style="text-align: center;">
+              <a href="${setupUrl}" class="button">Complete Twilio Setup</a>
             </div>
 
             <div class="warning">
-              <strong>⏰ Important:</strong> This setup link expires in 24 hours for security. If you need a new link, just try connecting again in the Mobile Jarvis app.
+              This setup link expires in 24 hours for security. If you need a new link, just try connecting again in the Juniper app.
             </div>
 
             <p><strong>After completing the form:</strong></p>
             <p>Return to your Juniper app and tap "Finalize Integration" to complete the setup process.</p>
 
             <div class="footer">
-              <p><em>Ready to get started? Choose your option above and let's connect your AI! 🚀</em></p>
-              <p>Need help? Contact support or check our documentation.</p>
-              <p>This email was sent because you requested to set up a Twilio integration.</p>
             </div>
           </div>
         </div>
@@ -448,25 +303,21 @@ function getServiceEmailContent(serviceName: string, setupUrl: string): { subjec
       <div class="container">
         <div class="header">
           <h1>🔗 Complete Your ${serviceName} Setup</h1>
-          <p>You're one step away from connecting ${serviceName} to your Mobile Jarvis assistant!</p>
+          <p>You're one step away from connecting ${serviceName} to your Juniper assistant!</p>
         </div>
         <div class="content">
-          <p>Hi there!</p>
-          <p>You started setting up your ${serviceName} integration. Complete the setup using the button below:</p>
-          
           <div style="text-align: center;">
             <a href="${setupUrl}" class="button">Complete ${serviceName} Setup</a>
           </div>
 
           <div class="warning">
-            <strong>⏰ Important:</strong> This setup link expires in 24 hours for security. If you need a new link, just try connecting again in the Mobile Jarvis app.
+            This setup link expires in 24 hours for security. If you need a new link, just try connecting again in the Juniper app.
           </div>
 
           <p><strong>After completing the form:</strong></p>
           <p>Return to your Juniper app and tap "Finalize Integration" to complete the setup process.</p>
 
           <div class="footer">
-            <p>Need help? Contact support or check our documentation.</p>
             <p>This email was sent because you requested to set up a ${serviceName} integration.</p>
           </div>
         </div>

@@ -19,10 +19,9 @@ interface FormSubmissionRequest {
     // Perplexity
     perplexityApiKey?: string
     // Twilio
-    accountSid?: string
-    twilioApiKey?: string
-    apiSecret?: string
-    phoneNumber?: string
+    account_sid?: string
+    auth_token?: string
+    phone_number?: string
     // Generic API key field
     apiKey?: string
   }
@@ -160,7 +159,7 @@ serve(async (req: Request) => {
           if (!success) errorMessage = 'Failed to validate API key'
         }
       } else if (service.toLowerCase() === 'twilio') {
-        if (!formData.accountSid || !formData.apiKey || !formData.apiSecret || !formData.phoneNumber) {
+        if (!formData.account_sid || !formData.auth_token || !formData.phone_number) {
           errorMessage = 'All Twilio credentials are required'
         } else {
           // Validate and store Twilio credentials
@@ -181,7 +180,7 @@ serve(async (req: Request) => {
         return new Response(
           JSON.stringify({ 
             success: true, 
-            message: 'Setup completed successfully! Your integration is now active and ready to use.' 
+            message: 'Configuration completed successfully!' 
           }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
@@ -263,15 +262,15 @@ async function processPerplexitySetup(apiKey: string, tokenData: any, supabase: 
 
 async function processTwilioSetup(formData: any, tokenData: any, supabase: any): Promise<boolean> {
   try {
-    const { accountSid, apiKey, apiSecret, phoneNumber } = formData
+    const { account_sid, auth_token, phone_number } = formData
 
     // Basic validation
-    if (!accountSid.startsWith('AC') || !apiKey.startsWith('SK')) {
+    if (!account_sid.startsWith('AC') || auth_token.length < 32) {
       return false
     }
 
     // Clean phone number
-    const cleanedPhoneNumber = phoneNumber.replace(/[^\d]/g, '')
+    const cleanedPhoneNumber = phone_number.replace(/[^\d]/g, '')
     if (cleanedPhoneNumber.length < 10) {
       return false
     }
@@ -281,9 +280,8 @@ async function processTwilioSetup(formData: any, tokenData: any, supabase: any):
       .from('integrations')
       .update({
         configuration: {
-          account_sid: accountSid,
-          api_key: apiKey,
-          api_secret: apiSecret,
+          account_sid: account_sid,
+          auth_token: auth_token,
           phone_number: cleanedPhoneNumber
         },
         is_active: true,
@@ -334,7 +332,7 @@ function generateFormPage(token: string, service: string, serviceName: string): 
     <!DOCTYPE html>
     <html>
     <head>
-      <title>${serviceName} Integration Setup</title>
+      <title>${serviceName.charAt(0).toUpperCase() + serviceName.slice(1)} Integration Setup</title>
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
@@ -351,6 +349,8 @@ function generateFormPage(token: string, service: string, serviceName: string): 
         .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
         .instructions { background: #f8f9ff; padding: 20px; border-radius: 5px; margin-bottom: 30px; border-left: 4px solid #4A90E2; }
         .instructions h3 { margin-top: 0; color: #4A90E2; }
+        .instructions a { color: #4A90E2; text-decoration: none; font-weight: 600; border-bottom: 1px solid transparent; transition: all 0.2s ease; }
+        .instructions a:hover { color: #357ABD; border-bottom: 1px solid #357ABD; background-color: rgba(74, 144, 226, 0.1); padding: 2px 4px; border-radius: 3px; }
         .loading { display: none; text-align: center; padding: 20px; }
         .success { display: none; text-align: center; padding: 20px; background: #d4edda; border-radius: 5px; color: #155724; }
         .error { display: none; text-align: center; padding: 20px; background: #f8d7da; border-radius: 5px; color: #721c24; }
@@ -359,7 +359,7 @@ function generateFormPage(token: string, service: string, serviceName: string): 
     <body>
       <div class="container">
         <div class="header">
-          <h1>${serviceName} Integration Setup</h1>
+          <h1>${serviceName.charAt(0).toUpperCase() + serviceName.slice(1)} Integration Setup</h1>
           <p>Complete your integration setup for Juniper</p>
         </div>
 
@@ -367,12 +367,11 @@ function generateFormPage(token: string, service: string, serviceName: string): 
         <div class="instructions">
           <h3>📝 Getting your Perplexity API Key</h3>
           <ol>
-            <li><strong>Create an account</strong></li>
-            <li><strong>Go to <a href="https://www.perplexity.ai/account/api/group" target="_blank">perplexity.ai/account</a></strong></li>
-            <li><strong>Create a group</strong></li>
-            <li><strong>Go to API Billing and enter info</strong></li>
-            <li><strong>Purchase credits</strong></li>
-            <li><strong>Go to API Keys and generate a key.</strong> It might take a second for the credits to propagate.</li>
+            <li><strong>1. Create a Perplexity account</strong> at <a href="https://www.perplexity.ai" target="_blank">perplexity.ai ↗</a></li>
+            <li><strong>2. Create a group</strong> at <a href="https://www.perplexity.ai/account/api/group" target="_blank">perplexity.ai/account/api/group ↗</a></li>
+            <li><strong>3. Go to API Billing</strong> and enter info</li>
+            <li><strong>4. Purchase credits</strong></li>
+            <li><strong>5. Go to API Keys</strong> and generate a key. It might take a second for the credits to propagate.</li>
           </ol>
           
           <h4>💰 Personal Usage Estimates:</h4>
@@ -395,32 +394,75 @@ function generateFormPage(token: string, service: string, serviceName: string): 
 
         ${isTwilio ? `
         <div class="instructions">
-          <h3>📝 Instructions</h3>
-          <ol>
-            <li>Sign up at <a href="https://twilio.com" target="_blank">twilio.com</a> ($15 free credit)</li>
-            <li>Go to Console > Account > API keys & tokens</li>
-            <li>Copy your Account SID</li>
-            <li>Create a new API Key (gives you Key + Secret)</li>
-            <li>Buy a phone number in Console > Phone Numbers</li>
-          </ol>
+          <h3>🚀 Quick Start (7 minutes total)</h3>
+          
+          <div style="margin-bottom: 30px;">
+            <h4>Step 1: Create Your Account</h4>
+            <ul style="margin-bottom: 20px;">
+              <li>a. Visit <a href="https://twilio.com" target="_blank">twilio.com ↗</a> and create account</li>
+              <li>b. $15 free credit included <strong>no payment required initially</strong></li>
+              <li>c. Verify your email address</li>
+            </ul>
+          </div>
+
+          <div style="margin-bottom: 30px;">
+            <h4>Step 2: Get Your API Credentials</h4>
+            <ol style="margin-bottom: 20px;">
+              <li>a. Go to <strong>Console</strong> → <strong>Account</strong> (scroll down)</li>
+              <li>b. Copy your <strong>Account SID</strong> (starts with <code>AC...</code>)</li>
+              <li>c. Copy your <strong>Auth Token</strong> (click "Show" to reveal)</li>
+              <li>d. Save these credentials securely and enter below</li>
+            </ol>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <h4>📞 Phone Number Options</h4>
+          </div>
+
+          <div style="background: #f8fff9; border: 2px solid #28a745; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h4>🟢 Option A: Buy New Number (Recommended)</h4>
+            <p style="margin-bottom: 15px;"><strong>Best for most users - simple & clean separation</strong></p>
+            <p style="margin-bottom: 15px; font-size: 14px; color: #555;"><strong>Steps:</strong> Console → Phone Numbers → Manage → Buy a number → Select type (local/toll-free) → Purchase → Copy number</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+              <tr><th style="padding: 8px 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: bold;">Aspect</th><th style="padding: 8px 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: bold;">Details</th></tr>
+              <tr><td style="padding: 8px 12px; border: 1px solid #dee2e6;">⚡ Setup Time</td><td style="padding: 8px 12px; border: 1px solid #dee2e6;">2 minutes</td></tr>
+              <tr><td style="padding: 8px 12px; border: 1px solid #dee2e6;">🕐 Live Time</td><td style="padding: 8px 12px; border: 1px solid #dee2e6;">Instant</td></tr>
+              <tr><td style="padding: 8px 12px; border: 1px solid #dee2e6;">💵 Monthly Base Cost</td><td style="padding: 8px 12px; border: 1px solid #dee2e6;">$1.15 local / $2.15 toll-free</td></tr>
+              <tr><td style="padding: 8px 12px; border: 1px solid #dee2e6;">📱 SMS Costs</td><td style="padding: 8px 12px; border: 1px solid #dee2e6;">$0.01 per message sent/received</td></tr>
+              <tr><td style="padding: 8px 12px; border: 1px solid #dee2e6;">💰 Estimated Total</td><td style="padding: 8px 12px; border: 1px solid #dee2e6;">$1.90-$2.90/month (75 messages)</td></tr>
+              <tr><td style="padding: 8px 12px; border: 1px solid #dee2e6;">✅ Benefits</td><td style="padding: 8px 12px; border: 1px solid #dee2e6;">Keeps personal number private, professional setup</td></tr>
+            </table>
+          </div>
+
+          <div style="background: #fffdf7; border: 2px solid #ffc107; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h4>🟡 Option B: Port Your Personal Number</h4>
+            <p style="margin-bottom: 15px;"><strong>For users who want AI to text as "them"</strong></p>
+            <p style="margin-bottom: 15px; font-size: 14px; color: #555;"><strong>Steps:</strong> Console → Phone Numbers → Port and Host → Enter your number → Upload carrier info → Pay $2 → Wait 2-4 weeks → Copy number</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+              <tr><th style="padding: 8px 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: bold;">Aspect</th><th style="padding: 8px 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: bold;">Details</th></tr>
+              <tr><td style="padding: 8px 12px; border: 1px solid #dee2e6;">⚡ Setup Time</td><td style="padding: 8px 12px; border: 1px solid #dee2e6;">5 minutes</td></tr>
+              <tr><td style="padding: 8px 12px; border: 1px solid #dee2e6;">🕐 Live Time</td><td style="padding: 8px 12px; border: 1px solid #dee2e6;">2-4 weeks</td></tr>
+              <tr><td style="padding: 8px 12px; border: 1px solid #dee2e6;">💵 Monthly Base Cost</td><td style="padding: 8px 12px; border: 1px solid #dee2e6;">$2 setup + $1.15 local / $2.15 toll-free</td></tr>
+              <tr><td style="padding: 8px 12px; border: 1px solid #dee2e6;">📱 SMS Costs</td><td style="padding: 8px 12px; border: 1px solid #dee2e6;">$0.01 per message sent/received</td></tr>
+              <tr><td style="padding: 8px 12px; border: 1px solid #dee2e6;">💰 Estimated Total</td><td style="padding: 8px 12px; border: 1px solid #dee2e6;">$1.90-$2.90/month (75 messages)</td></tr>
+              <tr><td style="padding: 8px 12px; border: 1px solid #dee2e6;">⚠️ Note</td><td style="padding: 8px 12px; border: 1px solid #dee2e6;">AI sends as you from your own number</td></tr>
+            </table>
+          </div>
+
         </div>
 
         <form id="setupForm">
           <div class="form-group">
-            <label for="accountSid">Account SID</label>
-            <input type="text" id="accountSid" name="accountSid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
+            <label for="account_sid">Account SID</label>
+            <input type="text" id="account_sid" name="account_sid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
           </div>
           <div class="form-group">
-            <label for="apiKey">API Key</label>
-            <input type="text" id="apiKey" name="apiKey" placeholder="SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
+            <label for="auth_token">Auth Token</label>
+            <input type="password" id="auth_token" name="auth_token" placeholder="Your auth token" required>
           </div>
           <div class="form-group">
-            <label for="apiSecret">API Secret</label>
-            <input type="password" id="apiSecret" name="apiSecret" placeholder="Your API secret" required>
-          </div>
-          <div class="form-group">
-            <label for="phoneNumber">Twilio Phone Number</label>
-            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="+1234567890" required>
+            <label for="phone_number">Twilio Phone Number</label>
+            <input type="tel" id="phone_number" name="phone_number" placeholder="+1234567890" required>
           </div>
           <button type="submit" class="submit-btn">Complete Setup</button>
         </form>
@@ -431,9 +473,8 @@ function generateFormPage(token: string, service: string, serviceName: string): 
         </div>
 
         <div class="success" id="success">
-          <h3>✅ Setup Complete!</h3>
-          <p>Your ${serviceName} integration has been configured successfully and is now active.</p>
-          <p><strong>Next step:</strong> Return to your Juniper app - your integration is ready to use!</p>
+          <h3>✅ Configuration Complete!</h3>
+          <p><strong>Next step:</strong> Please return to the Integrations screen in the app and tap "Finalize Integration" to complete the setup process.</p>
         </div>
 
         <div class="error" id="error">

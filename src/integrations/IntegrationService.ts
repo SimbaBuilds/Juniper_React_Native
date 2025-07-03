@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthContext';
 import { getAuthService } from './auth';
 import PerplexityAuthService from './auth/services/PerplexityAuthService';
 import TwilioAuthService from './auth/services/TwilioAuthService';
+import TextbeltAuthService from './auth/services/TextbeltAuthService';
 import { Alert } from 'react-native';
 import { supabase } from '../supabase/supabase';
 import { Integration } from '../supabase/tables';
@@ -26,6 +27,15 @@ interface TwilioCredentials {
 
 interface StartTwilioIntegrationParams extends StartIntegrationParams {
   credentials: TwilioCredentials;
+}
+
+interface TextbeltCredentials {
+  phone_number: string;
+  carrier: string;
+}
+
+interface StartTextbeltIntegrationParams extends StartIntegrationParams {
+  credentials: TextbeltCredentials;
 }
 
 // Helper function to safely get error message
@@ -55,6 +65,7 @@ function mapServiceName(dbServiceName: string): string {
     'Microsoft Outlook Mail': 'microsoft-outlook-mail',
     'Microsoft Teams': 'microsoft-teams',
     'Twilio': 'twilio',
+    'Textbelt': 'textbelt',
     'Todoist': 'todoist'
   };
   
@@ -514,7 +525,7 @@ export class IntegrationService {
       console.log(`✅ Integration record created with ID: ${integration.id}`);
 
       // Start Twilio authentication
-      await this.startTwilioAuth(integration.id, credentials);
+      // await this.startTwilioAuth(integration.id, credentials);
 
     } catch (error) {
       console.error(`❌ Error starting Twilio integration:`, error);
@@ -529,41 +540,41 @@ export class IntegrationService {
   /**
    * Start Twilio authentication with credentials
    */
-  private async startTwilioAuth(integrationId: string, credentials: TwilioCredentials): Promise<void> {
-    try {
-      console.log(`🔑 Starting Twilio authentication...`);
+  // private async startTwilioAuth(integrationId: string, credentials: TwilioCredentials): Promise<void> {
+  //   try {
+  //     console.log(`🔑 Starting Twilio authentication...`);
 
-      const twilioService = TwilioAuthService.getInstance();
-      const result = await twilioService.storeCredentials(credentials, integrationId);
+  //     const twilioService = TwilioAuthService.getInstance();
+  //     const result = await twilioService.storeCredentials(credentials, integrationId);
       
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to validate Twilio credentials');
-      }
+  //     if (!result.success) {
+  //       throw new Error(result.error || 'Failed to validate Twilio credentials');
+  //     }
 
-      console.log(`✅ Twilio authentication completed successfully`);
+  //     console.log(`✅ Twilio authentication completed successfully`);
       
-      // Update integration status to active
-      await this.updateIntegrationStatus(integrationId, 'active', true);
+  //     // Update integration status to active
+  //     await this.updateIntegrationStatus(integrationId, 'active', true);
 
-      Alert.alert(
-        'Integration Successful!',
-        `Your Twilio account has been successfully connected.`,
-        [{ text: 'OK' }]
-      );
+  //     Alert.alert(
+  //       'Integration Successful!',
+  //       `Your Twilio account has been successfully connected.`,
+  //       [{ text: 'OK' }]
+  //     );
 
-    } catch (error) {
-      console.error(`❌ Twilio authentication failed:`, error);
+  //   } catch (error) {
+  //     console.error(`❌ Twilio authentication failed:`, error);
       
-      // Update integration status to failed
-      await this.updateIntegrationStatus(integrationId, 'failed', false);
+  //     // Update integration status to failed
+  //     await this.updateIntegrationStatus(integrationId, 'failed', false);
 
-      Alert.alert(
-        'Authentication Failed',
-        `Failed to connect to Twilio: ${getErrorMessage(error)}`,
-        [{ text: 'OK' }]
-      );
-    }
-  }
+  //     Alert.alert(
+  //       'Authentication Failed',
+  //       `Failed to connect to Twilio: ${getErrorMessage(error)}`,
+  //       [{ text: 'OK' }]
+  //     );
+  //   }
+  // }
 
   /**
    * Reconnect Twilio integration
@@ -575,14 +586,126 @@ export class IntegrationService {
       // Update integration status to pending
       await this.updateIntegrationStatus(integrationId, 'pending', false);
 
-      // Start Twilio authentication
-      await this.startTwilioAuth(integrationId, credentials);
+      // // Start Twilio authentication
+      // await this.startTwilioAuth(integrationId, credentials);
 
     } catch (error) {
       console.error(`❌ Error reconnecting Twilio integration:`, error);
       Alert.alert(
         'Reconnection Failed',
         `Failed to reconnect Twilio integration: ${getErrorMessage(error)}`,
+        [{ text: 'OK' }]
+      );
+    }
+  }
+
+  /**
+   * Start the integration flow for textbelt with credentials
+   */
+  async startTextbeltIntegration({ serviceId, serviceName, userId, credentials }: StartTextbeltIntegrationParams): Promise<void> {
+    try {
+      console.log(`🚀 Starting textbelt integration...`);
+
+      // Check if integration already exists and is active
+      const existingIntegrations = await DatabaseService.getIntegrations(userId);
+      const existingIntegration = existingIntegrations.find(
+        (integration: any) => integration.service_id === serviceId && integration.is_active
+      );
+
+      if (existingIntegration) {
+        Alert.alert(
+          'Already Connected',
+          `You already have an active textbelt integration. Would you like to reconnect?`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: 'Reconnect', 
+              onPress: () => this.reconnectTextbeltIntegration(existingIntegration.id, credentials)
+            }
+          ]
+        );
+        return;
+      }
+
+      // Create a new integration record
+      const integration = await this.createIntegrationRecord(serviceId, userId);
+      console.log(`✅ Integration record created with ID: ${integration.id}`);
+
+      // Start textbelt authentication
+      await this.startTextbeltAuth(integration.id, credentials);
+
+    } catch (error) {
+      console.error(`❌ Error starting textbelt integration:`, error);
+      Alert.alert(
+        'Integration Error',
+        `Failed to start textbelt integration: ${getErrorMessage(error)}`,
+        [{ text: 'OK' }]
+      );
+    }
+  }
+
+  /**
+   * Start textbelt authentication with credentials
+   */
+  private async startTextbeltAuth(integrationId: string, credentials: TextbeltCredentials): Promise<void> {
+    try {
+      console.log(`🔑 Starting textbelt authentication...`);
+
+      const textbeltService = TextbeltAuthService.getInstance();
+      const mappedCredentials = {
+        phone_number: credentials.phone_number,
+        carrier: credentials.carrier
+      };
+      
+      const result = await textbeltService.storeCredentials(mappedCredentials, integrationId);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to validate textbelt credentials');
+      }
+
+      console.log(`✅ textbelt authentication completed successfully`);
+      
+      // Update integration status to active
+      await this.updateIntegrationStatus(integrationId, 'active', true);
+
+      Alert.alert(
+        'Integration Successful!',
+        `Your textbelt SMS service has been successfully connected.`,
+        [{ text: 'OK' }]
+      );
+
+    } catch (error) {
+      console.error(`❌ textbelt authentication failed:`, error);
+      
+      // Update integration status to failed
+      await this.updateIntegrationStatus(integrationId, 'failed', false);
+
+      Alert.alert(
+        'Authentication Failed',
+        `Failed to connect to textbelt: ${getErrorMessage(error)}`,
+        [{ text: 'OK' }]
+      );
+    }
+  }
+
+  /**
+   * Reconnect textbelt integration
+   */
+  private async reconnectTextbeltIntegration(integrationId: string, credentials: TextbeltCredentials): Promise<void> {
+    try {
+      console.log(`🔄 Reconnecting textbelt integration...`);
+
+      // Update integration status to pending
+      await this.updateIntegrationStatus(integrationId, 'pending', false);
+
+      // Start textbelt authentication
+      await this.startTextbeltAuth(integrationId, credentials);
+
+    } catch (error) {
+      console.error(`❌ Error reconnecting textbelt integration:`, error);
+      Alert.alert(
+        'Reconnection Failed',
+        `Failed to reconnect textbelt integration: ${getErrorMessage(error)}`,
         [{ text: 'OK' }]
       );
     }

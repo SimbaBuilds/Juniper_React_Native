@@ -360,16 +360,14 @@ export class PerplexityAuthService {
    */
   static getApiKeyInstructions(): string {
     return `
-**Getting your Perplexity API Key:**
+Getting your Perplexity API Key:
+1. Create a Perplexity account at perplexity.ai
+2. Create a group at perplexity.ai/account/api/group
+3. Go to API Billing and enter info
+4. Purchase credits
+5. Go to API Keys and generate a key. It might take a second for the credits to propagate.
 
-1. Create an account
-2. Go to perplexity.ai/account (direct link: perplexity.ai/account/api/group)
-3. Create a group
-4. Go to API Billing and enter info
-5. Purchase credits
-6. Go to API Keys and generate a key. It might take a second for the credits to propagate.
-
-**Personal Usage Estimates:**
+Personal Usage Estimates:
 - Light use: ~4 queries/day = $1-2/month
 - Moderate use: ~10 queries/day = $5-10/month
 - Heavy use: ~50 queries/day = $15-30/month

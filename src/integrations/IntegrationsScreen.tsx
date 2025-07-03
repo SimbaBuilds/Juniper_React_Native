@@ -8,6 +8,7 @@ import IntegrationService from './IntegrationService';
 import IntegrationEmailService from '../services/IntegrationEmailService';
 import ApiKeyModal from './components/ApiKeyModal';
 import TwilioCredentialsModal from './components/TwilioCredentialsModal';
+import TextbeltCredentialsModal from './components/TextbeltCredentialsModal';
 
 interface ServiceWithStatus {
   id: string;
@@ -28,6 +29,11 @@ interface TwilioCredentials {
   phoneNumber: string;
 }
 
+interface TextbeltCredentials {
+  phone_number: string;
+  carrier: string;
+}
+
 interface ServiceCategory {
   name: string;
   services: ServiceWithStatus[];
@@ -40,6 +46,7 @@ export const IntegrationsScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [apiKeyModalVisible, setApiKeyModalVisible] = useState(false);
   const [twilioModalVisible, setTwilioModalVisible] = useState(false);
+  const [textbeltModalVisible, setTextbeltModalVisible] = useState(false);
   const [selectedService, setSelectedService] = useState<ServiceWithStatus | null>(null);
 
   // Define service categories
@@ -47,7 +54,7 @@ export const IntegrationsScreen: React.FC = () => {
     const name = serviceName.toLowerCase();
     
     // Communications
-    if (['slack', 'microsoft teams', 'twilio'].includes(name)) {
+    if (['slack', 'microsoft teams', 'twilio', 'textbelt'].includes(name)) {
       return 'Communications';
     }
     
@@ -331,6 +338,18 @@ export const IntegrationsScreen: React.FC = () => {
         setTwilioModalVisible(true);
         return;
       }
+
+      // Check if this service uses textbelt credentials
+      if (internalServiceName === 'textbelt') {
+        // Ensure integration record exists for email functionality
+        if (!service.integration_id) {
+          const integration = await integrationService.createIntegrationRecord(service.id, user.id);
+          service.integration_id = integration.id;
+        }
+        setSelectedService(service);
+        setTextbeltModalVisible(true);
+        return;
+      }
       
       // All other services use OAuth - the IntegrationService will handle the supported check
       // Start the integration flow
@@ -399,6 +418,34 @@ export const IntegrationsScreen: React.FC = () => {
 
     } catch (error) {
       console.error('Error submitting Twilio credentials:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      Alert.alert('Error', `Failed to connect: ${errorMessage}`);
+      throw error; // Re-throw to let modal handle it
+    }
+  };
+
+  // Handle textbelt credentials submission
+  const handleTextbeltCredentialsSubmit = async (credentials: TextbeltCredentials) => {
+    try {
+      if (!selectedService || !user?.id) {
+        throw new Error('Missing service or user information');
+      }
+
+      console.log('🔑 Submitting textbelt credentials...');
+
+      const integrationService = IntegrationService.getInstance();
+      await integrationService.startTextbeltIntegration({
+        serviceId: selectedService.id,
+        serviceName: selectedService.service_name,
+        userId: user.id,
+        credentials: credentials
+      });
+
+      // Refresh the services list to show updated status
+      await loadServicesWithStatus();
+
+    } catch (error) {
+      console.error('Error submitting textbelt credentials:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       Alert.alert('Error', `Failed to connect: ${errorMessage}`);
       throw error; // Re-throw to let modal handle it
@@ -665,6 +712,21 @@ export const IntegrationsScreen: React.FC = () => {
           // Handle email sent - set service to pending setup state
           loadServicesWithStatus();
         }}
+      />
+
+      {/* Textbelt Credentials Modal */}
+      <TextbeltCredentialsModal
+        visible={textbeltModalVisible}
+        integrationId={selectedService?.integration_id}
+        onClose={() => {
+          setTextbeltModalVisible(false);
+          setSelectedService(null);
+        }}
+        onSuccess={() => {
+          setTextbeltModalVisible(false);
+          setSelectedService(null);
+        }}
+        onSubmit={handleTextbeltCredentialsSubmit}
       />
     </SafeAreaView>
   );

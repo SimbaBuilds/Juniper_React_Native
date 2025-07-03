@@ -84,7 +84,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
       if (result.success) {
         Alert.alert(
           'Email Sent! 📧',
-          'We\'ve sent you a setup link. Check your email and complete the setup on desktop, then return here to finalize the integration.',
+          'We\'ve sent you a setup link. Please check your email and complete the setup on desktop; then return here to finalize the integration.',
           [
             {
               text: 'Got it',
