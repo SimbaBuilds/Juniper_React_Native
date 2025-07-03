@@ -31,7 +31,6 @@ interface TwilioCredentials {
 
 interface TextbeltCredentials {
   phone_number: string;
-  carrier: string;
 }
 
 interface ServiceCategory {

@@ -31,7 +31,6 @@ interface StartTwilioIntegrationParams extends StartIntegrationParams {
 
 interface TextbeltCredentials {
   phone_number: string;
-  carrier: string;
 }
 
 interface StartTextbeltIntegrationParams extends StartIntegrationParams {
@@ -653,8 +652,7 @@ export class IntegrationService {
 
       const textbeltService = TextbeltAuthService.getInstance();
       const mappedCredentials = {
-        phone_number: credentials.phone_number,
-        carrier: credentials.carrier
+        phone_number: credentials.phone_number
       };
       
       const result = await textbeltService.storeCredentials(mappedCredentials, integrationId);
