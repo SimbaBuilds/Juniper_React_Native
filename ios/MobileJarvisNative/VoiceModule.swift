@@ -103,6 +103,22 @@ class VoiceModule: RCTEventEmitter {
         resolve(true)
     }
     
+    /**
+     * Start continuous conversation mode (iOS equivalent of Android wake word trigger)
+     * This simulates the wake word detection flow for iOS
+     */
+    @objc func startContinuousConversation(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+        print("🎙️ VoiceModule: startContinuousConversation called - iOS continuous mode")
+        
+        // Simulate wake word detection state for iOS
+        voiceManager.simulateWakeWordDetection()
+        
+        // Start listening for speech
+        voiceManager.startListening()
+        
+        resolve(true)
+    }
+    
     @objc func stopListening(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
         print("🛑 VoiceModule: stopListening called from React Native")
         voiceManager.stopListening()

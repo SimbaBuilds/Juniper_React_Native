@@ -31,6 +31,7 @@ const VoiceContext = createContext<VoiceContextValue>({
   setTranscript: () => {},
   setResponse: () => {},
   startListening: async () => false,
+  startContinuousConversation: async () => false,
   stopListening: async () => false,
   resetState: () => {},
   interruptSpeech: async () => false,
@@ -477,6 +478,25 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
   }, [voiceStateFromHook]);
 
+  // Start continuous conversation (iOS-specific) - simulates Android wake word flow
+  const startContinuousConversation = useCallback(async () => {
+    try {
+      console.log('🎤 Starting continuous conversation (iOS mode)');
+      
+      if (Platform.OS === 'ios') {
+        // Use the iOS-specific continuous conversation method
+        return await voiceService.startContinuousConversation();
+      } else {
+        // For Android, just use regular startListening
+        return await voiceStateFromHook.startListening();
+      }
+    } catch (err) {
+      console.error('Error starting continuous conversation:', err);
+      setError(err instanceof Error ? err.message : 'Failed to start continuous conversation');
+      return false;
+    }
+  }, [voiceStateFromHook, voiceService]);
+
   // Stop listening - delegate to hook
   const stopListening = useCallback(async () => {
     try {
@@ -713,6 +733,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     setTranscript,
     setResponse,
     startListening,
+    startContinuousConversation,
     stopListening,
     resetState,
     interruptSpeech,

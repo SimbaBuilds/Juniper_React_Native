@@ -37,6 +37,7 @@ export interface VoiceContextActions {
   setTranscript: (transcript: string) => void;
   setResponse: (response: string) => void;
   startListening: () => Promise<boolean>;
+  startContinuousConversation: () => Promise<boolean>; // iOS-specific continuous conversation
   stopListening: () => Promise<boolean>;
   resetState: () => void;
   interruptSpeech: () => Promise<boolean>;

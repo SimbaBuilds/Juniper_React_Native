@@ -2,15 +2,18 @@ import Foundation
 
 @objc public enum VoiceState: Int, CaseIterable {
     case idle = 0
-    case listening = 1
-    case processing = 2
-    case speaking = 3
-    case error = 4
+    case wakeWordDetected = 1
+    case listening = 2
+    case processing = 3
+    case speaking = 4
+    case error = 5
     
     var description: String {
         switch self {
         case .idle:
             return "idle"
+        case .wakeWordDetected:
+            return "wakeWordDetected"
         case .listening:
             return "listening"
         case .processing:
@@ -26,6 +29,8 @@ import Foundation
         switch string.lowercased() {
         case "idle":
             return .idle
+        case "wakeworddetected", "wake_word_detected":
+            return .wakeWordDetected
         case "listening":
             return .listening
         case "processing":

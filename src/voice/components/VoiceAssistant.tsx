@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert, Platform } from 'react-native';
 import { VoiceButton } from './VoiceButton';
 import { VoiceResponseDisplay } from './VoiceResponseDisplay';
 import { useVoice } from '../VoiceContext';
@@ -38,7 +38,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     sendTextMessage,
     continuePreviousChat,
     cancelRequest,
-    isRequestInProgress
+    isRequestInProgress,
+    startContinuousConversation
   } = useVoice();
 
   // State for conversation history modal
@@ -198,7 +199,11 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         />
       ) : (
         <View style={styles.emptyChatContainer}>
-          <Text style={styles.emptyChatText}>Say the wake word or type a message to start or continue a chat.</Text>
+          <Text style={styles.emptyChatText}>
+            {Platform.OS === 'ios' 
+              ? 'Tap the voice button or type a message to start a conversation.'
+              : 'Say the wake word or type a message to start or continue a chat.'}
+          </Text>
         </View>
       )}
       
@@ -228,6 +233,19 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           <Ionicons name="stop-circle" size={24} color="white" />
           <Text style={styles.interruptButtonText}>Tap to Interrupt</Text>
         </TouchableOpacity>
+      )}
+
+      {/* Voice button for iOS - positioned above text input */}
+      {Platform.OS === 'ios' && (
+        <View style={styles.voiceButtonContainer}>
+          <VoiceButton 
+            size={60}
+            onPress={async () => {
+              console.log('iOS Voice button pressed - starting continuous conversation');
+              await startContinuousConversation();
+            }}
+          />
+        </View>
       )}
 
       {/* Text input at the bottom */}
@@ -404,5 +422,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
     marginLeft: 8,
+  },
+  voiceButtonContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingVertical: 8,
   },
 });

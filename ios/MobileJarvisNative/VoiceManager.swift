@@ -229,15 +229,20 @@ class VoiceManager: NSObject {
     private func setupRecognition() {
         print("🎙️ VoiceManager: Setting up recognition with provider: \(currentSTTProvider.displayName)")
         
-        // Configure audio session for recording
-        do {
-            try audioManager.configureAudioSessionForRecording()
-        } catch {
-            print("❌ VoiceManager: Failed to configure audio session for recording: \(error)")
-            scheduleRetry()
-            return
+        // Request audio focus for recording with priority-based management
+        audioManager.requestAudioFocus(.recording) { [weak self] success in
+            guard success else {
+                print("❌ VoiceManager: Failed to acquire audio focus for recording")
+                self?.scheduleRetry()
+                return
+            }
+            
+            // Continue with STT setup based on provider
+            self?.continueSTTSetup()
         }
-        
+    }
+    
+    private func continueSTTSetup() {
         // Setup recognition based on selected provider
         switch currentSTTProvider {
         case .native:
@@ -520,7 +525,8 @@ class VoiceManager: NSObject {
             processTextRequest(finalResult)
         } else {
             print("⚠️ VoiceManager: No final result to process")
-            setState(.idle)
+            // Don't automatically return to idle - let the conversation flow determine state
+            // This matches Android behavior where state management is more deliberate
         }
     }
     
@@ -589,14 +595,29 @@ class VoiceManager: NSObject {
         // Stop any current listening first
         stopListening()
         
-        // Small delay to ensure audio session handoff
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+        // Request audio focus for TTS playback (higher priority than STT)
+        audioManager.requestAudioFocus(.playback) { [weak self] success in
+            guard let self = self, success else {
+                print("❌ VoiceManager: Failed to acquire audio focus for TTS")
+                self?.setState(.idle)
+                return
+            }
+            
             // Start TTS playback
             self.setState(.speaking)
             
             self.ttsManager.speak(response) {
-                print("🎵 VoiceManager: TTS completed, returning to idle")
-                self.setState(.idle)
+                print("🎵 VoiceManager: TTS completed, transitioning to LISTENING for continuous conversation")
+                
+                // Release audio focus to allow STT to take over
+                self.audioManager.releaseAudioFocus()
+                
+                // Match Android behavior: transition to LISTENING instead of IDLE
+                // This enables continuous conversation without requiring wake word
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self.setState(.listening)
+                    self.startListening()
+                }
             }
         }
     }
@@ -624,6 +645,24 @@ class VoiceManager: NSObject {
         reactNativeApiCallback = callback
     }
     
+    /**
+     * Simulate wake word detection for iOS (matches Android wake word flow)
+     * This enables continuous conversation mode on iOS
+     */
+    @objc func simulateWakeWordDetection() {
+        print("🎯 VoiceManager: Simulating wake word detection for iOS continuous conversation")
+        
+        // Set state to WAKE_WORD_DETECTED to match Android flow
+        setState(.wakeWordDetected)
+        
+        // Play a sound or provide feedback that conversation mode is active
+        // This could be a simple beep or "Yes?" response
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            // Transition to listening state
+            self.setState(.listening)
+        }
+    }
+    
     func stopListening() {
         print("🛑 VoiceManager: Stopping speech recognition")
         
@@ -643,6 +682,9 @@ class VoiceManager: NSObject {
         // Reset
         recognitionTask = nil
         recognitionRequest = nil
+        
+        // Release audio focus when stopping listening
+        audioManager.releaseAudioFocus()
         
         setState(.idle)
     }

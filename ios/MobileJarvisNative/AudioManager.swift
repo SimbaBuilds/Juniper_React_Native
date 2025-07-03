@@ -17,6 +17,15 @@ enum AudioFocus {
     case recording
     case playback
     case playAndRecord
+    
+    var priority: Int {
+        switch self {
+        case .playback: return 3  // TTS has highest priority
+        case .recording: return 2 // STT has medium priority
+        case .playAndRecord: return 1
+        case .none: return 0
+        }
+    }
 }
 
 // MARK: - Audio Manager
@@ -34,6 +43,11 @@ class AudioManager: NSObject {
     // Audio interruption handling
     private var isAudioInterrupted = false
     private var resumeAfterInterruption = false
+    
+    // Audio focus request queue
+    private var requestQueue: [(focus: AudioFocus, completion: (Bool) -> Void)] = []
+    private var isProcessingRequest = false
+    private let requestQueueLock = NSLock()
     
     // Call monitoring
     private var callObserver: CXCallObserver?
@@ -53,6 +67,96 @@ class AudioManager: NSObject {
     deinit {
         removeAudioSessionObservers()
         callObserver = nil
+    }
+    
+    // MARK: - Audio Focus Management
+    
+    /**
+     * Request audio focus with priority-based queueing
+     */
+    func requestAudioFocus(_ focus: AudioFocus, completion: @escaping (Bool) -> Void) {
+        print("🔊 AUDIO_MANAGER: Requesting audio focus: \(focus) with priority \(focus.priority)")
+        
+        requestQueueLock.lock()
+        defer { requestQueueLock.unlock() }
+        
+        // Check if we should preempt current focus based on priority
+        if currentFocus != .none && focus.priority > currentFocus.priority {
+            print("🔊 AUDIO_MANAGER: ⚡ Higher priority request (\(focus)) preempting current focus (\(currentFocus))")
+            
+            // Release current focus immediately for higher priority
+            releaseAudioFocus()
+            
+            // Process the high priority request immediately
+            processAudioFocusRequest(focus, completion: completion)
+        } else if currentFocus == .none || currentFocus == focus {
+            // Process immediately if no current focus or same focus type
+            processAudioFocusRequest(focus, completion: completion)
+        } else {
+            // Queue the request
+            print("🔊 AUDIO_MANAGER: 📋 Queueing audio focus request: \(focus)")
+            requestQueue.append((focus: focus, completion: completion))
+            
+            // Sort queue by priority (highest first)
+            requestQueue.sort { $0.focus.priority > $1.focus.priority }
+            
+            // Process queue if not already processing
+            if !isProcessingRequest {
+                processNextRequest()
+            }
+        }
+    }
+    
+    /**
+     * Process the next request in the queue
+     */
+    private func processNextRequest() {
+        requestQueueLock.lock()
+        
+        guard !isProcessingRequest, !requestQueue.isEmpty else {
+            requestQueueLock.unlock()
+            return
+        }
+        
+        isProcessingRequest = true
+        let nextRequest = requestQueue.removeFirst()
+        requestQueueLock.unlock()
+        
+        print("🔊 AUDIO_MANAGER: 🔄 Processing queued request: \(nextRequest.focus)")
+        
+        processAudioFocusRequest(nextRequest.focus) { success in
+            self.requestQueueLock.lock()
+            self.isProcessingRequest = false
+            self.requestQueueLock.unlock()
+            
+            nextRequest.completion(success)
+            
+            // Process next request if any
+            self.processNextRequest()
+        }
+    }
+    
+    /**
+     * Process audio focus request
+     */
+    private func processAudioFocusRequest(_ focus: AudioFocus, completion: @escaping (Bool) -> Void) {
+        do {
+            switch focus {
+            case .recording:
+                try configureAudioSessionForRecording()
+            case .playback:
+                try configureAudioSessionForPlayback()
+            case .playAndRecord:
+                try configureAudioSessionForPlayAndRecord()
+            case .none:
+                releaseAudioFocus()
+            }
+            
+            completion(true)
+        } catch {
+            print("🔊 AUDIO_MANAGER: ❌ Failed to configure audio session for \(focus): \(error)")
+            completion(false)
+        }
     }
     
     // MARK: - Audio Session Configuration
@@ -144,9 +248,35 @@ class AudioManager: NSObject {
             try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
             currentFocus = .none
             print("🔊 AUDIO_MANAGER: ✅ Audio focus released")
+            
+            // Process any pending requests after releasing focus
+            requestQueueLock.lock()
+            if !requestQueue.isEmpty && !isProcessingRequest {
+                requestQueueLock.unlock()
+                processNextRequest()
+            } else {
+                requestQueueLock.unlock()
+            }
         } catch {
             print("🔊 AUDIO_MANAGER: ❌ Failed to release audio focus: \(error)")
         }
+    }
+    
+    /**
+     * Clear all pending audio focus requests
+     */
+    func clearPendingRequests() {
+        requestQueueLock.lock()
+        defer { requestQueueLock.unlock() }
+        
+        print("🔊 AUDIO_MANAGER: Clearing \(requestQueue.count) pending audio requests")
+        
+        // Notify all pending requests that they were cancelled
+        for request in requestQueue {
+            request.completion(false)
+        }
+        
+        requestQueue.removeAll()
     }
     
     // MARK: - Audio Routing

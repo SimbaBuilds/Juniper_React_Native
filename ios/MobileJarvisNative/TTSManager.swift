@@ -83,14 +83,8 @@ class TTSManager: NSObject {
         // Stop any current speech
         stopSpeaking()
         
-        // Configure audio session
-        do {
-            try audioManager.configureAudioSessionForPlayback()
-        } catch {
-            print("🎵 TTS_MANAGER: ❌ Failed to configure audio session: \(error)")
-            completion(false)
-            return
-        }
+        // Audio focus is now managed by VoiceManager before calling TTS
+        // The VoiceManager will request playback focus before calling speak
         
         isSpeaking = true
         

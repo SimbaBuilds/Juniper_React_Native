@@ -131,6 +131,31 @@ export class VoiceService {
         }
     }
 
+    /**
+     * Start continuous conversation mode (iOS specific)
+     * This simulates the Android wake word flow for iOS
+     */
+    public async startContinuousConversation(): Promise<boolean> {
+        try {
+            if (Platform.OS !== 'ios') {
+                console.warn('⚠️ startContinuousConversation is iOS-specific, using startListening instead');
+                return this.startListening();
+            }
+            
+            console.log('🎤 iOS: Starting continuous conversation mode...');
+            
+            // iOS doesn't need permissions check like Android
+            console.log('📱 iOS: Calling native startContinuousConversation...');
+            const result = await VoiceModule.startContinuousConversation();
+            console.log('📱 iOS: Continuous conversation started:', result);
+            
+            return result;
+        } catch (error) {
+            console.error('❌ iOS: Error starting continuous conversation:', error);
+            throw error;
+        }
+    }
+
     public async stopListening(): Promise<boolean> {
         try {
             console.log('📱 Android: Stopping voice recognition...');
