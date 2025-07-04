@@ -11,7 +11,7 @@ import { HomeScreen } from './src/HomeScreen';
 import { SettingsScreen } from './src/settings/SettingsScreen';
 import { IntegrationsScreen } from './src/integrations/IntegrationsScreen';
 import { AutomationsScreen } from './src/automations/AutomationsScreen';
-import { MemoriesScreen } from './src/memories/MemoriesScreen';
+import { RepoScreen } from './src/repo/RepoScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from './src/supabase/supabase';
@@ -618,10 +618,10 @@ function MainTabNavigator() {
         }}
       />
       <Tab.Screen 
-        name="Memories" 
-        component={MemoriesScreen}
+        name="Repo" 
+        component={RepoScreen}
         options={{
-          title: 'Memories',
+          title: 'Repo',
         }}
       />
       <Tab.Screen 

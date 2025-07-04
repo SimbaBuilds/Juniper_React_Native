@@ -312,19 +312,20 @@ export const DatabaseService = {
     return await this.updateUserProfile(userId, settings)
   },
 
-  // Memories
+  // Resources (including memories)
   async getMemories(userId: string) {
     const { data, error } = await supabase
-      .from('memories')
+      .from('resources')
       .select(`
         *,
-        tag_1:tags!memories_tag_1_id_fkey(*),
-        tag_2:tags!memories_tag_2_id_fkey(*),
-        tag_3:tags!memories_tag_3_id_fkey(*),
-        tag_4:tags!memories_tag_4_id_fkey(*),
-        tag_5:tags!memories_tag_5_id_fkey(*)
+        tag_1:tags!resources_tag_1_id_fkey(*),
+        tag_2:tags!resources_tag_2_id_fkey(*),
+        tag_3:tags!resources_tag_3_id_fkey(*),
+        tag_4:tags!resources_tag_4_id_fkey(*),
+        tag_5:tags!resources_tag_5_id_fkey(*)
       `)
       .eq('user_id', userId)
+      .eq('type', 'memory')
       .order('created_at', { ascending: false })
     
     if (error) throw error
@@ -336,9 +337,10 @@ export const DatabaseService = {
     const { tags, ...memoryData } = memory;
     
     const { data, error } = await supabase
-      .from('memories')
+      .from('resources')
       .insert({
         user_id: userId,
+        type: 'memory', // Set resource type
         ...memoryData,
         tags: tags || [], // Store as array of tag IDs
         created_at: new Date().toISOString(),
@@ -356,7 +358,7 @@ export const DatabaseService = {
 
   async getMemoryTags(memoryId: string): Promise<any[]> {
     const { data, error } = await supabase
-      .from('memories')
+      .from('resources')
       .select('tags')
       .eq('id', memoryId)
       .single();
@@ -378,7 +380,7 @@ export const DatabaseService = {
   async addMemoryTags(memoryId: string, tagIds: string[]): Promise<void> {
     // Get current tags
     const { data: memory, error: getError } = await supabase
-      .from('memories')
+      .from('resources')
       .select('tags')
       .eq('id', memoryId)
       .single();
@@ -389,7 +391,7 @@ export const DatabaseService = {
     const newTags = [...new Set([...currentTags, ...tagIds])]; // Remove duplicates
     
     const { error } = await supabase
-      .from('memories')
+      .from('resources')
       .update({
         tags: newTags,
         updated_at: new Date().toISOString()
@@ -401,7 +403,7 @@ export const DatabaseService = {
 
   async updateMemory(memoryId: string, updates: any) {
     const { data, error } = await supabase
-      .from('memories')
+      .from('resources')
       .update({
         ...updates,
         updated_at: new Date().toISOString()
@@ -416,9 +418,126 @@ export const DatabaseService = {
 
   async deleteMemory(memoryId: string) {
     const { error } = await supabase
-      .from('memories')
+      .from('resources')
       .delete()
       .eq('id', memoryId)
+    
+    if (error) throw error
+  },
+
+  // General resource methods
+  async getResources(userId: string, resourceType?: string) {
+    let query = supabase
+      .from('resources')
+      .select(`
+        *,
+        tag_1:tags!resources_tag_1_id_fkey(*),
+        tag_2:tags!resources_tag_2_id_fkey(*),
+        tag_3:tags!resources_tag_3_id_fkey(*),
+        tag_4:tags!resources_tag_4_id_fkey(*),
+        tag_5:tags!resources_tag_5_id_fkey(*)
+      `)
+      .eq('user_id', userId)
+      .order('last_accessed', { ascending: false })
+    
+    if (resourceType) {
+      query = query.eq('type', resourceType)
+    }
+    
+    const { data, error } = await query
+    
+    if (error) throw error
+    return data || []
+  },
+
+  async createResource(userId: string, resource: any) {
+    // Handle tags - convert tag names/IDs to proper tag references
+    const { tags, ...resourceData } = resource;
+    
+    const { data, error } = await supabase
+      .from('resources')
+      .insert({
+        user_id: userId,
+        ...resourceData,
+        tags: tags || [], // Store as array of tag IDs
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select(`
+        *,
+        resource_tags:tags!inner(*)
+      `)
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async getResourceTags(resourceId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('resources')
+      .select('tags')
+      .eq('id', resourceId)
+      .single();
+    
+    if (error) throw error;
+    
+    if (!data?.tags || data.tags.length === 0) return [];
+    
+    // Get tag details
+    const { data: tagData, error: tagError } = await supabase
+      .from('tags')
+      .select('*')
+      .in('id', data.tags);
+    
+    if (tagError) throw tagError;
+    return tagData || [];
+  },
+
+  async addResourceTags(resourceId: string, tagIds: string[]): Promise<void> {
+    // Get current tags
+    const { data: resource, error: getError } = await supabase
+      .from('resources')
+      .select('tags')
+      .eq('id', resourceId)
+      .single();
+    
+    if (getError) throw getError;
+    
+    const currentTags = resource?.tags || [];
+    const newTags = [...new Set([...currentTags, ...tagIds])]; // Remove duplicates
+    
+    const { error } = await supabase
+      .from('resources')
+      .update({
+        tags: newTags,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', resourceId);
+    
+    if (error) throw error;
+  },
+
+  async updateResource(resourceId: string, updates: any) {
+    const { data, error } = await supabase
+      .from('resources')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', resourceId)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async deleteResource(resourceId: string) {
+    const { error } = await supabase
+      .from('resources')
+      .delete()
+      .eq('id', resourceId)
     
     if (error) throw error
   },
