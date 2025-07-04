@@ -76,8 +76,6 @@ export type UserProfile = {
   export type Memory = {
     id: string;
     user_id: string;
-    memory_type: string;
-    category?: string;
     title: string;
     content: string;
     importance_score: number;
@@ -97,7 +95,7 @@ export type UserProfile = {
   };
   
   export const memoryFields = [
-    'id', 'user_id', 'memory_type', 'category', 'title', 'content',
+    'id', 'user_id', 'title', 'content',
     'importance_score', 'embedding', 'decay_factor', 'auto_committed',
     'source_conversation_id', 'tag_1_id', 'tag_2_id', 'tag_3_id', 'tag_4_id', 'tag_5_id',
     'last_accessed', 'created_at', 'updated_at'
