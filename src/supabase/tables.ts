@@ -255,6 +255,7 @@ export type UserProfile = {
     id: string;
     service_id: string;
     name: string;
+    display_name?: string;
     description?: string;
     parameters?: Record<string, any>;  // JSON schema for input parameters
     returns?: Record<string, any>;     // JSON schema for output format
@@ -280,7 +281,7 @@ export type UserProfile = {
   };
 
   export const serviceToolFields = [
-    'id', 'service_id', 'name', 'description', 'parameters',
+    'id', 'service_id', 'name', 'display_name', 'description', 'parameters',
     'returns', 'example', 'run_script', 'endpoint_url', 'http_method',
     'auth_required', 'category', 'version', 'is_active', 'execution_timeout',
     'rate_limit', 'tag_id', 'resource_1_id', 'resource_2_id', 'resource_3_id', 'resource_4_id', 'resource_5_id',

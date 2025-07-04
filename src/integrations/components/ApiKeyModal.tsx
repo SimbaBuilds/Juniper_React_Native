@@ -115,7 +115,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
 
   const getPlaceholder = () => {
     if (serviceName.toLowerCase() === 'perplexity') {
-      return 'pplx-';
+      return 'pplx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
     }
     return 'Enter your API key';
   };

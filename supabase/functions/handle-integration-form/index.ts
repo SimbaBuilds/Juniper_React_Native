@@ -386,7 +386,7 @@ function generateFormPage(token: string, service: string, serviceName: string): 
         <form id="setupForm">
           <div class="form-group">
             <label for="apiKey">Perplexity API Key</label>
-            <input type="password" id="apiKey" name="apiKey" placeholder="pplx-" required>
+            <input type="password" id="apiKey" name="apiKey" placeholder="pplx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
           </div>
           <button type="submit" class="submit-btn">Complete Setup</button>
         </form>
