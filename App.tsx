@@ -38,7 +38,7 @@ type TabParamList = {
   Home: undefined;
   Integrations: undefined;
   Automations: undefined;
-  Memories: undefined;
+  Repo: undefined;
   Settings: undefined;
 };
 
@@ -570,7 +570,7 @@ function MainTabNavigator() {
             iconName = focused ? 'link' : 'link-outline';
           } else if (route.name === 'Automations') {
             iconName = focused ? 'cog' : 'cog-outline';
-          } else if (route.name === 'Memories') {
+          } else if (route.name === 'Repo') {
             iconName = focused ? 'bookmark' : 'bookmark-outline';
           } else if (route.name === 'Settings') {
             iconName = focused ? 'settings' : 'settings-outline';
@@ -595,13 +595,13 @@ function MainTabNavigator() {
         },
       })}
     >
-      {/* <Tab.Screen 
+      <Tab.Screen 
         name="Automations" 
         component={AutomationsScreen}
         options={{
           title: 'Automations',
         }}
-      /> */}
+      />
       <Tab.Screen 
         name="Integrations" 
         component={IntegrationsScreen}
