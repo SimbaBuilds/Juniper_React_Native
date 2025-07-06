@@ -6,7 +6,6 @@ import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
 import IntegrationService from './IntegrationService';
 import IntegrationEmailService from '../services/IntegrationEmailService';
-import ApiKeyModal from './components/ApiKeyModal';
 import TwilioCredentialsModal from './components/TwilioCredentialsModal';
 import TextbeltCredentialsModal from './components/TextbeltCredentialsModal';
 
@@ -43,7 +42,6 @@ export const IntegrationsScreen: React.FC = () => {
   const [services, setServices] = useState<ServiceWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [apiKeyModalVisible, setApiKeyModalVisible] = useState(false);
   const [twilioModalVisible, setTwilioModalVisible] = useState(false);
   const [textbeltModalVisible, setTextbeltModalVisible] = useState(false);
   const [selectedService, setSelectedService] = useState<ServiceWithStatus | null>(null);
@@ -78,7 +76,7 @@ export const IntegrationsScreen: React.FC = () => {
     }
     
     // Research
-    if (['perplexity'].includes(name)) {
+    if (['perplexity', 'twitter', 'x'].includes(name)) {
       return 'Research';
     }
     
@@ -177,6 +175,9 @@ export const IntegrationsScreen: React.FC = () => {
         return 'cloud';
       case 'perplexity':
         return 'search';
+      case 'twitter':
+      case 'x':
+        return 'logo-twitter';
       case 'google sheets':
       case 'microsoft excel online':
         return 'grid';
@@ -224,15 +225,37 @@ export const IntegrationsScreen: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      // Fetch all services and user integrations in parallel
-      const [allServices, userIntegrations] = await Promise.all([
+      // Fetch all services, user integrations, and system integrations in parallel
+      const [allServices, userIntegrations, systemIntegrations] = await Promise.all([
         DatabaseService.getAllServicesWithTags(),
-        DatabaseService.getIntegrations(user.id)
+        DatabaseService.getIntegrations(user.id),
+        DatabaseService.getSystemIntegrations(user.id)
       ]);
       
       // Map services to their status
       const servicesWithStatus: ServiceWithStatus[] = await Promise.all(
         allServices.map(async (service: any) => {
+          const serviceName = service.service_name.toLowerCase();
+          
+          // Check if this is a system integration (Twitter/X or Perplexity)
+          if (['twitter', 'x', 'perplexity'].includes(serviceName)) {
+            const integrationKey = serviceName === 'twitter' || serviceName === 'x' ? 'twitter_x' : 'perplexity';
+            const isActive = systemIntegrations[integrationKey] ?? true; // Default to true
+            
+            return {
+              id: service.id,
+              service_name: service.service_name,
+              tags: service.tagNames || [],
+              description: service.description,
+              isActive,
+              isConnected: isActive,
+              integration_id: undefined, // System integrations don't have integration_id
+              status: isActive ? 'active' : 'inactive',
+              isPendingSetup: false,
+            };
+          }
+          
+          // Handle regular integrations
           const integration = userIntegrations.find(
             (int: any) => int.service_id === service.id
           );
@@ -240,9 +263,9 @@ export const IntegrationsScreen: React.FC = () => {
           const isActive = integration?.is_active;
           let isPendingSetup = false;
 
-          // For API key integrations (Perplexity, Twilio), check if setup is pending
+          // For API key integrations (Twilio), check if setup is pending
           if (integration && !isActive && 
-              ['perplexity', 'twilio'].includes(service.service_name.toLowerCase())) {
+              ['twilio'].includes(service.service_name.toLowerCase())) {
             try {
               const emailService = IntegrationEmailService.getInstance();
               const integrationStatus = await emailService.getIntegrationStatus(integration.id);
@@ -281,6 +304,8 @@ export const IntegrationsScreen: React.FC = () => {
       'Notion': 'notion',
       'Slack': 'slack',
       'Perplexity': 'perplexity',
+      'Twitter': 'twitter',
+      'X': 'twitter',
       'Google Sheets': 'google-sheets',
       'Google Docs': 'google-docs',
       'Gmail': 'gmail',
@@ -314,15 +339,16 @@ export const IntegrationsScreen: React.FC = () => {
       // Initialize integration service
       const integrationService = IntegrationService.getInstance();
       
-      // Check if this service uses API key authentication
-      if (internalServiceName === 'perplexity') {
-        // Ensure integration record exists for email functionality
-        if (!service.integration_id) {
-          const integration = await integrationService.createIntegrationRecord(service.id, user.id);
-          service.integration_id = integration.id;
-        }
-        setSelectedService(service);
-        setApiKeyModalVisible(true);
+      // Check if this service is a system-managed service (no auth required)
+      if (['perplexity', 'twitter'].includes(internalServiceName)) {
+        // Handle system services - toggle on/off using enabled_integrations field
+        const integrationKey = internalServiceName === 'twitter' ? 'twitter_x' : 'perplexity';
+        const newState = !service.isActive;
+        
+        await DatabaseService.updateSystemIntegration(user.id, integrationKey, newState);
+        
+        // Refresh the services list
+        await loadServicesWithStatus();
         return;
       }
 
@@ -367,33 +393,6 @@ export const IntegrationsScreen: React.FC = () => {
     }
   };
 
-  // Handle API key submission
-  const handleApiKeySubmit = async (apiKey: string) => {
-    try {
-      if (!selectedService || !user?.id) {
-        throw new Error('Missing service or user information');
-      }
-
-      console.log('🔑 Submitting API key for:', selectedService.service_name);
-
-      const integrationService = IntegrationService.getInstance();
-      await integrationService.startApiKeyIntegration({
-        serviceId: selectedService.id,
-        serviceName: selectedService.service_name,
-        userId: user.id,
-        apiKey: apiKey
-      });
-
-      // Refresh the services list to show updated status
-      await loadServicesWithStatus();
-
-    } catch (error) {
-      console.error('Error submitting API key:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      Alert.alert('Error', `Failed to connect: ${errorMessage}`);
-      throw error; // Re-throw to let modal handle it
-    }
-  };
 
   // Handle Twilio credentials submission
   const handleTwilioCredentialsSubmit = async (credentials: TwilioCredentials) => {
@@ -674,25 +673,6 @@ export const IntegrationsScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* API Key Modal for Perplexity */}
-      <ApiKeyModal
-        visible={apiKeyModalVisible}
-        serviceName={selectedService?.service_name || ''}
-        integrationId={selectedService?.integration_id}
-        onClose={() => {
-          setApiKeyModalVisible(false);
-          setSelectedService(null);
-        }}
-        onSuccess={() => {
-          setApiKeyModalVisible(false);
-          setSelectedService(null);
-        }}
-        onSubmit={handleApiKeySubmit}
-        onEmailSent={() => {
-          // Handle email sent - set service to pending setup state
-          loadServicesWithStatus();
-        }}
-      />
 
       {/* Twilio Credentials Modal */}
       <TwilioCredentialsModal

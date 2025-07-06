@@ -7,7 +7,7 @@ export type { AuthResult, StoredTokenData } from './BaseOAuthService';
 // OAuth Service implementations
 export { default as NotionAuthService } from './services/NotionAuthService';
 export { default as SlackAuthService } from './services/SlackAuthService';
-export { default as PerplexityAuthService } from './services/PerplexityAuthService';
+export { default as TwitterAuthService } from './services/TwitterAuthService';
 export { default as TodoistAuthService } from './services/TodoistAuthService';
 export { default as GoogleSheetsAuthService } from './services/GoogleSheetsAuthService';
 export { default as GoogleDocsAuthService } from './services/GoogleDocsAuthService';
@@ -25,7 +25,7 @@ export { default as MicrosoftTeamsAuthService } from './services/MicrosoftTeamsA
 // Import services for use in getAuthService
 import NotionAuthService from './services/NotionAuthService';
 import SlackAuthService from './services/SlackAuthService';
-import PerplexityAuthService from './services/PerplexityAuthService';
+import TwitterAuthService from './services/TwitterAuthService';
 import TodoistAuthService from './services/TodoistAuthService';
 import GoogleSheetsAuthService from './services/GoogleSheetsAuthService';
 import GoogleDocsAuthService from './services/GoogleDocsAuthService';
@@ -43,7 +43,7 @@ import MicrosoftTeamsAuthService from './services/MicrosoftTeamsAuthService';
 // Export types for external use
 export type { NotionAuthService as NotionAuthServiceType } from './services/NotionAuthService';
 export type { SlackAuthService as SlackAuthServiceType } from './services/SlackAuthService';
-export type { PerplexityAuthService as PerplexityAuthServiceType } from './services/PerplexityAuthService';
+export type { TwitterAuthService as TwitterAuthServiceType } from './services/TwitterAuthService';
 export type { GoogleSheetsAuthService as GoogleSheetsAuthServiceType } from './services/GoogleSheetsAuthService';
 export type { GoogleDocsAuthService as GoogleDocsAuthServiceType } from './services/GoogleDocsAuthService';
 export type { GmailAuthService as GmailAuthServiceType } from './services/GmailAuthService';
@@ -64,8 +64,8 @@ export const getAuthService = (serviceName: string) => {
       return NotionAuthService.getInstance();
     case 'slack':
       return SlackAuthService.getInstance();
-    case 'perplexity':
-      return PerplexityAuthService.getInstance();
+    case 'twitter':
+      return TwitterAuthService.getInstance();
     case 'todoist':
       return TodoistAuthService.getInstance();
     case 'google-sheets':

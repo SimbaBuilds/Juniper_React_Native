@@ -20,6 +20,11 @@ export type UserProfile = {
     xai_live_search_safe_search?: boolean;
     // User-defined tags for categorization and organization (max 50 tags)
     user_tags: string[];
+    // Integration enablement flags
+    enabled_integrations: {
+      twitter_x: boolean;
+      perplexity: boolean;
+    };
     // Usage tracking
     requests_today: number;
     requests_week: number;
@@ -31,7 +36,7 @@ export type UserProfile = {
   export const userProfileFields = [
     'id', 'display_name', 'name', 'location', 'education', 'profession', 'language', 'deepgram_enabled', 'base_language_model', 'general_instructions',
     'wake_word', 'wake_word_sensitivity', 'wake_word_detection_enabled', 'selected_deepgram_voice', 'timezone', 'preferences', 
-    'xai_live_search_enabled', 'xai_live_search_safe_search', 'user_tags',
+    'xai_live_search_enabled', 'xai_live_search_safe_search', 'user_tags', 'enabled_integrations',
     'requests_today', 'requests_week', 'requests_month', 'created_at', 'updated_at'
   ] as const;
   export type UserProfileField = (typeof userProfileFields)[number];
@@ -78,6 +83,7 @@ export type UserProfile = {
     user_id: string;
     title: string;
     content: string;
+    instructions?: string; // Instructions for how to use or interpret this resource
     type: string; // New field: type of resource (memory, document, file, link, note, reference)
     importance_score: number;
     embedding?: number[];
@@ -100,7 +106,7 @@ export type UserProfile = {
   };
   
   export const resourceFields = [
-    'id', 'user_id', 'title', 'content', 'type',
+    'id', 'user_id', 'title', 'content', 'instructions', 'type',
     'importance_score', 'embedding', 'decay_factor', 'auto_committed',
     'source_conversation_id', 'blob', 'path', 'url',
     'tag_1_id', 'tag_2_id', 'tag_3_id', 'tag_4_id', 'tag_5_id',

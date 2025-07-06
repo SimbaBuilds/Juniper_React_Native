@@ -535,7 +535,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               await handleVoiceSettingsUpdate({ deepgramEnabled });
               console.log('🎵 DEEPGRAM_TOGGLE: ✅ Deepgram toggle update completed');
             }}
-            description="Choose from a variety of voices; when disabled, the application falls back to on device text-to-speech."
+            description="Choose from a variety of voices; when disabled, the application falls back to on device text-to-speech. Note: Voice interaction with Deepgram is a bit slower than with on device text-to-speech."
             hasSubSettings={true}
           >
             <VoiceSelectionDropdown

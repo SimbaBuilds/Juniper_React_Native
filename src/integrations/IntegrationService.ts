@@ -1,9 +1,9 @@
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
 import { getAuthService } from './auth';
-import PerplexityAuthService from './auth/services/PerplexityAuthService';
 import TwilioAuthService from './auth/services/TwilioAuthService';
 import TextbeltAuthService from './auth/services/TextbeltAuthService';
+// TwitterAuthService removed - Twitter/X is now managed via enabled_integrations field
 import { Alert } from 'react-native';
 import { supabase } from '../supabase/supabase';
 import { Integration } from '../supabase/tables';
@@ -14,9 +14,6 @@ interface StartIntegrationParams {
   userId: string;
 }
 
-interface StartApiKeyIntegrationParams extends StartIntegrationParams {
-  apiKey: string;
-}
 
 interface TwilioCredentials {
   accountSid: string;
@@ -54,6 +51,8 @@ function mapServiceName(dbServiceName: string): string {
     'Slack': 'slack',
     'Zoom': 'zoom',
     'Perplexity': 'perplexity',
+    'Twitter': 'twitter',
+    'X': 'twitter',
     'Google Sheets': 'google-sheets',
     'Google Docs': 'google-docs',
     'Gmail': 'gmail',
@@ -81,63 +80,6 @@ export class IntegrationService {
     return IntegrationService.instance;
   }
 
-  /**
-   * Start the integration flow for a service with API key
-   */
-  async startApiKeyIntegration({ serviceId, serviceName, userId, apiKey }: StartApiKeyIntegrationParams): Promise<void> {
-    try {
-      console.log(`🚀 Starting API key integration for ${serviceName}...`);
-
-      // Check if integration already exists and is active
-      const existingIntegrations = await DatabaseService.getIntegrations(userId);
-      const existingIntegration = existingIntegrations.find(
-        (integration: any) => integration.service_id === serviceId && integration.is_active
-      );
-
-      if (existingIntegration) {
-        Alert.alert(
-          'Already Connected',
-          `You already have an active ${serviceName} integration. Would you like to reconnect?`,
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { 
-              text: 'Reconnect', 
-              onPress: () => this.reconnectApiKeyIntegration(existingIntegration.id, serviceName, apiKey)
-            }
-          ]
-        );
-        return;
-      }
-
-      // Find any existing integration (active or inactive) for this service
-      const anyExistingIntegration = existingIntegrations.find(
-        (integration: any) => integration.service_id === serviceId
-      );
-
-      let integrationId: string;
-      if (anyExistingIntegration) {
-        // Use existing integration record (could be inactive)
-        integrationId = anyExistingIntegration.id;
-        console.log(`✅ Using existing integration record with ID: ${integrationId}`);
-      } else {
-        // Create a new integration record (shouldn't happen since modal creates one)
-        const integration = await this.createIntegrationRecord(serviceId, userId);
-        integrationId = integration.id;
-        console.log(`✅ Integration record created with ID: ${integrationId}`);
-      }
-
-      // Start API key authentication
-      await this.startApiKeyAuth(serviceName, integrationId, apiKey);
-
-    } catch (error) {
-      console.error(`❌ Error starting ${serviceName} integration:`, error);
-      Alert.alert(
-        'Integration Error',
-        `Failed to start ${serviceName} integration: ${getErrorMessage(error)}`,
-        [{ text: 'OK' }]
-      );
-    }
-  }
 
   /**
    * Start the integration flow for a service
@@ -217,15 +159,15 @@ export class IntegrationService {
   /**
    * Create integration record in database
    */
-  async createIntegrationRecord(serviceId: string, userId: string): Promise<any> {
+  async createIntegrationRecord(serviceId: string, userId: string, isSystemService: boolean = false): Promise<any> {
     try {
       const integrationData = {
         user_id: userId,
         service_id: serviceId,
-        is_active: false, // Will be set to true after successful OAuth
-        status: 'pending',
+        is_active: isSystemService, // System services start active by default
+        status: isSystemService ? 'active' : 'pending',
         notes: null,
-        last_used: null,
+        last_used: isSystemService ? new Date().toISOString() : null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -244,67 +186,6 @@ export class IntegrationService {
     }
   }
 
-  /**
-   * Start API key authentication for specific service
-   */
-  private async startApiKeyAuth(serviceName: string, integrationId: string, apiKey: string): Promise<void> {
-    try {
-      console.log(`🔑 Starting API key authentication for ${serviceName}...`);
-
-      if (serviceName.toLowerCase() === 'perplexity') {
-        const perplexityService = PerplexityAuthService.getInstance();
-        const result = await perplexityService.authenticateWithApiKey(apiKey, integrationId);
-        
-        console.log(`✅ ${serviceName} API key authentication completed successfully`);
-        
-        // Update integration status to active
-        await this.updateIntegrationStatus(integrationId, 'active', true);
-
-        Alert.alert(
-          'Integration Successful!',
-          `Your ${serviceName} account has been successfully connected.`,
-          [{ text: 'OK' }]
-        );
-      } else {
-        throw new Error(`API key authentication not supported for ${serviceName}`);
-      }
-
-    } catch (error) {
-      console.error(`❌ API key authentication failed for ${serviceName}:`, error);
-      
-      // Update integration status to failed
-      await this.updateIntegrationStatus(integrationId, 'failed', false);
-
-      Alert.alert(
-        'Authentication Failed',
-        `Failed to connect to ${serviceName}: ${getErrorMessage(error)}`,
-        [{ text: 'OK' }]
-      );
-    }
-  }
-
-  /**
-   * Reconnect an existing integration with API key
-   */
-  private async reconnectApiKeyIntegration(integrationId: string, serviceName: string, apiKey: string): Promise<void> {
-    try {
-      console.log(`🔄 Reconnecting ${serviceName} integration with API key...`);
-
-      // Update status to pending
-      await this.updateIntegrationStatus(integrationId, 'pending', false);
-
-      // Start API key authentication with existing integration ID
-      await this.startApiKeyAuth(serviceName, integrationId, apiKey);
-
-    } catch (error) {
-      console.error(`❌ Error reconnecting ${serviceName}:`, error);
-      Alert.alert(
-        'Reconnection Failed',
-        `Failed to reconnect ${serviceName}: ${getErrorMessage(error)}`,
-        [{ text: 'OK' }]
-      );
-    }
-  }
 
   /**
    * Start OAuth flow for specific service
@@ -708,6 +589,8 @@ export class IntegrationService {
       );
     }
   }
+
+  // System service methods removed - Twitter/X and Perplexity are now managed via enabled_integrations field in user_profiles
 }
 
 export default IntegrationService; 

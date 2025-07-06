@@ -54,6 +54,11 @@ export const DatabaseService = {
         xai_live_search_safe_search: updates.xai_live_search_safe_search ?? true,
         // User tags defaults
         user_tags: updates.user_tags || [],
+        // System integrations defaults (enabled by default)
+        enabled_integrations: updates.enabled_integrations || {
+          twitter_x: true,
+          perplexity: true
+        },
         updated_at: new Date().toISOString()
       };
       
@@ -141,6 +146,11 @@ export const DatabaseService = {
         xai_live_search_safe_search: true,
         // User tags defaults
         user_tags: [],
+        // System integrations defaults (enabled by default)
+        enabled_integrations: {
+          twitter_x: true,
+          perplexity: true
+        },
         updated_at: new Date().toISOString()
       };
       
@@ -723,6 +733,37 @@ export const DatabaseService = {
       console.error('❌ Error fixing null general_instructions:', error);
       throw error;
     }
+  },
+
+  // System integration management (Twitter/X and Perplexity)
+  async updateSystemIntegration(userId: string, integration: 'twitter_x' | 'perplexity', enabled: boolean) {
+    const currentProfile = await this.getUserProfile(userId);
+    const enabledIntegrations = currentProfile?.enabled_integrations || {
+      twitter_x: true,
+      perplexity: true
+    };
+    
+    const updatedIntegrations = {
+      ...enabledIntegrations,
+      [integration]: enabled
+    };
+    
+    return await this.updateUserProfile(userId, { 
+      enabled_integrations: updatedIntegrations 
+    });
+  },
+
+  async getSystemIntegrations(userId: string) {
+    const profile = await this.getUserProfile(userId);
+    return profile?.enabled_integrations || {
+      twitter_x: true,
+      perplexity: true
+    };
+  },
+
+  async isSystemIntegrationEnabled(userId: string, integration: 'twitter_x' | 'perplexity'): Promise<boolean> {
+    const systemIntegrations = await this.getSystemIntegrations(userId);
+    return systemIntegrations[integration] ?? true; // Default to true if not set
   },
 
   // Integrations

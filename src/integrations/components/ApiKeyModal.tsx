@@ -11,7 +11,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import PerplexityAuthService from '../auth/services/PerplexityAuthService';
 import IntegrationEmailService from '../../services/IntegrationEmailService';
 import { useAuth } from '../../auth/AuthContext';
 
@@ -107,16 +106,10 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
   };
 
   const getInstructions = () => {
-    if (serviceName.toLowerCase() === 'perplexity') {
-      return PerplexityAuthService.getApiKeyInstructions();
-    }
     return 'Please enter your API key for this service.';
   };
 
   const getPlaceholder = () => {
-    if (serviceName.toLowerCase() === 'perplexity') {
-      return 'pplx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
-    }
     return 'Enter your API key';
   };
 
