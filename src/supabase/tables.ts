@@ -347,5 +347,41 @@ export type UserProfile = {
   ] as const;
   export type IntegrationSetupTokenField = (typeof integrationSetupTokenFields)[number];
 
+  export type EmbeddingJob = {
+    id: string;
+    resource_id: string;
+    user_id: string;
+    content: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    error_message?: string;
+    created_at: Date;
+    updated_at: Date;
+    completed_at?: Date;
+  };
+
+  export const embeddingJobFields = [
+    'id', 'resource_id', 'user_id', 'content', 'status', 'error_message', 'created_at', 'updated_at', 'completed_at'
+  ] as const;
+  export type EmbeddingJobField = (typeof embeddingJobFields)[number];
+
+  export type DecayLog = {
+    id: string;
+    resource_id: string;
+    old_relevance_score: number;
+    new_relevance_score: number;
+    time_since_last_access: number; // Days since last access
+    decay_constant: number;
+    decay_factor: number;
+    decay_applied: number; // Amount of decay applied
+    created_at: Date;
+  };
+
+  export const decayLogFields = [
+    'id', 'resource_id', 'old_relevance_score', 'new_relevance_score',
+    'time_since_last_access', 'decay_constant', 'decay_factor', 
+    'decay_applied', 'created_at'
+  ] as const;
+  export type DecayLogField = (typeof decayLogFields)[number];
+
 
 

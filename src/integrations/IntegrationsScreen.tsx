@@ -719,7 +719,7 @@ export const IntegrationsScreen: React.FC = () => {
                         <Text style={styles.serviceName}>{service.service_name}</Text>
                         <Text style={styles.systemServiceDescription}>
                           {service.service_name.toLowerCase() === 'twitter/x' || service.service_name.toLowerCase() === 'x' 
-                            ? 'Gives Juniper abiltity to scrape and build automations around Twitter/X'
+                            ? 'Gives Juniper abiltity to scrape and build automations around Twitter/X. <br />Note: XAI Live Search with X/Twitter and Grok is built into Juniper\'s search functionality, managed in settings. '
                             : 'Gives Juniper advanced web search and research capabilities'
                           }
                         </Text>
