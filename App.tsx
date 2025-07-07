@@ -18,8 +18,9 @@ import { supabase } from './src/supabase/supabase';
 import LoginPage from './src/auth/LoginPage';
 import SignUpPage from './src/auth/SignUpPage';
 import PhoneSignUpPage from './src/auth/PhoneSignUpPage';
-import { AuthProvider } from './src/auth/AuthContext';
+import { AuthProvider, useAuth } from './src/auth/AuthContext';
 import IntegrationCompletionService from './src/integrations/IntegrationCompletionService';
+import { DatabaseService } from './src/supabase/supabase';
 
 type RootStackParamList = {
   MainTabs: undefined;
@@ -543,7 +544,9 @@ export default function App() {
 
 function MainTabNavigator() {
   const { integrationInProgress, sendTextMessage } = useVoice();
+  const { user } = useAuth();
   const navigation = useNavigation();
+  const [expiringResourcesCount, setExpiringResourcesCount] = useState(0);
   
   // Set up integration completion handler
   useEffect(() => {
@@ -556,6 +559,30 @@ function MainTabNavigator() {
       }
     });
   }, [sendTextMessage, navigation]);
+
+  // Check for expiring resources
+  useEffect(() => {
+    const checkExpiringResources = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const resources = await DatabaseService.getResources(user.id);
+        const expiringCount = resources.filter(resource => 
+          resource.relevance_score < 10
+        ).length;
+        setExpiringResourcesCount(expiringCount);
+      } catch (error) {
+        console.error('Error checking expiring resources:', error);
+      }
+    };
+
+    checkExpiringResources();
+    
+    // Check every 5 minutes
+    const interval = setInterval(checkExpiringResources, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [user?.id]);
   
   return (
     <Tab.Navigator
@@ -622,6 +649,7 @@ function MainTabNavigator() {
         component={RepoScreen}
         options={{
           title: 'Repo',
+          tabBarBadge: expiringResourcesCount > 0 ? expiringResourcesCount : undefined,
         }}
       />
       <Tab.Screen 

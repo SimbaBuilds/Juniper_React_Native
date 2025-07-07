@@ -51,7 +51,7 @@ function mapServiceName(dbServiceName: string): string {
     'Slack': 'slack',
     'Zoom': 'zoom',
     'Perplexity': 'perplexity',
-    'Twitter': 'twitter',
+    'Twitter_X': 'twitter',
     'X': 'twitter',
     'Google Sheets': 'google-sheets',
     'Google Docs': 'google-docs',

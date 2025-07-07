@@ -85,7 +85,7 @@ export type UserProfile = {
     content: string;
     instructions?: string; // Instructions for how to use or interpret this resource
     type: string; // New field: type of resource (memory, document, file, link, note, reference)
-    importance_score: number;
+    relevance_score: number;
     embedding?: number[];
     decay_factor: number;
     auto_committed: boolean;
@@ -107,7 +107,7 @@ export type UserProfile = {
   
   export const resourceFields = [
     'id', 'user_id', 'title', 'content', 'instructions', 'type',
-    'importance_score', 'embedding', 'decay_factor', 'auto_committed',
+    'relevance_score', 'embedding', 'decay_factor', 'auto_committed',
     'source_conversation_id', 'blob', 'path', 'url',
     'tag_1_id', 'tag_2_id', 'tag_3_id', 'tag_4_id', 'tag_5_id',
     'last_accessed', 'created_at', 'updated_at'

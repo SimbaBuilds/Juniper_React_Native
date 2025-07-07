@@ -130,28 +130,65 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
     }
   };
 
+  const handleDeleteTag = async (tagId: string, tagName: string) => {
+    Alert.alert(
+      'Delete Tag',
+      `Are you sure you want to delete the tag "${tagName}"? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await DatabaseService.deleteTag(tagId);
+              setUserTags(prev => prev.filter(tag => tag.id !== tagId));
+              // Remove from selected tags if it was selected
+              onTagsChange(selectedTags.filter(tag => tag.id !== tagId));
+              Alert.alert('Success', 'Tag deleted successfully');
+            } catch (err) {
+              console.error('Error deleting tag:', err);
+              Alert.alert('Error', 'Failed to delete tag');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderTagSection = (title: string, tags: any[], sectionKey: string) => (
     <View key={sectionKey} style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
       <View style={styles.tagGrid}>
         {tags.map((tag) => (
-          <TouchableOpacity
-            key={tag.id}
-            style={[
-              styles.tagButton,
-              selectedTags.some(t => t.id === tag.id) && styles.selectedTagButton
-            ]}
-            onPress={() => handleTagToggle(tag)}
-          >
-            <Text
+          <View key={tag.id} style={styles.tagContainer}>
+            <TouchableOpacity
               style={[
-                styles.tagButtonText,
-                selectedTags.some(t => t.id === tag.id) && styles.selectedTagButtonText
+                styles.tagButton,
+                selectedTags.some(t => t.id === tag.id) && styles.selectedTagButton
               ]}
+              onPress={() => handleTagToggle(tag)}
             >
-              {tag.name}
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.tagButtonText,
+                  selectedTags.some(t => t.id === tag.id) && styles.selectedTagButtonText
+                ]}
+              >
+                {tag.name}
+              </Text>
+            </TouchableOpacity>
+            {/* Show delete button only for user-created tags */}
+            {tag.type === 'user_created' && (
+              <TouchableOpacity
+                style={styles.deleteTagButton}
+                onPress={() => handleDeleteTag(tag.id, tag.name)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close-circle" size={16} color="#666666" />
+              </TouchableOpacity>
+            )}
+          </View>
         ))}
       </View>
     </View>
@@ -380,12 +417,31 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
+  tagContainer: {
+    position: 'relative',
+    marginBottom: 8,
+  },
   tagButton: {
     backgroundColor: '#F5F5F5',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    marginBottom: 8,
+  },
+  deleteTagButton: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    width: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
   selectedTagButton: {
     backgroundColor: '#4A90E2',

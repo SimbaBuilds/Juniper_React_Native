@@ -8,6 +8,7 @@ import IntegrationService from './IntegrationService';
 import IntegrationEmailService from '../services/IntegrationEmailService';
 import TwilioCredentialsModal from './components/TwilioCredentialsModal';
 import TextbeltCredentialsModal from './components/TextbeltCredentialsModal';
+import { SettingsToggle } from '../settings/components/SettingsToggle';
 
 interface ServiceWithStatus {
   id: string;
@@ -19,6 +20,7 @@ interface ServiceWithStatus {
   integration_id?: string;
   status?: string; // pending, active, etc.
   isPendingSetup?: boolean; // Waiting for online form completion
+  isSystemIntegration?: boolean; // Flag for system integrations (Twitter/X, Perplexity)
 }
 
 interface TwilioCredentials {
@@ -100,11 +102,14 @@ export const IntegrationsScreen: React.FC = () => {
     return 'Other';
   };
 
-  // Organize services into categories
+  // Organize regular services into categories (excludes system integrations)
   const organizeServicesByCategory = (services: ServiceWithStatus[]): ServiceCategory[] => {
     const categoryMap: { [key: string]: ServiceWithStatus[] } = {};
     
-    services.forEach(service => {
+    // Filter out system integrations from regular categories
+    const regularServices = services.filter(service => !service.isSystemIntegration);
+    
+    regularServices.forEach(service => {
       const category = getServiceCategory(service.service_name);
       if (!categoryMap[category]) {
         categoryMap[category] = [];
@@ -112,14 +117,13 @@ export const IntegrationsScreen: React.FC = () => {
       categoryMap[category].push(service);
     });
     
-    // Define the order of categories
+    // Define the order of categories (removed Research since Twitter/X and Perplexity are now system integrations)
     const categoryOrder = [
       'Communications',
       'Productivity and Task Management',
       'Calendar',
       'Email',
       'Video Conferencing',
-      'Research',
       'Cloud Storage',
       'Cloud Text Documents',
       'Cloud Spreadsheets',
@@ -142,6 +146,11 @@ export const IntegrationsScreen: React.FC = () => {
     });
     
     return categories;
+  };
+
+  // Get system integrations (Twitter/X and Perplexity)
+  const getSystemIntegrations = (services: ServiceWithStatus[]): ServiceWithStatus[] => {
+    return services.filter(service => service.isSystemIntegration);
   };
 
   // Helper function to get icon for integration type
@@ -238,7 +247,7 @@ export const IntegrationsScreen: React.FC = () => {
           const serviceName = service.service_name.toLowerCase();
           
           // Check if this is a system integration (Twitter/X or Perplexity)
-          if (['twitter', 'x', 'perplexity'].includes(serviceName)) {
+          if (['twitter', 'x', "twitter/x", 'perplexity'].includes(serviceName)) {
             const integrationKey = serviceName === 'twitter' || serviceName === 'x' ? 'twitter_x' : 'perplexity';
             const isActive = systemIntegrations[integrationKey] ?? true; // Default to true
             
@@ -252,6 +261,7 @@ export const IntegrationsScreen: React.FC = () => {
               integration_id: undefined, // System integrations don't have integration_id
               status: isActive ? 'active' : 'inactive',
               isPendingSetup: false,
+              isSystemIntegration: true, // Flag to identify system integrations
             };
           }
           
@@ -285,6 +295,7 @@ export const IntegrationsScreen: React.FC = () => {
             integration_id: integration?.id,
             status: integration?.status,
             isPendingSetup,
+            isSystemIntegration: false, // Regular OAuth integrations
           };
         })
       );
@@ -304,7 +315,7 @@ export const IntegrationsScreen: React.FC = () => {
       'Notion': 'notion',
       'Slack': 'slack',
       'Perplexity': 'perplexity',
-      'Twitter': 'twitter',
+      'Twitter_X': 'twitter',
       'X': 'twitter',
       'Google Sheets': 'google-sheets',
       'Google Docs': 'google-docs',
@@ -341,14 +352,8 @@ export const IntegrationsScreen: React.FC = () => {
       
       // Check if this service is a system-managed service (no auth required)
       if (['perplexity', 'twitter'].includes(internalServiceName)) {
-        // Handle system services - toggle on/off using enabled_integrations field
-        const integrationKey = internalServiceName === 'twitter' ? 'twitter_x' : 'perplexity';
-        const newState = !service.isActive;
-        
-        await DatabaseService.updateSystemIntegration(user.id, integrationKey, newState);
-        
-        // Refresh the services list
-        await loadServicesWithStatus();
+        // This should now be handled by handleSystemIntegrationToggle instead
+        console.warn('System integration toggle should use handleSystemIntegrationToggle');
         return;
       }
 
@@ -492,6 +497,31 @@ export const IntegrationsScreen: React.FC = () => {
     }
   };
 
+  // Handle system integration toggle
+  const handleSystemIntegrationToggle = async (service: ServiceWithStatus, enabled: boolean) => {
+    try {
+      if (!user?.id) {
+        Alert.alert('Error', 'User not authenticated. Please log in again.');
+        return;
+      }
+
+      console.log(`🔧 Toggling system integration: ${service.service_name} to ${enabled}`);
+      
+      // Map service name to integration key
+      const serviceName = service.service_name.toLowerCase();
+      const integrationKey = serviceName === 'twitter' || serviceName === 'x' ? 'twitter_x' : 'perplexity';
+      
+      await DatabaseService.updateSystemIntegration(user.id, integrationKey, enabled);
+      
+      // Refresh the services list
+      await loadServicesWithStatus();
+      
+    } catch (error) {
+      console.error('Error toggling system integration:', error);
+      Alert.alert('Error', 'Failed to update integration. Please try again.');
+    }
+  };
+
   // Handle disconnect button press
   const handleDisconnect = async (service: ServiceWithStatus) => {
     try {
@@ -567,6 +597,7 @@ export const IntegrationsScreen: React.FC = () => {
   }
 
   const categorizedServices = organizeServicesByCategory(services);
+  const systemIntegrations = getSystemIntegrations(services);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -661,6 +692,54 @@ export const IntegrationsScreen: React.FC = () => {
             </View>
           ))}
         </View>
+
+        {/* System Integrations Section */}
+        {systemIntegrations.length > 0 && (
+          <View style={styles.systemIntegrationsSection}>
+            <View style={styles.systemIntegrationsHeader}>
+              <Ionicons name="settings-outline" size={20} color="#4A90E2" />
+              <Text style={styles.systemIntegrationsTitle}>System Integrations</Text>
+              <View style={styles.categoryDivider} />
+            </View>
+            <Text style={styles.systemIntegrationsDescription}>
+              Built-in services that don't require separate authentication
+            </Text>
+            
+            <View style={styles.systemIntegrationsServices}>
+              {systemIntegrations.map((service) => (
+                <View key={service.id} style={styles.systemServiceCard}>
+                  <View style={styles.systemServiceHeader}>
+                    <View style={styles.systemServiceLeft}>
+                      <Ionicons 
+                        name={getIconForIntegrationType(service.service_name)} 
+                        size={24} 
+                        color={service.isActive ? "#4A90E2" : "#666666"} 
+                      />
+                      <View style={styles.serviceInfo}>
+                        <Text style={styles.serviceName}>{service.service_name}</Text>
+                        <Text style={styles.systemServiceDescription}>
+                          {service.service_name.toLowerCase() === 'twitter/x' || service.service_name.toLowerCase() === 'x' 
+                            ? 'Gives Juniper abiltity to scrape and build automations around Twitter/X'
+                            : 'Gives Juniper advanced web search and research capabilities'
+                          }
+                        </Text>
+                      </View>
+                    </View>
+                    
+                    <View style={styles.systemServiceRight}>
+                      <SettingsToggle
+                        label=""
+                        value={service.isActive}
+                        onValueChange={(enabled) => handleSystemIntegrationToggle(service, enabled)}
+                        description=""
+                      />
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {services.length === 0 && (
           <View style={styles.emptyState}>
@@ -921,5 +1000,60 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '500',
+  },
+  // System Integrations Section Styles
+  systemIntegrationsSection: {
+    marginTop: 32,
+    marginBottom: 24,
+  },
+  systemIntegrationsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  systemIntegrationsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginLeft: 8,
+  },
+  systemIntegrationsDescription: {
+    fontSize: 14,
+    color: '#B0B0B0',
+    marginBottom: 16,
+    paddingHorizontal: 4,
+    lineHeight: 20,
+  },
+  systemIntegrationsServices: {
+    gap: 12,
+  },
+  systemServiceCard: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+    borderLeftWidth: 4,
+    borderLeftColor: '#4A90E2',
+  },
+  systemServiceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  systemServiceLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  systemServiceRight: {
+    marginLeft: 16,
+  },
+  systemServiceDescription: {
+    fontSize: 13,
+    color: '#B0B0B0',
+    marginTop: 4,
+    lineHeight: 18,
   },
 }); 

@@ -11,7 +11,9 @@ interface DisplayResource {
   id: string;
   content: string;
   title?: string;
+  instructions?: string;
   type: string;
+  relevance_score: number;
   last_accessed: string;
   created_at: string;
   tags: any[]; // Array of tag objects with id and name
@@ -45,6 +47,7 @@ export const RepoScreen: React.FC = () => {
   const [newResource, setNewResource] = useState({
     title: '',
     content: '',
+    instructions: '',
     type: 'memory',
     tags: [] as any[]
   });
@@ -52,6 +55,7 @@ export const RepoScreen: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [selectedFilterTags, setSelectedFilterTags] = useState<any[]>([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [expandedResources, setExpandedResources] = useState<Set<string>>(new Set());
 
   // Helper function to ensure resources have proper tags arrays
   const ensureResourceTags = (resources: any[]): DisplayResource[] => {
@@ -88,7 +92,9 @@ export const RepoScreen: React.FC = () => {
             id: resource.id,
             content: resource.content,
             title: resource.title,
+            instructions: resource.instructions,
             type: resource.type || 'memory',
+            relevance_score: resource.relevance_score || 100,
             last_accessed: resource.last_accessed,
             created_at: resource.created_at,
             tags: tags
@@ -102,6 +108,7 @@ export const RepoScreen: React.FC = () => {
               id: '1',
               content: 'Favorite coffee shop is Blue Bottle Coffee on Market Street - they make excellent cortados',
               type: 'memory',
+              relevance_score: 100,
               last_accessed: '2024-05-30',
               created_at: '2024-05-30',
               tags: [],
@@ -110,6 +117,7 @@ export const RepoScreen: React.FC = () => {
               id: '2',
               content: 'Meeting with design team every Tuesday at 2 PM in conference room B',
               type: 'notes',
+              relevance_score: 100,
               last_accessed: '2024-05-29',
               created_at: '2024-05-29',
               tags: [],
@@ -118,6 +126,7 @@ export const RepoScreen: React.FC = () => {
               id: '3',
               content: 'Preferred news sources: TechCrunch, The Verge, Hacker News for tech updates',
               type: 'memory',
+              relevance_score: 100,
               last_accessed: '2024-05-28',
               created_at: '2024-05-28',
               tags: [],
@@ -158,8 +167,9 @@ export const RepoScreen: React.FC = () => {
       const resourceData = {
         title: newResource.title.trim() || null,
         content: newResource.content.trim(),
+        instructions: newResource.instructions.trim() || null,
         type: newResource.type,
-        importance_score: 5,
+        relevance_score: 100,
         decay_factor: 1.0,
         auto_committed: false,
         tags: tagIds,
@@ -176,7 +186,9 @@ export const RepoScreen: React.FC = () => {
         id: savedResource.id,
         content: savedResource.content,
         title: savedResource.title,
+        instructions: savedResource.instructions,
         type: savedResource.type,
+        relevance_score: savedResource.relevance_score || 100,
         last_accessed: savedResource.last_accessed,
         created_at: savedResource.created_at,
         tags: resourceTags
@@ -185,7 +197,7 @@ export const RepoScreen: React.FC = () => {
       setResources(prev => ensureResourceTags([formattedResource, ...prev]));
       
       // Reset form
-      setNewResource({ title: '', content: '', type: 'memory', tags: [] });
+      setNewResource({ title: '', content: '', instructions: '', type: 'memory', tags: [] });
       setShowAddModal(false);
       
       Alert.alert('Success', 'Resource saved successfully');
@@ -256,10 +268,32 @@ export const RepoScreen: React.FC = () => {
     setExpandedCategories(newExpanded);
   };
 
+  const toggleResourceExpansion = (resourceId: string) => {
+    const newExpanded = new Set(expandedResources);
+    if (newExpanded.has(resourceId)) {
+      newExpanded.delete(resourceId);
+    } else {
+      newExpanded.add(resourceId);
+    }
+    setExpandedResources(newExpanded);
+  };
+
+  // Separate expiring and regular resources
+  const regularResources = resources.filter(resource => resource.relevance_score >= 10);
+  const expiringResources = resources.filter(resource => resource.relevance_score < 10);
+
   // Filter resources by selected tags (AND logic - resource must have all selected tags)
-  const filteredResources = selectedFilterTags.length === 0 
-    ? resources 
-    : resources.filter(resource => 
+  const filteredRegularResources = selectedFilterTags.length === 0 
+    ? regularResources 
+    : regularResources.filter(resource => 
+        selectedFilterTags.every(filterTag => 
+          resource.tags && resource.tags.some(tag => tag.id === filterTag.id)
+        )
+      );
+
+  const filteredExpiringResources = selectedFilterTags.length === 0 
+    ? expiringResources 
+    : expiringResources.filter(resource => 
         selectedFilterTags.every(filterTag => 
           resource.tags && resource.tags.some(tag => tag.id === filterTag.id)
         )
@@ -276,7 +310,47 @@ export const RepoScreen: React.FC = () => {
     return Array.from(tagMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   };
 
-  const groupedResources = groupResourcesByType(filteredResources);
+  const deleteResource = async (resourceId: string) => {
+    Alert.alert(
+      'Delete Resource',
+      'Are you sure you want to delete this resource? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await DatabaseService.deleteResource(resourceId);
+              setResources(prev => prev.filter(resource => resource.id !== resourceId));
+              Alert.alert('Success', 'Resource deleted successfully');
+            } catch (err) {
+              console.error('Error deleting resource:', err);
+              Alert.alert('Error', 'Failed to delete resource');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const resetRelevanceScore = async (resourceId: string) => {
+    try {
+      await DatabaseService.updateResourceRelevanceScore(resourceId, 100);
+      setResources(prev => prev.map(resource => 
+        resource.id === resourceId 
+          ? { ...resource, relevance_score: 100 }
+          : resource
+      ));
+      Alert.alert('Success', 'Relevance score reset to 100%');
+    } catch (err) {
+      console.error('Error resetting relevance score:', err);
+      Alert.alert('Error', 'Failed to reset relevance score');
+    }
+  };
+
+  const groupedResources = groupResourcesByType(filteredRegularResources);
+  const groupedExpiringResources = groupResourcesByType(filteredExpiringResources);
 
   if (loading) {
     return (
@@ -327,7 +401,7 @@ export const RepoScreen: React.FC = () => {
             <View style={styles.repoActions}>
               {selectedFilterTags.length > 0 && (
                 <Text style={styles.filterStatus}>
-                  Showing {filteredResources.length} of {resources.length} resources
+                  Showing {filteredRegularResources.length + filteredExpiringResources.length} of {resources.length} resources
                 </Text>
               )}
               <TouchableOpacity
@@ -343,7 +417,124 @@ export const RepoScreen: React.FC = () => {
             </View>
           </View>
           
-          {filteredResources.length === 0 && resources.length > 0 ? (
+          {/* Expiring Resources Section */}
+          {filteredExpiringResources.length > 0 && (
+            <View style={styles.expiringSection}>
+              <View style={styles.expiringSectionHeader}>
+                <Ionicons name="warning" size={20} color="#FF6B35" />
+                <Text style={styles.expiringSectionTitle}>
+                  Expiring Resources ({filteredExpiringResources.length})
+                </Text>
+              </View>
+              <Text style={styles.expiringSectionSubtitle}>
+                These resources have low relevance scores and may be outdated
+              </Text>
+              
+              {filteredExpiringResources.map((resource) => {
+                const isExpanded = expandedResources.has(resource.id);
+                const shouldTruncate = resource.content.length > 500;
+                const displayContent = shouldTruncate && !isExpanded 
+                  ? resource.content.substring(0, 500) + '...' 
+                  : resource.content;
+
+                return (
+                  <View key={resource.id} style={styles.expiringResourceCard}>
+                    <View style={styles.resourceHeader}>
+                      <View style={styles.resourceTypeIndicator}>
+                        <Ionicons 
+                          name={RESOURCE_ICONS[resource.type as keyof typeof RESOURCE_ICONS] as any} 
+                          size={16} 
+                          color="#FF6B35" 
+                        />
+                      </View>
+                      {resource.title && (
+                        <Text style={styles.resourceTitle}>{resource.title}</Text>
+                      )}
+                      <Text style={styles.relevanceScore}>
+                        {Math.round(resource.relevance_score)}%
+                      </Text>
+                    </View>
+                    
+                    {resource.instructions && (
+                      <View style={styles.instructionsContainer}>
+                        <Text style={styles.instructionsLabel}>Instructions:</Text>
+                        <Text style={styles.instructionsText}>{resource.instructions}</Text>
+                      </View>
+                    )}
+                    
+                    <TouchableOpacity
+                      style={styles.resourceContent}
+                      onPress={() => shouldTruncate && toggleResourceExpansion(resource.id)}
+                      activeOpacity={shouldTruncate ? 0.7 : 1}
+                    >
+                      {isExpanded ? (
+                        <ScrollView
+                          style={styles.expandedContentScroll}
+                          showsVerticalScrollIndicator={true}
+                          nestedScrollEnabled={true}
+                          contentContainerStyle={styles.expandedContentContainer}
+                        >
+                          <Text style={styles.resourceText}>{resource.content}</Text>
+                        </ScrollView>
+                      ) : (
+                        <Text style={styles.resourceText}>{displayContent}</Text>
+                      )}
+                      
+                      {shouldTruncate && (
+                        <View style={styles.expandToggle}>
+                          <Text style={styles.expandToggleText}>
+                            {isExpanded ? 'Show less' : 'Show more'}
+                          </Text>
+                          <Ionicons
+                            name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                            size={16}
+                            color="#4A90E2"
+                          />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                    
+                    <View style={styles.expiringResourceActions}>
+                      <TouchableOpacity
+                        style={styles.resetScoreButton}
+                        onPress={() => resetRelevanceScore(resource.id)}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons name="refresh" size={16} color="#4A90E2" />
+                        <Text style={styles.resetScoreButtonText}>Reset Score</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={styles.deleteResourceButton}
+                        onPress={() => deleteResource(resource.id)}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons name="trash-outline" size={16} color="#FF6B35" />
+                        <Text style={styles.deleteResourceButtonText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                    
+                    <View style={styles.resourceFooter}>
+                      <Text style={styles.resourceDate}>
+                        Last accessed: {formatDate(resource.last_accessed)}
+                      </Text>
+                      {resource.tags && Array.isArray(resource.tags) && resource.tags.length > 0 && (
+                        <View style={styles.tagsContainer}>
+                          {(resource.tags || []).map((tag, index) => (
+                            <View key={tag.id || index} style={styles.tag}>
+                              <Text style={styles.tagText}>{tag.name || tag}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+
+          {filteredRegularResources.length === 0 && filteredExpiringResources.length === 0 && resources.length > 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="filter" size={48} color="#666666" />
               <Text style={styles.emptyStateText}>No resources match your filters</Text>
@@ -394,39 +585,84 @@ export const RepoScreen: React.FC = () => {
                     />
                   </TouchableOpacity>
                   
-                  {displayResources.map((resource) => (
-                    <View key={resource.id} style={styles.resourceCard}>
-                      <View style={styles.resourceHeader}>
-                        <View style={styles.resourceTypeIndicator}>
-                          <Ionicons 
-                            name={RESOURCE_ICONS[resource.type as keyof typeof RESOURCE_ICONS] as any} 
-                            size={16} 
-                            color="#4A90E2" 
-                          />
+                  {displayResources.map((resource) => {
+                    const isExpanded = expandedResources.has(resource.id);
+                    const shouldTruncate = resource.content.length > 500;
+                    const displayContent = shouldTruncate && !isExpanded 
+                      ? resource.content.substring(0, 500) + '...' 
+                      : resource.content;
+
+                    return (
+                      <View key={resource.id} style={styles.resourceCard}>
+                        <View style={styles.resourceHeader}>
+                          <View style={styles.resourceTypeIndicator}>
+                            <Ionicons 
+                              name={RESOURCE_ICONS[resource.type as keyof typeof RESOURCE_ICONS] as any} 
+                              size={16} 
+                              color="#4A90E2" 
+                            />
+                          </View>
+                          {resource.title && (
+                            <Text style={styles.resourceTitle}>{resource.title}</Text>
+                          )}
                         </View>
-                        {resource.title && (
-                          <Text style={styles.resourceTitle}>{resource.title}</Text>
-                        )}
-                      </View>
-                      <View style={styles.resourceContent}>
-                        <Text style={styles.resourceText}>{resource.content}</Text>
-                      </View>
-                      <View style={styles.resourceFooter}>
-                        <Text style={styles.resourceDate}>
-                          Last accessed: {formatDate(resource.last_accessed)}
-                        </Text>
-                        {resource.tags && Array.isArray(resource.tags) && resource.tags.length > 0 && (
-                          <View style={styles.tagsContainer}>
-                            {(resource.tags || []).map((tag, index) => (
-                              <View key={tag.id || index} style={styles.tag}>
-                                <Text style={styles.tagText}>{tag.name || tag}</Text>
-                              </View>
-                            ))}
+                        
+                        {resource.instructions && (
+                          <View style={styles.instructionsContainer}>
+                            <Text style={styles.instructionsLabel}>Instructions:</Text>
+                            <Text style={styles.instructionsText}>{resource.instructions}</Text>
                           </View>
                         )}
+                        
+                        <TouchableOpacity
+                          style={styles.resourceContent}
+                          onPress={() => shouldTruncate && toggleResourceExpansion(resource.id)}
+                          activeOpacity={shouldTruncate ? 0.7 : 1}
+                        >
+                          {isExpanded ? (
+                            <ScrollView
+                              style={styles.expandedContentScroll}
+                              showsVerticalScrollIndicator={true}
+                              nestedScrollEnabled={true}
+                              contentContainerStyle={styles.expandedContentContainer}
+                            >
+                              <Text style={styles.resourceText}>{resource.content}</Text>
+                            </ScrollView>
+                          ) : (
+                            <Text style={styles.resourceText}>{displayContent}</Text>
+                          )}
+                          
+                          {shouldTruncate && (
+                            <View style={styles.expandToggle}>
+                              <Text style={styles.expandToggleText}>
+                                {isExpanded ? 'Show less' : 'Show more'}
+                              </Text>
+                              <Ionicons
+                                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                                size={16}
+                                color="#4A90E2"
+                              />
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                        
+                        <View style={styles.resourceFooter}>
+                          <Text style={styles.resourceDate}>
+                            Last accessed: {formatDate(resource.last_accessed)}
+                          </Text>
+                          {resource.tags && Array.isArray(resource.tags) && resource.tags.length > 0 && (
+                            <View style={styles.tagsContainer}>
+                              {(resource.tags || []).map((tag, index) => (
+                                <View key={tag.id || index} style={styles.tag}>
+                                  <Text style={styles.tagText}>{tag.name || tag}</Text>
+                                </View>
+                              ))}
+                            </View>
+                          )}
+                        </View>
                       </View>
-                    </View>
-                  ))}
+                    );
+                  })}
                   
                   {!isExpanded && categoryResources.length > 5 && (
                     <TouchableOpacity 
@@ -586,12 +822,40 @@ export const RepoScreen: React.FC = () => {
                   style={styles.contentInput}
                   placeholder="What would you like to save?"
                   value={newResource.content}
-                  onChangeText={(text) => setNewResource(prev => ({ ...prev, content: text }))}
+                  onChangeText={(text) => {
+                    if (text.length <= 2000) {
+                      setNewResource(prev => ({ ...prev, content: text }));
+                    }
+                  }}
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"
                   editable={!saving}
+                  maxLength={2000}
                 />
+                <Text style={styles.characterCount}>
+                  {newResource.content.length}/2000 characters
+                </Text>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Instructions (Optional)</Text>
+                <TextInput
+                  style={styles.titleInput}
+                  placeholder="e.g. read this when..."
+                  value={newResource.instructions}
+                  onChangeText={(text) => {
+                    if (text.length <= 100) {
+                      setNewResource(prev => ({ ...prev, instructions: text }));
+                    }
+                  }}
+                  editable={!saving}
+                  returnKeyType="next"
+                  maxLength={100}
+                />
+                <Text style={styles.characterCount}>
+                  {newResource.instructions.length}/100 characters
+                </Text>
               </View>
 
               <TagSelector
@@ -952,6 +1216,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E1E1E',
     color: '#FFFFFF',
   },
+  characterCount: {
+    fontSize: 12,
+    color: '#666666',
+    textAlign: 'right',
+    marginTop: 4,
+  },
   contentInput: {
     borderWidth: 1,
     borderColor: '#3A3A3A',
@@ -1021,5 +1291,127 @@ const styles = StyleSheet.create({
   },
   filterTagTextSelected: {
     color: '#FFFFFF',
+  },
+  instructionsContainer: {
+    marginBottom: 8,
+    padding: 8,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: '#4A90E2',
+  },
+  instructionsLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4A90E2',
+    marginBottom: 4,
+  },
+  instructionsText: {
+    fontSize: 13,
+    color: '#B0B0B0',
+    fontStyle: 'italic',
+  },
+  expandedContentScroll: {
+    maxHeight: 300,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 6,
+    padding: 8,
+  },
+  expandedContentContainer: {
+    paddingBottom: 8,
+  },
+  expandToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#333333',
+  },
+  expandToggleText: {
+    fontSize: 14,
+    color: '#4A90E2',
+    fontWeight: '500',
+    marginRight: 4,
+  },
+  expiringSection: {
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: '#2A1A1A',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FF6B35',
+  },
+  expiringSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  expiringSectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FF6B35',
+    marginLeft: 8,
+  },
+  expiringSectionSubtitle: {
+    fontSize: 14,
+    color: '#B0B0B0',
+    marginBottom: 16,
+  },
+  expiringResourceCard: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#FF6B35',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  relevanceScore: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FF6B35',
+    marginLeft: 'auto',
+  },
+  expiringResourceActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#333333',
+  },
+  resetScoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  resetScoreButtonText: {
+    fontSize: 14,
+    color: '#4A90E2',
+    fontWeight: '500',
+    marginLeft: 4,
+  },
+  deleteResourceButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFE5E0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  deleteResourceButtonText: {
+    fontSize: 14,
+    color: '#FF6B35',
+    fontWeight: '500',
+    marginLeft: 4,
   },
 }); 
