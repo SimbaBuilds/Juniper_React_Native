@@ -136,7 +136,8 @@ export type UserProfile = {
     type: TagType;
     user_id?: string; // Optional for user created tags
     created_at: Date;
-  };
+    auth_script?: string; // Optional authentication script for the tag
+};
   
   export const userHabitFields = [
     'id', 'user_id', 'habit_type', 'pattern', 'frequency_data',
@@ -146,7 +147,7 @@ export type UserProfile = {
   export type UserHabitField = (typeof userHabitFields)[number];
 
   export const tagFields = [
-    'id', 'name', 'type', 'user_id', 'created_at'
+    'id', 'name', 'type', 'user_id', 'created_at', 'auth_script'
   ] as const;
   export type TagField = (typeof tagFields)[number];
   
@@ -232,7 +233,6 @@ export type UserProfile = {
     service_name: string;
     num_users: number;
     config_form_id?: string; // Foreign key to ConfigForm.id
-    auth_script?: string;
     refresh_script?: string;
     tools?: string[];
     integration_method?: string; // e.g. OAuth, External App, Internal App etc.
@@ -251,7 +251,7 @@ export type UserProfile = {
 
   export const serviceFields = [
     'id', 'created_at', 'service_name', 'num_users', 'config_form_id',
-    'auth_script', 'refresh_script', 'tools', 'integration_method',
+    'refresh_script', 'tools', 'integration_method',
     'description', 'tag_1_id', 'tag_2_id', 'tag_3_id', 'tag_4_id', 'tag_5_id',
     'interactions_day', 'interactions_week', 'interactions_month'
   ] as const;
