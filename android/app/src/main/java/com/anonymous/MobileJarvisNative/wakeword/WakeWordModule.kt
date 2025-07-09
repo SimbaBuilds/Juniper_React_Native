@@ -36,20 +36,26 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
                 override fun onReceive(context: Context, intent: Intent) {
                     if (intent.action == Constants.Actions.WAKE_WORD_DETECTED_RN) {
                         val timestamp = intent.getLongExtra("timestamp", System.currentTimeMillis())
+                        val confidence = intent.getFloatExtra("confidence", 0f)
+                        val wakeWord = intent.getStringExtra("wakeWord") ?: "Unknown"
                         val timeString = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.US).format(java.util.Date(timestamp))
                         
-                        Log.d(TAG, "======================================================")
-                        Log.d(TAG, "👂 RECEIVED WAKE WORD BROADCAST IN RN MODULE! 👂")
-                        Log.d(TAG, "🕒 Time: $timeString")
-                        Log.d(TAG, "======================================================")
+                        Log.i(TAG, "📡 RN_BRIDGE: ========== WAKE WORD BROADCAST RECEIVED ==========")
+                        Log.i(TAG, "📡 RN_BRIDGE: 👂 WAKE WORD DETECTED EVENT FROM NATIVE SERVICE")
+                        Log.i(TAG, "📡 RN_BRIDGE: 🕒 Time: $timeString")
+                        Log.i(TAG, "📡 RN_BRIDGE: 🎯 Wake word: '$wakeWord'")
+                        Log.i(TAG, "📡 RN_BRIDGE: 📊 Confidence: ${String.format("%.4f", confidence)}")
+                        Log.i(TAG, "📡 RN_BRIDGE: 🚀 Forwarding to JavaScript...")
                         
                         // Send event to JavaScript
                         val params = Arguments.createMap()
                         params.putDouble("timestamp", timestamp.toDouble())
+                        params.putDouble("confidence", confidence.toDouble())
+                        params.putString("wakeWord", wakeWord)
                         sendEvent("wakeWordDetected", params)
                         
-                        // Also log to console
-                        Log.i(TAG, "Wake word event sent to React Native")
+                        Log.i(TAG, "📡 RN_BRIDGE: ✅ Wake word event sent to React Native successfully")
+                        Log.i(TAG, "📡 RN_BRIDGE: =====================================================")
                     }
                 }
             }
@@ -123,7 +129,13 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     @ReactMethod
     fun startDetection(serviceClass: String, promise: Promise) {
         try {
+            Log.i(TAG, "🚀 START_DETECTION: ========== STARTING WAKE WORD DETECTION ==========")
+            Log.i(TAG, "🚀 START_DETECTION: Service class: $serviceClass")
+            Log.i(TAG, "🚀 START_DETECTION: Timestamp: ${System.currentTimeMillis()}")
+            Log.i(TAG, "🚀 START_DETECTION: Android version: ${Build.VERSION.SDK_INT}")
+            
             // First, check if we have required permissions
+            Log.i(TAG, "🚀 START_DETECTION: Checking permissions...")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 val hasRecordAudioPermission = ContextCompat.checkSelfPermission(
                     reactApplicationContext, 
@@ -135,8 +147,11 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
                     Manifest.permission.FOREGROUND_SERVICE_MICROPHONE
                 ) == PackageManager.PERMISSION_GRANTED
                 
+                Log.i(TAG, "🚀 START_DETECTION: RECORD_AUDIO permission: $hasRecordAudioPermission")
+                Log.i(TAG, "🚀 START_DETECTION: FOREGROUND_SERVICE_MICROPHONE permission: $hasForegroundServicePermission")
+                
                 if (!hasRecordAudioPermission || !hasForegroundServicePermission) {
-                    Log.e(TAG, "Missing required permissions for wake word detection")
+                    Log.e(TAG, "🚀 START_DETECTION: ❌ Missing required permissions for wake word detection")
                     val errorMessage = "Missing permissions: " + 
                         (!hasRecordAudioPermission).let { if (it) "RECORD_AUDIO " else "" } +
                         (!hasForegroundServicePermission).let { if (it) "FOREGROUND_SERVICE_MICROPHONE" else "" }
@@ -150,8 +165,10 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
                     Manifest.permission.RECORD_AUDIO
                 ) == PackageManager.PERMISSION_GRANTED
                 
+                Log.i(TAG, "🚀 START_DETECTION: RECORD_AUDIO permission: $hasRecordAudioPermission")
+                
                 if (!hasRecordAudioPermission) {
-                    Log.e(TAG, "Missing RECORD_AUDIO permission for wake word detection")
+                    Log.e(TAG, "🚀 START_DETECTION: ❌ Missing RECORD_AUDIO permission for wake word detection")
                     promise.reject("PERMISSION_DENIED", "Missing RECORD_AUDIO permission")
                     return
                 }
@@ -162,8 +179,10 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
             prefs.edit().putBoolean("wake_word_enabled", true).apply()
             Log.d(TAG, "Set wake_word_enabled preference to true")
             
+            Log.i(TAG, "🚀 START_DETECTION: ✅ All permissions granted")
+            
             if (isServiceRunning) {
-                Log.d(TAG, "Service already running, updating state only")
+                Log.i(TAG, "🚀 START_DETECTION: ℹ️ Service already running, updating state only")
                 val result = Arguments.createMap()
                 result.putBoolean("success", true)
                 result.putString("message", "Service already running")
@@ -171,7 +190,7 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
                 return
             }
 
-            Log.d(TAG, "Starting wake word service with class: $serviceClass")
+            Log.i(TAG, "🚀 START_DETECTION: Creating service intent for class: $serviceClass")
             val context = reactApplicationContext
             
             // Create intent with the provided service class
@@ -179,33 +198,36 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
                 val serviceClazz = Class.forName(serviceClass)
                 Intent(context, serviceClazz)
             } catch (e: ClassNotFoundException) {
-                Log.e(TAG, "Service class not found: $serviceClass", e)
+                Log.e(TAG, "🚀 START_DETECTION: ❌ Service class not found: $serviceClass", e)
                 throw Exception("Service class not found: $serviceClass")
             }
             
+            Log.i(TAG, "🚀 START_DETECTION: Starting service...")
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    Log.d(TAG, "Using startForegroundService() for Android O+")
+                    Log.i(TAG, "🚀 START_DETECTION: Using startForegroundService() for Android O+")
                     context.startForegroundService(intent)
                 } else {
-                    Log.d(TAG, "Using startService() for pre-Android O")
+                    Log.i(TAG, "🚀 START_DETECTION: Using startService() for pre-Android O")
                     context.startService(intent)
                 }
                 
                 isServiceRunning = true
-                Log.d(TAG, "Service start command sent successfully")
+                Log.i(TAG, "🚀 START_DETECTION: ✅ Service start command sent successfully")
                 
             } catch (e: Exception) {
-                Log.e(TAG, "Error starting service: ${e.message}", e)
+                Log.e(TAG, "🚀 START_DETECTION: ❌ Error starting service: ${e.message}", e)
                 throw e
             }
             
             val result = Arguments.createMap()
             result.putBoolean("success", true)
+            Log.i(TAG, "🚀 START_DETECTION: ✅ Wake word detection started successfully")
+            Log.i(TAG, "🚀 START_DETECTION: =====================================================")
             promise.resolve(result)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Error starting wake word detection: ${e.message}", e)
+            Log.e(TAG, "🚀 START_DETECTION: ❌ Error starting wake word detection: ${e.message}", e)
             promise.reject("START_DETECTION_ERROR", "Failed to start wake word detection: ${e.message}", e)
         }
     }
@@ -290,25 +312,25 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     }
     
     /**
-     * Set the access key for Picovoice
+     * Set the wake word detection threshold
      */
     @ReactMethod
-    fun setAccessKey(accessKey: String, promise: Promise) {
+    fun setWakeWordThreshold(threshold: Float, promise: Promise) {
         try {
-            if (accessKey.isBlank()) {
-                promise.reject("INVALID_KEY", "Access key cannot be empty")
+            if (threshold < 0.0f || threshold > 1.0f) {
+                promise.reject("INVALID_THRESHOLD", "Threshold must be between 0.0 and 1.0")
                 return
             }
 
-            val prefs = reactApplicationContext.getSharedPreferences("picovoice_prefs", Context.MODE_PRIVATE)
-            prefs.edit().putString("picovoice_access_key", accessKey).apply()
+            val prefs = reactApplicationContext.getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
+            prefs.edit().putFloat("wake_word_threshold", threshold).apply()
             
             val result = Arguments.createMap()
             result.putBoolean("success", true)
             promise.resolve(result)
         } catch (e: Exception) {
-            Log.e(TAG, "Error setting access key: ${e.message}", e)
-            promise.reject("SET_KEY_ERROR", "Failed to set access key: ${e.message}", e)
+            Log.e(TAG, "Error setting wake word threshold: ${e.message}", e)
+            promise.reject("SET_THRESHOLD_ERROR", "Failed to set wake word threshold: ${e.message}", e)
         }
     }
     
@@ -543,6 +565,25 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         } catch (e: Exception) {
             Log.e(TAG, "🎚️ WAKEWORD_SENSITIVITY: ❌ Error getting wake word sensitivity: ${e.message}", e)
             promise.reject("GET_SENSITIVITY_ERROR", "Failed to get wake word sensitivity: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Get the wake word detection threshold
+     */
+    @ReactMethod
+    fun getWakeWordThreshold(promise: Promise) {
+        try {
+            val prefs = reactApplicationContext.getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
+            val threshold = prefs.getFloat("wake_word_threshold", 0.5f)
+            
+            val result = Arguments.createMap()
+            result.putDouble("threshold", threshold.toDouble())
+            result.putBoolean("success", true)
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting wake word threshold: ${e.message}", e)
+            promise.reject("GET_THRESHOLD_ERROR", "Failed to get wake word threshold: ${e.message}", e)
         }
     }
     

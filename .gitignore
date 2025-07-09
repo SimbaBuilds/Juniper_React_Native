@@ -41,7 +41,6 @@ android/.gradle/buildOutputCleanup/buildOutputCleanup.lock
 
 app.config.js
 
-
 tests/
 
 .cursor/
@@ -49,3 +48,7 @@ tests/
 .env
 
 dev_mds/archive/
+
+OpenWakeWord-Research/
+
+OpenWakeWord/

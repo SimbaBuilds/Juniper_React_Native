@@ -1,9 +1,5 @@
 package com.anonymous.MobileJarvisNative.wakeword
 
-import ai.picovoice.porcupine.PorcupineActivationException
-import ai.picovoice.porcupine.PorcupineManager
-import ai.picovoice.porcupine.PorcupineManagerCallback
-import ai.picovoice.porcupine.Porcupine
 import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
@@ -13,32 +9,33 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.BroadcastReceiver
+import android.content.SharedPreferences
+import android.media.AudioFormat
+import android.media.AudioRecord
+import android.media.MediaRecorder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import android.content.pm.ServiceInfo
-import android.content.SharedPreferences
 import com.anonymous.MobileJarvisNative.MainActivity
 import com.anonymous.MobileJarvisNative.utils.PermissionUtils
 import com.anonymous.MobileJarvisNative.voice.VoiceManager
 import com.anonymous.MobileJarvisNative.ConfigManager
+import com.anonymous.MobileJarvisNative.utils.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import com.anonymous.MobileJarvisNative.utils.Constants
 import kotlinx.coroutines.SupervisorJob
 
-/**
- * Service that listens for the wake word "Jarvis" in the background
- */
 class WakeWordService : Service() {
     
     private val TAG = "WakeWordService"
-    private var porcupineManager: PorcupineManager? = null
+    private var openWakeWordEngine: OpenWakeWordEngine? = null
+    private var audioRecord: AudioRecord? = null
+    private var recordingThread: Thread? = null
     private var isRunning = false
     private var isPaused = false
     private var isServiceRunning = false
@@ -48,7 +45,13 @@ class WakeWordService : Service() {
     private lateinit var prefs: SharedPreferences
     private lateinit var configManager: ConfigManager
     private lateinit var brWakeWordPause: BroadcastReceiver
-    private var wakeWordCallback: PorcupineManagerCallback? = null
+    private var wakeWordThreshold = 0.5f
+    
+    // Audio recording constants
+    private val SAMPLE_RATE = 16000
+    private val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
+    private val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
+    private val BUFFER_SIZE = 1280 // 80ms chunks
     
     // Notification constants
     private val NOTIFICATION_CHANNEL_ID = "wake_word_channel"
@@ -62,46 +65,43 @@ class WakeWordService : Service() {
         @Volatile
         private var instance: WakeWordService? = null
         
-        // Built-in wake words from Picovoice
-        val BUILTIN_WAKE_WORDS = mapOf(
-            "BUMBLEBEE" to Porcupine.BuiltInKeyword.BUMBLEBEE,
-            "GRASSHOPPER" to Porcupine.BuiltInKeyword.GRASSHOPPER,
-            "JARVIS" to Porcupine.BuiltInKeyword.JARVIS,
-            "PICOVOICE" to Porcupine.BuiltInKeyword.PICOVOICE,
-            "PORCUPINE" to Porcupine.BuiltInKeyword.PORCUPINE,
-            "TERMINATOR" to Porcupine.BuiltInKeyword.TERMINATOR
-        )
-        
-        // Custom wake words with their .ppn file names
-        val CUSTOM_WAKE_WORDS = mapOf(
-            "JUNIPER" to "Juniper_en_android_v3_0_0.ppn"
-        )
-        
-        // Combined available wake words for external access
+        // Available wake words from OpenWakeWord
         val AVAILABLE_WAKE_WORDS: Set<String>
-            get() = BUILTIN_WAKE_WORDS.keys + CUSTOM_WAKE_WORDS.keys
+            get() = setOf(
+                "Hey Jarvis", "Hey Juni", "Hey Jasmine", "Hey Jade", "Hey Jay", "Hey Jasper", "Hey Jerry",
+                "Alexa", "Alex", "Aloe",
+                "Hey Mycroft", "Hey Michael", "Hey Mulberry", "Hey Myrillis", "Hey Marigold"
+            )
     }
     
     override fun onCreate() {
         super.onCreate()
-        Log.i(TAG, "Service onCreate called (WakeWordService)")
+        Log.i(TAG, "🚀 SERVICE_LIFECYCLE: ========== WAKE WORD SERVICE CREATED ==========")
+        Log.i(TAG, "🚀 SERVICE_LIFECYCLE: Timestamp: ${System.currentTimeMillis()}")
+        Log.i(TAG, "🚀 SERVICE_LIFECYCLE: Process ID: ${android.os.Process.myPid()}")
+        Log.i(TAG, "🚀 SERVICE_LIFECYCLE: Thread: ${Thread.currentThread().name}")
+        
         instance = this
         isServiceRunning = true
         prefs = getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
+        
+        Log.i(TAG, "🚀 SERVICE_LIFECYCLE: Creating notification channel...")
         createNotificationChannel()
+        
+        Log.i(TAG, "🚀 SERVICE_LIFECYCLE: Starting foreground service...")
         serviceScope.launch(Dispatchers.Main) {
             startForegroundWithNotification()
         }
+        
+        Log.i(TAG, "🚀 SERVICE_LIFECYCLE: Registering broadcast receivers...")
         registerPauseResumeReceiver()
+        
+        Log.i(TAG, "🚀 SERVICE_LIFECYCLE: =====================================================")
     }
 
-    /**
-     * Helper method to start foreground service with notification
-     */
     private fun startForegroundWithNotification() {
         try {
-            // Get the configured wake word for notification
-            val selectedWakeWord = prefs.getString("selected_wake_word", "JARVIS") ?: "JARVIS"
+            val selectedWakeWord = prefs.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
             
             val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setContentTitle("Wake Word Detection Active")
@@ -121,17 +121,13 @@ class WakeWordService : Service() {
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.i(TAG, "Service onStartCommand called (WakeWordService)")
-        Log.i(TAG, "Launching foreground notification and initialization coroutine")
         serviceScope.launch(Dispatchers.Main) {
             try {
                 startForegroundWithNotification()
-                Toast.makeText(this@WakeWordService, "Jarvis detection service starting...", Toast.LENGTH_SHORT).show()
-                Log.i(TAG, "Foreground started, launching initializeService() in IO")
+                Toast.makeText(this@WakeWordService, "Wake word detection service starting...", Toast.LENGTH_SHORT).show()
                 serviceScope.launch(Dispatchers.IO) {
                     try {
-                        Log.i(TAG, "Calling initializeService()...")
                         initializeService()
-                        Log.i(TAG, "initializeService() completed")
                     } catch (e: Exception) {
                         Log.e(TAG, "Error in service initialization: ${e.message}", e)
                         serviceScope.launch(Dispatchers.Main) {
@@ -148,27 +144,21 @@ class WakeWordService : Service() {
         return START_STICKY
     }
 
-    /**
-     * Initialize the service after it has been started in foreground
-     */
     private fun initializeService() {
         Log.i(TAG, "Entered initializeService()")
         try {
             ConfigManager.init(this)
             configManager = ConfigManager.getInstance()
-            Log.i(TAG, "ConfigManager initialized")
+            
             if (!isWakeWordEnabled()) {
                 Log.i(TAG, "Wake word detection is disabled")
                 stopSelf()
-                Log.i(TAG, "Exiting initializeService() because wake word is disabled")
                 return
             }
-            Log.i(TAG, "Calling initWakeWordDetection() from initializeService()")
             
             isServiceRunning = true
             isRunning = true
             
-            // Initialize remaining components
             initializeComponents()
         } catch (e: Exception) {
             Log.e(TAG, "Fatal error in service initialization: ${e.message}", e)
@@ -182,23 +172,18 @@ class WakeWordService : Service() {
 
     private fun initializeComponents() {
         try {
-            // Check if we can access the Porcupine BuiltInKeyword class
-            if (!checkPorcupineLibrary()) {
-                Log.e(TAG, "Cannot access Porcupine library classes")
+            if (!checkOpenWakeWordEngine()) {
+                Log.e(TAG, "Cannot initialize OpenWakeWord engine")
                 serviceScope.launch(Dispatchers.Main) {
-                    Toast.makeText(this@WakeWordService, "Porcupine library not properly initialized", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@WakeWordService, "OpenWakeWord engine not properly initialized", Toast.LENGTH_LONG).show()
                 }
                 cleanup()
                 stopSelf()
                 return
             }
             
-            // Initialize voice manager
             voiceManager = VoiceManager.getInstance()
-            
-            // Set up voice state monitoring
             setupVoiceStateMonitoring()
-            
             initWakeWordDetection()
         } catch (e: Exception) {
             Log.e(TAG, "Error initializing components: ${e.message}", e)
@@ -210,8 +195,13 @@ class WakeWordService : Service() {
     private fun cleanup() {
         try {
             stateMonitorJob?.cancel()
-            porcupineManager?.stop()
-            porcupineManager = null
+            recordingThread?.interrupt()
+            audioRecord?.stop()
+            audioRecord?.release()
+            openWakeWordEngine?.cleanup()
+            recordingThread = null
+            audioRecord = null
+            openWakeWordEngine = null
             isRunning = false
             isServiceRunning = false
         } catch (e: Exception) {
@@ -228,10 +218,8 @@ class WakeWordService : Service() {
         
         stateMonitorJob = serviceScope.launch {
             try {
-                // Check voice state every second
                 while (true) {
                     delay(1000)
-                    
                     val currentState = voiceManager.voiceState.value
                     if (currentState !is VoiceManager.VoiceState.IDLE) {
                         pauseWakeWordDetection()
@@ -246,10 +234,11 @@ class WakeWordService : Service() {
     }
     
     private fun pauseWakeWordDetection() {
-        if (isRunning) {
+        if (isRunning && !isPaused) {
             try {
                 Log.i(TAG, "Pausing wake word detection during conversation")
-                porcupineManager?.stop()
+                isPaused = true
+                // Audio recording continues, but we just ignore the results
             } catch (e: Exception) {
                 Log.e(TAG, "Error pausing wake word detection", e)
             }
@@ -257,40 +246,43 @@ class WakeWordService : Service() {
     }
     
     private fun resumeWakeWordDetection() {
-        if (isRunning) {
+        if (isRunning && isPaused) {
             try {
-                serviceScope.launch {
-                    delay(500)
-                    Log.i(TAG, "Resuming wake word detection after conversation")
-                    try {
-                        porcupineManager?.start()
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error resuming wake word detection", e)
-                        initWakeWordDetection()
-                    }
-                }
+                Log.i(TAG, "Resuming wake word detection after conversation")
+                isPaused = false
             } catch (e: Exception) {
-                Log.e(TAG, "Error scheduling wake word detection resume", e)
+                Log.e(TAG, "Error resuming wake word detection", e)
             }
         }
     }
     
-    private fun checkPorcupineLibrary(): Boolean {
+    private fun checkOpenWakeWordEngine(): Boolean {
         return try {
-            val keywordValue = Porcupine.BuiltInKeyword.JARVIS.name
-            Log.d(TAG, "Successfully accessed Porcupine BuiltInKeyword: $keywordValue")
-            true
-        } catch (e: NoClassDefFoundError) {
-            Log.e(TAG, "Failed to find Porcupine classes: ${e.message}", e)
-            false
+            Log.i(TAG, "🤖 ENGINE_CHECK: ========== CHECKING OPENWAKEWORD ENGINE ==========")
+            Log.i(TAG, "🤖 ENGINE_CHECK: Getting OpenWakeWord engine instance...")
+            
+            openWakeWordEngine = OpenWakeWordEngine.getInstance(this)
+            Log.i(TAG, "🤖 ENGINE_CHECK: ✅ Engine instance obtained")
+            
+            Log.i(TAG, "🤖 ENGINE_CHECK: Initializing engine...")
+            val initialized = openWakeWordEngine?.initialize() ?: false
+            
+            if (initialized) {
+                Log.i(TAG, "🤖 ENGINE_CHECK: ✅ Engine initialization successful")
+            } else {
+                Log.e(TAG, "🤖 ENGINE_CHECK: ❌ Engine initialization failed")
+            }
+            
+            Log.i(TAG, "🤖 ENGINE_CHECK: ====================================================")
+            initialized
         } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error checking Porcupine library: ${e.message}", e)
+            Log.e(TAG, "🤖 ENGINE_CHECK: ❌ Failed to initialize OpenWakeWord engine: ${e.message}", e)
             false
         }
     }
     
-    private fun getPicovoiceAccessKey(): String {
-        return configManager.getPicovoiceAccessKey()
+    private fun getWakeWordThreshold(): Float {
+        return prefs.getFloat("wake_word_threshold", 0.5f)
     }
     
     private fun initWakeWordDetection() {
@@ -313,96 +305,29 @@ class WakeWordService : Service() {
                 return
             }
             
-            val accessKey = getPicovoiceAccessKey()
-            Log.d(TAG, "Initializing Picovoice with access key length: ${accessKey.length}")
-            
-            if (accessKey.isEmpty()) {
-                Log.e(TAG, "Access key is empty")
-                Toast.makeText(
-                    this, 
-                    "Picovoice access key not found. Wake word detection disabled.", 
-                    Toast.LENGTH_LONG
-                ).show()
-                stopSelf()
-                return
-            }
-            
-            // Get configured wake word and sensitivity from preferences
-            val selectedWakeWord = prefs.getString("selected_wake_word", "JARVIS") ?: "JARVIS"
-            val sensitivity = prefs.getFloat("wake_word_sensitivity", 0.3f)
+            val threshold = getWakeWordThreshold()
+            val selectedWakeWord = prefs.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
             
             Log.i(TAG, "🎯 WAKEWORD_SETUP: ======= Wake Word Configuration =======")
             Log.i(TAG, "🎯 WAKEWORD_SETUP: Selected wake word: '$selectedWakeWord'")
-            Log.i(TAG, "🎯 WAKEWORD_SETUP: Sensitivity level: $sensitivity (${(sensitivity * 100).toInt()}%)")
+            Log.i(TAG, "🎯 WAKEWORD_SETUP: Threshold: $threshold")
             Log.i(TAG, "🎯 WAKEWORD_SETUP: Available wake words: ${AVAILABLE_WAKE_WORDS}")
             Log.i(TAG, "🎯 WAKEWORD_SETUP: =======================================")
             
-            // Keyword callback
-            val porcupineCallback = object : PorcupineManagerCallback {
-                override fun invoke(keywordIndex: Int) {
-                    try {
-                        Log.i(TAG, "🎯 WAKEWORD_TRIGGER: *** WAKE WORD DETECTED *** keyword index: $keywordIndex")
-                        onWakeWordDetected(keywordIndex)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "🎯 WAKEWORD_TRIGGER: ❌ Error in wake word callback: ${e.message}", e)
-                    }
-                }
-            }
+            // Set the wake phrase in the engine
+            openWakeWordEngine?.setWakePhrase(selectedWakeWord)
+            wakeWordThreshold = threshold
             
-            // Sensitivity (0.0-1.0), higher means more sensitive but more false positives
-            val sensitivities = floatArrayOf(sensitivity)
+            // Set up audio recording
+            setupAudioRecording()
             
-            try {
-                Log.d(TAG, "Creating PorcupineManager...")
-                
-                // Check if this is a built-in or custom wake word
-                val porcupineBuilder = PorcupineManager.Builder()
-                    .setAccessKey(accessKey)
-                    .setSensitivities(sensitivities)
-                
-                if (BUILTIN_WAKE_WORDS.containsKey(selectedWakeWord)) {
-                    // Use built-in keyword
-                    val builtInKeyword = BUILTIN_WAKE_WORDS[selectedWakeWord] ?: Porcupine.BuiltInKeyword.JARVIS
-                    val keywords = arrayOf(builtInKeyword)
-                    Log.i(TAG, "🎯 WAKEWORD_SETUP: Using built-in keyword: ${builtInKeyword.name}")
-                    porcupineBuilder.setKeywords(keywords)
-                } else if (CUSTOM_WAKE_WORDS.containsKey(selectedWakeWord)) {
-                    // Use custom keyword file (path relative to assets folder)
-                    val keywordFileName = CUSTOM_WAKE_WORDS[selectedWakeWord]!!
-                    Log.i(TAG, "🎯 WAKEWORD_SETUP: Using custom keyword file: $keywordFileName")
-                    Log.i(TAG, "🎯 WAKEWORD_SETUP: Keyword path (relative to assets): $keywordFileName")
-                    porcupineBuilder.setKeywordPaths(arrayOf(keywordFileName))
-                } else {
-                    // Fallback to default built-in keyword
-                    Log.w(TAG, "🎯 WAKEWORD_SETUP: Unknown wake word '$selectedWakeWord', falling back to JARVIS")
-                    val keywords = arrayOf(Porcupine.BuiltInKeyword.JARVIS)
-                    porcupineBuilder.setKeywords(keywords)
-                }
-                
-                // Initialize porcupine manager
-                porcupineManager = porcupineBuilder.build(this, porcupineCallback)
-                
-                Log.d(TAG, "🚀 PorcupineManager created successfully! Starting detection...")
-                // Start listening for wake word
-                porcupineManager?.start()
-                isRunning = true
-                
-                Log.i(TAG, "✅ Wake word detection started successfully ✅")
-                serviceScope.launch(Dispatchers.Main) {
-                    Toast.makeText(
-                        applicationContext,
-                        "Wake word detection started - listening for '$selectedWakeWord'",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            } catch (e: PorcupineActivationException) {
-                Log.e(TAG, "Porcupine activation error: ${e.message}", e)
+            Log.i(TAG, "✅ Wake word detection started successfully ✅")
+            serviceScope.launch(Dispatchers.Main) {
                 Toast.makeText(
-                    this, 
-                    "Invalid Picovoice access key. Wake word detection disabled.", 
-                    Toast.LENGTH_LONG
+                    applicationContext,
+                    "Wake word detection started - listening for '$selectedWakeWord'",
+                    Toast.LENGTH_SHORT
                 ).show()
-                stopSelf()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error initializing wake word detection: ${e.message}", e)
@@ -415,19 +340,94 @@ class WakeWordService : Service() {
         }
     }
     
-    private fun onWakeWordDetected(keywordIndex: Int) {
+    private fun setupAudioRecording() {
+        try {
+            val minBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
+            val bufferSize = maxOf(minBufferSize, BUFFER_SIZE * 2)
+            
+            audioRecord = AudioRecord(
+                MediaRecorder.AudioSource.MIC,
+                SAMPLE_RATE,
+                CHANNEL_CONFIG,
+                AUDIO_FORMAT,
+                bufferSize
+            )
+            
+            if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
+                Log.e(TAG, "Failed to initialize AudioRecord")
+                return
+            }
+            
+            audioRecord?.startRecording()
+            isRunning = true
+            
+            // Start recording thread
+            recordingThread = Thread {
+                processAudioLoop()
+            }
+            recordingThread?.start()
+            
+            Log.d(TAG, "Audio recording started successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting up audio recording: ${e.message}", e)
+            throw e
+        }
+    }
+    
+    private fun processAudioLoop() {
+        val buffer = ShortArray(BUFFER_SIZE)
+        var chunkCount = 0
+        var lastLogTime = System.currentTimeMillis()
+        
+        Log.i(TAG, "🎙️ AUDIO_LOOP: ========== STARTING AUDIO PROCESSING LOOP ==========")
+        Log.i(TAG, "🎙️ AUDIO_LOOP: Buffer size: $BUFFER_SIZE samples (${BUFFER_SIZE * 1000 / SAMPLE_RATE}ms)")
+        Log.i(TAG, "🎙️ AUDIO_LOOP: Sample rate: ${SAMPLE_RATE}Hz")
+        Log.i(TAG, "🎙️ AUDIO_LOOP: Wake word threshold: $wakeWordThreshold")
+        Log.i(TAG, "🎙️ AUDIO_LOOP: =====================================================")
+        
+        while (isRunning && !Thread.currentThread().isInterrupted) {
+            try {
+                val readCount = audioRecord?.read(buffer, 0, buffer.size) ?: 0
+                chunkCount++
+                
+                // Log audio processing stats every 5 seconds
+                val currentTime = System.currentTimeMillis()
+                if (currentTime - lastLogTime > 5000) {
+                    Log.d(TAG, "🎙️ AUDIO_LOOP: Processed $chunkCount chunks in 5s (isPaused: $isPaused)")
+                    lastLogTime = currentTime
+                    chunkCount = 0
+                }
+                
+                if (readCount > 0 && !isPaused) {
+                    val confidence = openWakeWordEngine?.processAudioChunk(buffer) ?: 0f
+                    
+                    if (confidence > wakeWordThreshold) {
+                        Log.i(TAG, "🎯 WAKEWORD_TRIGGER: ⚡ WAKE WORD DETECTED! Confidence: ${String.format("%.4f", confidence)} (threshold: $wakeWordThreshold)")
+                        onWakeWordDetected(confidence)
+                    }
+                } else if (readCount <= 0) {
+                    Log.w(TAG, "🎙️ AUDIO_LOOP: No audio data read (readCount: $readCount)")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "🎙️ AUDIO_LOOP: ❌ Error in audio processing loop: ${e.message}", e)
+                break
+            }
+        }
+        
+        Log.i(TAG, "🎙️ AUDIO_LOOP: Audio processing loop ended (isRunning: $isRunning, interrupted: ${Thread.currentThread().isInterrupted})")
+    }
+    
+    private fun onWakeWordDetected(confidence: Float) {
         val timestamp = System.currentTimeMillis()
         val timeString = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.US).format(java.util.Date(timestamp))
         
-        // Get the configured wake word for display
-        val selectedWakeWord = prefs.getString("selected_wake_word", "JARVIS") ?: "JARVIS"
-        val sensitivity = prefs.getFloat("wake_word_sensitivity", 0.3f)
+        val selectedWakeWord = prefs.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
         
         Log.i(TAG, "🔥 WAKEWORD_USE: ================================================")
         Log.i(TAG, "🔥 WAKEWORD_USE: *** WAKE WORD '$selectedWakeWord' ACTIVATED ***")
         Log.i(TAG, "🔥 WAKEWORD_USE: Time: $timeString")
-        Log.i(TAG, "🔥 WAKEWORD_USE: Keyword Index: $keywordIndex")
-        Log.i(TAG, "🔥 WAKEWORD_USE: Sensitivity: $sensitivity (${(sensitivity * 100).toInt()}%)")
+        Log.i(TAG, "🔥 WAKEWORD_USE: Confidence: $confidence")
+        Log.i(TAG, "🔥 WAKEWORD_USE: Threshold: $wakeWordThreshold")
         Log.i(TAG, "🔥 WAKEWORD_USE: Timestamp: $timestamp")
         Log.i(TAG, "🔥 WAKEWORD_USE: ================================================")
         
@@ -435,7 +435,7 @@ class WakeWordService : Service() {
         try {
             val intent = Intent(Constants.Actions.WAKE_WORD_DETECTED_RN)
             intent.putExtra("timestamp", timestamp)
-            intent.putExtra("keywordIndex", keywordIndex)
+            intent.putExtra("confidence", confidence)
             intent.putExtra("wakeWord", selectedWakeWord)
             sendBroadcast(intent)
             Log.i(TAG, "🔥 WAKEWORD_USE: ✅ Sent wake word detected broadcast to React Native")
@@ -466,7 +466,7 @@ class WakeWordService : Service() {
             }
         }
         
-        // Pause wake word detection to prevent continuous triggers during conversation
+        // Pause wake word detection to prevent continuous triggers
         Log.i(TAG, "🔥 WAKEWORD_USE: Pausing wake word detection to prevent interruption during voice session")
         pauseWakeWordButKeepMicActive()
     }
@@ -489,8 +489,7 @@ class WakeWordService : Service() {
     }
     
     private fun createNotification(): Notification {
-        val selectedWakeWord = prefs.getString("selected_wake_word", "JARVIS") ?: "JARVIS"
-        Log.d(TAG, "🎙️ WAKEWORD_NOTIFICATION: Creating notification with wake word: '$selectedWakeWord'")
+        val selectedWakeWord = prefs.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
         
         val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Wake Word Detection Active")
@@ -502,9 +501,6 @@ class WakeWordService : Service() {
         return builder.build()
     }
     
-    /**
-     * Register broadcast receiver for pause/resume commands
-     */
     private fun registerPauseResumeReceiver() {
         brWakeWordPause = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
@@ -532,120 +528,68 @@ class WakeWordService : Service() {
         Log.d(TAG, "Registered pause/resume broadcast receiver")
     }
     
-    /**
-     * Pause wake word detection but keep microphone active for other voice processing
-     */
     private fun pauseWakeWordButKeepMicActive() {
         if (isPaused) {
-            Log.d(TAG, "Wake word detection already paused")
+            Log.d(TAG, "⏸️ PAUSE_RESUME: Wake word detection already paused")
             return
         }
         
         try {
-            Log.i(TAG, "Pausing wake word detection but keeping mic active")
+            Log.i(TAG, "⏸️ PAUSE_RESUME: ========== PAUSING WAKE WORD DETECTION ==========")
+            Log.i(TAG, "⏸️ PAUSE_RESUME: Timestamp: ${System.currentTimeMillis()}")
+            Log.i(TAG, "⏸️ PAUSE_RESUME: Reason: Voice session active - keeping mic active")
             
-            // Set paused flag
             isPaused = true
-            
-            // Update notification to show paused state
             updateNotification("Voice active", "Listening for your command...")
             
-            // Note: We're not stopping the recorder or detector, just ignoring wake word events
-            // This allows the microphone to remain active for voice processing
-            try {
-                porcupineManager?.stop()
-                Log.d(TAG, "Explicitly stopped porcupineManager to pause wake word detection")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error stopping porcupineManager during pause: ${e.message}", e)
-            }
+            Log.i(TAG, "⏸️ PAUSE_RESUME: ✅ Wake word detection paused (mic still active)")
+            Log.i(TAG, "⏸️ PAUSE_RESUME: Setting 2-minute auto-resume timer...")
             
-            // Disable the callback to prevent wake word triggers
-            wakeWordCallback = null
-            
-            Log.d(TAG, "Wake word detection paused, microphone still active")
-            
-            // Set a timer to automatically resume wake word detection if it's stuck in paused state
+            // Set a timer to automatically resume
             serviceScope.launch {
                 try {
-                    // After 2 minutes, check if we're still paused and should auto-resume
                     delay(2 * 60 * 1000L) // 2 minutes
                     if (isPaused) {
-                        Log.w(TAG, "Wake word detection stuck in paused state for 2 minutes, auto-resuming")
+                        Log.w(TAG, "⏸️ PAUSE_RESUME: ⚠️ Auto-resume triggered after 2 minutes")
                         resumeWakeWordDetectionFromPaused()
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error in auto-resume timer: ${e.message}", e)
+                    Log.e(TAG, "⏸️ PAUSE_RESUME: ❌ Error in auto-resume timer: ${e.message}", e)
                 }
             }
+            
+            Log.i(TAG, "⏸️ PAUSE_RESUME: ====================================================")
         } catch (e: Exception) {
-            Log.e(TAG, "Error pausing wake word detection: ${e.message}", e)
+            Log.e(TAG, "⏸️ PAUSE_RESUME: ❌ Error pausing wake word detection: ${e.message}", e)
         }
     }
     
-    /**
-     * Resume wake word detection from paused state
-     */
     private fun resumeWakeWordDetectionFromPaused() {
         if (!isPaused) {
-            Log.d(TAG, "Wake word detection not paused")
+            Log.d(TAG, "▶️ PAUSE_RESUME: Wake word detection not paused")
             return
         }
         
         try {
-            Log.i(TAG, "Resuming wake word detection from paused state")
+            Log.i(TAG, "▶️ PAUSE_RESUME: ========== RESUMING WAKE WORD DETECTION ==========")
+            Log.i(TAG, "▶️ PAUSE_RESUME: Timestamp: ${System.currentTimeMillis()}")
+            Log.i(TAG, "▶️ PAUSE_RESUME: Previous state: Paused")
             
-            // Reset paused flag
             isPaused = false
             
-            // Get the configured wake word for notification
-            val selectedWakeWord = prefs.getString("selected_wake_word", "JARVIS") ?: "JARVIS"
+            val selectedWakeWord = prefs.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
+            Log.i(TAG, "▶️ PAUSE_RESUME: Active wake phrase: '$selectedWakeWord'")
+            Log.i(TAG, "▶️ PAUSE_RESUME: Wake word threshold: $wakeWordThreshold")
             
-            // Update notification
             updateNotification("Listening for wake word", "Say '$selectedWakeWord' to activate")
             
-            // Restore wake word callback
-            wakeWordCallback = createWakeWordCallback()
-            
-            // Explicitly restart the porcupine manager
-            try {
-                porcupineManager?.start()
-                Log.d(TAG, "Successfully restarted porcupineManager")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error restarting porcupineManager, will try to reinitialize: ${e.message}", e)
-                
-                // If starting fails, try to reinitialize
-                serviceScope.launch(Dispatchers.IO) {
-                    try {
-                        // Short delay before reinitializing
-                        delay(500)
-                        Log.d(TAG, "Reinitializing wake word detection after failed resume")
-                        initWakeWordDetection()
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error reinitializing wake word detection: ${e.message}", e)
-                    }
-                }
-            }
-            
-            Log.d(TAG, "Wake word detection resumed")
+            Log.i(TAG, "▶️ PAUSE_RESUME: ✅ Wake word detection resumed successfully")
+            Log.i(TAG, "▶️ PAUSE_RESUME: ====================================================")
         } catch (e: Exception) {
-            Log.e(TAG, "Error resuming wake word detection: ${e.message}", e)
-            
-            // If resuming fails, attempt to reinitialize the whole wake word detection
-            serviceScope.launch(Dispatchers.IO) {
-                try {
-                    delay(1000)
-                    Log.w(TAG, "Attempting to reinitialize wake word detection after resume failure")
-                    initWakeWordDetection()
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to reinitialize wake word detection: ${e.message}", e)
-                }
-            }
+            Log.e(TAG, "▶️ PAUSE_RESUME: ❌ Error resuming wake word detection: ${e.message}", e)
         }
     }
     
-    /**
-     * Update notification with new title and text
-     */
     private fun updateNotification(title: String, text: String) {
         val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle(title)
@@ -657,28 +601,11 @@ class WakeWordService : Service() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(Constants.NOTIFICATION_ID, builder.build())
     }
-
-    /**
-     * Create wake word callback
-     */
-    private fun createWakeWordCallback(): PorcupineManagerCallback {
-        return object : PorcupineManagerCallback {
-            override fun invoke(keywordIndex: Int) {
-                try {
-                    Log.d(TAG, "🎙️ Wake word callback received for keyword index: $keywordIndex")
-                    onWakeWordDetected(keywordIndex)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error in wake word callback: ${e.message}", e)
-                }
-            }
-        }
-    }
     
     override fun onDestroy() {
         super.onDestroy()
         cleanup()
         
-        // Unregister pause/resume receiver
         try {
             unregisterReceiver(brWakeWordPause)
             Log.d(TAG, "Unregistered pause/resume broadcast receiver")
@@ -692,4 +619,4 @@ class WakeWordService : Service() {
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
-} 
+}
