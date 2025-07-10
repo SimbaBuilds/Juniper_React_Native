@@ -136,7 +136,7 @@ export type UserProfile = {
     type: TagType;
     user_id?: string; // Optional for user created tags
     created_at: Date;
-    auth_script?: string; // Optional authentication script for the tag
+    integration_script?: string; // Optional integration script for the tag
 };
   
   export const userHabitFields = [
@@ -147,7 +147,7 @@ export type UserProfile = {
   export type UserHabitField = (typeof userHabitFields)[number];
 
   export const tagFields = [
-    'id', 'name', 'type', 'user_id', 'created_at', 'auth_script'
+    'id', 'name', 'type', 'user_id', 'created_at', 'integration_script'
   ] as const;
   export type TagField = (typeof tagFields)[number];
   
