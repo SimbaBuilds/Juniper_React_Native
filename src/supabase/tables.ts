@@ -114,19 +114,6 @@ export type UserProfile = {
   ] as const;
   export type ResourceField = (typeof resourceFields)[number];
 
-  
-  export type UserHabit = {
-    id: string;
-    user_id: string;
-    habit_type: string;
-    pattern: string;
-    frequency_data: Record<string, any>;
-    confidence_score: number;
-    suggested_automation?: string;
-    automation_approved: boolean;
-    last_observed: Date;
-    created_at: Date;
-  };
 
   export type TagType = 'general' | 'service' | 'service_type' | 'user_created' | 'service_tool';
 
@@ -136,18 +123,11 @@ export type UserProfile = {
     type: TagType;
     user_id?: string; // Optional for user created tags
     created_at: Date;
-    integration_script?: string; // Optional integration script for the tag
+    integration_script_id?: string; // FK to IntegrationScript.id
 };
-  
-  export const userHabitFields = [
-    'id', 'user_id', 'habit_type', 'pattern', 'frequency_data',
-    'confidence_score', 'suggested_automation', 'automation_approved',
-    'last_observed', 'created_at'
-  ] as const;
-  export type UserHabitField = (typeof userHabitFields)[number];
 
   export const tagFields = [
-    'id', 'name', 'type', 'user_id', 'created_at', 'integration_script'
+    'id', 'name', 'type', 'user_id', 'created_at', 'integration_script_id'
   ] as const;
   export type TagField = (typeof tagFields)[number];
   
@@ -382,6 +362,16 @@ export type UserProfile = {
     'decay_applied', 'created_at'
   ] as const;
   export type DecayLogField = (typeof decayLogFields)[number];
+
+  export type IntegrationScript = {
+    script: string;
+    created_at: Date;
+};
+
+  export const integrationScriptFields = [
+    'script', 'created_at'
+  ] as const;
+  export type IntegrationScriptField = (typeof integrationScriptFields)[number];
 
 
 
