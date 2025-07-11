@@ -102,12 +102,12 @@ export const IntegrationsScreen: React.FC = () => {
     return 'Other';
   };
 
-  // Organize regular services into categories (excludes system integrations)
+  // Organize regular services into categories (excludes system integrations and Twitter/X)
   const organizeServicesByCategory = (services: ServiceWithStatus[]): ServiceCategory[] => {
     const categoryMap: { [key: string]: ServiceWithStatus[] } = {};
     
-    // Filter out system integrations from regular categories
-    const regularServices = services.filter(service => !service.isSystemIntegration);
+    // Filter out system integrations and Twitter/X from regular categories
+    const regularServices = services.filter(service => !service.isSystemIntegration && !['twitter', 'x', 'twitter/x'].includes(service.service_name.toLowerCase()));
     
     regularServices.forEach(service => {
       const category = getServiceCategory(service.service_name);
@@ -148,9 +148,9 @@ export const IntegrationsScreen: React.FC = () => {
     return categories;
   };
 
-  // Get system integrations (Twitter/X and Perplexity)
+  // Get system integrations (Perplexity only, filter out Twitter/X)
   const getSystemIntegrations = (services: ServiceWithStatus[]): ServiceWithStatus[] => {
-    return services.filter(service => service.isSystemIntegration);
+    return services.filter(service => service.isSystemIntegration && !['twitter', 'x', 'twitter/x'].includes(service.service_name.toLowerCase()));
   };
 
   // Helper function to get icon for integration type
@@ -720,7 +720,7 @@ export const IntegrationsScreen: React.FC = () => {
                         <Text style={styles.systemServiceDescription}>
                           {service.service_name.toLowerCase() === 'twitter/x' || service.service_name.toLowerCase() === 'x' 
                             ? 'Gives Juniper abiltity to scrape and build automations around Twitter/X. <br />Note: XAI Live Search with X/Twitter and Grok is built into Juniper\'s search functionality, managed in settings. '
-                            : 'Gives Juniper advanced web search and research capabilities'
+                            : 'Gives Juniper advanced research capabilities'
                           }
                         </Text>
                       </View>
