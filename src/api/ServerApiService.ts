@@ -47,7 +47,7 @@ export interface ChatRequest {
   preferences?: {
     voice?: string;
     response_type?: string;
-    model?: string; // Language model to use (e.g., 'grok-3', 'grok-3.5', 'gpt-4o', 'claude-sonnet-4-20250514')
+    model?: string; // Language model to use (e.g., 'grok-3', 'grok-3.5', 'o3-mini-2025-01-31', 'claude-sonnet-4-20250514')
     [key: string]: any;
   };
   // feature_settings removed - backend will fetch from database

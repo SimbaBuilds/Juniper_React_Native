@@ -39,7 +39,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     continuePreviousChat,
     cancelRequest,
     isRequestInProgress,
-    startContinuousConversation
+    startContinuousConversation,
+    startListening
   } = useVoice();
 
   // State for conversation history modal
@@ -200,9 +201,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       ) : (
         <View style={styles.emptyChatContainer}>
           <Text style={styles.emptyChatText}>
-            {Platform.OS === 'ios' 
-              ? 'Tap the voice button or type a message to start a conversation.'
-              : 'Say the wake word or type a message to start or continue a chat.'}
+            Tap the voice button or type a message to start a conversation.
+            {Platform.OS === 'android' && ' You can also use the wake word if enabled.'}
           </Text>
         </View>
       )}
@@ -235,18 +235,21 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         </TouchableOpacity>
       )}
 
-      {/* Voice button for iOS - positioned above text input */}
-      {Platform.OS === 'ios' && (
-        <View style={styles.voiceButtonContainer}>
-          <VoiceButton 
-            size={60}
-            onPress={async () => {
-              console.log('iOS Voice button pressed - starting continuous conversation');
+      {/* Voice button - positioned above text input */}
+      <View style={styles.voiceButtonContainer}>
+        <VoiceButton 
+          size={60}
+          onPress={async () => {
+            console.log('Voice button pressed - starting conversation');
+            if (Platform.OS === 'ios') {
               await startContinuousConversation();
-            }}
-          />
-        </View>
-      )}
+            } else {
+              // For Android, use regular startListening since wake word handles continuous mode
+              await startListening();
+            }
+          }}
+        />
+      </View>
 
       {/* Text input at the bottom */}
       <TextChatInput 

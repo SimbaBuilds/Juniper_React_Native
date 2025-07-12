@@ -47,6 +47,7 @@ export const IntegrationsScreen: React.FC = () => {
   const [twilioModalVisible, setTwilioModalVisible] = useState(false);
   const [textbeltModalVisible, setTextbeltModalVisible] = useState(false);
   const [selectedService, setSelectedService] = useState<ServiceWithStatus | null>(null);
+  const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set());
 
   // Define service categories
   const getServiceCategory = (serviceName: string): string => {
@@ -497,6 +498,19 @@ export const IntegrationsScreen: React.FC = () => {
     }
   };
 
+  // Handle toggle description expansion
+  const toggleDescriptionExpansion = (serviceId: string) => {
+    setExpandedServices(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(serviceId)) {
+        newSet.delete(serviceId);
+      } else {
+        newSet.add(serviceId);
+      }
+      return newSet;
+    });
+  };
+
   // Handle system integration toggle
   const handleSystemIntegrationToggle = async (service: ServiceWithStatus, enabled: boolean) => {
     try {
@@ -686,6 +700,32 @@ export const IntegrationsScreen: React.FC = () => {
                         )}
                       </View>
                     </View>
+                    
+                    {/* Description section - expandable */}
+                    {service.description && (
+                      <View style={styles.descriptionSection}>
+                        <TouchableOpacity
+                          style={styles.descriptionToggle}
+                          onPress={() => toggleDescriptionExpansion(service.id)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.descriptionToggleText}>
+                            {expandedServices.has(service.id) ? 'Hide Details' : 'Show Details'}
+                          </Text>
+                          <Ionicons 
+                            name={expandedServices.has(service.id) ? 'chevron-up' : 'chevron-down'} 
+                            size={16} 
+                            color="#4A90E2" 
+                          />
+                        </TouchableOpacity>
+                        
+                        {expandedServices.has(service.id) && (
+                          <View style={styles.descriptionContent}>
+                            <Text style={styles.descriptionText}>{service.description}</Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
                   </View>
                 ))}
               </View>
@@ -735,6 +775,32 @@ export const IntegrationsScreen: React.FC = () => {
                       />
                     </View>
                   </View>
+                  
+                  {/* Description section - expandable */}
+                  {service.description && (
+                    <View style={styles.descriptionSection}>
+                      <TouchableOpacity
+                        style={styles.descriptionToggle}
+                        onPress={() => toggleDescriptionExpansion(service.id)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.descriptionToggleText}>
+                          {expandedServices.has(service.id) ? 'Hide Details' : 'Show Details'}
+                        </Text>
+                        <Ionicons 
+                          name={expandedServices.has(service.id) ? 'chevron-up' : 'chevron-down'} 
+                          size={16} 
+                          color="#4A90E2" 
+                        />
+                      </TouchableOpacity>
+                      
+                      {expandedServices.has(service.id) && (
+                        <View style={styles.descriptionContent}>
+                          <Text style={styles.descriptionText}>{service.description}</Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
                 </View>
               ))}
             </View>
@@ -1055,5 +1121,32 @@ const styles = StyleSheet.create({
     color: '#B0B0B0',
     marginTop: 4,
     lineHeight: 18,
+  },
+  // Description expansion styles
+  descriptionSection: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#2A2A2A',
+  },
+  descriptionToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+  },
+  descriptionToggleText: {
+    fontSize: 14,
+    color: '#4A90E2',
+    fontWeight: '500',
+  },
+  descriptionContent: {
+    marginTop: 8,
+    paddingHorizontal: 4,
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: '#B0B0B0',
+    lineHeight: 20,
   },
 }); 
