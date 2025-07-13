@@ -579,7 +579,7 @@ function MainTabNavigator() {
     checkExpiringResources();
     
     // Check every 5 minutes
-    const interval = setInterval(checkExpiringResources, 5 * 60 * 1000);
+    const interval = setInterval(checkExpiringResources, parseInt(process.env.EXPIRING_RESOURCES_INTERVAL || '5') * 60 * 1000);
     
     return () => clearInterval(interval);
   }, [user?.id]);

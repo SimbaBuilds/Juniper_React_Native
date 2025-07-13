@@ -18,7 +18,6 @@ interface TagSelectorProps {
   selectedTags: any[]; // Array of tag objects
   userId: string;
   onTagsChange: (tags: any[]) => void;
-  onAddUserTag?: (tag: any) => void;
   disabled?: boolean;
 }
 
@@ -26,13 +25,9 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   selectedTags,
   userId,
   onTagsChange,
-  onAddUserTag,
   disabled = false
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [showAddTagInput, setShowAddTagInput] = useState(false);
-  const [newTagInput, setNewTagInput] = useState('');
-  const [isAddingTag, setIsAddingTag] = useState(false);
   const [loading, setLoading] = useState(false);
   
   // Tag state from database
@@ -86,109 +81,30 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
     }
   };
 
-  const handleAddNewTag = async () => {
-    const trimmedTag = newTagInput.trim();
-    
-    if (!trimmedTag) {
-      Alert.alert('Error', 'Please enter a tag name.');
-      return;
-    }
-    
-    if (trimmedTag.length > MAX_TAG_LENGTH) {
-      Alert.alert('Error', `Tag must be ${MAX_TAG_LENGTH} characters or less.`);
-      return;
-    }
-    
-    try {
-      setIsAddingTag(true);
-      
-      const newTag = await DatabaseService.addUserTag(userId, trimmedTag);
-      
-      // Update local user tags
-      setUserTags(prev => [...prev, newTag]);
-      
-      // Call parent callback
-      if (onAddUserTag) {
-        await onAddUserTag(newTag);
-      }
-      
-      // Also add it to selected tags if under limit
-      if (selectedTags.length < MAX_MEMORY_TAGS) {
-        onTagsChange([...selectedTags, newTag]);
-      }
-      
-      setNewTagInput('');
-      setShowAddTagInput(false);
-      
-      // Show success feedback
-      Alert.alert('Success', `Tag "${trimmedTag}" added successfully!`);
-    } catch (error) {
-      console.error('Error adding tag:', error);
-      Alert.alert('Error', 'Failed to add tag. Please try again.');
-    } finally {
-      setIsAddingTag(false);
-    }
-  };
 
-  const handleDeleteTag = async (tagId: string, tagName: string) => {
-    Alert.alert(
-      'Delete Tag',
-      `Are you sure you want to delete the tag "${tagName}"? This action cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await DatabaseService.deleteTag(tagId);
-              setUserTags(prev => prev.filter(tag => tag.id !== tagId));
-              // Remove from selected tags if it was selected
-              onTagsChange(selectedTags.filter(tag => tag.id !== tagId));
-              Alert.alert('Success', 'Tag deleted successfully');
-            } catch (err) {
-              console.error('Error deleting tag:', err);
-              Alert.alert('Error', 'Failed to delete tag');
-            }
-          },
-        },
-      ]
-    );
-  };
 
   const renderTagSection = (title: string, tags: any[], sectionKey: string) => (
     <View key={sectionKey} style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
       <View style={styles.tagGrid}>
         {tags.map((tag) => (
-          <View key={tag.id} style={styles.tagContainer}>
-            <TouchableOpacity
+          <TouchableOpacity
+            key={tag.id}
+            style={[
+              styles.tagButton,
+              selectedTags.some(t => t.id === tag.id) && styles.selectedTagButton
+            ]}
+            onPress={() => handleTagToggle(tag)}
+          >
+            <Text
               style={[
-                styles.tagButton,
-                selectedTags.some(t => t.id === tag.id) && styles.selectedTagButton
+                styles.tagButtonText,
+                selectedTags.some(t => t.id === tag.id) && styles.selectedTagButtonText
               ]}
-              onPress={() => handleTagToggle(tag)}
             >
-              <Text
-                style={[
-                  styles.tagButtonText,
-                  selectedTags.some(t => t.id === tag.id) && styles.selectedTagButtonText
-                ]}
-              >
-                {tag.name}
-              </Text>
-            </TouchableOpacity>
-            {/* Show delete button only for user-created tags */}
-            {tag.type === 'user_created' && (
-              <TouchableOpacity
-                style={styles.deleteTagButton}
-                onPress={() => handleDeleteTag(tag.id, tag.name)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="close-circle" size={16} color="#666666" />
-              </TouchableOpacity>
-            )}
-          </View>
+              {tag.name}
+            </Text>
+          </TouchableOpacity>
         ))}
       </View>
     </View>
@@ -254,50 +170,6 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                 {renderTagSection('Services', serviceTags, 'services')}
                 {renderTagSection('Service Types', serviceTypeTags, 'types')}
                 {userTags.length > 0 && renderTagSection('My Tags', userTags, 'user')}
-
-                <View style={styles.addTagSection}>
-                  <TouchableOpacity
-                    style={styles.addTagButton}
-                    onPress={() => {
-                      console.log('Add New Tag button pressed, current state:', showAddTagInput);
-                      setShowAddTagInput(!showAddTagInput);
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="add" size={20} color="#4A90E2" />
-                    <Text style={styles.addTagButtonText}>
-                      {showAddTagInput ? 'Cancel' : 'Add New Tag'}
-                    </Text>
-                  </TouchableOpacity>
-
-                  {showAddTagInput && (
-                    <View style={styles.addTagInputContainer}>
-                      <TextInput
-                        style={styles.addTagInput}
-                        placeholder="Enter new tag..."
-                        value={newTagInput}
-                        onChangeText={setNewTagInput}
-                        maxLength={MAX_TAG_LENGTH}
-                        returnKeyType="done"
-                        onSubmitEditing={handleAddNewTag}
-                        editable={!isAddingTag}
-                        autoFocus
-                      />
-                      <TouchableOpacity
-                        style={[
-                          styles.addTagSubmitButton,
-                          isAddingTag && styles.addTagSubmitButtonDisabled
-                        ]}
-                        onPress={handleAddNewTag}
-                        disabled={isAddingTag}
-                      >
-                        <Text style={styles.addTagSubmitText}>
-                          {isAddingTag ? 'Adding...' : 'Add'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </View>
               </>
             )}
           </ScrollView>
@@ -417,31 +289,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
-  tagContainer: {
-    position: 'relative',
-    marginBottom: 8,
-  },
   tagButton: {
     backgroundColor: '#F5F5F5',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
-  },
-  deleteTagButton: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    width: 16,
-    height: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
   },
   selectedTagButton: {
     backgroundColor: '#4A90E2',
@@ -453,51 +305,5 @@ const styles = StyleSheet.create({
   },
   selectedTagButtonText: {
     color: '#FFFFFF',
-  },
-  addTagSection: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-  },
-  addTagButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  addTagButtonText: {
-    color: '#4A90E2',
-    fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 8,
-  },
-  addTagInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  addTagInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginRight: 12,
-  },
-  addTagSubmitButton: {
-    backgroundColor: '#4A90E2',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  addTagSubmitButtonDisabled: {
-    backgroundColor: '#CCCCCC',
-    opacity: 0.6,
-  },
-  addTagSubmitText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
   },
 }); 

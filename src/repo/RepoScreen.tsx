@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
 import { TagSelector } from './components/TagSelector';
 import { MAX_MEMORY_TAGS } from './constants/tags';
-import { Resource } from '../supabase/tables';
 
 interface DisplayResource {
   id: string;
@@ -66,86 +66,94 @@ export const RepoScreen: React.FC = () => {
   };
 
   // Load resources from database
-  useEffect(() => {
-    const loadData = async () => {
-      if (!user?.id) return;
+  const loadResourcesFromDatabase = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
       
-      try {
-        setLoading(true);
-        setError(null);
+      // Load resources
+      const dbResources = await DatabaseService.getResources(user.id);
+      
+      // Convert database resources to UI format with tag objects
+      const formattedResources: DisplayResource[] = dbResources.map((resource: any) => {
+        // Collect tags from tag_1 through tag_5 columns
+        const tags = [
+          resource.tag_1,
+          resource.tag_2, 
+          resource.tag_3,
+          resource.tag_4,
+          resource.tag_5
+        ].filter(Boolean); // Remove null/undefined tags
         
-        // Load resources
-        const dbResources = await DatabaseService.getResources(user.id);
-        
-        // Convert database resources to UI format with tag objects
-        const formattedResources: DisplayResource[] = dbResources.map((resource: any) => {
-          // Collect tags from tag_1 through tag_5 columns
-          const tags = [
-            resource.tag_1,
-            resource.tag_2, 
-            resource.tag_3,
-            resource.tag_4,
-            resource.tag_5
-          ].filter(Boolean); // Remove null/undefined tags
-          
-          return {
-            id: resource.id,
-            content: resource.content,
-            title: resource.title,
-            instructions: resource.instructions,
-            type: resource.type || 'memory',
-            relevance_score: resource.relevance_score || 100,
-            last_accessed: resource.last_accessed,
-            created_at: resource.created_at,
-            tags: tags
-          };
-        });
+        return {
+          id: resource.id,
+          content: resource.content,
+          title: resource.title,
+          instructions: resource.instructions,
+          type: resource.type || 'memory',
+          relevance_score: resource.relevance_score || 100,
+          last_accessed: resource.last_accessed,
+          created_at: resource.created_at,
+          tags: tags
+        };
+      });
 
-        // Add default resources if none exist
-        if (formattedResources.length === 0) {
-          const defaultResources: DisplayResource[] = [
-            {
-              id: '1',
-              content: 'Favorite coffee shop is Blue Bottle Coffee on Market Street - they make excellent cortados',
-              type: 'memory',
-              relevance_score: 100,
-              last_accessed: '2024-05-30',
-              created_at: '2024-05-30',
-              tags: [],
-            },
-            {
-              id: '2',
-              content: 'Meeting with design team every Tuesday at 2 PM in conference room B',
-              type: 'notes',
-              relevance_score: 100,
-              last_accessed: '2024-05-29',
-              created_at: '2024-05-29',
-              tags: [],
-            },
-            {
-              id: '3',
-              content: 'Preferred news sources: TechCrunch, The Verge, Hacker News for tech updates',
-              type: 'memory',
-              relevance_score: 100,
-              last_accessed: '2024-05-28',
-              created_at: '2024-05-28',
-              tags: [],
-            },
-          ];
-          setResources(ensureResourceTags(defaultResources));
-        } else {
-          setResources(ensureResourceTags(formattedResources));
-        }
-      } catch (err) {
-        console.error('Error loading resources:', err);
-        setError('Failed to load resources');
-      } finally {
-        setLoading(false);
+      // Add default resources if none exist
+      if (formattedResources.length === 0) {
+        const defaultResources: DisplayResource[] = [
+          {
+            id: '1',
+            content: 'Favorite coffee shop is Blue Bottle Coffee on Market Street - they make excellent cortados',
+            type: 'memory',
+            relevance_score: 100,
+            last_accessed: '2024-05-30',
+            created_at: '2024-05-30',
+            tags: [],
+          },
+          {
+            id: '2',
+            content: 'Meeting with design team every Tuesday at 2 PM in conference room B',
+            type: 'notes',
+            relevance_score: 100,
+            last_accessed: '2024-05-29',
+            created_at: '2024-05-29',
+            tags: [],
+          },
+          {
+            id: '3',
+            content: 'Preferred news sources: TechCrunch, The Verge, Hacker News for tech updates',
+            type: 'memory',
+            relevance_score: 100,
+            last_accessed: '2024-05-28',
+            created_at: '2024-05-28',
+            tags: [],
+          },
+        ];
+        setResources(ensureResourceTags(defaultResources));
+      } else {
+        setResources(ensureResourceTags(formattedResources));
       }
-    };
+    } catch (err) {
+      console.error('Error loading resources:', err);
+      setError('Failed to load resources');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadData();
+  // Initial load
+  useEffect(() => {
+    loadResourcesFromDatabase();
   }, [user?.id]);
+
+  // Refresh when screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      loadResourcesFromDatabase();
+    }, [user?.id])
+  );
 
   const handleAddResource = async () => {
     if (!user?.id || !newResource.content.trim()) {
@@ -336,7 +344,7 @@ export const RepoScreen: React.FC = () => {
 
   const resetRelevanceScore = async (resourceId: string) => {
     try {
-      await DatabaseService.updateResourceRelevanceScore(resourceId, 100);
+      await DatabaseService.updateResource(resourceId, { relevance_score: 100 });
       setResources(prev => prev.map(resource => 
         resource.id === resourceId 
           ? { ...resource, relevance_score: 100 }
@@ -387,7 +395,7 @@ export const RepoScreen: React.FC = () => {
         </View>
 
         <View style={styles.instructionsSection}>
-          <Text style={styles.instructionsText}>
+          <Text style={styles.instructionsSectionText}>
             Add resources by telling your assistant e.g.{'\n'}
             "Save this document for future reference."
             {'\n\n'}
@@ -397,7 +405,7 @@ export const RepoScreen: React.FC = () => {
 
         <View style={styles.section}>
           <View style={styles.repoHeader}>
-            <Text style={styles.sectionTitle}>Your Resource Repository</Text>
+            <Text style={styles.sectionTitle}>Juniper's Resource Repository</Text>
             <View style={styles.repoActions}>
               {selectedFilterTags.length > 0 && (
                 <Text style={styles.filterStatus}>
@@ -558,6 +566,12 @@ export const RepoScreen: React.FC = () => {
                 ? getResourcesFromPast30Days(categoryResources)
                 : getRecentResources(categoryResources);
               
+              // Debug logging for memory category
+              if (resourceType.value === 'memory') {
+                console.log('Memory resources:', categoryResources);
+                console.log('Display resources for memory:', displayResources);
+                console.log('Memory category expanded:', isExpanded);
+              }
               if (categoryResources.length === 0) return null;
               
               return (
@@ -709,15 +723,6 @@ export const RepoScreen: React.FC = () => {
                 selectedTags={selectedFilterTags}
                 userId={user!.id}
                 onTagsChange={setSelectedFilterTags}
-                onAddUserTag={async (tag) => {
-                  try {
-                    // Tag is now already created in the database
-                    console.log('Tag added:', tag);
-                  } catch (err) {
-                    console.error('Error adding user tag:', err);
-                    Alert.alert('Error', 'Failed to add tag');
-                  }
-                }}
               />
               
               {getAllTagsFromResources().length > 0 && (
@@ -862,15 +867,6 @@ export const RepoScreen: React.FC = () => {
                 selectedTags={newResource.tags}
                 userId={user!.id}
                 onTagsChange={(tags) => setNewResource(prev => ({ ...prev, tags }))}
-                onAddUserTag={async (tag) => {
-                  try {
-                    // Tag is now already created in the database
-                    console.log('Tag added:', tag);
-                  } catch (err) {
-                    console.error('Error adding user tag:', err);
-                    Alert.alert('Error', 'Failed to add tag');
-                  }
-                }}
                 disabled={saving}
               />
             </ScrollView>
@@ -968,7 +964,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: '#4A90E2',
   },
-  instructionsText: {
+  instructionsSectionText: {
     fontSize: 14,
     color: '#B0B0B0',
     lineHeight: 20,
