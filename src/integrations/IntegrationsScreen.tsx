@@ -619,7 +619,7 @@ export const IntegrationsScreen: React.FC = () => {
         <View style={styles.header}>
           {/* <Text style={styles.title}>Integrations</Text> */}
           <Text style={styles.subtitle}>
-            Connect your favorite services to unlock powerful automations
+            Give Juniper access to your frequently used services
           </Text>
         </View>
 

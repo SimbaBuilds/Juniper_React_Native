@@ -269,17 +269,13 @@ export const useRepoScreen = () => {
   };
 
   const toggleCategoryExpansion = useCallback((category: string) => {
-    console.log('Toggling category:', category, 'Current expanded:', Array.from(expandedCategories));
     const newExpanded = new Set(expandedCategories);
     if (newExpanded.has(category)) {
       newExpanded.delete(category);
-      console.log('Collapsing category:', category);
     } else {
       newExpanded.add(category);
-      console.log('Expanding category:', category);
     }
     setExpandedCategories(newExpanded);
-    console.log('New expanded state:', Array.from(newExpanded));
   }, [expandedCategories]);
 
   const toggleResourceExpansion = useCallback((resourceId: string) => {
