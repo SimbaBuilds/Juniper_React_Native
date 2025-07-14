@@ -97,7 +97,7 @@ export const RepoScreen: React.FC = () => {
             Add resources by telling your assistant e.g.{'\n'}
             "Save this document for future reference."
             {'\n\n'}
-            Or use the + button above. Adding tags helps organize and retrieve resources better.
+            Or use the + button above.
           </Text>
         </View>
 
