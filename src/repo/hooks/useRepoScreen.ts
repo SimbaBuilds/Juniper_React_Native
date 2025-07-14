@@ -169,7 +169,7 @@ export const useRepoScreen = () => {
         instructions: newResource.instructions.trim() || null,
         type: newResource.type,
         relevance_score: 100,
-        decay_factor: 1.0,
+        decay_factor: 0.8,
         auto_committed: false,
         tags: tagIds,
         last_accessed: new Date().toISOString()

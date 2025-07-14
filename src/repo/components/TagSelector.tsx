@@ -34,6 +34,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   const [serviceTags, setServiceTags] = useState<any[]>([]);
   const [serviceTypeTags, setServiceTypeTags] = useState<any[]>([]);
   const [userTags, setUserTags] = useState<any[]>([]);
+  const [generalTags, setGeneralTags] = useState<any[]>([]);
 
   // Load tags from database
   useEffect(() => {
@@ -47,12 +48,14 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
         await DatabaseService.initializeServiceTags();
         
         // Load all tag types
-        const [services, serviceTypes, userCreated] = await Promise.all([
+        const [generals, services, serviceTypes, userCreated] = await Promise.all([
+          DatabaseService.getTags(undefined, ['general']),
           DatabaseService.getTags(undefined, ['service']),
           DatabaseService.getTags(undefined, ['service_type']),
           DatabaseService.getUserTags(userId)
         ]);
         
+        setGeneralTags(generals);
         setServiceTags(services);
         setServiceTypeTags(serviceTypes);
         setUserTags(userCreated);
@@ -167,6 +170,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
               </View>
             ) : (
               <>
+                {renderTagSection('General', generalTags, 'general')}
                 {renderTagSection('Services', serviceTags, 'services')}
                 {renderTagSection('Service Types', serviceTypeTags, 'types')}
                 {userTags.length > 0 && renderTagSection('My Tags', userTags, 'user')}

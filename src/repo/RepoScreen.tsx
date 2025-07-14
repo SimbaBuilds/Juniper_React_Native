@@ -264,7 +264,6 @@ export const RepoScreen: React.FC = () => {
                 ? categoryResources
                 : getRecentResources(categoryResources);
               
-              console.log(`Category: ${resourceType.value}, Total: ${categoryResources.length}, IsExpanded: ${isExpanded}, Display: ${displayResources.length}`);
              
               if (!categoryResources || categoryResources.length === 0) return null;
               

@@ -461,21 +461,33 @@ export const DatabaseService = {
   },
 
   async createResource(userId: string, resource: any) {
-    // Handle tags - convert tag names/IDs to proper tag references
+    // Handle tags - convert tag IDs to individual foreign key columns
     const { tags, ...resourceData } = resource;
+    
+    // Map tag IDs to foreign key columns (up to 5 tags)
+    const tagForeignKeys: any = {};
+    if (tags && Array.isArray(tags)) {
+      for (let i = 0; i < Math.min(tags.length, 5); i++) {
+        tagForeignKeys[`tag_${i + 1}_id`] = tags[i];
+      }
+    }
     
     const { data, error } = await supabase
       .from('resources')
       .insert({
         user_id: userId,
         ...resourceData,
-        tags: tags || [], // Store as array of tag IDs
+        ...tagForeignKeys,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .select(`
         *,
-        resource_tags:tags!inner(*)
+        tag_1:tags!resources_tag_1_id_fkey(*),
+        tag_2:tags!resources_tag_2_id_fkey(*),
+        tag_3:tags!resources_tag_3_id_fkey(*),
+        tag_4:tags!resources_tag_4_id_fkey(*),
+        tag_5:tags!resources_tag_5_id_fkey(*)
       `)
       .single()
     
@@ -486,41 +498,72 @@ export const DatabaseService = {
   async getResourceTags(resourceId: string): Promise<any[]> {
     const { data, error } = await supabase
       .from('resources')
-      .select('tags')
+      .select('tag_1_id, tag_2_id, tag_3_id, tag_4_id, tag_5_id')
       .eq('id', resourceId)
       .single();
     
     if (error) throw error;
     
-    if (!data?.tags || data.tags.length === 0) return [];
+    // Collect all non-null tag IDs
+    const tagIds = [
+      data?.tag_1_id,
+      data?.tag_2_id,
+      data?.tag_3_id,
+      data?.tag_4_id,
+      data?.tag_5_id
+    ].filter(Boolean);
+    
+    if (tagIds.length === 0) return [];
     
     // Get tag details
     const { data: tagData, error: tagError } = await supabase
       .from('tags')
       .select('*')
-      .in('id', data.tags);
+      .in('id', tagIds);
     
     if (tagError) throw tagError;
     return tagData || [];
   },
 
   async addResourceTags(resourceId: string, tagIds: string[]): Promise<void> {
-    // Get current tags
+    // Get current tag assignments
     const { data: resource, error: getError } = await supabase
       .from('resources')
-      .select('tags')
+      .select('tag_1_id, tag_2_id, tag_3_id, tag_4_id, tag_5_id')
       .eq('id', resourceId)
       .single();
     
     if (getError) throw getError;
     
-    const currentTags = resource?.tags || [];
-    const newTags = [...new Set([...currentTags, ...tagIds])]; // Remove duplicates
+    // Collect current tag IDs
+    const currentTags = [
+      resource?.tag_1_id,
+      resource?.tag_2_id,
+      resource?.tag_3_id,
+      resource?.tag_4_id,
+      resource?.tag_5_id
+    ].filter(Boolean);
+    
+    // Merge new tags with existing ones (remove duplicates)
+    const allTags = [...new Set([...currentTags, ...tagIds])];
+    
+    // Map back to foreign key columns (up to 5 tags)
+    const tagUpdates: any = {
+      tag_1_id: null,
+      tag_2_id: null,
+      tag_3_id: null,
+      tag_4_id: null,
+      tag_5_id: null,
+    };
+    
+    for (let i = 0; i < Math.min(allTags.length, 5); i++) {
+      tagUpdates[`tag_${i + 1}_id`] = allTags[i];
+    }
     
     const { error } = await supabase
       .from('resources')
       .update({
-        tags: newTags,
+        ...tagUpdates,
         updated_at: new Date().toISOString()
       })
       .eq('id', resourceId);
