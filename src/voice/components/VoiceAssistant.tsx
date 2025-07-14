@@ -40,7 +40,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     cancelRequest,
     isRequestInProgress,
     startContinuousConversation,
-    startListening
+    startListening,
+    requestStatus
   } = useVoice();
 
   // State for conversation history modal
@@ -188,15 +189,30 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           data={chatHistory}
           keyExtractor={(item, index) => `chat-${index}-${item.timestamp}`}
           style={styles.chatList}
-          renderItem={({ item }) => (
-            <View style={[
-              styles.chatBubble, 
-              item.role === 'user' ? styles.userBubble : styles.assistantBubble
-            ]}>
-              <Text style={styles.chatText} selectable={true}>{item.content}</Text>
-              <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
-            </View>
-          )}
+          renderItem={({ item, index }) => {
+            const isLatestAssistantMessage = item.role === 'assistant' && index === chatHistory.length - 1;
+            const showStatus = isLatestAssistantMessage && requestStatus && (requestStatus !== 'completed');
+            
+            return (
+              <View style={[
+                styles.chatBubble, 
+                item.role === 'user' ? styles.userBubble : styles.assistantBubble
+              ]}>
+                <Text style={styles.chatText} selectable={true}>{item.content}</Text>
+                <View style={styles.messageFooter}>
+                  <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
+                  {showStatus && (
+                    <Text style={styles.statusText}>
+                      {requestStatus === 'pending' && 'Processing...'}
+                      {requestStatus === 'processing' && 'Processing...'}
+                      {requestStatus === 'failed' && 'Failed'}
+                      {requestStatus === 'cancelled' && 'Cancelled'}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            );
+          }}
         />
       ) : (
         <View style={styles.emptyChatContainer}>
@@ -355,11 +371,20 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
   },
+  messageFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
   timeText: {
     color: 'rgba(255, 255, 255, 0.6)',
     fontSize: 11,
-    marginTop: 4,
-    textAlign: 'right',
+  },
+  statusText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 11,
+    fontStyle: 'italic',
   },
   emptyChatContainer: {
     flex: 1,

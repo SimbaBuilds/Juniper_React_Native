@@ -47,6 +47,15 @@ export const useRepoScreen = () => {
   const [selectedFilterTags, setSelectedFilterTags] = useState<any[]>([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [expandedResources, setExpandedResources] = useState<Set<string>>(new Set());
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingResource, setEditingResource] = useState<DisplayResource | null>(null);
+  const [editResource, setEditResource] = useState<NewResource>({
+    title: '',
+    content: '',
+    instructions: '',
+    type: 'memory',
+    tags: []
+  });
 
   // Helper function to ensure resources have proper tags arrays
   const ensureResourceTags = (resources: any[]): DisplayResource[] => {
@@ -207,6 +216,80 @@ export const useRepoScreen = () => {
       setSaving(false);
     }
   }, [user?.id, newResource]);
+
+  const openEditModal = useCallback((resource: DisplayResource) => {
+    setEditingResource(resource);
+    setEditResource({
+      title: resource.title || '',
+      content: resource.content,
+      instructions: resource.instructions || '',
+      type: resource.type,
+      tags: resource.tags || []
+    });
+    setShowEditModal(true);
+  }, []);
+
+  const handleEditResource = useCallback(async () => {
+    if (!user?.id || !editingResource || !editResource.content.trim()) {
+      Alert.alert('Error', 'Please enter resource content');
+      return;
+    }
+
+    if (editResource.tags.length > MAX_MEMORY_TAGS) {
+      Alert.alert('Error', `You can only select up to ${MAX_MEMORY_TAGS} tags per resource.`);
+      return;
+    }
+
+    try {
+      setSaving(true);
+      
+      // Extract tag IDs from tag objects
+      const tagIds = editResource.tags.map(tag => tag.id);
+      
+      const updateData = {
+        title: editResource.title.trim() || null,
+        content: editResource.content.trim(),
+        instructions: editResource.instructions.trim() || null,
+        type: editResource.type,
+        tags: tagIds,
+        last_accessed: new Date().toISOString()
+      };
+
+      const updatedResource = await DatabaseService.updateResource(editingResource.id, updateData);
+      
+      // Get full tag details for UI display
+      const resourceTags = await DatabaseService.getResourceTags(updatedResource.id);
+      
+      // Update local state
+      const formattedResource: DisplayResource = {
+        id: updatedResource.id,
+        content: updatedResource.content,
+        title: updatedResource.title,
+        instructions: updatedResource.instructions,
+        type: updatedResource.type,
+        relevance_score: updatedResource.relevance_score || editingResource.relevance_score,
+        last_accessed: updatedResource.last_accessed,
+        created_at: updatedResource.created_at,
+        tags: resourceTags
+      };
+
+      setResources(prev => prev.map(resource => 
+        resource.id === editingResource.id ? formattedResource : resource
+      ));
+      
+      // Reset form
+      setEditResource({ title: '', content: '', instructions: '', type: 'memory', tags: [] });
+      setEditingResource(null);
+      setShowEditModal(false);
+      
+      Alert.alert('Success', 'Resource updated successfully');
+    } catch (err) {
+      console.error('Error updating resource:', err);
+      Alert.alert('Error', 'Failed to update resource');
+    } finally {
+      setSaving(false);
+    }
+  }, [user?.id, editingResource, editResource]);
 
   const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr);
@@ -381,6 +464,11 @@ export const useRepoScreen = () => {
     showFilterModal,
     setShowFilterModal,
     expandedResources,
+    showEditModal,
+    setShowEditModal,
+    editingResource,
+    editResource,
+    setEditResource,
     
     // Computed values
     regularResources,
@@ -393,6 +481,8 @@ export const useRepoScreen = () => {
     // Functions
     ensureResourceTags,
     handleAddResource,
+    openEditModal,
+    handleEditResource,
     formatDate,
     groupResourcesByType,
     getRecentResources,

@@ -817,5 +817,24 @@ export const DatabaseService = {
       .eq('id', integrationId);
     if (error) throw error;
   },
+
+  // Request status polling
+  async getRequestStatus(requestId: string): Promise<string | null> {
+    const { data, error } = await supabase
+      .from('requests')
+      .select('status')
+      .eq('request_id', requestId)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows returned - request not found
+        return null;
+      }
+      throw error;
+    }
+    
+    return data?.status || null;
+  },
 }
         

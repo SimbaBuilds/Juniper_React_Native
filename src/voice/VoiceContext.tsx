@@ -9,6 +9,7 @@ import { useAuth } from '../auth/AuthContext';
 import { DeviceEventEmitter, EmitterSubscription, Platform, NativeModules } from 'react-native';
 import { conversationService } from '../services/conversationService';
 import { isCancellationError } from '../utils/cancellationUtils';
+import { useRequestStatusPolling } from '../hooks/useRequestStatusPolling';
 
 const { VoiceModule } = NativeModules;
 
@@ -25,6 +26,8 @@ const VoiceContext = createContext<VoiceContextValue>({
   isError: false,
   inputMode: 'voice',
   integrationInProgress: false,
+  currentRequestId: null,
+  requestStatus: null,
   setVoiceState: () => {},
   setWakeWordEnabled: () => {},
   setError: () => {},
@@ -99,11 +102,22 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
   const [integrationInProgress, setIntegrationInProgress] = useState<boolean>(false);
+  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
+  const [requestStatus, setRequestStatus] = useState<string | null>(null);
   
   // Auto-refresh timer state
   const [lastMessageTimestamp, setLastMessageTimestamp] = useState<number | null>(null);
   const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const integrationPollingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Request status polling
+  const { status: polledStatus } = useRequestStatusPolling({
+    requestId: currentRequestId,
+    onStatusChange: (status) => {
+      console.log('📊 REQUEST_STATUS: Status changed to:', status);
+      setRequestStatus(status);
+    }
+  });
   
   // Voice service instance
   const voiceService = useMemo(() => VoiceService.getInstance(), []);
@@ -112,7 +126,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const listenersSetupRef = useRef(false);
 
   // Server API hook
-  const { sendMessage, cancelRequest, isRequestInProgress } = useServerApi();
+  const { sendMessage, cancelRequest, isRequestInProgress, getCurrentRequestId } = useServerApi();
 
   // Auto-refresh timer functions
   const handleAutoRefresh = useCallback(async () => {
@@ -387,7 +401,13 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             try {
               console.log('🔄 VOICE_CONTEXT: Sending message with current settings');
               
-              const response = await sendMessage(text, updatedHistory);
+              // Start polling immediately when request begins
+              setRequestStatus('pending');
+              
+              const response = await sendMessage(text, updatedHistory, (requestId) => {
+                console.log('📊 REQUEST_STATUS: Setting request ID for polling:', requestId);
+                setCurrentRequestId(requestId);
+              });
               console.log('🟠 VOICE_CONTEXT: Received API response');
               console.log('🔄 VOICE_CONTEXT: Response settings_updated flag:', response.settings_updated);
               
@@ -410,6 +430,10 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               // Send response back to native for TTS (only in voice mode)
               await voiceService.handleApiResponse(requestId, response.response);
               
+              // Clear request ID after successful response
+              setCurrentRequestId(null);
+              setRequestStatus(null);
+              
             } catch (error) {
               console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
               
@@ -424,6 +448,10 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               } else {
                 console.log('🟠 VOICE_CONTEXT: Request was cancelled - not sending error to native');
               }
+              
+              // Clear request ID after error
+              setCurrentRequestId(null);
+              setRequestStatus(null);
             }
           }, 0);
           
@@ -612,8 +640,14 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             console.log('📝 TEXT_INPUT: ========== SENDING TO API ==========');
             console.log('📝 TEXT_INPUT: Sending message to API');
             
+            // Start polling immediately when request begins
+            setRequestStatus('pending');
+            
             const apiStartTime = Date.now();
-            const response = await sendMessage(text.trim(), updatedHistory);
+            const response = await sendMessage(text.trim(), updatedHistory, (requestId) => {
+              console.log('📊 REQUEST_STATUS: Setting request ID for polling:', requestId);
+              setCurrentRequestId(requestId);
+            });
             const apiEndTime = Date.now();
             
             console.log('📝 TEXT_INPUT: ========== API RESPONSE RECEIVED ==========');
@@ -669,6 +703,10 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             // Note: No TTS playback because we're in text mode
             console.log('📝 TEXT_INPUT: Response added to chat (no TTS in text mode)');
             
+            // Clear request ID after successful response
+            setCurrentRequestId(null);
+            setRequestStatus(null);
+            
           } catch (error) {
             console.error('📝 TEXT_INPUT: ❌ Error processing text message:', error);
             
@@ -685,6 +723,10 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             } else {
               console.log('📝 TEXT_INPUT: Request was cancelled - not showing error to user');
             }
+            
+            // Clear request ID after error
+            setCurrentRequestId(null);
+            setRequestStatus(null);
           }
         }, 0);
         
@@ -720,6 +762,8 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     chatHistory,
     inputMode,
     integrationInProgress,
+    currentRequestId,
+    requestStatus,
     
     // Voice settings
     voiceSettings,

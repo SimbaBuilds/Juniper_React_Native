@@ -373,5 +373,22 @@ export type UserProfile = {
   ] as const;
   export type IntegrationScriptField = (typeof integrationScriptFields)[number];
 
+  export type Request = {
+    id: string;
+    user_id: string;
+    request_id: string;              // Unique identifier for tracking this specific request
+    request_type: string;            // Type of request (chat, integration, etc.)
+    status: string;                  // pending, processing, completed, failed, cancelled
+    metadata: Record<string, any>;   // Additional request context and data
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const requestFields = [
+    'id', 'user_id', 'request_id', 'request_type', 'status',
+    'metadata', 'created_at', 'updated_at'
+  ] as const;
+  export type RequestField = (typeof requestFields)[number];
+
 
 

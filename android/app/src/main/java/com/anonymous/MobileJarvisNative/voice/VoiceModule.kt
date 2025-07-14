@@ -73,7 +73,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                         Log.w(TAG, "🔵 VOICE_MODULE: Timeout for request: $requestId")
                         callback("I'm sorry, there was a timeout processing your request. Please try again.")
                     }
-                }, 30000)
+                }, 240000)
                 
             } catch (e: Exception) {
                 Log.e(TAG, "🔵 VOICE_MODULE: ❌ Error emitting processTextFromNative event", e)

@@ -25,6 +25,8 @@ export interface VoiceContextState {
   chatHistory: { role: 'user' | 'assistant'; content: string; timestamp: number }[];
   inputMode: 'voice' | 'text';
   integrationInProgress: boolean;
+  currentRequestId: string | null;
+  requestStatus: string | null;
 }
 
 /**

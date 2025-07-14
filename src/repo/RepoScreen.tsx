@@ -47,6 +47,13 @@ export const RepoScreen: React.FC = () => {
     groupedResources,
     resources,
     handleAddResource,
+    showEditModal,
+    setShowEditModal,
+    editingResource,
+    editResource,
+    setEditResource,
+    openEditModal,
+    handleEditResource,
     formatDate,
     getRecentResources,
     getResourcesFromPast30Days,
@@ -211,6 +218,15 @@ export const RepoScreen: React.FC = () => {
                       </TouchableOpacity>
                       
                       <TouchableOpacity
+                        style={styles.editResourceButton}
+                        onPress={() => openEditModal(resource)}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons name="create-outline" size={16} color="#4A90E2" />
+                        <Text style={styles.editResourceButtonText}>Edit</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
                         style={styles.deleteResourceButton}
                         onPress={() => deleteResource(resource.id)}
                         activeOpacity={0.7}
@@ -352,6 +368,17 @@ export const RepoScreen: React.FC = () => {
                             </View>
                           )}
                         </TouchableOpacity>
+                        
+                        <View style={styles.resourceActions}>
+                          <TouchableOpacity
+                            style={styles.editResourceButton}
+                            onPress={() => openEditModal(resource)}
+                            activeOpacity={0.7}
+                          >
+                            <Ionicons name="create-outline" size={16} color="#4A90E2" />
+                            <Text style={styles.editResourceButtonText}>Edit</Text>
+                          </TouchableOpacity>
+                        </View>
                         
                         <View style={styles.resourceFooter}>
                           <Text style={styles.resourceDate}>
@@ -566,6 +593,118 @@ export const RepoScreen: React.FC = () => {
           </SafeAreaView>
         </Modal>
 
+        {/* Edit Resource Modal */}
+        <Modal
+          visible={showEditModal}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setShowEditModal(false)}
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity
+                onPress={() => setShowEditModal(false)}
+                style={styles.modalCloseButton}
+              >
+                <Text style={styles.modalCloseText}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Edit Resource</Text>
+              <TouchableOpacity
+                onPress={handleEditResource}
+                style={[
+                  styles.modalSaveButton,
+                  saving && styles.modalSaveButtonDisabled
+                ]}
+                disabled={saving || !editResource.content.trim()}
+              >
+                <Text style={[
+                  styles.modalSaveText,
+                  (!editResource.content.trim() || saving) && styles.modalSaveTextDisabled
+                ]}>
+                  {saving ? 'Saving...' : 'Save'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalContent}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Title (Optional)</Text>
+                <TextInput
+                  style={styles.titleInput}
+                  placeholder="Add a title..."
+                  value={editResource.title}
+                  onChangeText={(text) => setEditResource(prev => ({ ...prev, title: text }))}
+                  editable={!saving}
+                  returnKeyType="next"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Resource Type *</Text>
+                <TouchableOpacity
+                  style={styles.pickerContainer}
+                  onPress={() => setShowTypeSelector(true)}
+                  disabled={saving}
+                >
+                  <Text style={styles.pickerText}>
+                    {RESOURCE_TYPES.find(type => type.value === editResource.type)?.label || 'Select Type'}
+                  </Text>
+                  <Ionicons name="chevron-down" size={20} color="#666666" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Resource Content *</Text>
+                <TextInput
+                  style={styles.contentInput}
+                  placeholder="What would you like to save?"
+                  value={editResource.content}
+                  onChangeText={(text) => {
+                    if (text.length <= 2000) {
+                      setEditResource(prev => ({ ...prev, content: text }));
+                    }
+                  }}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                  editable={!saving}
+                  maxLength={2000}
+                />
+                <Text style={styles.characterCount}>
+                  {editResource.content.length}/2000 characters
+                </Text>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Instructions (Optional)</Text>
+                <TextInput
+                  style={styles.titleInput}
+                  placeholder="e.g. read this when..."
+                  value={editResource.instructions}
+                  onChangeText={(text) => {
+                    if (text.length <= 100) {
+                      setEditResource(prev => ({ ...prev, instructions: text }));
+                    }
+                  }}
+                  editable={!saving}
+                  returnKeyType="next"
+                  maxLength={100}
+                />
+                <Text style={styles.characterCount}>
+                  {editResource.instructions.length}/100 characters
+                </Text>
+              </View>
+
+              <TagSelector
+                selectedTags={editResource.tags}
+                userId={user!.id}
+                onTagsChange={(tags) => setEditResource(prev => ({ ...prev, tags }))}
+                disabled={saving}
+              />
+            </ScrollView>
+          </SafeAreaView>
+        </Modal>
+
         {/* Resource Type Selector Modal */}
         <Modal
           visible={showTypeSelector}
@@ -590,25 +729,29 @@ export const RepoScreen: React.FC = () => {
                   key={type.value}
                   style={[
                     styles.typeOption,
-                    newResource.type === type.value && styles.typeOptionSelected
+                    ((showEditModal ? editResource.type : newResource.type) === type.value) && styles.typeOptionSelected
                   ]}
                   onPress={() => {
-                    setNewResource(prev => ({ ...prev, type: type.value }));
+                    if (showEditModal) {
+                      setEditResource(prev => ({ ...prev, type: type.value }));
+                    } else {
+                      setNewResource(prev => ({ ...prev, type: type.value }));
+                    }
                     setShowTypeSelector(false);
                   }}
                 >
                   <Ionicons 
                     name={RESOURCE_ICONS[type.value as keyof typeof RESOURCE_ICONS] as any} 
                     size={24} 
-                    color={newResource.type === type.value ? '#FFFFFF' : '#4A90E2'} 
+                    color={((showEditModal ? editResource.type : newResource.type) === type.value) ? '#FFFFFF' : '#4A90E2'} 
                   />
                   <Text style={[
                     styles.typeOptionText,
-                    newResource.type === type.value && styles.typeOptionTextSelected
+                    ((showEditModal ? editResource.type : newResource.type) === type.value) && styles.typeOptionTextSelected
                   ]}>
                     {type.label}
                   </Text>
-                  {newResource.type === type.value && (
+                  {((showEditModal ? editResource.type : newResource.type) === type.value) && (
                     <Ionicons name="checkmark" size={20} color="#FFFFFF" />
                   )}
                 </TouchableOpacity>
@@ -1102,5 +1245,27 @@ const styles = StyleSheet.create({
     color: '#FF6B35',
     fontWeight: '500',
     marginLeft: 4,
+  },
+  editResourceButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  editResourceButtonText: {
+    fontSize: 14,
+    color: '#4A90E2',
+    fontWeight: '500',
+    marginLeft: 4,
+  },
+  resourceActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#333333',
   },
 }); 

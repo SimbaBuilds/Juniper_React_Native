@@ -12,10 +12,11 @@ interface UseServerApiResult {
   isLoading: boolean;
   error: Error | null;
   response: ChatResponse | null;
-  sendMessage: (message: string, history: ChatMessage[]) => Promise<ChatResponse>;
+  sendMessage: (message: string, history: ChatMessage[], onRequestStart?: (requestId: string) => void) => Promise<ChatResponse>;
   updateConfig: (config: Partial<ServerApiConfig>) => void;
   cancelRequest: () => Promise<boolean>;
   isRequestInProgress: boolean;
+  getCurrentRequestId: () => string | null;
 }
 
 /**
@@ -54,6 +55,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
   const sendMessage = useCallback(async (
     message: string, 
     history: ChatMessage[],
+    onRequestStart?: (requestId: string) => void,
   ): Promise<ChatResponse> => {
     // Clear any previous cancellation errors before starting new request
     setError(null);
@@ -65,6 +67,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
         message, 
         history, 
         options.preferences,
+        onRequestStart,
       );
       
       setResponse(result);
@@ -138,6 +141,13 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
     ServerApiService.updateConfig(config);
   }, []);
 
+  /**
+   * Get the current request ID
+   */
+  const getCurrentRequestId = useCallback((): string | null => {
+    return ServerApiService.getCurrentRequestId();
+  }, []);
+
   return {
     isLoading,
     error,
@@ -146,5 +156,6 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
     updateConfig,
     cancelRequest,
     isRequestInProgress,
+    getCurrentRequestId,
   };
 }; 
