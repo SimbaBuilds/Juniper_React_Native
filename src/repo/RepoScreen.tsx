@@ -1,364 +1,62 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Modal, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
-import { DatabaseService } from '../supabase/supabase';
-import { useAuth } from '../auth/AuthContext';
 import { TagSelector } from './components/TagSelector';
-import { MAX_MEMORY_TAGS } from './constants/tags';
-
-interface DisplayResource {
-  id: string;
-  content: string;
-  title?: string;
-  instructions?: string;
-  type: string;
-  relevance_score: number;
-  last_accessed: string;
-  created_at: string;
-  tags: any[]; // Array of tag objects with id and name
-}
+import { NUM_DISPLAYED_RESOURCES, useRepoScreen } from './hooks/useRepoScreen';
 
 const RESOURCE_TYPES = [
-  { value: 'memory', label: 'Memory' },
-  { value: 'samples', label: 'Sample' },
-  { value: 'notes', label: 'Note' },
-  { value: 'files', label: 'File' },
+  { value: 'memory', label: 'Memories' },
+  { value: 'sample', label: 'Samples' },
+  { value: 'note', label: 'Notes' },
+  { value: 'file', label: 'Files' },
   { value: 'media', label: 'Media' },
   { value: 'other', label: 'Other' }
 ];
 
+
+
 const RESOURCE_ICONS = {
   memory: 'bulb-outline' as const,
-  samples: 'cube-outline' as const,
-  notes: 'document-text-outline' as const,
-  files: 'folder-outline' as const,
+  sample: 'cube-outline' as const,
+  note: 'document-text-outline' as const,
+  file: 'folder-outline' as const,
   media: 'image-outline' as const,
   other: 'ellipsis-horizontal-outline' as const
 };
 
 export const RepoScreen: React.FC = () => {
-  const { user } = useAuth();
-  const [resources, setResources] = useState<DisplayResource[]>([]);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newResource, setNewResource] = useState({
-    title: '',
-    content: '',
-    instructions: '',
-    type: 'memory',
-    tags: [] as any[]
-  });
-  const [showTypeSelector, setShowTypeSelector] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [selectedFilterTags, setSelectedFilterTags] = useState<any[]>([]);
-  const [showFilterModal, setShowFilterModal] = useState(false);
-  const [expandedResources, setExpandedResources] = useState<Set<string>>(new Set());
+  const {
+    user,
+    loading,
+    error,
+    showAddModal,
+    setShowAddModal,
+    newResource,
+    setNewResource,
+    showTypeSelector,
+    setShowTypeSelector,
+    saving,
+    selectedFilterTags,
+    setSelectedFilterTags,
+    showFilterModal,
+    setShowFilterModal,
+    expandedCategories,
+    expandedResources,
+    filteredRegularResources,
+    filteredExpiringResources,
+    groupedResources,
+    resources,
+    handleAddResource,
+    formatDate,
+    getRecentResources,
+    getResourcesFromPast30Days,
+    toggleCategoryExpansion,
+    toggleResourceExpansion,
+    deleteResource,
+    resetRelevanceScore,
+    getAllTagsFromResources,
+  } = useRepoScreen();
 
-  // Helper function to ensure resources have proper tags arrays
-  const ensureResourceTags = (resources: any[]): DisplayResource[] => {
-    return resources.map(resource => ({
-      ...resource,
-      tags: Array.isArray(resource.tags) ? resource.tags : []
-    }));
-  };
-
-  // Load resources from database
-  const loadResourcesFromDatabase = async () => {
-    if (!user?.id) return;
-    
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Load resources
-      const dbResources = await DatabaseService.getResources(user.id);
-      
-      // Convert database resources to UI format with tag objects
-      const formattedResources: DisplayResource[] = dbResources.map((resource: any) => {
-        // Collect tags from tag_1 through tag_5 columns
-        const tags = [
-          resource.tag_1,
-          resource.tag_2, 
-          resource.tag_3,
-          resource.tag_4,
-          resource.tag_5
-        ].filter(Boolean); // Remove null/undefined tags
-        
-        return {
-          id: resource.id,
-          content: resource.content,
-          title: resource.title,
-          instructions: resource.instructions,
-          type: resource.type || 'memory',
-          relevance_score: resource.relevance_score || 100,
-          last_accessed: resource.last_accessed,
-          created_at: resource.created_at,
-          tags: tags
-        };
-      });
-
-      // Add default resources if none exist
-      if (formattedResources.length === 0) {
-        const defaultResources: DisplayResource[] = [
-          {
-            id: '1',
-            content: 'Favorite coffee shop is Blue Bottle Coffee on Market Street - they make excellent cortados',
-            type: 'memory',
-            relevance_score: 100,
-            last_accessed: '2024-05-30',
-            created_at: '2024-05-30',
-            tags: [],
-          },
-          {
-            id: '2',
-            content: 'Meeting with design team every Tuesday at 2 PM in conference room B',
-            type: 'notes',
-            relevance_score: 100,
-            last_accessed: '2024-05-29',
-            created_at: '2024-05-29',
-            tags: [],
-          },
-          {
-            id: '3',
-            content: 'Preferred news sources: TechCrunch, The Verge, Hacker News for tech updates',
-            type: 'memory',
-            relevance_score: 100,
-            last_accessed: '2024-05-28',
-            created_at: '2024-05-28',
-            tags: [],
-          },
-        ];
-        setResources(ensureResourceTags(defaultResources));
-      } else {
-        setResources(ensureResourceTags(formattedResources));
-      }
-    } catch (err) {
-      console.error('Error loading resources:', err);
-      setError('Failed to load resources');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Initial load
-  useEffect(() => {
-    loadResourcesFromDatabase();
-  }, [user?.id]);
-
-  // Refresh when screen is focused
-  useFocusEffect(
-    React.useCallback(() => {
-      loadResourcesFromDatabase();
-    }, [user?.id])
-  );
-
-  const handleAddResource = async () => {
-    if (!user?.id || !newResource.content.trim()) {
-      Alert.alert('Error', 'Please enter resource content');
-      return;
-    }
-
-    if (newResource.tags.length > MAX_MEMORY_TAGS) {
-      Alert.alert('Error', `You can only select up to ${MAX_MEMORY_TAGS} tags per resource.`);
-      return;
-    }
-
-    try {
-      setSaving(true);
-      
-      // Extract tag IDs from tag objects
-      const tagIds = newResource.tags.map(tag => tag.id);
-      
-      const resourceData = {
-        title: newResource.title.trim() || null,
-        content: newResource.content.trim(),
-        instructions: newResource.instructions.trim() || null,
-        type: newResource.type,
-        relevance_score: 100,
-        decay_factor: 1.0,
-        auto_committed: false,
-        tags: tagIds,
-        last_accessed: new Date().toISOString()
-      };
-
-      const savedResource = await DatabaseService.createResource(user.id, resourceData);
-      
-      // Get full tag details for UI display
-      const resourceTags = await DatabaseService.getResourceTags(savedResource.id);
-      
-      // Add to local state
-      const formattedResource: DisplayResource = {
-        id: savedResource.id,
-        content: savedResource.content,
-        title: savedResource.title,
-        instructions: savedResource.instructions,
-        type: savedResource.type,
-        relevance_score: savedResource.relevance_score || 100,
-        last_accessed: savedResource.last_accessed,
-        created_at: savedResource.created_at,
-        tags: resourceTags
-      };
-
-      setResources(prev => ensureResourceTags([formattedResource, ...prev]));
-      
-      // Reset form
-      setNewResource({ title: '', content: '', instructions: '', type: 'memory', tags: [] });
-      setShowAddModal(false);
-      
-      Alert.alert('Success', 'Resource saved successfully');
-    } catch (err) {
-      console.error('Error saving resource:', err);
-      Alert.alert('Error', 'Failed to save resource');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const formatDate = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const groupResourcesByType = (resources: DisplayResource[]) => {
-    const grouped: { [key: string]: DisplayResource[] } = {};
-    
-    // Initialize all categories
-    RESOURCE_TYPES.forEach(type => {
-      grouped[type.value] = [];
-    });
-    
-    resources.forEach(resource => {
-      if (grouped[resource.type]) {
-        grouped[resource.type].push(resource);
-      } else {
-        grouped['other'].push(resource);
-      }
-    });
-    
-    // Sort each category by last_accessed (most recent first)
-    Object.keys(grouped).forEach(type => {
-      grouped[type].sort((a, b) => 
-        new Date(b.last_accessed).getTime() - new Date(a.last_accessed).getTime()
-      );
-    });
-    
-    return grouped;
-  };
-
-  const getRecentResources = (resources: DisplayResource[], limit: number = 5) => {
-    return resources.slice(0, limit);
-  };
-
-  const getResourcesFromPast30Days = (resources: DisplayResource[]) => {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    return resources.filter(resource => 
-      new Date(resource.last_accessed) >= thirtyDaysAgo
-    );
-  };
-
-  const toggleCategoryExpansion = (category: string) => {
-    const newExpanded = new Set(expandedCategories);
-    if (newExpanded.has(category)) {
-      newExpanded.delete(category);
-    } else {
-      newExpanded.add(category);
-    }
-    setExpandedCategories(newExpanded);
-  };
-
-  const toggleResourceExpansion = (resourceId: string) => {
-    const newExpanded = new Set(expandedResources);
-    if (newExpanded.has(resourceId)) {
-      newExpanded.delete(resourceId);
-    } else {
-      newExpanded.add(resourceId);
-    }
-    setExpandedResources(newExpanded);
-  };
-
-  // Separate expiring and regular resources
-  const regularResources = resources.filter(resource => resource.relevance_score >= 10);
-  const expiringResources = resources.filter(resource => resource.relevance_score < 10);
-
-  // Filter resources by selected tags (AND logic - resource must have all selected tags)
-  const filteredRegularResources = selectedFilterTags.length === 0 
-    ? regularResources 
-    : regularResources.filter(resource => 
-        selectedFilterTags.every(filterTag => 
-          resource.tags && resource.tags.some(tag => tag.id === filterTag.id)
-        )
-      );
-
-  const filteredExpiringResources = selectedFilterTags.length === 0 
-    ? expiringResources 
-    : expiringResources.filter(resource => 
-        selectedFilterTags.every(filterTag => 
-          resource.tags && resource.tags.some(tag => tag.id === filterTag.id)
-        )
-      );
-
-  // Get all unique tags from resources for filter options
-  const getAllTagsFromResources = () => {
-    const tagMap = new Map<string, any>();
-    resources.forEach(resource => {
-      if (resource.tags) {
-        resource.tags.forEach(tag => tagMap.set(tag.id, tag));
-      }
-    });
-    return Array.from(tagMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  };
-
-  const deleteResource = async (resourceId: string) => {
-    Alert.alert(
-      'Delete Resource',
-      'Are you sure you want to delete this resource? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await DatabaseService.deleteResource(resourceId);
-              setResources(prev => prev.filter(resource => resource.id !== resourceId));
-              Alert.alert('Success', 'Resource deleted successfully');
-            } catch (err) {
-              console.error('Error deleting resource:', err);
-              Alert.alert('Error', 'Failed to delete resource');
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const resetRelevanceScore = async (resourceId: string) => {
-    try {
-      await DatabaseService.updateResource(resourceId, { relevance_score: 100 });
-      setResources(prev => prev.map(resource => 
-        resource.id === resourceId 
-          ? { ...resource, relevance_score: 100 }
-          : resource
-      ));
-      Alert.alert('Success', 'Relevance score reset to 100%');
-    } catch (err) {
-      console.error('Error resetting relevance score:', err);
-      Alert.alert('Error', 'Failed to reset relevance score');
-    }
-  };
-
-  const groupedResources = groupResourcesByType(filteredRegularResources);
-  const groupedExpiringResources = groupResourcesByType(filteredExpiringResources);
 
   if (loading) {
     return (
@@ -560,14 +258,15 @@ export const RepoScreen: React.FC = () => {
             </View>
           ) : (
             RESOURCE_TYPES.map((resourceType) => {
-              const categoryResources = groupedResources[resourceType.value];
+              const categoryResources = groupedResources[resourceType.value] || [];
               const isExpanded = expandedCategories.has(resourceType.value);
               const displayResources = isExpanded 
-                ? getResourcesFromPast30Days(categoryResources)
+                ? categoryResources
                 : getRecentResources(categoryResources);
               
+              console.log(`Category: ${resourceType.value}, Total: ${categoryResources.length}, IsExpanded: ${isExpanded}, Display: ${displayResources.length}`);
              
-              if (categoryResources.length === 0) return null;
+              if (!categoryResources || categoryResources.length === 0) return null;
               
               return (
                 <View key={resourceType.value} style={styles.categorySection}>
@@ -680,7 +379,7 @@ export const RepoScreen: React.FC = () => {
                       activeOpacity={0.7}
                     >
                       <Text style={styles.showMoreText}>
-                        Show {categoryResources.length - 5} more from past 30 days
+                        Show {categoryResources.length - NUM_DISPLAYED_RESOURCES}
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -700,7 +399,7 @@ export const RepoScreen: React.FC = () => {
           <SafeAreaView style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <TouchableOpacity onPress={() => setShowFilterModal(false)}>
-                <Text style={styles.modalCloseText}>Cancel</Text>
+                <Text style={styles.modalCloseText}>Close</Text>
               </TouchableOpacity>
               <Text style={styles.modalTitle}>Filter by Tags</Text>
               <TouchableOpacity 

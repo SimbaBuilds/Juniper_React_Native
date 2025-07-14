@@ -1,9 +1,6 @@
 export const SERVICES = [
   'Notion',
   'Slack', 
-  'Trello',
-  'Zoom',
-  'WhatsApp',
   'Dropbox',
   'Todoist',
   'Perplexity',
@@ -16,7 +13,7 @@ export const SERVICES = [
   'Microsoft Calendar',
   'Microsoft Email',
   'Microsoft Teams',
-  'Twilio'
+  'Textbelt'
 ] as const;
 
 export const SERVICE_TYPES = [
