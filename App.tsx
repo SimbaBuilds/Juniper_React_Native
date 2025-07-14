@@ -36,7 +36,7 @@ type RootStackParamList = {
 };
 
 type TabParamList = {
-  Home: undefined;
+  Juniper: undefined;
   Integrations: undefined;
   Automations: undefined;
   Repo: undefined;
@@ -586,12 +586,12 @@ function MainTabNavigator() {
   
   return (
     <Tab.Navigator
-      initialRouteName="Home"
+      initialRouteName="Juniper"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
 
-          if (route.name === 'Home') {
+          if (route.name === 'Juniper') {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Integrations') {
             iconName = focused ? 'link' : 'link-outline';
@@ -638,10 +638,10 @@ function MainTabNavigator() {
         }}
       />
       <Tab.Screen 
-        name="Home" 
+        name="Juniper" 
         component={HomeScreen}
         options={{
-          title: 'Home',
+          title: 'Juniper',
         }}
       />
       <Tab.Screen 

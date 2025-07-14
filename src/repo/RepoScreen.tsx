@@ -94,8 +94,8 @@ export const RepoScreen: React.FC = () => {
 
         <View style={styles.instructionsSection}>
           <Text style={styles.instructionsSectionText}>
-            Add resources by telling your assistant e.g.{'\n'}
-            "Remember the details of this discussed workflow for future reference."
+            Add/edit resources by telling your assistant e.g.{'\n'}
+            "Remember the details of this workflow for future reference."
             {'\n\n'}
             Or use the + button above to add manually
           </Text>
