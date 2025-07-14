@@ -62,22 +62,15 @@ export class VoiceService {
             
             const grants = await PermissionsAndroid.requestMultiple([
                 PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-                PermissionsAndroid.PERMISSIONS.INTERNET,
             ]);
 
             const audioGranted = grants[PermissionsAndroid.PERMISSIONS.RECORD_AUDIO] === PermissionsAndroid.RESULTS.GRANTED;
-            const internetGranted = grants[PermissionsAndroid.PERMISSIONS.INTERNET] === PermissionsAndroid.RESULTS.GRANTED;
 
-            console.log('📱 Android permissions:', { audioGranted, internetGranted });
+            console.log('📱 Android permissions:', { audioGranted });
 
             if (!audioGranted) {
                 console.error('❌ Android: Audio recording permission not granted');
                 return false;
-            }
-
-            if (!internetGranted) {
-                console.warn('⚠️ Android: Internet permission not granted');
-                // Continue anyway as this might be automatically granted
             }
 
             return true;

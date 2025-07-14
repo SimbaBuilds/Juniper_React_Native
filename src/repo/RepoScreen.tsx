@@ -566,12 +566,7 @@ export const RepoScreen: React.FC = () => {
                 ? getResourcesFromPast30Days(categoryResources)
                 : getRecentResources(categoryResources);
               
-              // Debug logging for memory category
-              if (resourceType.value === 'memory') {
-                console.log('Memory resources:', categoryResources);
-                console.log('Display resources for memory:', displayResources);
-                console.log('Memory category expanded:', isExpanded);
-              }
+             
               if (categoryResources.length === 0) return null;
               
               return (

@@ -239,15 +239,6 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       <View style={styles.voiceButtonContainer}>
         <VoiceButton 
           size={60}
-          onPress={async () => {
-            console.log('Voice button pressed - starting conversation');
-            if (Platform.OS === 'ios') {
-              await startContinuousConversation();
-            } else {
-              // For Android, use regular startListening since wake word handles continuous mode
-              await startListening();
-            }
-          }}
         />
       </View>
 
