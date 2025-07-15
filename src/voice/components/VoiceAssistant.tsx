@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert, Platform } from 'react-native';
 import { VoiceButton } from './VoiceButton';
 import { VoiceResponseDisplay } from './VoiceResponseDisplay';
 import { useVoice } from '../VoiceContext';
@@ -38,7 +38,10 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     sendTextMessage,
     continuePreviousChat,
     cancelRequest,
-    isRequestInProgress
+    isRequestInProgress,
+    startContinuousConversation,
+    startListening,
+    requestStatus
   } = useVoice();
 
   // State for conversation history modal
@@ -186,19 +189,37 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           data={chatHistory}
           keyExtractor={(item, index) => `chat-${index}-${item.timestamp}`}
           style={styles.chatList}
-          renderItem={({ item }) => (
-            <View style={[
-              styles.chatBubble, 
-              item.role === 'user' ? styles.userBubble : styles.assistantBubble
-            ]}>
-              <Text style={styles.chatText} selectable={true}>{item.content}</Text>
-              <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
-            </View>
-          )}
+          renderItem={({ item, index }) => {
+            const isLatestAssistantMessage = item.role === 'assistant' && index === chatHistory.length - 1;
+            const showStatus = isLatestAssistantMessage && requestStatus && (requestStatus !== 'completed');
+            
+            return (
+              <View style={[
+                styles.chatBubble, 
+                item.role === 'user' ? styles.userBubble : styles.assistantBubble
+              ]}>
+                <Text style={styles.chatText} selectable={true}>{item.content}</Text>
+                <View style={styles.messageFooter}>
+                  <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
+                  {showStatus && (
+                    <Text style={styles.statusText}>
+                      {requestStatus === 'pending' && 'Processing...'}
+                      {requestStatus === 'processing' && 'Processing...'}
+                      {requestStatus === 'failed' && 'Failed'}
+                      {requestStatus === 'cancelled' && 'Cancelled'}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            );
+          }}
         />
       ) : (
         <View style={styles.emptyChatContainer}>
-          <Text style={styles.emptyChatText}>Say the wake word or type a message to start or continue a chat.</Text>
+          <Text style={styles.emptyChatText}>
+            Tap the voice button or type a message to start a conversation.
+            {Platform.OS === 'android' && ' You can also use the wake word if enabled.'}
+          </Text>
         </View>
       )}
       
@@ -229,6 +250,13 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           <Text style={styles.interruptButtonText}>Tap to Interrupt</Text>
         </TouchableOpacity>
       )}
+
+      {/* Voice button - positioned above text input */}
+      <View style={styles.voiceButtonContainer}>
+        <VoiceButton 
+          size={60}
+        />
+      </View>
 
       {/* Text input at the bottom */}
       <TextChatInput 
@@ -343,11 +371,20 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
   },
+  messageFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
   timeText: {
     color: 'rgba(255, 255, 255, 0.6)',
     fontSize: 11,
-    marginTop: 4,
-    textAlign: 'right',
+  },
+  statusText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 11,
+    fontStyle: 'italic',
   },
   emptyChatContainer: {
     flex: 1,
@@ -404,5 +441,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
     marginLeft: 8,
+  },
+  voiceButtonContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingVertical: 8,
   },
 });

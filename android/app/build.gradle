@@ -190,8 +190,8 @@ dependencies {
     // Add preference library for PreferenceManager
     implementation("androidx.preference:preference:1.2.1")
     
-    // Add Picovoice Porcupine dependencies for wake word detection
-    implementation 'ai.picovoice:porcupine-android:3.0.1'
+    // Add ONNX Runtime for OpenWakeWord
+    implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.17.0'
     
     // Add OkHttp for API calls
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'

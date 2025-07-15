@@ -25,6 +25,8 @@ export interface VoiceContextState {
   chatHistory: { role: 'user' | 'assistant'; content: string; timestamp: number }[];
   inputMode: 'voice' | 'text';
   integrationInProgress: boolean;
+  currentRequestId: string | null;
+  requestStatus: string | null;
 }
 
 /**
@@ -37,6 +39,7 @@ export interface VoiceContextActions {
   setTranscript: (transcript: string) => void;
   setResponse: (response: string) => void;
   startListening: () => Promise<boolean>;
+  startContinuousConversation: () => Promise<boolean>; // iOS-specific continuous conversation
   stopListening: () => Promise<boolean>;
   resetState: () => void;
   interruptSpeech: () => Promise<boolean>;

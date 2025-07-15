@@ -24,6 +24,7 @@
     <string>????</string>
     <key>CFBundleURLTypes</key>
     <array>
+      <!-- Existing schemes -->
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
@@ -34,6 +35,84 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>exp+mobilejarvisnative</string>
+        </array>
+      </dict>
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>mobilejarvisnative-oauth</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>mobilejarvisnative</string>
+        </array>
+      </dict>
+      
+      <!-- Google OAuth (existing - will work with your current client ID) -->
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>google-oauth</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>com.googleusercontent.apps.66333577628-jr6ag67m9spk0f96l61moim1jjaus4n7</string>
+        </array>
+      </dict>
+      
+      <!-- Microsoft OAuth -->
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>microsoft-oauth</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>msauth.com.anonymous.MobileJarvisNative</string>
+        </array>
+      </dict>
+      
+      <!-- Other OAuth Services -->
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>slack-oauth</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>slack</string>
+        </array>
+      </dict>
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>notion-oauth</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>notion</string>
+        </array>
+      </dict>
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>dropbox-oauth</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>db-ffavxgtu0ynafn8</string>
+        </array>
+      </dict>
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>todoist-oauth</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>todoist</string>
+        </array>
+      </dict>
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>trello-oauth</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>trello</string>
+        </array>
+      </dict>
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>zoom-oauth</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>zoom</string>
         </array>
       </dict>
     </array>
@@ -74,5 +153,22 @@
     <string>Light</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
+    
+    <!-- LSApplicationQueriesSchemes for OAuth services -->
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+      <string>googlegmail</string>
+      <string>googlecalendar</string>
+      <string>slack</string>
+      <string>notion</string>
+      <string>dropbox</string>
+      <string>dropbox-1</string>
+      <string>todoist</string>
+      <string>trello</string>
+      <string>zoomus</string>
+      <string>microsoft-outlook</string>
+      <string>microsoft-teams</string>
+      <string>microsoft-edge</string>
+    </array>
   </dict>
 </plist>

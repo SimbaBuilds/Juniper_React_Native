@@ -37,6 +37,12 @@ export const useAuth = () => {
       if (error) throw error;
     },
     
+    // Google authentication
+    loginWithGoogle: async () => {
+      const { error } = await context.signInWithGoogle();
+      if (error) throw error;
+    },
+    
     // Common
     logout: async () => {
       await context.signOut();

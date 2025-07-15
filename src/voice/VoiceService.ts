@@ -62,22 +62,15 @@ export class VoiceService {
             
             const grants = await PermissionsAndroid.requestMultiple([
                 PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-                PermissionsAndroid.PERMISSIONS.INTERNET,
             ]);
 
             const audioGranted = grants[PermissionsAndroid.PERMISSIONS.RECORD_AUDIO] === PermissionsAndroid.RESULTS.GRANTED;
-            const internetGranted = grants[PermissionsAndroid.PERMISSIONS.INTERNET] === PermissionsAndroid.RESULTS.GRANTED;
 
-            console.log('📱 Android permissions:', { audioGranted, internetGranted });
+            console.log('📱 Android permissions:', { audioGranted });
 
             if (!audioGranted) {
                 console.error('❌ Android: Audio recording permission not granted');
                 return false;
-            }
-
-            if (!internetGranted) {
-                console.warn('⚠️ Android: Internet permission not granted');
-                // Continue anyway as this might be automatically granted
             }
 
             return true;
@@ -127,6 +120,31 @@ export class VoiceService {
             return result;
         } catch (error) {
             console.error('❌ Android: Error starting voice recognition:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Start continuous conversation mode (iOS specific)
+     * This simulates the Android wake word flow for iOS
+     */
+    public async startContinuousConversation(): Promise<boolean> {
+        try {
+            if (Platform.OS !== 'ios') {
+                console.warn('⚠️ startContinuousConversation is iOS-specific, using startListening instead');
+                return this.startListening();
+            }
+            
+            console.log('🎤 iOS: Starting continuous conversation mode...');
+            
+            // iOS doesn't need permissions check like Android
+            console.log('📱 iOS: Calling native startContinuousConversation...');
+            const result = await VoiceModule.startContinuousConversation();
+            console.log('📱 iOS: Continuous conversation started:', result);
+            
+            return result;
+        } catch (error) {
+            console.error('❌ iOS: Error starting continuous conversation:', error);
             throw error;
         }
     }

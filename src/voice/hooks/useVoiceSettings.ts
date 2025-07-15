@@ -10,7 +10,7 @@ const VOICE_SETTINGS_KEY = 'voice_settings';
 
 const defaultVoiceSettings: VoiceSettings = {
   deepgramEnabled: false,
-  baseLanguageModel: 'grok-3',
+  baseLanguageModel: 'claude-sonnet-4-20250514',
   generalInstructions: '',
   selectedWakeWord: 'JARVIS',
   wakeWordSensitivity: 0.3,

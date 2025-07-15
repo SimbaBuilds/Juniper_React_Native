@@ -11,11 +11,11 @@ export class UserProfileService {
         id: userId,
         display_name: displayName,
         deepgram_enabled: false,
-        base_language_model: 'claude-3-5-sonnet-20241022',
+        base_language_model: 'claude-sonnet-4-20250514',
         general_instructions: '',
-        wake_word: 'Jarvis',
+        wake_word: 'Juniper',
         wake_word_sensitivity: 0.3,
-        wake_word_detection_enabled: false,
+        wake_word_detection_enabled: true,
         selected_deepgram_voice: 'aura-2-mars-en',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         preferences: {
@@ -28,8 +28,13 @@ export class UserProfileService {
           language: 'en'
         },
         // XAI LiveSearch defaults
-        xai_live_search_enabled: false,
+        xai_live_search_enabled: true,
         xai_live_search_safe_search: true,
+        // Add missing properties
+        user_tags: [],
+        requests_today: 0,
+        requests_week: 0,
+        requests_month: 0,
       };
 
       const { data, error } = await supabase

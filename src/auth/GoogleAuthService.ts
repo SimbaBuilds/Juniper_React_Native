@@ -3,33 +3,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { supabase } from '../supabase/supabase';
 
-// Google API configuration - unified for all services
+// Google API configuration - basic sign-in only
 const GOOGLE_CONFIG = {
   CLIENT_ID: Constants.expoConfig?.extra?.GOOGLE_CLIENT_ID,
   API_KEY: Constants.expoConfig?.extra?.GOOGLE_API_KEY,
-  // Combined scopes for all Google services
+  // Basic sign-in scopes only - individual services handle their own scopes
   SCOPES: [
-    // Calendar scopes
-    'https://www.googleapis.com/auth/calendar.readonly',
-    'https://www.googleapis.com/auth/calendar.events',
-    // Gmail scopes
-    'https://www.googleapis.com/auth/gmail.readonly',
-    'https://www.googleapis.com/auth/gmail.modify',
-    // Drive scopes
-    'https://www.googleapis.com/auth/drive.readonly',
-    'https://www.googleapis.com/auth/drive.metadata.readonly',
-    // Contacts scope
-    'https://www.googleapis.com/auth/contacts.readonly',
+    'openid',
+    'email', 
+    'profile',
   ].join(' '),
   get REDIRECT_URI() {
-    const clientId = this.CLIENT_ID;
-    if (!clientId) {
-      console.warn('GOOGLE_CLIENT_ID not found in environment variables');
-      return 'com.googleusercontent.apps.MISSING_CLIENT_ID:/oauth2redirect';
+    const siteUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_SITE_URL;
+    if (!siteUrl) {
+      console.warn('EXPO_PUBLIC_SITE_URL not found in environment variables');
+      return 'https://hightower-ai.com/oauth/google/callback';
     }
-    
-    const cleanClientId = clientId.replace('.apps.googleusercontent.com', '');
-    return `com.googleusercontent.apps.${cleanClientId}:/oauth2redirect`;
+    return `${siteUrl}/oauth/google/callback`;
   },
 };
 
@@ -41,8 +31,8 @@ interface GoogleAuth {
 }
 
 /**
- * Unified Google authentication service for all Google integrations
- * Handles OAuth flow and token management for Calendar, Gmail, Drive, and Contacts
+ * Unified Google authentication service for basic sign-in
+ * Individual integration services handle their own specific scopes
  */
 export class GoogleAuthService {
   private static instance: GoogleAuthService | null = null;
@@ -108,8 +98,8 @@ export class GoogleAuthService {
       this.isInitialized = true;
       
       console.log('GoogleAuthService initialized');
-      console.log('Using redirect URI:', GOOGLE_CONFIG.REDIRECT_URI);
-      console.log('Scopes:', GOOGLE_CONFIG.SCOPES);
+      console.log('Using HTTPS redirect URI:', GOOGLE_CONFIG.REDIRECT_URI);
+      console.log('Basic sign-in scopes:', GOOGLE_CONFIG.SCOPES);
     } catch (error) {
       console.error('Error initializing GoogleAuthService:', error);
       throw error;
@@ -147,7 +137,7 @@ export class GoogleAuthService {
       
       console.log('=== STARTING GOOGLE OAUTH FLOW ===');
       console.log('Opening OAuth URL:', authUrl);
-      console.log('Expected redirect URI:', GOOGLE_CONFIG.REDIRECT_URI);
+      console.log('Expected HTTPS redirect URI:', GOOGLE_CONFIG.REDIRECT_URI);
       
       const supported = await Linking.canOpenURL(authUrl);
       if (supported) {
@@ -165,16 +155,67 @@ export class GoogleAuthService {
   }
 
   /**
-   * Handle OAuth callback
+   * Handle HTTPS OAuth callback (NEW METHOD)
+   * Called from App.tsx when HTTPS redirect is detected
    */
   async handleAuthCallback(code: string): Promise<boolean> {
     try {
-      console.log('=== HANDLING GOOGLE OAUTH CALLBACK ===');
+      console.log('=== HANDLING GOOGLE HTTPS OAUTH CALLBACK ===');
       
       if (!code) {
         throw new Error('No authorization code provided');
       }
       
+      // Exchange code for tokens first
+      const tokenData = await this.exchangeCodeForToken(code);
+      
+      // Get user info from Google
+      const userInfo = await this.getGoogleUserInfo(tokenData.access_token);
+      
+      // Try using the ID token for Supabase auth
+      if (tokenData.id_token) {
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: tokenData.id_token,
+        });
+        
+        if (error) {
+          console.error('❌ Error creating Supabase session with ID token:', error);
+          throw error;
+        }
+        
+        if (data.user) {
+          console.log('✅ Google authentication successful - Supabase session created');
+          
+          // Store additional auth data locally
+          this.authData = {
+            accessToken: tokenData.access_token,
+            refreshToken: tokenData.refresh_token,
+            expiresAt: Date.now() + (tokenData.expires_in * 1000),
+            scope: tokenData.scope || GOOGLE_CONFIG.SCOPES,
+          };
+          
+          await this.saveAuthData();
+          this.notifyAuthCallbacks();
+          return true;
+        }
+      } else {
+        console.warn('❌ No ID token received from Google');
+        throw new Error('No ID token received from Google OAuth response');
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('❌ Error handling HTTPS auth callback:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Exchange authorization code for tokens and save them
+   */
+  private async exchangeCodeAndSaveTokens(code: string): Promise<boolean> {
+    try {
       console.log('🔄 Exchanging code for tokens...');
       const tokenData = await this.exchangeCodeForToken(code);
       
@@ -194,7 +235,7 @@ export class GoogleAuthService {
       this.notifyAuthCallbacks();
       return true;
     } catch (error) {
-      console.error('❌ Error handling auth callback:', error);
+      console.error('❌ Error exchanging code for tokens:', error);
       return false;
     }
   }
@@ -336,7 +377,7 @@ export class GoogleAuthService {
         .eq('service_name', 'google')
         .eq('is_active', true);
 
-      // Insert new unified Google integration
+      // Insert new basic Google sign-in integration
       const { error } = await supabase
         .from('integrations')
         .insert({
@@ -349,7 +390,7 @@ export class GoogleAuthService {
           scope: tokenData.scope || GOOGLE_CONFIG.SCOPES,
           is_active: true,
           configuration: {
-            services: ['calendar', 'gmail', 'drive', 'contacts'],
+            auth_type: 'basic_signin',
             scopes: GOOGLE_CONFIG.SCOPES.split(' '),
           },
         });
@@ -358,7 +399,7 @@ export class GoogleAuthService {
         throw error;
       }
 
-      console.log('✅ Google integration saved to Supabase');
+      console.log('✅ Google basic sign-in integration saved to Supabase');
     } catch (error) {
       console.error('❌ Error saving integration to Supabase:', error);
     }
@@ -437,7 +478,7 @@ export class GoogleAuthService {
         .from('integrations')
         .update(updateData)
         .eq('user_id', user.id)
-        .eq('integration_type', 'google')
+        .eq('service_name', 'google')
         .eq('is_active', true);
 
       if (error) {
@@ -463,7 +504,7 @@ export class GoogleAuthService {
         .from('integrations')
         .update({ is_active: false })
         .eq('user_id', user.id)
-        .eq('integration_type', 'google')
+        .eq('service_name', 'google')
         .eq('is_active', true);
 
       if (error) {
@@ -492,7 +533,7 @@ export class GoogleAuthService {
         },
         body: new URLSearchParams({
           token: this.authData.accessToken,
-        }),
+        }).toString(),
       });
 
       if (response.ok) {
@@ -502,6 +543,33 @@ export class GoogleAuthService {
       }
     } catch (error) {
       console.warn('⚠️ Error during token revocation:', error);
+    }
+  }
+
+  private async getGoogleUserInfo(accessToken: string): Promise<any> {
+    try {
+      const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get user info: ${response.status} ${response.statusText}`);
+      }
+
+      const userInfo = await response.json();
+      console.log('📋 Google user info retrieved:', {
+        id: userInfo.id,
+        email: userInfo.email,
+        name: userInfo.name,
+        verified_email: userInfo.verified_email
+      });
+
+      return userInfo;
+    } catch (error) {
+      console.error('❌ Error getting Google user info:', error);
+      throw error;
     }
   }
 

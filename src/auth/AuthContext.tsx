@@ -13,6 +13,7 @@ type AuthContextType = {
   signInWithPhone: (phone: string) => Promise<{ error: Error | null }>;
   signUpWithPhone: (phone: string) => Promise<{ error: Error | null }>;
   verifyOtp: (phone: string, token: string, type: 'sms' | 'phone_change') => Promise<{ error: Error | null }>;
+  signInWithGoogle: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 };
 
@@ -248,6 +249,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: null };
       } catch (error) {
         console.error('OTP verification exception:', error);
+        return { error: error as Error };
+      } finally {
+        setLoading(false);
+      }
+    },
+    signInWithGoogle: async () => {
+      try {
+        setLoading(true);
+        
+        // Import and use GoogleAuthService
+        const { GoogleAuthService } = await import('./GoogleAuthService');
+        const googleService = GoogleAuthService.getInstance();
+        
+        // Initialize if needed
+        await googleService.initialize();
+        
+        // Start OAuth flow
+        const success = await googleService.authenticate();
+        
+        if (!success) {
+          return { error: new Error('Failed to start Google authentication') };
+        }
+        
+        return { error: null };
+      } catch (error) {
+        console.error('Google sign in exception:', error);
         return { error: error as Error };
       } finally {
         setLoading(false);

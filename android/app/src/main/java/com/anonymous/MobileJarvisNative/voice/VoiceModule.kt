@@ -73,7 +73,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                         Log.w(TAG, "🔵 VOICE_MODULE: Timeout for request: $requestId")
                         callback("I'm sorry, there was a timeout processing your request. Please try again.")
                     }
-                }, 30000)
+                }, 240000)
                 
             } catch (e: Exception) {
                 Log.e(TAG, "🔵 VOICE_MODULE: ❌ Error emitting processTextFromNative event", e)
@@ -94,11 +94,10 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
     fun startListening(promise: Promise) {
         Log.d(TAG, "startListening called from JS")
         try {
-            // Ensure speech recognition is initialized
-            ensureSpeechRecognitionInitialized()
-            
-            voiceManager.startListening()
-            promise.resolve(true)
+            Log.i(TAG, "Calling voiceManager.onWakeWordDetected() to simulate wake word flow")
+            val result = voiceManager.onWakeWordDetected()
+            Log.i(TAG, "onWakeWordDetected returned: $result")
+            promise.resolve(result)
         } catch (e: Exception) {
             Log.e(TAG, "Error starting listening", e)
             promise.reject("ERR_VOICE_START", e.message, e)

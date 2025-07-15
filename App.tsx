@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Linking } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import { VoiceProvider, useVoice } from './src/voice/VoiceContext';
 import { WakeWordProvider } from './src/wakeword/WakeWordContext';
 import WakeWordService from './src/wakeword/WakeWordService';
@@ -11,15 +11,16 @@ import { HomeScreen } from './src/HomeScreen';
 import { SettingsScreen } from './src/settings/SettingsScreen';
 import { IntegrationsScreen } from './src/integrations/IntegrationsScreen';
 import { AutomationsScreen } from './src/automations/AutomationsScreen';
-import { MemoriesScreen } from './src/memories/MemoriesScreen';
+import { RepoScreen } from './src/repo/RepoScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from './src/supabase/supabase';
 import LoginPage from './src/auth/LoginPage';
 import SignUpPage from './src/auth/SignUpPage';
 import PhoneSignUpPage from './src/auth/PhoneSignUpPage';
-import { AuthProvider } from './src/auth/AuthContext';
-import OAuthCallbackHandler from './src/integrations/OAuthCallbackHandler';
+import { AuthProvider, useAuth } from './src/auth/AuthContext';
+import IntegrationCompletionService from './src/integrations/IntegrationCompletionService';
+import { DatabaseService } from './src/supabase/supabase';
 
 type RootStackParamList = {
   MainTabs: undefined;
@@ -35,10 +36,10 @@ type RootStackParamList = {
 };
 
 type TabParamList = {
-  Home: undefined;
+  Juniper: undefined;
   Integrations: undefined;
   Automations: undefined;
-  Memories: undefined;
+  Repo: undefined;
   Settings: undefined;
 };
 
@@ -83,7 +84,266 @@ export default function App() {
     initializeApp();
   }, []);
 
-  // Handle OAuth deep links with hybrid callback system
+  // OAuth callback handlers for each service type
+  const handleGoogleCallback = (url: string) => {
+    // Extract service from redirect path
+    const servicePath = url.match(/oauth2redirect\/(.+)/)?.[1];
+    const queryString = url.split('?')[1] || url.split('#')[1];
+    
+    if (queryString) {
+      const urlParams = new URLSearchParams(queryString);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Google OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        switch (servicePath) {
+          case 'calendar':
+            const GoogleCalendarAuthService = require('./src/integrations/auth/services/GoogleCalendarAuthService').default;
+            GoogleCalendarAuthService.getInstance().handleAuthCallback(code, state);
+            break;
+          case 'gmail':
+            const GmailAuthService = require('./src/integrations/auth/services/GmailAuthService').default;
+            GmailAuthService.getInstance().handleAuthCallback(code, state);
+            break;
+          case 'docs':
+            const GoogleDocsAuthService = require('./src/integrations/auth/services/GoogleDocsAuthService').default;
+            GoogleDocsAuthService.getInstance().handleAuthCallback(code, state);
+            break;
+          case 'sheets':
+            const GoogleSheetsAuthService = require('./src/integrations/auth/services/GoogleSheetsAuthService').default;
+            GoogleSheetsAuthService.getInstance().handleAuthCallback(code, state);
+            break;
+          case 'meet':
+            const GoogleMeetAuthService = require('./src/integrations/auth/services/GoogleMeetAuthService').default;
+            GoogleMeetAuthService.getInstance().handleAuthCallback(code, state);
+            break;
+          default:
+            console.warn(`❌ Unknown Google service: ${servicePath}`);
+            // Fall back to legacy Google auth for login
+            GoogleAuthService.getInstance().handleAuthCallback(code);
+        }
+      }
+    }
+  };
+
+  const handleMicrosoftCallback = (url: string) => {
+    const queryString = url.split('?')[1] || url.split('#')[1];
+    
+    if (queryString) {
+      const urlParams = new URLSearchParams(queryString);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Microsoft OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        // Determine service from state parameter
+        // For now, route to legacy handler or implement service-specific handlers
+        if (navigationRef.current && session) {
+          navigationRef.current.navigate('OAuthCallback', { url });
+        }
+      }
+    }
+  };
+
+  const handleSlackCallback = (url: string) => {
+    const queryString = url.split('?')[1];
+    
+    if (queryString) {
+      const urlParams = new URLSearchParams(queryString);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Slack OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        const SlackAuthService = require('./src/integrations/auth/services/SlackAuthService').default;
+        SlackAuthService.getInstance().handleAuthCallback(code, state);
+      }
+    }
+  };
+
+  const handleNotionCallback = (url: string) => {
+    const queryString = url.split('?')[1];
+    
+    if (queryString) {
+      const urlParams = new URLSearchParams(queryString);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Notion OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        const NotionAuthService = require('./src/integrations/auth/services/NotionAuthService').default;
+        NotionAuthService.getInstance().handleAuthCallback(code, state);
+      }
+    }
+  };
+
+  const handleTodoistCallback = (url: string) => {
+    const queryString = url.split('?')[1];
+    
+    if (queryString) {
+      const urlParams = new URLSearchParams(queryString);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Todoist OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        const TodoistAuthService = require('./src/integrations/auth/services/TodoistAuthService').default;
+        TodoistAuthService.getInstance().handleAuthCallback(code, state);
+      }
+    }
+  };
+
+  const handleZoomCallback = (url: string) => {
+    const queryString = url.split('?')[1];
+    
+    if (queryString) {
+      const urlParams = new URLSearchParams(queryString);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        console.error('❌ Zoom OAuth error:', error);
+        return;
+      }
+      
+      if (code && state) {
+        const ZoomAuthService = require('./src/integrations/auth/services/ZoomAuthService').default;
+        ZoomAuthService.getInstance().handleAuthCallback(code, state);
+      }
+    }
+  };
+
+  const handleHttpsOAuthCallback = (url: string) => {
+    console.log('=== HANDLING HTTPS OAUTH CALLBACK ===');
+    console.log('URL:', url);
+    
+    // Extract service name from URL path: /oauth/{serviceName}/callback
+    const pathMatch = url.match(/\/oauth\/([^\/]+)\/callback/);
+    if (!pathMatch) {
+      console.error('❌ Could not extract service name from HTTPS callback URL');
+      return;
+    }
+    
+    const serviceName = pathMatch[1];
+    console.log('📝 Detected service:', serviceName);
+    
+    const queryString = url.split('?')[1];
+    if (!queryString) {
+      console.error('❌ No query parameters in HTTPS callback URL');
+      return;
+    }
+    
+    const urlParams = new URLSearchParams(queryString);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    const error = urlParams.get('error');
+    
+    if (error) {
+      console.error(`❌ ${serviceName} OAuth error:`, error);
+      return;
+    }
+    
+    if (!code || !state) {
+      console.error(`❌ Missing code or state in ${serviceName} callback`);
+      return;
+    }
+    
+    console.log(`✅ Processing ${serviceName} HTTPS callback with code and state`);
+    
+    // Route to appropriate service handler based on service name
+    // To add a new service, add a new case below with the correct import path
+    try {
+      switch (serviceName) {
+        case 'google-calendar':
+          require('./src/integrations/auth/services/GoogleCalendarAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'gmail':
+          require('./src/integrations/auth/services/GmailAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'google-docs':
+          require('./src/integrations/auth/services/GoogleDocsAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'google-sheets':
+          require('./src/integrations/auth/services/GoogleSheetsAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'google-meet':
+          require('./src/integrations/auth/services/GoogleMeetAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'google':
+          const { GoogleAuthService } = require('./src/auth/GoogleAuthService');
+          GoogleAuthService.getInstance().handleAuthCallback(code);
+          break;
+        case 'outlook-mail':
+          require('./src/integrations/auth/services/MicrosoftOutlookMailAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'outlook-calendar':
+          require('./src/integrations/auth/services/MicrosoftOutlookCalendarAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'microsoft-teams':
+          require('./src/integrations/auth/services/MicrosoftTeamsAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'microsoft-excel':
+          require('./src/integrations/auth/services/MicrosoftExcelAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'microsoft-word':
+          require('./src/integrations/auth/services/MicrosoftWordAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'slack':
+          require('./src/integrations/auth/services/SlackAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'notion':
+          require('./src/integrations/auth/services/NotionAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'todoist':
+          require('./src/integrations/auth/services/TodoistAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'zoom':
+          require('./src/integrations/auth/services/ZoomAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        default:
+          console.warn(`❌ Unknown service in HTTPS callback: ${serviceName}`);
+          // Fall back to legacy handler
+          if (navigationRef.current && session) {
+            navigationRef.current.navigate('OAuthCallback', { url });
+          }
+      }
+    } catch (serviceError) {
+      console.error(`❌ Error handling ${serviceName} service callback:`, serviceError);
+      // Fall back to legacy handler on service error
+      if (navigationRef.current && session) {
+        navigationRef.current.navigate('OAuthCallback', { url });
+      }
+    }
+  };
+
+  // Handle OAuth deep links with new callback routing system
   useEffect(() => {
     console.log('Setting up deep link handlers...');
     
@@ -91,6 +351,8 @@ export default function App() {
       const url = event.url;
       console.log('=== DEEP LINK RECEIVED ===');
       console.log('Full URL:', url);
+      console.log('URL starts with https://', url.startsWith('https://'));
+      console.log('URL includes /oauth/', url.includes('/oauth/'));
       
       // Check if this is an OAuth callback URL
       const isOAuthCallback = url.includes('oauth2redirect') || 
@@ -98,48 +360,58 @@ export default function App() {
                             url.startsWith('mobilejarvisnative://oauth/callback') ||
                             url.includes('/oauth/callback') ||
                             url.includes('code=') ||
-                            url.includes('error=');
+                            url.includes('error=') ||
+                            url.startsWith('msauth.com.anonymous.MobileJarvisNative') ||
+                            url.startsWith('slack://oauth/callback') ||
+                            url.startsWith('notion://oauth/callback') ||
+                            url.startsWith('db-') ||
+                            url.startsWith('todoist://oauth/callback') ||
+                            url.startsWith('zoom://oauth/callback') ||
+                            // HTTPS callback URLs
+                            (url.startsWith('https://') && url.includes('/oauth/'));
       
       if (isOAuthCallback) {
-        console.log('✅ Detected OAuth callback - using hybrid processing system');
+        console.log('✅ Detected OAuth callback - using new OAuth routing system');
         
-        // Navigate to OAuthCallback screen with URL for processing
-        // This will use our hybrid mapping system in the backend
-        if (navigationRef.current && session) {
-          console.log('✅ Navigating to OAuthCallback screen for hybrid processing');
-          navigationRef.current.navigate('OAuthCallback', { url });
-        } else {
-          // Fallback: If navigation not available or user not logged in, process here
-          console.log('⚠️ Navigation not available or user not logged in, processing callback inline');
-          
-          // For legacy Google Calendar integration compatibility
-          if (url.includes('oauth2redirect') || url.includes('com.googleusercontent.apps')) {
-            try {
-              let queryString = '';
-              if (url.includes('?')) {
-                queryString = url.split('?')[1];
-              } else if (url.includes('#')) {
-                queryString = url.split('#')[1];
-              }
-              
-              if (queryString) {
-                const urlParams = new URLSearchParams(queryString);
-                const code = urlParams.get('code');
-                const error = urlParams.get('error');
-                
-                if (error) {
-                  console.error('❌ OAuth error:', error);
-                  return;
-                }
-                
-                if (code) {
-                  console.log('✅ Processing Google OAuth callback with legacy handler');
-                  GoogleAuthService.getInstance().handleAuthCallback(code);
-                }
-              }
-            } catch (error) {
-                             console.error('❌ Error processing legacy OAuth callback:', error);
-            }
+        try {
+          // Handle HTTPS OAuth callbacks (NEW HTTPS REDIRECT SYSTEM)
+          if (url.startsWith('https://') && url.includes('/oauth/')) {
+            handleHttpsOAuthCallback(url);
+          }
+          // Handle Google services (existing working pattern)
+          else if (url.includes('oauth2redirect') || url.includes('com.googleusercontent.apps')) {
+            handleGoogleCallback(url);
+          }
+          // Handle Microsoft services
+          else if (url.includes('msauth.com.anonymous.MobileJarvisNative')) {
+            handleMicrosoftCallback(url);
+          }
+          // Handle Slack
+          else if (url.startsWith('slack://oauth/callback')) {
+            handleSlackCallback(url);
+          }
+          // Handle Notion
+          else if (url.startsWith('notion://oauth/callback')) {
+            handleNotionCallback(url);
+          }
+          // Handle Todoist
+          else if (url.startsWith('todoist://oauth/callback')) {
+            handleTodoistCallback(url);
+          }
+          // Handle Zoom
+          else if (url.startsWith('zoom://oauth/callback')) {
+            handleZoomCallback(url);
+          }
+          // Legacy callback handling
+          else if (navigationRef.current && session) {
+            console.log('✅ Navigating to OAuthCallback screen for backend processing');
+            navigationRef.current.navigate('OAuthCallback', { url });
+          }
+        } catch (error) {
+          console.error('❌ Error processing OAuth callback:', error);
+          // Fall back to old system on error
+          if (navigationRef.current && session) {
+            navigationRef.current.navigate('OAuthCallback', { url });
           }
         }
       } else {
@@ -181,7 +453,49 @@ export default function App() {
     <NavigationContainer ref={navigationRef}>
       <AuthProvider>
         <VoiceProvider>
-          <WakeWordProvider>
+          {Platform.OS === 'android' ? (
+            <WakeWordProvider>
+              <Stack.Navigator
+                screenOptions={{
+                  headerShown: false,
+                }}
+                initialRouteName={session ? "MainTabs" : "Login"}
+              >
+                {session ? (
+                  <>
+                    <Stack.Screen 
+                      name="MainTabs" 
+                      component={MainTabNavigator}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Stack.Screen 
+                      name="Login" 
+                      component={LoginPage}
+                      options={{
+                        title: 'Sign In',
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="SignUp" 
+                      component={SignUpPage}
+                      options={{
+                        title: 'Create Account',
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="PhoneSignUp" 
+                      component={PhoneSignUpPage}
+                      options={{
+                        title: 'Phone Sign Up',
+                      }}
+                    />
+                  </>
+                )}
+              </Stack.Navigator>
+            </WakeWordProvider>
+          ) : (
             <Stack.Navigator
               screenOptions={{
                 headerShown: false,
@@ -193,14 +507,6 @@ export default function App() {
                   <Stack.Screen 
                     name="MainTabs" 
                     component={MainTabNavigator}
-                  />
-                  <Stack.Screen 
-                    name="OAuthCallback" 
-                    component={OAuthCallbackHandler}
-                    options={{
-                      title: 'Completing Integration...',
-                      headerShown: true,
-                    }}
                   />
                 </>
               ) : (
@@ -229,7 +535,7 @@ export default function App() {
                 </>
               )}
             </Stack.Navigator>
-          </WakeWordProvider>
+          )}
         </VoiceProvider>
       </AuthProvider>
     </NavigationContainer>
@@ -237,22 +543,61 @@ export default function App() {
 }
 
 function MainTabNavigator() {
-  const { integrationInProgress } = useVoice();
+  const { integrationInProgress, sendTextMessage } = useVoice();
+  const { user } = useAuth();
+  const navigation = useNavigation();
+  const [expiringResourcesCount, setExpiringResourcesCount] = useState(0);
+  
+  // Set up integration completion handler
+  useEffect(() => {
+    IntegrationCompletionService.getInstance().setHandler({
+      sendTextMessage: async (message: string) => {
+        await sendTextMessage(message);
+      },
+      navigateToHome: () => {
+        navigation.navigate('Home' as never);
+      }
+    });
+  }, [sendTextMessage, navigation]);
+
+  // Check for expiring resources
+  useEffect(() => {
+    const checkExpiringResources = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const resources = await DatabaseService.getResources(user.id);
+        const expiringCount = resources.filter(resource => 
+          resource.relevance_score < 10
+        ).length;
+        setExpiringResourcesCount(expiringCount);
+      } catch (error) {
+        console.error('Error checking expiring resources:', error);
+      }
+    };
+
+    checkExpiringResources();
+    
+    // Check every 5 minutes
+    const interval = setInterval(checkExpiringResources, parseInt(process.env.EXPIRING_RESOURCES_INTERVAL || '5') * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [user?.id]);
   
   return (
     <Tab.Navigator
-      initialRouteName="Home"
+      initialRouteName="Juniper"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
 
-          if (route.name === 'Home') {
+          if (route.name === 'Juniper') {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Integrations') {
             iconName = focused ? 'link' : 'link-outline';
           } else if (route.name === 'Automations') {
             iconName = focused ? 'cog' : 'cog-outline';
-          } else if (route.name === 'Memories') {
+          } else if (route.name === 'Repo') {
             iconName = focused ? 'bookmark' : 'bookmark-outline';
           } else if (route.name === 'Settings') {
             iconName = focused ? 'settings' : 'settings-outline';
@@ -277,13 +622,13 @@ function MainTabNavigator() {
         },
       })}
     >
-      {/* <Tab.Screen 
+      <Tab.Screen 
         name="Automations" 
         component={AutomationsScreen}
         options={{
           title: 'Automations',
         }}
-      /> */}
+      />
       <Tab.Screen 
         name="Integrations" 
         component={IntegrationsScreen}
@@ -293,17 +638,18 @@ function MainTabNavigator() {
         }}
       />
       <Tab.Screen 
-        name="Home" 
+        name="Juniper" 
         component={HomeScreen}
         options={{
-          title: 'Home',
+          title: 'Juniper',
         }}
       />
       <Tab.Screen 
-        name="Memories" 
-        component={MemoriesScreen}
+        name="Repo" 
+        component={RepoScreen}
         options={{
-          title: 'Memories',
+          title: 'Repo',
+          tabBarBadge: expiringResourcesCount > 0 ? expiringResourcesCount : undefined,
         }}
       />
       <Tab.Screen 

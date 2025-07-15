@@ -71,7 +71,7 @@ const WakeWordModule: WakeWordModuleInterface = nativeWakeWordModule
       stopDetection: async () => ({ success: false, error: 'Platform not supported or module not found' }),
       getStatus: async () => ({ enabled: false }),
       setAccessKey: async () => ({ success: false, error: 'Platform not supported or module not found' }),
-      getAvailableWakeWords: async () => ({ wakeWords: ['JARVIS'], success: true }),
+      getAvailableWakeWords: async () => ({ wakeWords: ['BUMBLEBEE', 'GRASSHOPPER', 'JARVIS', 'JUNIPER', 'PICOVOICE', 'PORCUPINE', 'TERMINATOR'], success: true }),
       setSelectedWakeWord: async () => ({ success: true }),
       getSelectedWakeWord: async () => ({ wakeWord: 'JARVIS', success: true }),
       setWakeWordSensitivity: async () => ({ success: true }),
@@ -429,14 +429,14 @@ class WakeWordService {
   async getAvailableWakeWords(): Promise<string[]> {
     try {
       if (Platform.OS !== 'android') {
-        return ['JARVIS']; // Default for non-Android platforms
+        return ['BUMBLEBEE', 'GRASSHOPPER', 'JARVIS', 'JUNIPER', 'PICOVOICE', 'PORCUPINE', 'TERMINATOR']; // Default for non-Android platforms
       }
       
       const result = await WakeWordModule.getAvailableWakeWords();
-      return result.wakeWords || ['JARVIS'];
+      return result.wakeWords || ['BUMBLEBEE', 'GRASSHOPPER', 'JARVIS', 'JUNIPER', 'PICOVOICE', 'PORCUPINE', 'TERMINATOR'];
     } catch (error) {
       console.error('Error getting available wake words:', error);
-      return ['JARVIS'];
+      return ['BUMBLEBEE', 'GRASSHOPPER', 'JARVIS', 'JUNIPER', 'PICOVOICE', 'PORCUPINE', 'TERMINATOR'];
     }
   }
 

@@ -9,7 +9,6 @@ type RootStackParamList = {
   Settings: undefined;
   Login: undefined;
   SignUp: undefined;
-  PhoneSignUp: undefined;
 };
 
 type SignUpPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'SignUp'>;
@@ -19,7 +18,7 @@ interface SignUpPageProps {
 }
 
 const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
-  const { register, isLoading } = useAuth();
+  const { register, loginWithGoogle, isLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
   const handleSignUp = async (email: string, password: string, name: string) => {
@@ -29,8 +28,8 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
       
       // Show success message
       Alert.alert(
-        'Account Created!', 
-        'Please check your email to verify your account before signing in.',
+        'Success!',
+        '',
         [
           {
             text: 'OK',
@@ -59,12 +58,23 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
     }
   };
 
-  const handleNavigateToLogin = () => {
-    navigation.navigate('Login');
+  const handleGoogleSignUp = async () => {
+    try {
+      setError(null);
+      await loginWithGoogle();
+    } catch (err) {
+      let errorMessage = 'Google sign-up failed. Please try again.';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+    }
   };
 
-  const handleNavigateToPhoneSignup = () => {
-    navigation.navigate('PhoneSignUp');
+  const handleNavigateToLogin = () => {
+    navigation.navigate('Login');
   };
 
   return (
@@ -96,8 +106,12 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
             <View style={styles.divider} />
           </View>
 
-          <TouchableOpacity onPress={handleNavigateToPhoneSignup} style={styles.phoneButton}>
-            <Text style={styles.phoneButtonText}>Sign up with Phone</Text>
+          <TouchableOpacity 
+            style={styles.googleButton} 
+            onPress={handleGoogleSignUp}
+            disabled={isLoading}
+          >
+            <Text style={styles.googleButtonText}>Sign up with Google</Text>
           </TouchableOpacity>
 
           <View style={styles.footer}>
@@ -183,6 +197,21 @@ const styles = StyleSheet.create({
   },
   phoneButtonText: {
     color: '#3498db',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  googleButton: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginBottom: 16,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  googleButtonText: {
+    color: '#333',
     fontSize: 16,
     fontWeight: '600',
   },

@@ -47,9 +47,10 @@ export interface ChatRequest {
   preferences?: {
     voice?: string;
     response_type?: string;
-    model?: string; // Language model to use (e.g., 'grok-3', 'grok-3.5', 'gpt-4o', 'claude-3-5-sonnet-20241022')
+    model?: string; // Language model to use (e.g., 'grok-3', 'grok-3.5', 'o3-mini-2025-01-31', 'claude-sonnet-4-20250514')
     [key: string]: any;
   };
+  request_id?: string; // Optional request ID for tracking
   // feature_settings removed - backend will fetch from database
 }
 
@@ -62,6 +63,7 @@ export interface ChatResponse {
   settings_updated?: boolean;
   integration_in_progress?: boolean;
   additional_data?: any;
+  request_id?: string;
 }
 
 /**
@@ -143,6 +145,13 @@ class ServerApiService {
   }
 
   /**
+   * Get the current request ID
+   */
+  public getCurrentRequestId(): string | null {
+    return this.currentRequestId;
+  }
+
+  /**
    * Insert cancellation request into database
    */
   private async insertCancellationRequest(requestId: string): Promise<void> {
@@ -181,6 +190,7 @@ class ServerApiService {
     message: string,
     history: ChatMessage[],
     preferences?: ChatRequest['preferences'],
+    onRequestStart?: (requestId: string) => void,
   ): Promise<ChatResponse> {
     // Queue requests to prevent concurrent auth issues
     // Use .catch() to prevent cancelled requests from breaking the queue
@@ -197,6 +207,11 @@ class ServerApiService {
       this.currentRequestController = new AbortController();
 
       console.log('🔴 SERVER_API: Generated request ID:', this.currentRequestId);
+
+      // Call the callback immediately after request ID is generated
+      if (onRequestStart && this.currentRequestId) {
+        onRequestStart(this.currentRequestId);
+      }
 
       try {
         // Add a delay to ensure previous operations are complete (longer for Android)
@@ -222,8 +237,8 @@ class ServerApiService {
           preferences: {
             ...defaultPreferences,
             ...preferences // Allow override of defaults with passed preferences
-          }
-          // feature_settings removed - backend will fetch from database
+          },
+          request_id: this.currentRequestId // Include request_id in the payload
         };
 
         history.forEach((message, index) => {
@@ -247,7 +262,7 @@ class ServerApiService {
             headers: { 
               'Content-Type': 'multipart/form-data'
             },
-            timeout: 30000, // 30 second timeout for Android
+            timeout: 240000, // 240 second timeout for Android
             signal: this.currentRequestController.signal // Add AbortController signal
           }).catch((error: unknown) => {
             console.error('🔴 SERVER_API: ❌ API request error:', error);
@@ -260,6 +275,9 @@ class ServerApiService {
 
         const data: ChatResponse = apiResponse.data;
         console.log('🔴 SERVER_API: ✅ Server response received');
+        
+        // Include the request ID in the response
+        data.request_id = this.currentRequestId;
         
         // Clear the controller and request ID since request completed successfully
         this.currentRequestController = null;

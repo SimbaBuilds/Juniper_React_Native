@@ -18,7 +18,7 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ navigation }) => {
-  const { login, isLoading } = useAuth();
+  const { login, loginWithGoogle, isLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (email: string, password: string) => {
@@ -39,6 +39,21 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigation }) => {
         } else {
           errorMessage = err.message;
         }
+      }
+      
+      setError(errorMessage);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setError(null);
+      await loginWithGoogle();
+    } catch (err) {
+      let errorMessage = 'Google sign-in failed. Please try again.';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
       }
       
       setError(errorMessage);
@@ -71,6 +86,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigation }) => {
           )}
 
           <LoginForm onLogin={handleLogin} isLoading={isLoading} />
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.divider} />
+          </View>
+
+          <TouchableOpacity 
+            style={styles.googleButton} 
+            onPress={handleGoogleSignIn}
+            disabled={isLoading}
+          >
+            <Text style={styles.googleButtonText}>Sign in with Google</Text>
+          </TouchableOpacity>
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
@@ -120,6 +149,36 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#c62828',
     fontSize: 14,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#ddd',
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    color: '#999',
+    fontSize: 14,
+  },
+  googleButton: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginBottom: 16,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  googleButtonText: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
