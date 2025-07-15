@@ -257,8 +257,14 @@ export const useRepoScreen = () => {
 
       const updatedResource = await DatabaseService.updateResource(editingResource.id, updateData);
       
-      // Get full tag details for UI display
-      const resourceTags = await DatabaseService.getResourceTags(updatedResource.id);
+      // Collect tags from the returned resource (tag_1 through tag_5)
+      const tags = [
+        updatedResource.tag_1,
+        updatedResource.tag_2,
+        updatedResource.tag_3,
+        updatedResource.tag_4,
+        updatedResource.tag_5
+      ].filter(Boolean); // Remove null/undefined tags
       
       // Update local state
       const formattedResource: DisplayResource = {
@@ -270,7 +276,7 @@ export const useRepoScreen = () => {
         relevance_score: updatedResource.relevance_score || editingResource.relevance_score,
         last_accessed: updatedResource.last_accessed,
         created_at: updatedResource.created_at,
-        tags: resourceTags
+        tags: tags
       };
 
       setResources(prev => prev.map(resource => 

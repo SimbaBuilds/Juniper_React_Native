@@ -572,14 +572,43 @@ export const DatabaseService = {
   },
 
   async updateResource(resourceId: string, updates: any) {
+    // Handle tags - convert tag IDs to individual foreign key columns
+    const { tags, ...resourceData } = updates;
+    
+    // Map tag IDs to foreign key columns (up to 5 tags)
+    const tagForeignKeys: any = {};
+    if (tags !== undefined) {
+      // Clear all tag columns first
+      tagForeignKeys.tag_1_id = null;
+      tagForeignKeys.tag_2_id = null;
+      tagForeignKeys.tag_3_id = null;
+      tagForeignKeys.tag_4_id = null;
+      tagForeignKeys.tag_5_id = null;
+      
+      // Then set the new tags
+      if (tags && Array.isArray(tags)) {
+        for (let i = 0; i < Math.min(tags.length, 5); i++) {
+          tagForeignKeys[`tag_${i + 1}_id`] = tags[i];
+        }
+      }
+    }
+    
     const { data, error } = await supabase
       .from('resources')
       .update({
-        ...updates,
+        ...resourceData,
+        ...tagForeignKeys,
         updated_at: new Date().toISOString()
       })
       .eq('id', resourceId)
-      .select()
+      .select(`
+        *,
+        tag_1:tags!resources_tag_1_id_fkey(*),
+        tag_2:tags!resources_tag_2_id_fkey(*),
+        tag_3:tags!resources_tag_3_id_fkey(*),
+        tag_4:tags!resources_tag_4_id_fkey(*),
+        tag_5:tags!resources_tag_5_id_fkey(*)
+      `)
       .single()
     
     if (error) throw error
