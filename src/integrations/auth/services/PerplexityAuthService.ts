@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import { completeIntegration, createApiKeyAuthParams, disconnectIntegration } from '../../../api/integration_api';
 import { supabase } from '../../../supabase/supabase';
 
 interface PerplexityAuthResult {
@@ -65,9 +64,6 @@ export class PerplexityAuthService {
 
       // Store API key in database integration record
       await this.updateIntegrationWithApiKey(trimmedApiKey, integrationId);
-
-      // Call backend to complete integration
-      await this.completeIntegration(authResult, integrationId);
 
       return authResult;
 
@@ -212,27 +208,6 @@ export class PerplexityAuthService {
   }
 
   /**
-   * Complete integration by calling backend
-   */
-  private async completeIntegration(authResult: PerplexityAuthResult, integrationId: string): Promise<void> {
-    try {
-      const authParams = createApiKeyAuthParams(authResult.apiKey);
-
-      await completeIntegration({
-        integration_id: integrationId,
-        service_name: 'perplexity',
-        service_type: 'api_key',
-        auth_params: authParams,
-        status: 'connected',
-        connected_at: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('🔴 Error completing Perplexity integration:', error);
-      // Don't throw here - the API key is valid, just log the backend error
-    }
-  }
-
-  /**
    * Test connection with stored API key
    */
   async testConnection(integrationId: string): Promise<boolean> {
@@ -293,12 +268,6 @@ export class PerplexityAuthService {
 
       // Clear API key from database
       await this.clearApiKeyFromDatabase(integrationId);
-
-      // Disconnect from backend
-      await disconnectIntegration({
-        integration_id: integrationId,
-        service_name: 'perplexity'
-      });
 
       console.log('🟠 Perplexity integration disconnected');
     } catch (error) {

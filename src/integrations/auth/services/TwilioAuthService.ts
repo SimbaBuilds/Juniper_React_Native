@@ -1,4 +1,3 @@
-import { completeIntegration, createCredentialsAuthParams, disconnectIntegration } from '../../../api/integration_api';
 import { supabase } from '../../../supabase/supabase';
 
 interface TwilioCredentials {
@@ -70,9 +69,6 @@ export class TwilioAuthService {
       // Store credentials in database
       await this.updateIntegrationWithCredentials(cleanedCredentials, integrationId);
 
-      // Complete integration with backend
-      await this.completeIntegration(cleanedCredentials, integrationId);
-
       console.log('✅ Twilio credentials validated and stored');
       
       return {
@@ -122,28 +118,6 @@ export class TwilioAuthService {
     }
   }
 
-  /**
-   * Complete integration by calling backend
-   */
-  private async completeIntegration(credentials: TwilioCredentials, integrationId: string): Promise<void> {
-    try {
-      const authParams = createCredentialsAuthParams({
-        account_sid: credentials.account_sid,
-        auth_token: credentials.auth_token,
-        phone_number: credentials.phone_number
-      });
-
-      await completeIntegration({
-        integration_id: integrationId,
-        service_name: 'twilio',
-        service_type: 'credentials',
-        auth_params: authParams
-      });
-    } catch (error) {
-      console.error('🔴 Error completing Twilio integration:', error);
-      throw error;
-    }
-  }
 
   /**
    * Test Twilio credentials (future implementation)
@@ -199,12 +173,6 @@ export class TwilioAuthService {
       
       // Clear credentials from database
       await this.clearCredentialsFromDatabase(integrationId);
-      
-      // Disconnect from backend
-      await disconnectIntegration({
-        integration_id: integrationId,
-        service_name: 'twilio'
-      });
 
       console.log('✅ Twilio integration disconnected');
     } catch (error) {

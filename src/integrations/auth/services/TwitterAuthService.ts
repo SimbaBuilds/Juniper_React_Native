@@ -1,4 +1,3 @@
-import { completeIntegration, disconnectIntegration } from '../../../api/integration_api';
 import { supabase, DatabaseService } from '../../../supabase/supabase';
 
 interface TwitterAuthResult {
@@ -22,9 +21,6 @@ export class TwitterAuthService {
       
       // Update integration record to active
       await this.updateIntegrationStatus(integrationId, true);
-
-      // Complete integration with backend
-      await this.completeIntegration(integrationId);
 
       console.log('✅ Twitter/X service enabled successfully');
       
@@ -65,22 +61,6 @@ export class TwitterAuthService {
     }
   }
 
-  private async completeIntegration(integrationId: string): Promise<void> {
-    try {
-      await completeIntegration({
-        integration_id: integrationId,
-        service_name: 'twitter',
-        service_type: 'api_key',
-        auth_params: {}, // No auth params needed for system-managed service
-        status: 'connected',
-        connected_at: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('🔴 Error completing Twitter/X integration:', error);
-      console.log('ℹ️ Twitter/X integration enabled locally, backend integration will be completed later');
-      // Don't throw error - service is enabled locally
-    }
-  }
 
   public async disableService(integrationId: string): Promise<TwitterAuthResult> {
     try {
@@ -113,15 +93,6 @@ export class TwitterAuthService {
       // Delete the integration record from Supabase
       await DatabaseService.deleteIntegration(integrationId);
       
-      try {
-        await disconnectIntegration({
-          integration_id: integrationId,
-          service_name: 'twitter'
-        });
-      } catch (error) {
-        console.warn('⚠️ Backend disconnect endpoint not implemented yet for Twitter/X:', error);
-        console.log('ℹ️ Local disconnect completed successfully');
-      }
 
       console.log('✅ Twitter/X integration disconnected and removed');
     } catch (error) {

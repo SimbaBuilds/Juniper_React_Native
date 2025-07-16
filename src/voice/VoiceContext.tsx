@@ -116,8 +116,18 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     onStatusChange: (status) => {
       console.log('📊 REQUEST_STATUS: Status changed to:', status);
       setRequestStatus(status);
+      
+      // Clear request ID when request completes
+      if (status === 'completed' || status === 'failed' || status === 'cancelled') {
+        console.log('📊 REQUEST_STATUS: Request reached final state, clearing request ID');
+        setTimeout(() => {
+          setCurrentRequestId(null);
+          setRequestStatus(null);
+        }, 2000); // Keep status visible for 2 seconds
+      }
     }
   });
+
   
   // Voice service instance
   const voiceService = useMemo(() => VoiceService.getInstance(), []);
@@ -430,9 +440,8 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               // Send response back to native for TTS (only in voice mode)
               await voiceService.handleApiResponse(requestId, response.response);
               
-              // Clear request ID after successful response
-              setCurrentRequestId(null);
-              setRequestStatus(null);
+              // Don't clear request status immediately - let polling handle it
+              // The polling will stop and clear when status reaches 'completed'
               
             } catch (error) {
               console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
@@ -703,9 +712,8 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             // Note: No TTS playback because we're in text mode
             console.log('📝 TEXT_INPUT: Response added to chat (no TTS in text mode)');
             
-            // Clear request ID after successful response
-            setCurrentRequestId(null);
-            setRequestStatus(null);
+            // Don't clear request status immediately - let polling handle it
+            // The polling will stop and clear when status reaches 'completed'
             
           } catch (error) {
             console.error('📝 TEXT_INPUT: ❌ Error processing text message:', error);

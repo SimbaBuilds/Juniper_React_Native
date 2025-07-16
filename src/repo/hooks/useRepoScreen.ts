@@ -4,6 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { DatabaseService } from '../../supabase/supabase';
 import { useAuth } from '../../auth/AuthContext';
 import { MAX_MEMORY_TAGS } from '../constants/tags';
+import { RESOURCE_TYPES } from '../types';
 
 interface DisplayResource {
   id: string;
@@ -309,16 +310,6 @@ export const useRepoScreen = () => {
 
   const groupResourcesByType = (resources: DisplayResource[]) => {
     const grouped: { [key: string]: DisplayResource[] } = {};
-    
-    // Initialize all categories
-    const RESOURCE_TYPES = [
-      { value: 'memory', label: 'Memories' },
-      { value: 'sample', label: 'Samples' },
-      { value: 'note', label: 'Notes' },
-      { value: 'file', label: 'Files' },
-      { value: 'media', label: 'Media' },
-      { value: 'other', label: 'Other' }
-    ];
     
     RESOURCE_TYPES.forEach(type => {
       grouped[type.value] = [];

@@ -2,7 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { getOAuthConfig, getRedirectUri, buildAuthUrl, OAuthServiceConfig } from './OAuthConfig';
-import { completeIntegration, createOAuthAuthParams, disconnectIntegration, CompleteIntegrationRequest } from '../../api/integration_api';
 import { calculateExpirationDate, safeToISOString, safeParseDateString, isValidDate } from './DateUtils';
 import { createBasicAuthHeader } from '../../utils/base64';
 import IntegrationCompletionService from '../IntegrationCompletionService';
@@ -210,12 +209,6 @@ export abstract class BaseOAuthService {
 
       // Clear stored tokens
       await this.clearStoredTokens(integrationId);
-
-      // Disconnect from backend
-      await disconnectIntegration({
-        integration_id: integrationId,
-        service_name: this.config.serviceName
-      });
 
       console.log(`✅ ${this.config.serviceName} integration disconnected`);
     } catch (error) {

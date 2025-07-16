@@ -190,8 +190,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           keyExtractor={(item, index) => `chat-${index}-${item.timestamp}`}
           style={styles.chatList}
           renderItem={({ item, index }) => {
-            const isLatestAssistantMessage = item.role === 'assistant' && index === chatHistory.length - 1;
-            const showStatus = isLatestAssistantMessage && requestStatus && (requestStatus !== 'completed');
+            const isLatestMessage = index === chatHistory.length - 1;
+            const showStatus = isLatestMessage && requestStatus && (requestStatus !== 'completed');
             
             return (
               <View style={[
@@ -249,6 +249,18 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           <Ionicons name="stop-circle" size={24} color="white" />
           <Text style={styles.interruptButtonText}>Tap to Interrupt</Text>
         </TouchableOpacity>
+      )}
+
+      {/* Request status indicator */}
+      {requestStatus && requestStatus !== 'completed' && (
+        <View style={styles.statusContainer}>
+          <Text style={styles.statusIndicator}>
+            {requestStatus === 'pending' && 'Processing request...'}
+            {requestStatus === 'processing' && 'Processing request...'}
+            {requestStatus === 'failed' && 'Request failed'}
+            {requestStatus === 'cancelled' && 'Request cancelled'}
+          </Text>
+        </View>
       )}
 
       {/* Voice button - positioned above text input */}
@@ -385,6 +397,20 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 11,
     fontStyle: 'italic',
+  },
+  statusContainer: {
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  statusIndicator: {
+    color: '#3B82F6',
+    fontSize: 14,
+    fontWeight: '500',
   },
   emptyChatContainer: {
     flex: 1,

@@ -42,6 +42,7 @@ export const useRequestStatusPolling = ({
           }
         }
       } catch (err) {
+        console.error('📊 POLLING_HOOK: Error polling status:', err);
         setError(err instanceof Error ? err : new Error('Failed to fetch request status'));
       }
     };

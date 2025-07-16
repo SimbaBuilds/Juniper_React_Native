@@ -41,46 +41,6 @@ export interface DisconnectIntegrationRequest {
   service_name: string;
 }
 
-/**
- * Complete integration setup on the backend
- */
-export async function completeIntegration(request: CompleteIntegrationRequest): Promise<any> {
-  try {
-    console.log(`🔗 Completing ${request.service_name} integration with backend...`);
-
-    const response = await api.post('/api/integration', request);
-
-    console.log(`✅ ${request.service_name} integration completed:`, response.data);
-    return response.data;
-  } catch (error) {
-    console.error(`🔴 Error completing ${request.service_name} integration:`, error);
-    // Don't throw here - the OAuth was successful, backend completion is secondary
-    throw error;
-  }
-}
-
-/**
- * Disconnect integration on the backend
- * Note: This endpoint is deprecated - local Supabase updates are handled by auth services
- */
-export async function disconnectIntegration(request: DisconnectIntegrationRequest): Promise<void> {
-  try {
-    console.log(`🔗 Attempting to disconnect ${request.service_name} integration from backend...`);
-
-    await api.delete(`/api/integration/${request.integration_id}`, {
-      data: { service_name: request.service_name }
-    });
-
-    console.log(`✅ ${request.service_name} integration disconnected from backend`);
-  } catch (error) {
-    // Backend endpoint is deprecated - log warning but don't fail the disconnect
-    console.warn(`⚠️ Backend disconnect endpoint is deprecated for ${request.service_name}:`, error);
-    console.log(`ℹ️ Local Supabase updates will still be applied by auth service`);
-    
-    // Don't throw error - let the auth service handle the local disconnect
-    // The integration will still be properly deactivated locally
-  }
-}
 
 /**
  * Helper function to create OAuth auth params from AuthorizeResult

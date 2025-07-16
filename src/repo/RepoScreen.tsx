@@ -3,25 +3,16 @@ import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Act
 import { Ionicons } from '@expo/vector-icons';
 import { TagSelector } from './components/TagSelector';
 import { NUM_DISPLAYED_RESOURCES, useRepoScreen } from './hooks/useRepoScreen';
+import { RESOURCE_TYPES } from './types';
 
-const RESOURCE_TYPES = [
-  { value: 'memory', label: 'Memories' },
-  { value: 'sample', label: 'Samples' },
-  { value: 'note', label: 'Notes' },
-  { value: 'file', label: 'Files' },
-  { value: 'media', label: 'Media' },
-  { value: 'other', label: 'Other' }
-];
 
 
 
 const RESOURCE_ICONS = {
   memory: 'bulb-outline' as const,
   sample: 'cube-outline' as const,
-  note: 'document-text-outline' as const,
-  file: 'folder-outline' as const,
-  media: 'image-outline' as const,
-  other: 'ellipsis-horizontal-outline' as const
+  reference: 'document-text-outline' as const,
+  note: 'ellipsis-horizontal-outline' as const
 };
 
 export const RepoScreen: React.FC = () => {

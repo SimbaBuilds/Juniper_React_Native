@@ -1,4 +1,3 @@
-import { completeIntegration, createCredentialsAuthParams, disconnectIntegration } from '../../../api/integration_api';
 import { supabase, DatabaseService } from '../../../supabase/supabase';
 
 interface TextbeltCredentials {
@@ -49,9 +48,6 @@ export class TextbeltAuthService {
       // Store credentials in database
       await this.updateIntegrationWithCredentials(cleanedCredentials, integrationId);
 
-      // Complete integration with backend
-      await this.completeIntegration(cleanedCredentials, integrationId);
-
       console.log('✅ textbelt credentials validated and stored');
       
       return {
@@ -92,26 +88,6 @@ export class TextbeltAuthService {
     } catch (error) {
       console.error('🔴 Error updating integration record with textbelt credentials:', error);
       throw error;
-    }
-  }
-
-  private async completeIntegration(credentials: TextbeltCredentials, integrationId: string): Promise<void> {
-    try {
-      const authParams = createCredentialsAuthParams({
-        phone_number: credentials.phone_number
-      });
-
-      await completeIntegration({
-        integration_id: integrationId,
-        service_name: 'textbelt',
-        service_type: 'credentials',
-        auth_params: authParams
-      });
-    } catch (error) {
-      console.error('🔴 Error completing textbelt integration (backend endpoint not implemented yet):', error);
-      console.log('ℹ️ textbelt integration stored locally, backend integration will be added later');
-      // Don't throw error - credentials are already stored locally in configuration field
-      // Backend endpoint will be implemented later
     }
   }
 
@@ -162,15 +138,7 @@ export class TextbeltAuthService {
       // Delete the integration record from Supabase (same as other services)
       await DatabaseService.deleteIntegration(integrationId);
       
-      try {
-        await disconnectIntegration({
-          integration_id: integrationId,
-          service_name: 'textbelt'
-        });
-      } catch (error) {
-        console.warn('⚠️ Backend disconnect endpoint not implemented yet for textbelt:', error);
-        console.log('ℹ️ Local disconnect completed successfully');
-      }
+
 
       console.log('✅ textbelt integration disconnected and removed');
     } catch (error) {
