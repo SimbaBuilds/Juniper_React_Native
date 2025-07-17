@@ -151,18 +151,6 @@ export type UserProfile = {
   export type AutomationField = (typeof automationFields)[number];
   
   
-  export type ConfigForm = {
-    id: string;
-    service_id: string;
-    json: Record<string, any>;
-    setup_instructions?: string;
-    updated_at: Date;
-  };
-
-  export const configFormFields = [
-    'id', 'service_id', 'json', 'setup_instructions', 'updated_at'
-  ] as const;
-  export type ConfigFormField = (typeof configFormFields)[number];
   
   export type Integration = {
     id: string;
@@ -292,24 +280,6 @@ export type UserProfile = {
     'metadata', 'created_at', 'processed_at'
   ] as const;
   export type CancellationRequestField = (typeof cancellationRequestFields)[number];
-
-  export type IntegrationBuildState = {
-    id: string;
-    user_id: string;
-    service_name: string;
-    completed_steps: string[];      // List of completed step names
-    current_status: string;         // not_started, in_progress, form_ready, auth_ready, completed, failed
-    state_data: Record<string, any>; // Additional state information
-    created_at: Date;
-    last_updated: Date;
-    updated_by?: string;
-  };
-
-  export const integrationBuildStateFields = [
-    'id', 'user_id', 'service_name', 'completed_steps', 'current_status',
-    'state_data', 'created_at', 'last_updated', 'updated_by'
-  ] as const;
-  export type IntegrationBuildStateField = (typeof integrationBuildStateFields)[number];
 
   export type IntegrationSetupToken = {
     id: string;

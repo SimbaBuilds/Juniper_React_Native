@@ -235,8 +235,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       ) : (
         <View style={styles.emptyChatContainer}>
           <Text style={styles.emptyChatText}>
-            Tap the voice button or type a message to start a conversation.
-            {Platform.OS === 'android' && ' You can also use the wake word if enabled.'}
+            Start or continue a conversation by tapping the voice button or typing a message.
+            {Platform.OS === 'android' && ' Or, use the wake word.'}
           </Text>
         </View>
       )}
