@@ -95,6 +95,27 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     });
   };
 
+  const getRequestStatusText = (status: string, context: 'inline' | 'indicator' = 'inline'): string => {
+    switch (status) {
+      case 'pending':
+        return 'Processing...';
+      case 'thinking':
+        return 'Thinking...';
+      case 'processing':
+        return 'Processing...';
+      case 'integrating':
+        return 'Integrating...';
+      case 'pinging':
+        return 'Pinging...';
+      case 'failed':
+        return 'Request failed';
+      case 'cancelled':
+        return 'Request cancelled';
+      default:
+        return '';
+    }
+  };
+
   /**
    * Handle interrupt button press
    * This stops the current TTS playback and changes the state from SPEAKING/RESPONDING to LISTENING
@@ -203,10 +224,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
                   <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
                   {showStatus && (
                     <Text style={styles.statusText}>
-                      {requestStatus === 'pending' && 'Processing...'}
-                      {requestStatus === 'processing' && 'Processing...'}
-                      {requestStatus === 'failed' && 'Failed'}
-                      {requestStatus === 'cancelled' && 'Cancelled'}
+                      {getRequestStatusText(requestStatus, 'inline')}
                     </Text>
                   )}
                 </View>
@@ -255,10 +273,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       {requestStatus && requestStatus !== 'completed' && (
         <View style={styles.statusContainer}>
           <Text style={styles.statusIndicator}>
-            {requestStatus === 'pending' && 'Processing request...'}
-            {requestStatus === 'processing' && 'Processing request...'}
-            {requestStatus === 'failed' && 'Request failed'}
-            {requestStatus === 'cancelled' && 'Request cancelled'}
+            {getRequestStatusText(requestStatus, 'indicator')}
           </Text>
         </View>
       )}

@@ -555,7 +555,7 @@ function MainTabNavigator() {
         await sendTextMessage(message);
       },
       navigateToHome: () => {
-        navigation.navigate('Home' as never);
+        navigation.navigate('Juniper' as never);
       }
     });
   }, [sendTextMessage, navigation]);

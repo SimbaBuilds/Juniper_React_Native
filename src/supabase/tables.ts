@@ -217,6 +217,7 @@ export type UserProfile = {
     tools?: string[];
     integration_method?: string; // e.g. OAuth, External App, Internal App etc.
     description?: string; // Detailed description of the service and its capabilities
+    type: string; // New field: type of service (user, system)
     // Foreign key columns for tags (up to 5 tags per service)
     tag_1_id?: string; // Foreign key to Tag.id
     tag_2_id?: string; // Foreign key to Tag.id
@@ -232,7 +233,7 @@ export type UserProfile = {
   export const serviceFields = [
     'id', 'created_at', 'service_name', 'num_users', 'config_form_id',
     'refresh_script', 'tools', 'integration_method',
-    'description', 'tag_1_id', 'tag_2_id', 'tag_3_id', 'tag_4_id', 'tag_5_id',
+    'description', 'type', 'tag_1_id', 'tag_2_id', 'tag_3_id', 'tag_4_id', 'tag_5_id',
     'interactions_day', 'interactions_week', 'interactions_month'
   ] as const;
   export type ServiceField = (typeof serviceFields)[number];
