@@ -123,8 +123,13 @@ export class GmailAuthService extends BaseOAuthService {
     try {
       console.log('📧 Refreshing Gmail token...');
 
+      if (!this.config.clientSecret) {
+        throw new Error('Client secret is required for token refresh');
+      }
+
       const requestBody = new URLSearchParams();
       requestBody.append('client_id', this.config.clientId);
+      requestBody.append('client_secret', this.config.clientSecret);
       requestBody.append('refresh_token', refreshToken);
       requestBody.append('grant_type', 'refresh_token');
       

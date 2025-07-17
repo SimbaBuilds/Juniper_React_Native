@@ -108,7 +108,7 @@ export abstract class BaseOAuthService {
   /**
    * Retrieve stored tokens
    */
-  async getStoredTokens(integrationId: string): Promise<AuthResult | null> {
+  async getStoredTokens(integrationId: string, skipRefresh: boolean = false): Promise<AuthResult | null> {
     try {
       const storageKey = `${this.config.serviceName.replace('-', '_')}_tokens_${integrationId}`;
       let tokenDataStr: string | null;
@@ -134,7 +134,7 @@ export abstract class BaseOAuthService {
       
       const expiresAt = expiresAtDate.getTime();
       
-      if (now >= expiresAt - 300000) { // Refresh 5 minutes before expiry
+      if (now >= expiresAt - 300000 && !skipRefresh) { // Refresh 5 minutes before expiry
         console.log(`🔄 ${this.config.serviceName} token expired, attempting refresh...`);
         if (tokenData.refreshToken) {
           return await this.refreshToken(tokenData.refreshToken, integrationId);
@@ -200,7 +200,7 @@ export abstract class BaseOAuthService {
     try {
       console.log(`🔌 Disconnecting ${this.config.serviceName} integration...`);
 
-      const tokens = await this.getStoredTokens(integrationId);
+      const tokens = await this.getStoredTokens(integrationId, true);
       
       // Revoke tokens if supported
       if (tokens && this.config.revokeEndpoint) {
