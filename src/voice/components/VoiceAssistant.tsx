@@ -104,7 +104,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       case 'processing':
         return 'Processing...';
       case 'integrating':
-        return 'Integrating... This can take a few moments.';
+        return 'Integrating... This can take up to 2 minutes.';
       case 'pinging':
         return 'Pinging... This can take a few moments.';
       case 'failed':
@@ -211,9 +211,6 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           keyExtractor={(item, index) => `chat-${index}-${item.timestamp}`}
           style={styles.chatList}
           renderItem={({ item, index }) => {
-            const isLatestMessage = index === chatHistory.length - 1;
-            const showStatus = isLatestMessage && requestStatus && (requestStatus !== 'completed');
-            
             return (
               <View style={[
                 styles.chatBubble, 
@@ -222,11 +219,6 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
                 <Text style={styles.chatText} selectable={true}>{item.content}</Text>
                 <View style={styles.messageFooter}>
                   <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
-                  {showStatus && (
-                    <Text style={styles.statusText}>
-                      {getRequestStatusText(requestStatus, 'inline')}
-                    </Text>
-                  )}
                 </View>
               </View>
             );

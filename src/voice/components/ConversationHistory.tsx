@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
   messagesContainer: {
     borderTopWidth: 1,
     borderTopColor: '#333333',
-    height: 300,
+    height: 450,
     flex: 0,
   },
   loadingContainer: {
