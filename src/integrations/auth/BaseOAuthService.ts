@@ -202,10 +202,10 @@ export abstract class BaseOAuthService {
 
       const tokens = await this.getStoredTokens(integrationId, true);
       
-      // Revoke tokens if supported
-      if (tokens && this.config.revokeEndpoint) {
-        await this.revokeTokens(tokens.accessToken);
-      }
+      // // Revoke tokens if supported
+      // if (tokens && this.config.revokeEndpoint) {
+      //   await this.revokeTokens(tokens.accessToken);
+      // }
 
       // Clear stored tokens
       await this.clearStoredTokens(integrationId);

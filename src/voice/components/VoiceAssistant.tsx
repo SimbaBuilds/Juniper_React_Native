@@ -102,6 +102,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         return 'Processing...';
       case 'thinking':
         return 'Thinking...';
+      case 'searching':
+        return 'Searching...';
       case 'processing':
         return 'Processing...';
       case 'integrating':

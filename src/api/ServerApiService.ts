@@ -290,7 +290,7 @@ class ServerApiService {
         this.currentRequestId = null;
         
         // Check if error was due to cancellation
-        if (error instanceof Error && (error.name === 'CanceledError' || error.message?.includes('canceled'))) {
+        if (error instanceof Error && (error.name === 'CanceledError' || error.message?.includes('canceled') || error.message?.includes('cancelled'))) {
           console.log('🔴 SERVER_API: Request was cancelled');
           throw new Error('Request was cancelled');
         }
