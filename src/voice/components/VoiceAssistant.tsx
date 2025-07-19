@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { NativeModules } from 'react-native';
 import { ConversationHistory } from './ConversationHistory';
 import { TextChatInput } from './TextChatInput';
+import { MarkdownMessage } from './MarkdownMessage';
 import Clipboard from '@react-native-clipboard/clipboard';
 
 const { VoiceModule } = NativeModules;
@@ -216,7 +217,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
                 styles.chatBubble, 
                 item.role === 'user' ? styles.userBubble : styles.assistantBubble
               ]}>
-                <Text style={styles.chatText} selectable={true}>{item.content}</Text>
+                <MarkdownMessage content={item.content} />
                 <View style={styles.messageFooter}>
                   <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
                 </View>

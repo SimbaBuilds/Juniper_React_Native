@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { conversationService, ConversationSummary } from '../../services/conversationService';
 import { ChatMessage } from '../VoiceContext';
+import { MarkdownMessage } from './MarkdownMessage';
 
 interface ConversationHistoryProps {
   visible: boolean;
@@ -247,7 +248,7 @@ export const ConversationHistory: React.FC<ConversationHistoryProps> = ({
                     message.role === 'user' ? styles.userMessage : styles.assistantMessage
                   ]}
                 >
-                  <Text style={styles.messageText}>{message.content}</Text>
+                  <MarkdownMessage content={message.content} />
                   <Text style={styles.messageTime}>{formatMessageTime(message.timestamp)}</Text>
                 </View>
               ))}

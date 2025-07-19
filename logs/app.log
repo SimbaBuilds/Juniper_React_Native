@@ -1,131 +1,35 @@
- LOG  🔗 Mapped Gmail to gmail for disconnection
- LOG  🔌 Disconnecting gmail integration...
- LOG  🔄 gmail token expired, attempting refresh...
- LOG  📧 Refreshing Gmail token...
- LOG  🔄 Making gmail token refresh request...
- LOG  📥 gmail token refresh response: {"status": 400, "statusText": ""}
- ERROR  ❌ gmail token refresh failed: {"response_body": "{
-  \"error\": \"invalid_request\",
-  \"error_description\": \"client_secret is missing.\"
-}", "status": 400, "statusText": ""}
- ERROR  ❌ Token refresh failed: [Error: token refresh failed: invalid_request - client_secret is missing.]
- ERROR  🔴 Error retrieving gmail tokens: [Error: Failed to refresh authentication. Please try signing in again.]
- LOG  ✅ gmail integration disconnected
- LOG  ✅ Gmail integration deactivated in Supabase
- LOG  ✅ Integration 83931f60-5394-4fce-81ce-4fa056203da5 status updated to: inactive
- LOG  🔗 Connecting to service: Gmail
- LOG  🔗 Mapped service name: gmail
- LOG  🚀 Starting integration for Gmail...
- LOG  🔗 Mapped Gmail to gmail
- LOG  ✅ Integration record created with ID: dba289db-ebd5-4681-a652-bec71f766a2e
- LOG  🔗 Starting OAuth flow for gmail...
- LOG  🔧 gmail OAuth Service initialized
- LOG  📧 Starting Gmail OAuth flow...
- LOG  📧 Integration ID: dba289db-ebd5-4681-a652-bec71f766a2e
- LOG  📧 Opening OAuth URL: https://accounts.google.com/o/oauth2/v2/auth?client_id=66333577628-gnnebnjk57ione1bfphjmfa1vmk9nr9a.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fhightower-ai.com%2Foauth%2Fgmail%2Fcallback&response_type=code&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fgmail.modify&state=dba289db-ebd5-4681-a652-bec71f766a2e&access_type=offline&prompt=consent
- LOG  ✅ Opening OAuth URL in browser...
- LOG  ✅ OAuth URL opened successfully
- LOG  ✅ gmail OAuth completed successfully
- LOG  ✅ Integration dba289db-ebd5-4681-a652-bec71f766a2e status updated to: active
- LOG  === DEEP LINK RECEIVED ===
- LOG  Full URL: https://hightower-ai.com/oauth/gmail/callback?state=dba289db-ebd5-4681-a652-bec71f766a2e&code=4/0AVMBsJhxHi69lQgExLC7SMdG-A_Dz8GZMkvrj7QJWDzsFgndFX5BVn-F93vy5BLBdoc9yw&scope=https://www.googleapis.com/auth/gmail.modify
- LOG  URL starts with https:// true
- LOG  URL includes /oauth/ true
- LOG  ✅ Detected OAuth callback - using new OAuth routing system
- LOG  === HANDLING HTTPS OAUTH CALLBACK ===
- LOG  URL: https://hightower-ai.com/oauth/gmail/callback?state=dba289db-ebd5-4681-a652-bec71f766a2e&code=4/0AVMBsJhxHi69lQgExLC7SMdG-A_Dz8GZMkvrj7QJWDzsFgndFX5BVn-F93vy5BLBdoc9yw&scope=https://www.googleapis.com/auth/gmail.modify
- LOG  📝 Detected service: gmail
- LOG  ✅ Processing gmail HTTPS callback with code and state
- LOG  📧 Handling Gmail OAuth callback...
- LOG  📧 Integration ID: dba289db-ebd5-4681-a652-bec71f766a2e
- LOG  🔄 Exchanging code for tokens...
- LOG  🔄 Making gmail token exchange request...
- LOG  📥 gmail token exchange response: {"status": 200, "statusText": ""}
- LOG  ✅ gmail token exchange successful
- LOG  ✅ Token exchange successful
- LOG  🔍 Storing gmail tokens for integration: dba289db-ebd5-4681-a652-bec71f766a2e
- LOG  🔍 Token result keys: ["access_token", "expires_in", "refresh_token", "scope", "token_type"]
- LOG  🔍 Storage key: gmail_tokens_dba289db-ebd5-4681-a652-bec71f766a2e
- LOG  🔍 Token data to store: {
-  "accessToken": "ya29.a0AS3H6NwcfXATr6ORZ1PGoVEz8nUTSJEHsn9sbqdTYonHiwyzIrqB4IAeIziypZeCphxWSlrMVOS_9mt6nooOS2xJoMCuO9c_zX6KFKPMbkqFFsFKeOlR2Z782sFWlZN4dIR4-fZa5DS04fGZv1HkVtAru_ITtF_KSRtzZf_IaCgYKAfQSARcSFQHGX2MiJP_sEf2x85dOQI4kaar_5g0175",
-  "refreshToken": "1//0fAtQuDp3dE2SCgYIARAAGA8SNwF-L9Ir5V0rLzJXKUho8vzq6DQ9dqtuDZSaDyYJ5K-ZfMonggPTDiJ9O79LYEErX0bWhYuUmAI",
-  "expiresAt": "2025-07-17T14:10:22.837Z",
-  "integrationId": "dba289db-ebd5-4681-a652-bec71f766a2e",
-  "service": "gmail",
-  "scope": "https://www.googleapis.com/auth/gmail.modify",
-  "storedAt": "2025-07-17T13:10:23.837Z"
-}
- LOG  🔐 gmail tokens stored securely
- LOG  ✅ Gmail integration saved to Supabase
- LOG  🔍 gmail completing integration flow...
- LOG  🔗 Completing integration for gmail
- LOG  📝 TEXT_INPUT: ========== TEXT MESSAGE PROCESSING ==========
- LOG  📝 TEXT_INPUT: Processing text message: Let's complete the integration for gmail
- LOG  📝 TEXT_INPUT: Current voice settings: {
-  "deepgramEnabled": false,
-  "baseLanguageModel": "claude-sonnet-4-20250514",
-  "generalInstructions": "",
-  "selectedWakeWord": "BUMBLEBEE",
-  "wakeWordSensitivity": 0.1,
-  "wakeWordDetectionEnabled": false,
-  "selectedDeepgramVoice": "aura-2-mars-en",
-  "xaiLiveSearchEnabled": false,
-  "xaiLiveSearchSafeSearch": true,
-  "xaiLiveSearchSources": [],
-  "xaiLiveSearchCountry": "US",
-  "xaiLiveSearchXHandles": [],
-  "assistantName": "Assistant",
-  "wakeWord": "BUMBLEBEE"
-}
- LOG  🕐 Setting auto-refresh timer for 10 minutes
- LOG  ✅ Integration completion flow triggered for gmail
- LOG  ✅ gmail integration completion flow triggered
- LOG  ✅ Gmail authentication successful
- LOG  📝 TEXT_INPUT: ========== SENDING TO API ==========
- LOG  📝 TEXT_INPUT: Sending message to API
- LOG  🔴 SERVER_API: sendChatRequest called
- LOG  🔴 SERVER_API: Message: "Let's complete the integration for gmail"
- LOG  🔴 SERVER_API: Generated request ID: 1752757824626-b7hnd61ia
- LOG  📊 REQUEST_STATUS: Setting request ID for polling: 1752757824626-b7hnd61ia
- LOG  🔴 SERVER_API: Adding delay for Android stability...
- LOG  🔴 SERVER_API: History[0]: {"content": "Let's complete the integration for gmail", "contentLength": 40, "role": "user", "timestamp": 1752757824162}
- LOG  🔴 SERVER_API: Full request payload: {
-  "message": "Let's complete the integration for gmail",
-  "timestamp": 1752757824847,
-  "history": [
-    {
-      "role": "user",
-      "content": "Let's complete the integration for gmail",
-      "timestamp": 1752757824162,
-      "type": "text"
-    }
-  ],
-  "preferences": {
-    "voice": "male",
-    "response_type": "concise"
-  },
-  "request_id": "1752757824626-b7hnd61ia"
-}
- LOG  🔍 API Interceptor: Starting auth check for request to: /api/chat
- LOG  📱 Platform: android
- LOG  🔍 API Interceptor: User check result: User ID: 56a2c117-6486-4ca5-a57d-6c2e877e7083
- LOG  🔍 API Interceptor: Session check result: Token exists: true
- LOG  ✅ API Interceptor: Auth token added to request
- LOG  📱 Android: Token length: 970
- LOG  🔍 API Interceptor: Final headers: {"Accept": "application/json, text/plain, */*", "Authorization": "[REDACTED]", "Content-Type": "multipart/form-data"}
+ LOG  📊 REQUEST_STATUS: Status changed to: pinging
+ LOG  📊 REQUEST_STATUS: Status changed to: pinging
+ LOG  📊 REQUEST_STATUS: Status changed to: pinging
+ LOG  📊 REQUEST_STATUS: Status changed to: pinging
+ LOG  📊 REQUEST_STATUS: Status changed to: pinging
+ LOG  📊 REQUEST_STATUS: Status changed to: pinging
+ LOG  📊 REQUEST_STATUS: Status changed to: pinging
+ LOG  📊 REQUEST_STATUS: Status changed to: pinging
+ LOG  📊 REQUEST_STATUS: Status changed to: pinging
  LOG  ✅ API Response Success: 200 /api/chat
  LOG  📱 Android: API request completed successfully
  LOG  🔴 SERVER_API: ✅ Server response received
  LOG  API Response:
- {"integration_in_progress": false, "request_id": "1752757824626-b7hnd61ia", "response": "I started working on your Gmail integration setup and was able to fetch some of your emails, including one from cameron@hightower-ai.com. However, I reached the maximum number of actions while trying to complete the full integration process, which includes storing email samples and extracting your contacts. 
+ {"integration_in_progress": false, "request_id": "1752808236641-1lze9tfv0", "response": "I've successfully extracted your frequent contacts from the past 90 days. Here are your key contacts that you can now reference by first name when composing emails:
 
-The integration is partially set up - I can access your Gmail - but we'll need to continue the setup process to fully complete features like contact extraction and email organization. Would you like to try continuing the setup process?", "settings_updated": false, "timestamp": 1752757974}
+**Personal/Professional:**
+- **Bennett** (tennis follow-ups)
+- **Andrew** (The Ronin Society - business partnerships)
+- **Alejandro** (The Ronin Society)
+- **Leila** (The Ronin Society)
+
+**Business Contacts:**
+- **Cassie** (real estate/locating services)
+- **Collin** (healthcare/SheetAssist user)
+- **Janelle** (CPA services)
+- **Dan** (SheetAssist user)
+
+Now when you want to send an email, you can simply say something like \"Send an email to Andrew about...\" and I'll know exactly who you mean and can draft it in your writing style. Your Gmail integration is fully set up and ready to use!", "settings_updated": false, "timestamp": 1752808306}
  LOG  📝 TEXT_INPUT: ========== API RESPONSE RECEIVED ==========
- LOG  📝 TEXT_INPUT: API call duration: 149678 ms
+ LOG  📝 TEXT_INPUT: API call duration: 69782 ms
  LOG  📝 TEXT_INPUT: Received API response
  LOG  📝 TEXT_INPUT: Response settings_updated flag: false
  LOG  📝 TEXT_INPUT: Response integration_in_progress flag: false
  LOG  ⚙️ TEXT_INPUT: No settings update flag - skipping settings refresh
- LOG  🔗 TEXT_INPUT: No integration build in progress flag - skipping polling
- LOG  🕐 Setting auto-refresh timer for 10 minutes
- LOG  📝 TEXT_INPUT: Response added to chat (no TTS in text mode)
+ LOG  🔗 TEXT_INPUT: No integration bu
