@@ -1,6 +1,7 @@
 import 'react-native-url-polyfill/auto'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createClient } from '@supabase/supabase-js'
+import { HotPhrase } from './tables'
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
@@ -783,6 +784,50 @@ export const DatabaseService = {
     
     if (error) throw error
     return data || []
+  },
+
+  // Hot Phrases
+  async getHotPhrases(userId: string) {
+    const { data, error } = await supabase
+      .from('hot_phrases')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data || []
+  },
+
+  async createHotPhrase(hotPhrase: Omit<HotPhrase, 'id' | 'created_at' | 'updated_at'>) {
+    const { data, error } = await supabase
+      .from('hot_phrases')
+      .insert([hotPhrase])
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async updateHotPhrase(id: string, updates: Partial<Omit<HotPhrase, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) {
+    const { data, error } = await supabase
+      .from('hot_phrases')
+      .update({ ...updates, updated_at: new Date() })
+      .eq('id', id)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async deleteHotPhrase(id: string) {
+    const { error } = await supabase
+      .from('hot_phrases')
+      .delete()
+      .eq('id', id)
+    
+    if (error) throw error
   },
 
   // Utility method to fix any existing profiles with null general_instructions

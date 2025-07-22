@@ -1,0 +1,21 @@
+- “Have Juniper create event driven automations across your integrated services and/or public web information”
+- Voice to Voice Automations for MVP would be dope e.g. forward emails like the one I just got from X to Y
+- Cron jobs if no service webhook
+- It will have to write and execute and iterate on a test script for the automation it builds
+- Fetch service tools and scripts on its own or delegate to IA? Probably have its own fetching capability for less coordination cost
+- EDA creation in web app - chat functionality in web app - *short max chat message length -* no user message caching - “message exceeds max length.  shorten message or write in text document in integrated service”
+- Hot Phrases
+    - “Cut processing time by more than 50% for the tasks below”
+    - Functionality: bypass Chat Agent and service/type level fetching and call IA with pre-injected tool params and associated resources (reuse DS function)
+        - “When you are called directly by the human user, keep your response brief e.g. “Done!”
+        - if calling agent = None, “You are currently being called directly by the human user”
+    - Schema
+        - phrase
+        - service name
+        - tool name
+        - description (for display)
+    - Built ins
+        - “send a text”, Textbelt, send text tool
+    - Create new hot phrase flow
+        - AA handles because it will have access to service tools anyway?
+        - Via chat only, read-only UI

@@ -361,5 +361,27 @@ export type UserProfile = {
   ] as const;
   export type RequestField = (typeof requestFields)[number];
 
+  export type HotPhrase = {
+    id: string;
+    user_id: string;
+    phrase: string;                    // "send a text", "check my calendar"
+    service_name: string;              // "Textbelt", "Google Calendar" 
+    tool_name: string;                 // "send_text", "get_events"
+    description: string;               // For display in UI
+    is_built_in: boolean;             // Built-ins can't be deleted
+    is_active: boolean;               // Enable/disable toggle
+    execution_count: number;          // Usage tracking
+    last_used?: Date;                 // Last execution time
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const hotPhraseFields = [
+    'id', 'user_id', 'phrase', 'service_name', 'tool_name', 
+    'description', 'is_built_in', 'is_active', 'execution_count',
+    'last_used', 'created_at', 'updated_at'
+  ] as const;
+  export type HotPhraseField = (typeof hotPhraseFields)[number];
+
 
 

@@ -3,12 +3,17 @@ import { View, Text, StyleSheet, ScrollView, SafeAreaView, ActivityIndicator } f
 import { Ionicons } from '@expo/vector-icons';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
+import { HotPhraseSection } from './HotPhraseSection';
 
 interface Automation {
   id: string;
   name: string;
+  trigger_conditions?: Record<string, any>;
+  actions?: Record<string, any>;
   integrations?: string[];
   enabled: boolean;
+  execution_count?: number;
+  last_executed?: Date;
 }
 
 export const AutomationsScreen: React.FC = () => {
@@ -32,8 +37,12 @@ export const AutomationsScreen: React.FC = () => {
         const formattedAutomations: Automation[] = dbAutomations.map((automation: any) => ({
           id: automation.id,
           name: automation.name,
+          trigger_conditions: automation.trigger_conditions,
+          actions: automation.actions,
           integrations: automation.actions?.integrations || [],
           enabled: automation.is_active,
+          execution_count: automation.execution_count || 0,
+          last_executed: automation.last_executed,
         }));
 
         // Add default automations if none exist
@@ -102,17 +111,17 @@ export const AutomationsScreen: React.FC = () => {
         </View>
 
         <View style={styles.instructionsSection}>
-          <Text style={styles.instructionsTitle}>How to Add Automations</Text>
+          <Text style={styles.instructionsTitle}>Event-Driven Automations</Text>
           <Text style={styles.instructionsText}>
             To add an automation, simply ask your assistant e.g.{'\n'}
             "Whenever a new Starship mission date is announced, add it to my calendar."
             {'\n\n'}
-            Your assistant will attempt to set up the automation or scope out implementation time and cost.
+            Your assistant will create and manage these automations automatically. You cannot edit them manually.
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Active Automations</Text>
+          <Text style={styles.sectionTitle}>Event-Driven Automations</Text>
           
           {automations.length === 0 ? (
             <View style={styles.emptyState}>
@@ -146,42 +155,29 @@ export const AutomationsScreen: React.FC = () => {
                   <Text style={styles.detailValue}>
                     {automation.integrations?.length ? automation.integrations.join(', ') : 'None configured'}
                   </Text>
+                  
+                  {automation.execution_count !== undefined && automation.execution_count > 0 && (
+                    <View style={styles.statsRow}>
+                      <Text style={styles.statsText}>
+                        Executed {automation.execution_count} time{automation.execution_count !== 1 ? 's' : ''}
+                        {automation.last_executed && ` • Last: ${new Date(automation.last_executed).toLocaleDateString()}`}
+                      </Text>
+                    </View>
+                  )}
+                  
+                  <View style={styles.createdByBadge}>
+                    <Text style={styles.createdByText}>Created by Assistant</Text>
+                  </View>
                 </View>
               </View>
             ))
           )}
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Automation Examples</Text>
-          
-          <View style={styles.exampleCard}>
-            <Text style={styles.exampleTitle}>Calendar Automations</Text>
-            <Text style={styles.exampleText}>
-              • Add meetings automatically from email invites{'\n'}
-              • Block focus time based on workload{'\n'}
-              • Send pre-meeting reminders
-            </Text>
-          </View>
-
-          <View style={styles.exampleCard}>
-            <Text style={styles.exampleTitle}>Communication Automations</Text>
-            <Text style={styles.exampleText}>
-              • Auto-respond to urgent emails{'\n'}
-              • Daily digest of important messages{'\n'}
-              • Schedule message sending for optimal times
-            </Text>
-          </View>
-
-          <View style={styles.exampleCard}>
-            <Text style={styles.exampleTitle}>Smart Home Integrations</Text>
-            <Text style={styles.exampleText}>
-              • Adjust lights based on calendar{'\n'}
-              • Pre-heat car before leaving{'\n'}
-              • Set thermostat based on schedule
-            </Text>
-          </View>
-        </View>
+        {/* Hot Phrases Section */}
+        <View style={styles.divider} />
+        
+        <HotPhraseSection userId={user?.id || ''} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -338,5 +334,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
     marginTop: 16,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#333333',
+    marginVertical: 32,
+  },
+  statsRow: {
+    marginTop: 8,
+  },
+  statsText: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  createdByBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(74, 144, 226, 0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 8,
+  },
+  createdByText: {
+    fontSize: 12,
+    color: '#4A90E2',
+    fontWeight: '500',
   },
 }); 
