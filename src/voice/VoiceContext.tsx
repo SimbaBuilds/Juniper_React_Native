@@ -754,6 +754,38 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     setChatHistory(messages);
   }, []);
 
+  // Wrap cancelRequest to immediately update UI status
+  const wrappedCancelRequest = useCallback(async (): Promise<boolean> => {
+    try {
+      console.log('🚫 CANCEL_WRAPPER: Cancelling request and updating UI status...');
+      
+      // Immediately update UI to show "cancelled" status
+      setRequestStatus('cancelled');
+      
+      // Call the original cancelRequest
+      const result = await cancelRequest();
+      
+      if (result) {
+        console.log('🚫 CANCEL_WRAPPER: Request cancelled successfully, clearing status in 2 seconds');
+        // Clear the status after 2 seconds (matching the existing pattern)
+        setTimeout(() => {
+          setCurrentRequestId(null);
+          setRequestStatus(null);
+        }, 2000);
+      } else {
+        // If cancellation failed, revert the status
+        console.log('🚫 CANCEL_WRAPPER: Request cancellation failed, reverting status');
+        setRequestStatus(null);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('🚫 CANCEL_WRAPPER: Error in cancel wrapper:', error);
+      setRequestStatus(null);
+      return false;
+    }
+  }, [cancelRequest]);
+
   // Context value - now purely bridging to native state
   const value: VoiceContextValue = {
     // Native state (single source of truth)
@@ -793,7 +825,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     refreshSettings,
     sendTextMessage,
     continuePreviousChat,
-    cancelRequest,
+    cancelRequest: wrappedCancelRequest,
     isRequestInProgress,
   };
   

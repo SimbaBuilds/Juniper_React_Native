@@ -28,6 +28,10 @@ export interface StoredTokenData {
 export abstract class BaseOAuthService {
   protected config: OAuthServiceConfig;
   protected isInitialized = false;
+  protected isReconnection = false;
+  
+  // Static map to track reconnection states across all service instances
+  private static reconnectionStates: Map<string, boolean> = new Map();
 
   constructor(serviceName: string) {
     this.config = getOAuthConfig(serviceName);
@@ -42,6 +46,32 @@ export abstract class BaseOAuthService {
 
     console.log(`🔧 ${this.config.serviceName} OAuth Service initialized`);
     this.isInitialized = true;
+  }
+
+  /**
+   * Set reconnection flag for a specific integration to skip completion message
+   */
+  setIsReconnection(isReconnection: boolean, integrationId?: string): void {
+    this.isReconnection = isReconnection;
+    
+    // If we have an integrationId, store the state globally for the callback to find
+    if (integrationId && isReconnection) {
+      BaseOAuthService.reconnectionStates.set(integrationId, true);
+    }
+  }
+  
+  /**
+   * Check if this integration is a reconnection
+   */
+  protected isIntegrationReconnection(integrationId: string): boolean {
+    return BaseOAuthService.reconnectionStates.get(integrationId) || false;
+  }
+  
+  /**
+   * Clear reconnection state for an integration
+   */
+  clearReconnectionState(integrationId: string): void {
+    BaseOAuthService.reconnectionStates.delete(integrationId);
   }
 
   /**
@@ -182,8 +212,21 @@ export abstract class BaseOAuthService {
     try {
       console.log(`🔍 ${this.config.serviceName} completing integration flow...`);
       
-      // Instead of calling the API endpoint, trigger the voice message and navigation
-      await IntegrationCompletionService.getInstance().completeIntegration(this.config.serviceName);
+      // Check if this is a reconnection using the stored state
+      const isReconnect = this.isIntegrationReconnection(integrationId);
+      
+      // Skip the completion message for reconnections
+      if (!isReconnect) {
+        // Instead of calling the API endpoint, trigger the voice message and navigation
+        await IntegrationCompletionService.getInstance().completeIntegration(this.config.serviceName);
+      } else {
+        console.log(`ℹ️ ${this.config.serviceName} skipping completion message for reconnection`);
+      }
+      
+      // Clean up the reconnection state after processing
+      if (isReconnect) {
+        BaseOAuthService.reconnectionStates.delete(integrationId);
+      }
       
       console.log(`✅ ${this.config.serviceName} integration completion flow triggered`);
     } catch (error) {

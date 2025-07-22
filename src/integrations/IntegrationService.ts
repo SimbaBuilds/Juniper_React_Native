@@ -190,12 +190,17 @@ export class IntegrationService {
   /**
    * Start OAuth flow for specific service
    */
-  private async startOAuthFlow(serviceName: string, integrationId: string): Promise<void> {
+  private async startOAuthFlow(serviceName: string, integrationId: string, isReconnect: boolean = false): Promise<void> {
     try {
       console.log(`🔗 Starting OAuth flow for ${serviceName}...`);
 
       // Get the appropriate auth service
       const authService = getAuthService(serviceName);
+
+      // Set reconnection flag if this is a reconnect
+      if ('setIsReconnection' in authService && typeof authService.setIsReconnection === 'function') {
+        authService.setIsReconnection(isReconnect, integrationId);
+      }
 
       // Check if authenticate method exists and start authentication
       if ('authenticate' in authService && typeof authService.authenticate === 'function') {
@@ -217,6 +222,16 @@ export class IntegrationService {
 
     } catch (error) {
       console.error(`❌ OAuth flow failed for ${serviceName}:`, error);
+      
+      // Clean up reconnection state on error
+      try {
+        const authService = getAuthService(serviceName);
+        if ('clearReconnectionState' in authService && typeof authService.clearReconnectionState === 'function') {
+          authService.clearReconnectionState(integrationId);
+        }
+      } catch (cleanupError) {
+        console.warn('Failed to cleanup reconnection state:', cleanupError);
+      }
       
       // Update integration status to failed
       await this.updateIntegrationStatus(integrationId, 'failed', false);
@@ -274,8 +289,8 @@ export class IntegrationService {
       // Update status to pending
       await this.updateIntegrationStatus(integrationId, 'pending', false);
 
-      // Start OAuth flow with existing integration ID
-      await this.startOAuthFlow(internalServiceName, integrationId);
+      // Start OAuth flow with existing integration ID (skip completion message for reconnect)
+      await this.startOAuthFlow(internalServiceName, integrationId, true);
 
     } catch (error) {
       console.error(`❌ Error reconnecting ${serviceName}:`, error);

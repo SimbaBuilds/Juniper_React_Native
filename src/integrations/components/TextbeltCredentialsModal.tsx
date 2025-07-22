@@ -99,7 +99,8 @@ const TextbeltCredentialsModal: React.FC<TextbeltCredentialsModalProps> = ({
           <View style={styles.instructionsContainer}>
             <Text style={styles.instructionsTitle}>SMS Setup</Text>
             <Text style={styles.instructionsText}>
-              Enter your phone number below so Juniper can send you text messages. <strong>You will not receive promotional content or ads at this number.</strong>
+              Enter your phone number below so Juniper can send you text messages.{' '}
+              <Text style={styles.boldText}>You will not receive promotional content or ads at this number.</Text>
             </Text>
           </View>
 
@@ -194,6 +195,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     lineHeight: 20,
+  },
+  boldText: {
+    fontWeight: 'bold',
   },
   inputContainer: {
     marginBottom: 20,
