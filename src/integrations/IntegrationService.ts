@@ -263,7 +263,7 @@ export class IntegrationService {
   /**
    * Reconnect an existing integration
    */
-  private async reconnectIntegration(integrationId: string, serviceName: string): Promise<void> {
+  async reconnectIntegration(integrationId: string, serviceName: string): Promise<void> {
     try {
       console.log(`🔄 Reconnecting ${serviceName} integration...`);
 

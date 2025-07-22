@@ -536,6 +536,40 @@ export const IntegrationsScreen: React.FC = () => {
     }
   };
 
+  // Handle reconnect button press
+  const handleReconnect = async (service: ServiceWithStatus) => {
+    try {
+      if (!service.integration_id) {
+        Alert.alert('Error', 'No integration ID found.');
+        return;
+      }
+
+      Alert.alert(
+        'Reconnect Integration',
+        `Are you sure you want to reconnect ${service.service_name}? This will start a new authentication flow.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Reconnect', 
+            onPress: async () => {
+              const integrationService = IntegrationService.getInstance();
+              await integrationService.reconnectIntegration(
+                service.integration_id!,
+                service.service_name
+              );
+              
+              // Refresh the services list
+              await loadServicesWithStatus();
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error reconnecting service:', error);
+      Alert.alert('Error', 'Failed to reconnect service. Please try again.');
+    }
+  };
+
   // Handle disconnect button press
   const handleDisconnect = async (service: ServiceWithStatus) => {
     try {
@@ -667,6 +701,13 @@ export const IntegrationsScreen: React.FC = () => {
                               <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
                               <Text style={styles.connectedText}>Connected</Text>
                             </View>
+                            <TouchableOpacity
+                              style={styles.reconnectButton}
+                              onPress={() => handleReconnect(service)}
+                              activeOpacity={0.7}
+                            >
+                              <Text style={styles.reconnectButtonText}>Reconnect</Text>
+                            </TouchableOpacity>
                             <TouchableOpacity
                               style={styles.disconnectButton}
                               onPress={() => handleDisconnect(service)}
@@ -976,6 +1017,20 @@ const styles = StyleSheet.create({
   connectButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
+    fontWeight: '500',
+  },
+  reconnectButton: {
+    backgroundColor: '#2A2A2A',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#4A90E2',
+    marginBottom: 6,
+  },
+  reconnectButtonText: {
+    color: '#4A90E2',
+    fontSize: 12,
     fontWeight: '500',
   },
   disconnectButton: {
