@@ -1,4 +1,4 @@
-import { NativeModules, NativeEventEmitter, EmitterSubscription, Platform } from 'react-native';
+import { NativeModules, NativeEventEmitter, DeviceEventEmitter, EmitterSubscription, Platform } from 'react-native';
 
 // Define the interface for responses from the native module
 interface WakeWordAvailabilityResponse {
@@ -78,10 +78,8 @@ const WakeWordModule: WakeWordModuleInterface = nativeWakeWordModule
       getWakeWordSensitivity: async () => ({ sensitivity: 0.3, success: true }),
     };
 
-// Create an event emitter for the module
-const eventEmitter = nativeWakeWordModule 
-  ? new NativeEventEmitter(nativeWakeWordModule)
-  : null;
+// Use DeviceEventEmitter to match native emission method
+const eventEmitter = DeviceEventEmitter;
 
 /**
  * Provides access to wake word detection functionality
@@ -94,29 +92,11 @@ class WakeWordService {
   private static ANDROID_SERVICE_CLASS = 'com.anonymous.MobileJarvisNative.wakeword.WakeWordService';
 
   constructor() {
-    // Initialize event listener if emitter is available
-    if (eventEmitter && !WakeWordService.eventSubscription) {
-      WakeWordService.eventSubscription = eventEmitter.addListener(
-        'wakeWordDetected',
-        (event) => {
-          console.log('Wake word detected:', event);
-          // Handle wake word detection event
-          this.handleWakeWordDetected(event);
-        }
-      );
-    }
+    // Event listeners are handled by individual consumers via addListener()
+    // No global listener needed in constructor
   }
 
-  private handleWakeWordDetected(event: any) {
-    const timestamp = event.timestamp || Date.now();
-    const timeString = new Date(timestamp).toLocaleTimeString();
-    
-    // Log the detection with emoji for visibility
-    // Additional debug information if available
-    if (event.debug) {
-      console.log('🔍 Debug info:', event.debug);
-    }
-  }
+  // handleWakeWordDetected method removed - handled by individual listeners
 
   /**
    * Clean up event subscription
@@ -416,11 +396,16 @@ class WakeWordService {
     eventType: string,
     listener: (event: any) => void
   ): EmitterSubscription | null {
-    if (!eventEmitter) {
-      console.warn('WakeWordEmitter is not available, cannot add listener');
-      return null;
-    }
-    return eventEmitter.addListener(eventType, listener);
+    console.log('🔊 WAKE_WORD_SERVICE: Adding DeviceEventEmitter listener for event:', eventType);
+    console.log('🔊 WAKE_WORD_SERVICE: DeviceEventEmitter available:', !!eventEmitter);
+    
+    const subscription = eventEmitter.addListener(eventType, (event) => {
+      console.log('🔊 WAKE_WORD_SERVICE: Event received from native via DeviceEventEmitter:', eventType, event);
+      listener(event);
+    });
+    
+    console.log('🔊 WAKE_WORD_SERVICE: DeviceEventEmitter listener added successfully, subscription:', !!subscription);
+    return subscription;
   }
 
   /**

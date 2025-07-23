@@ -590,12 +590,24 @@ class WakeWordService : Service() {
         
         // Send broadcast to React Native
         try {
+            Log.i(TAG, "📡 BROADCAST_SEND: ========== SENDING WAKE WORD BROADCAST ==========")
+            Log.i(TAG, "📡 BROADCAST_SEND: Send timestamp: ${System.currentTimeMillis()}")
+            Log.i(TAG, "📡 BROADCAST_SEND: Action: ${Constants.Actions.WAKE_WORD_DETECTED_RN}")
+            Log.i(TAG, "📡 BROADCAST_SEND: Wake word: '$selectedWakeWord'")
+            Log.i(TAG, "📡 BROADCAST_SEND: Confidence: $confidence")
+            
             val intent = Intent(Constants.Actions.WAKE_WORD_DETECTED_RN)
             intent.putExtra("timestamp", timestamp)
             intent.putExtra("confidence", confidence)
             intent.putExtra("wakeWord", selectedWakeWord)
+            
+            // Add package name to ensure the broadcast reaches our app
+            intent.setPackage(packageName)
+            
             sendBroadcast(intent)
+            Log.i(TAG, "📡 BROADCAST_SEND: ✅ Broadcast sent successfully")
             Log.i(TAG, "🔥 WAKEWORD_USE: ✅ Sent wake word detected broadcast to React Native")
+            Log.i(TAG, "📡 BROADCAST_SEND: ====================================================")
         } catch (e: Exception) {
             Log.e(TAG, "🔥 WAKEWORD_USE: ❌ Error sending wake word broadcast: ${e.message}", e)
         }

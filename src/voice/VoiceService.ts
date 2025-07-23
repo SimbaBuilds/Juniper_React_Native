@@ -279,11 +279,7 @@ export class VoiceService {
     private setupEventListeners(): void {
         console.log('🎤 Setting up voice event listeners');
         
-        // Listen for wake word detection
-        DeviceEventEmitter.addListener('wakeWordDetected', (data) => {
-            console.log('Wake word detected:', data);
-            // Handle wake word detection if needed
-        });
+        // Wake word detection is handled by WakeWordContext, not here
 
         // Listen for speech results
         DeviceEventEmitter.addListener('speechResult', (data) => {

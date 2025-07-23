@@ -197,10 +197,22 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // Subscribe to wake word detection events
     useEffect(() => {
+        console.log('🎧 WAKE_WORD_CONTEXT: Setting up wake word event listener...');
+        console.log('🎧 WAKE_WORD_CONTEXT: Current voice state:', voiceState);
+        
         const subscription = WakeWordService.addListener('wakeWordDetected', (event) => {
+            console.log('🎧 WAKE_WORD_CONTEXT: ========== WAKE WORD EVENT RECEIVED ==========');
+            console.log('🎧 WAKE_WORD_CONTEXT: Raw event data:', event);
+            
             const eventTime = event.timestamp ? new Date(event.timestamp) : new Date();
             const timeString = eventTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
             const wakeWord = event.wakeWord || 'Hey Jarvis';
+            const confidence = event.confidence || 0;
+            
+            console.log('🎧 WAKE_WORD_CONTEXT: ⏰ Time:', timeString);
+            console.log('🎧 WAKE_WORD_CONTEXT: 🎯 Wake word:', wakeWord);
+            console.log('🎧 WAKE_WORD_CONTEXT: 📊 Confidence:', confidence);
+            console.log('🎧 WAKE_WORD_CONTEXT: 🎵 Current voice state:', voiceState);
             
             console.log('\n');
             console.log(`⏰ Time: ${timeString}, 🎤 WAKE WORD "${wakeWord}" DETECTED in React Native! 🎤`);
@@ -208,15 +220,25 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             // Skip wake word activation if not in IDLE state
             // More specific check using enum values rather than string comparison
             if (voiceState !== VoiceState.IDLE) {
-                console.log('Conversation already in progress, ignoring wake word');
+                console.log('🎧 WAKE_WORD_CONTEXT: Conversation already in progress, ignoring wake word');
+                console.log('🎧 WAKE_WORD_CONTEXT: Current state:', voiceState, 'Expected:', VoiceState.IDLE);
                 return;
             }
             
             // Ensure running state is accurate
+            console.log('🎧 WAKE_WORD_CONTEXT: ✅ Wake word accepted, updating running state');
             setIsRunning(true);
+            console.log('🎧 WAKE_WORD_CONTEXT: ================================================');
         });
 
+        if (subscription) {
+            console.log('🎧 WAKE_WORD_CONTEXT: ✅ Wake word listener registered successfully');
+        } else {
+            console.error('🎧 WAKE_WORD_CONTEXT: ❌ Failed to register wake word listener');
+        }
+
         return () => {
+            console.log('🎧 WAKE_WORD_CONTEXT: Cleaning up wake word event listener');
             subscription?.remove();
         };
     }, [voiceState]);

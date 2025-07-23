@@ -1,72 +1,47 @@
-07-23 04:14:59.318 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: LOW confidence: 0.0000
-07-23 04:14:59.318 27877 28351 V OpenWakeWordEngine: 🎙️ PIPELINE: Confidence calculated: 4.7385693E-6
-07-23 04:14:59.318 27877 28351 V WakeWordService: 🔍 THRESHOLD_CHECK: Confidence=0.000005, Threshold=0.100000, Pass=false
-07-23 04:14:59.378 27877 28351 V OpenWakeWordEngine: 🎙️ PIPELINE: Processing audio buffer: 24000 samples
-07-23 04:14:59.378 27877 28351 V OpenWakeWordEngine: 🎵 MEL_EXTRACT: Starting mel spectrogram extraction
-07-23 04:14:59.378 27877 28351 V OpenWakeWordEngine: 🎵 MEL_EXTRACT: Input audio size: 24000 samples
-07-23 04:14:59.378 27877 28351 V OpenWakeWordEngine: 🎵 MEL_EXTRACT: Creating input tensor: input, shape=[1, 24000]
-07-23 04:14:59.383 27877 28351 V OpenWakeWordEngine: 🎵 MEL_EXTRACT: Raw output type: class [[[[F
-07-23 04:14:59.383 27877 28351 V OpenWakeWordEngine: 🎵 MEL_EXTRACT: Processing Array output with 1 elements
-07-23 04:14:59.383 27877 28351 V OpenWakeWordEngine: 🎵 MEL_EXTRACT: 4D array structure - batch: 1, channel: 1, mel_bins: 147
-07-23 04:14:59.383 27877 28351 V OpenWakeWordEngine: 🎵 MEL_EXTRACT: Mel bin 0 has 32 time frames
-07-23 04:14:59.383 27877 28351 V OpenWakeWordEngine: 🎵 MEL_EXTRACT: Mel bin 1 has 32 time frames
-07-23 04:14:59.383 27877 28351 V OpenWakeWordEngine: 🎵 MEL_EXTRACT: Mel bin 2 has 32 time frames
-07-23 04:14:59.383 27877 28351 V OpenWakeWordEngine: 🎵 MEL_EXTRACT: Flattened mel spec size: 4704
-07-23 04:14:59.383 27877 28351 V OpenWakeWordEngine: 🎵 MEL_EXTRACT: Applying OpenWakeWord transformation: (value / 10.0) + 2.0
-07-23 04:14:59.384 27877 28351 V OpenWakeWordEngine: 🎵 MEL_EXTRACT: Transformation complete: 4704 elements
-07-23 04:14:59.384 27877 28351 V OpenWakeWordEngine: 🎵 MEL_EXTRACT: Final transformed mel spec: 4704 elements, 4704 non-zero
-07-23 04:14:59.384 27877 28351 V OpenWakeWordEngine: 🎵 MEL_EXTRACT: Statistics: avg=-3.320033, std=1.449413
-07-23 04:14:59.384 27877 28351 V OpenWakeWordEngine: 🎙️ PIPELINE: Mel spectrogram generated: 4704 elements
-07-23 04:14:59.384 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Starting embedding generation
-07-23 04:14:59.384 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Input name: input_1
-07-23 04:14:59.384 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Input mel spec: 4704 elements
-07-23 04:14:59.384 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Mel structure: 32 mel bins × 147 time frames
-07-23 04:14:59.384 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Expected by model: 32 mel bins × 76 time frames
-07-23 04:14:59.384 27877 28351 I OpenWakeWordEngine: 🧠 EMBEDDING: ✂️ Truncating mel spec from 147 to 76 time frames
-07-23 04:14:59.384 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Final tensor shape: [1, 76, 32, 1]
-07-23 04:14:59.384 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Created tensor: [1, 76, 32, 1]
-07-23 04:14:59.390 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Raw output type: class [[[[F
-07-23 04:14:59.391 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Processing Array output with 1 elements
-07-23 04:14:59.391 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Batch has 1 sequences
-07-23 04:14:59.391 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Extracting all 1 sequence steps
-07-23 04:14:59.391 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Sequence 0 has 1 time steps
-07-23 04:14:59.391 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Seq 0, time 0: 96 features
-07-23 04:14:59.391 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Extracted 3D embedding: 96 elements from all sequences
-07-23 04:14:59.393 27877 28351 I OpenWakeWordEngine: 🧠 EMBEDDING: ✅ Got expected embedding size: 1×96=96
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Final embedding: 96 elements, 96 non-zero
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🧠 EMBEDDING: Statistics: avg=2.139543, std=15.689885
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎙️ PIPELINE: Embedding generated: 96 elements
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 📊 BUFFER: Adding embedding to temporal buffer: 96 elements
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 📊 BUFFER: Trimmed buffer to 16 embeddings
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 📊 BUFFER: Current buffer size: 16/16
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Starting wake word classification from buffer
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Input name: x.1
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Creating tensor shape: [1, 16, 96]
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Using 16 embeddings from buffer
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 0: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 1: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 2: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 3: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 4: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 5: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 6: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 7: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 8: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 9: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 10: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 11: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 12: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 13: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 14: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Time step 15: 96 features
-07-23 04:14:59.393 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Created tensor shape: [1, 16, 96]
-07-23 04:14:59.394 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Raw output type: class [[F
-07-23 04:14:59.394 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Output is Array with 1 elements
-07-23 04:14:59.394 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Batch has 1 features
-07-23 04:14:59.394 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Raw score from Array: 0.000005
-07-23 04:14:59.394 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Model output score: 0.000005, Final confidence: 0.000005
-07-23 04:14:59.394 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Model: hey_jarvis
-07-23 04:14:59.394 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: Very low confidence: 0.000005 - likely silence/background noise
-07-23 04:14:59.394 27877 28351 V OpenWakeWordEngine: 🎯 CLASSIFY: LOW confidence: 0.0000
-07-23 04:14:59.395 27877 28351 V OpenWakeWordEngine: 🎙️ PIPELINE: Confidence calculated: 4.708767E-6
-07-23 04:14:59.395 27877 28351 V WakeWordService: 🔍 THRESHOLD_CHECK: Confidence=0.000005, Threshold=0.100000, Pass=false
+07-23 05:23:03.470  3101  3998 I WakeWordModule: 🚀 START_DETECTION: ========== STARTING WAKE WORD DETECTION ==========
+07-23 05:23:03.470  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Service class: com.anonymous.MobileJarvisNative.wakeword.WakeWordService
+07-23 05:23:03.470  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Timestamp: 1753266183470
+07-23 05:23:03.470  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Android version: 34
+07-23 05:23:03.470  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Checking permissions...
+07-23 05:23:03.470  3101  3998 I WakeWordModule: 🚀 START_DETECTION: RECORD_AUDIO permission: true
+07-23 05:23:03.470  3101  3998 I WakeWordModule: 🚀 START_DETECTION: FOREGROUND_SERVICE_MICROPHONE permission: true
+07-23 05:23:03.471  3101  3998 D WakeWordModule: Set wake_word_enabled preference to true
+07-23 05:23:03.471  3101  3998 I WakeWordModule: 🚀 START_DETECTION: ✅ All permissions granted
+07-23 05:23:03.471  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Creating service intent for class: com.anonymous.MobileJarvisNative.wakeword.WakeWordService
+07-23 05:23:03.471  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Starting service...
+07-23 05:23:03.471  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Using startForegroundService() for Android O+
+07-23 05:23:03.472  3101  3998 I WakeWordModule: 🚀 START_DETECTION: ✅ Service start command sent successfully
+07-23 05:23:03.473  3101  3998 I WakeWordModule: 🚀 START_DETECTION: ✅ Wake word detection started successfully
+07-23 05:23:03.473  3101  3998 I WakeWordModule: 🚀 START_DETECTION: =====================================================
+07-23 05:23:03.477  3101  3998 I WakeWordModule: 🚀 START_DETECTION: ========== STARTING WAKE WORD DETECTION ==========
+07-23 05:23:03.477  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Service class: com.anonymous.MobileJarvisNative.wakeword.WakeWordService
+07-23 05:23:03.477  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Timestamp: 1753266183477
+07-23 05:23:03.477  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Android version: 34
+07-23 05:23:03.477  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Checking permissions...
+07-23 05:23:03.477  3101  3998 I WakeWordModule: 🚀 START_DETECTION: RECORD_AUDIO permission: true
+07-23 05:23:03.477  3101  3998 I WakeWordModule: 🚀 START_DETECTION: FOREGROUND_SERVICE_MICROPHONE permission: true
+07-23 05:23:03.477  3101  3998 D WakeWordModule: Set wake_word_enabled preference to true
+07-23 05:23:03.477  3101  3998 I WakeWordModule: 🚀 START_DETECTION: ✅ All permissions granted
+07-23 05:23:03.477  3101  3998 I WakeWordModule: 🚀 START_DETECTION: ℹ️ Service already running, updating state only
+07-23 05:23:03.755  3101  3998 I WakeWordModule: 🚀 START_DETECTION: ========== STARTING WAKE WORD DETECTION ==========
+07-23 05:23:03.755  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Service class: com.anonymous.MobileJarvisNative.wakeword.WakeWordService
+07-23 05:23:03.755  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Timestamp: 1753266183755
+07-23 05:23:03.755  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Android version: 34
+07-23 05:23:03.755  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Checking permissions...
+07-23 05:23:03.755  3101  3998 I WakeWordModule: 🚀 START_DETECTION: RECORD_AUDIO permission: true
+07-23 05:23:03.755  3101  3998 I WakeWordModule: 🚀 START_DETECTION: FOREGROUND_SERVICE_MICROPHONE permission: true
+07-23 05:23:03.756  3101  3998 D WakeWordModule: Set wake_word_enabled preference to true
+07-23 05:23:03.756  3101  3998 I WakeWordModule: 🚀 START_DETECTION: ✅ All permissions granted
+07-23 05:23:03.756  3101  3998 I WakeWordModule: 🚀 START_DETECTION: ℹ️ Service already running, updating state only
+07-23 05:23:04.478  3101  3998 D WakeWordModule: Current wake word state: enabled=true, serviceRunning=true
+07-23 05:23:04.496  3101  3998 D WakeWordModule: Current wake word state: enabled=true, serviceRunning=true
+07-23 05:23:04.772  3101  3998 I WakeWordModule: 🚀 START_DETECTION: ========== STARTING WAKE WORD DETECTION ==========
+07-23 05:23:04.773  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Service class: com.anonymous.MobileJarvisNative.wakeword.WakeWordService
+07-23 05:23:04.773  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Timestamp: 1753266184773
+07-23 05:23:04.773  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Android version: 34
+07-23 05:23:04.773  3101  3998 I WakeWordModule: 🚀 START_DETECTION: Checking permissions...
+07-23 05:23:04.773  3101  3998 I WakeWordModule: 🚀 START_DETECTION: RECORD_AUDIO permission: true
+07-23 05:23:04.773  3101  3998 I WakeWordModule: 🚀 START_DETECTION: FOREGROUND_SERVICE_MICROPHONE permission: true
+07-23 05:23:04.773  3101  3998 D WakeWordModule: Set wake_word_enabled preference to true
+07-23 05:23:04.773  3101  3998 I WakeWordModule: 🚀 START_DETECTION: ✅ All permissions granted
+07-23 05:23:04.773  3101  3998 I WakeWordModule: 🚀 START_DETECTION: ℹ️ Service already running, updating state only
