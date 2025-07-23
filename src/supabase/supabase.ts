@@ -111,6 +111,8 @@ export const DatabaseService = {
       // XAI LiveSearch settings
       xai_live_search_enabled: profile.xai_live_search_enabled,
       xai_live_search_safe_search: profile.xai_live_search_safe_search,
+      // Timezone setting
+      timezone: profile.timezone,
     }
   },
 
@@ -124,6 +126,7 @@ export const DatabaseService = {
     selected_deepgram_voice?: string;
     xai_live_search_enabled?: boolean;
     xai_live_search_safe_search?: boolean;
+    timezone?: string;
   }) {
     // First, ensure the user profile exists with all required fields
     let profile = await this.getUserProfile(userId);

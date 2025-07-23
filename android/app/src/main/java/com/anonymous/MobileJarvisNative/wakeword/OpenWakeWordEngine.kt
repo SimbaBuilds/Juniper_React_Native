@@ -3,23 +3,23 @@ package com.anonymous.MobileJarvisNative.wakeword
 import android.content.Context
 import android.content.res.AssetManager
 import android.util.Log
-import ai.onnxruntime.OnnxTensor
-import ai.onnxruntime.OrtEnvironment
-import ai.onnxruntime.OrtException
-import ai.onnxruntime.OrtSession
-import ai.onnxruntime.OrtSession.SessionOptions
+import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.InterpreterApi
 import java.io.InputStream
-import java.nio.FloatBuffer
-import java.util.Collections
-import kotlin.math.sqrt
+import java.io.File
+import java.io.FileOutputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
+import org.tensorflow.lite.support.common.FileUtil
 
 class OpenWakeWordEngine(private val context: Context) {
     private val TAG = "OpenWakeWordEngine"
     
-    private var ortEnvironment: OrtEnvironment? = null
-    private var wakeWordSession: OrtSession? = null
-    private var melSession: OrtSession? = null
-    private var embeddingSession: OrtSession? = null
+    private var wakeWordInterpreter: Interpreter? = null
+    private var melInterpreter: Interpreter? = null
+    private var embeddingInterpreter: Interpreter? = null
     
     private val SAMPLE_RATE = 16000
     private val CHUNK_SIZE = 1280 // 80ms chunks
@@ -68,11 +68,7 @@ class OpenWakeWordEngine(private val context: Context) {
     fun initialize(): Boolean {
         return try {
             Log.i(TAG, "🚀 ENGINE_INIT: ========== INITIALIZING OPENWAKEWORD ENGINE ==========")
-            Log.i(TAG, "🚀 ENGINE_INIT: Starting ONNX Runtime environment...")
-            
-            // Initialize ONNX Runtime environment
-            ortEnvironment = OrtEnvironment.getEnvironment()
-            Log.i(TAG, "🚀 ENGINE_INIT: ✅ ONNX Runtime environment created")
+            Log.i(TAG, "🚀 ENGINE_INIT: Starting TensorFlow Lite initialization...")
             
             // Load the base models (mel spectrogram and embedding)
             Log.i(TAG, "🚀 ENGINE_INIT: Loading base models (mel + embedding)...")
@@ -97,15 +93,136 @@ class OpenWakeWordEngine(private val context: Context) {
     
     private fun loadBaseModels() {
         try {
+            // Create interpreter options - aggressively disable all delegates
+            val options = Interpreter.Options()
+            options.setNumThreads(1) // Use single thread to avoid issues
+            options.setUseNNAPI(false) // Explicitly disable NNAPI
+            options.setAllowFp16PrecisionForFp32(false) // Disable FP16 to avoid precision issues
+            options.setAllowBufferHandleOutput(false)
+            options.setUseXNNPACK(false) // Disable XNNPACK delegate
+            // Don't add any delegates - force CPU execution
+            Log.d(TAG, "Interpreter options configured - threads: 1, NNAPI: false, FP16: false, XNNPACK: false")
+            
             // Load mel spectrogram model
-            val melModelBytes = loadModelFromAssets("models/melspectrogram.tflite")
-            val melOptions = SessionOptions()
-            melSession = ortEnvironment?.createSession(melModelBytes, melOptions)
+            Log.d(TAG, "🔧 STEP 1: Loading mel spectrogram model...")
+            val melModelBuffer = try {
+                val buffer = loadModelBufferFromAssets("models/melspectrogram.tflite")
+                Log.d(TAG, "✅ Custom model loading succeeded")
+                buffer
+            } catch (e: Exception) {
+                Log.w(TAG, "⚠️ Custom model loading failed, trying FileUtil: ${e.message}")
+                val buffer = FileUtil.loadMappedFile(context, "models/melspectrogram.tflite")
+                Log.d(TAG, "✅ FileUtil model loading succeeded")
+                buffer
+            }
+            Log.d(TAG, "📊 Mel model buffer size: ${melModelBuffer.capacity()} bytes")
+            Log.d(TAG, "📊 Buffer type: ${melModelBuffer.javaClass.simpleName}")
+            Log.d(TAG, "📊 Buffer isDirect: ${melModelBuffer.isDirect}")
+            Log.d(TAG, "📊 Buffer isReadOnly: ${melModelBuffer.isReadOnly}")
+            
+            try {
+                Log.d(TAG, "🔧 STEP 2: Creating mel spectrogram interpreter with conservative options...")
+                Log.d(TAG, "📋 Options summary: threads=1, NNAPI=false, FP16=false, XNNPACK=false")
+                
+                // Create interpreter - this is where the error typically occurs
+                Log.d(TAG, "🏗️ Calling Interpreter constructor...")
+                melInterpreter = Interpreter(melModelBuffer, options)
+                Log.d(TAG, "✅ STEP 2 COMPLETE: Mel spectrogram interpreter created successfully!")
+                
+                // Try to get model info before allocation
+                Log.d(TAG, "Getting model input/output information...")
+                val inputCount = melInterpreter?.inputTensorCount ?: 0
+                val outputCount = melInterpreter?.outputTensorCount ?: 0
+                Log.d(TAG, "Mel model - Inputs: $inputCount, Outputs: $outputCount")
+                
+                if (inputCount > 0) {
+                    val inputTensor = melInterpreter?.getInputTensor(0)
+                    val inputShape = inputTensor?.shape()
+                    Log.d(TAG, "Input tensor 0 - shape: ${inputShape?.contentToString()}, dtype: ${inputTensor?.dataType()}")
+                }
+                
+                // Try manual tensor allocation without resize
+                Log.d(TAG, "Attempting to allocate tensors without resize...")
+                try {
+                    melInterpreter?.allocateTensors()
+                    Log.d(TAG, "✅ Mel model tensors allocated successfully")
+                } catch (allocError: Exception) {
+                    Log.e(TAG, "❌ Tensor allocation failed: ${allocError.message}")
+                    Log.e(TAG, "Stack trace for allocation error:", allocError)
+                    throw allocError
+                }
+                
+                // Log detailed model information after successful allocation
+                Log.d(TAG, "Logging detailed model information...")
+                for (i in 0 until inputCount) {
+                    val tensor = melInterpreter?.getInputTensor(i)
+                    Log.d(TAG, "Mel input $i: shape=${tensor?.shape()?.contentToString()}, dtype=${tensor?.dataType()}")
+                }
+                
+                for (i in 0 until outputCount) {
+                    val tensor = melInterpreter?.getOutputTensor(i)
+                    Log.d(TAG, "Mel output $i: shape=${tensor?.shape()?.contentToString()}, dtype=${tensor?.dataType()}")
+                }
+                
+                Log.d(TAG, "✅ Mel spectrogram model fully initialized")
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Failed to initialize mel interpreter")
+                Log.e(TAG, "Error type: ${e.javaClass.simpleName}")
+                Log.e(TAG, "Error message: ${e.message}")
+                Log.e(TAG, "Detailed stack trace:", e)
+                
+                // Try to provide more context about the failure
+                if (e.message?.contains("delegate") == true) {
+                    Log.e(TAG, "This appears to be a delegate-related error despite our configuration")
+                }
+                if (e.message?.contains("BytesRequired") == true) {
+                    Log.e(TAG, "This is the BytesRequired overflow error - model may be incompatible")
+                }
+                
+                // Try a fallback approach with even more conservative settings
+                Log.w(TAG, "Attempting fallback initialization with minimal options...")
+                try {
+                    val fallbackOptions = Interpreter.Options()
+                    // Absolutely minimal configuration
+                    fallbackOptions.setNumThreads(1)
+                    
+                    melInterpreter = Interpreter(melModelBuffer, fallbackOptions)
+                    Log.i(TAG, "✅ Fallback mel interpreter created successfully!")
+                } catch (fallbackError: Exception) {
+                    Log.e(TAG, "❌ Fallback approach also failed: ${fallbackError.message}")
+                    throw e // Throw original error
+                }
+            }
             
             // Load embedding model
-            val embeddingModelBytes = loadModelFromAssets("models/embedding_model.tflite")
-            val embeddingOptions = SessionOptions()
-            embeddingSession = ortEnvironment?.createSession(embeddingModelBytes, embeddingOptions)
+            val embeddingModelBuffer = try {
+                loadModelBufferFromAssets("models/embedding_model.tflite")
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to load embedding model as MappedByteBuffer, trying FileUtil: ${e.message}")
+                FileUtil.loadMappedFile(context, "models/embedding_model.tflite")
+            }
+            Log.d(TAG, "Embedding model buffer size: ${embeddingModelBuffer.capacity()} bytes")
+            
+            try {
+                embeddingInterpreter = Interpreter(embeddingModelBuffer, options)
+                Log.d(TAG, "Embedding model loaded")
+                
+                // Pre-allocate tensors
+                try {
+                    embeddingInterpreter?.allocateTensors()
+                    Log.d(TAG, "Embedding model tensors allocated")
+                } catch (allocError: Exception) {
+                    Log.w(TAG, "Could not allocate embedding tensors: ${allocError.message}")
+                }
+                
+                // Log embedding model details
+                val embInputCount = embeddingInterpreter?.inputTensorCount ?: 0
+                val embOutputCount = embeddingInterpreter?.outputTensorCount ?: 0
+                Log.d(TAG, "Embedding model - Inputs: $embInputCount, Outputs: $embOutputCount")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to initialize embedding interpreter: ${e.message}")
+                throw e
+            }
             
             Log.d(TAG, "Base models loaded successfully")
         } catch (e: Exception) {
@@ -116,17 +233,46 @@ class OpenWakeWordEngine(private val context: Context) {
     
     private fun loadWakeWordModel(modelName: String) {
         try {
-            // Clean up existing wake word session
-            wakeWordSession?.close()
+            // Clean up existing wake word interpreter
+            wakeWordInterpreter?.close()
+            
+            // Create interpreter options - same conservative settings as base models
+            val options = Interpreter.Options()
+            options.setNumThreads(1) // Use single thread for stability
+            options.setUseNNAPI(false)
+            options.setAllowFp16PrecisionForFp32(false)
+            options.setAllowBufferHandleOutput(false)
+            options.setUseXNNPACK(false) // Disable XNNPACK delegate
+            Log.d(TAG, "Wake word interpreter options configured conservatively")
             
             // Load the specific wake word model
             val modelFileName = "${modelName}_v0.1.tflite"
-            val modelBytes = loadModelFromAssets("models/$modelFileName")
-            val options = SessionOptions()
-            wakeWordSession = ortEnvironment?.createSession(modelBytes, options)
+            val modelBuffer = try {
+                loadModelBufferFromAssets("models/$modelFileName")
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to load wake word model as MappedByteBuffer, trying FileUtil: ${e.message}")
+                FileUtil.loadMappedFile(context, "models/$modelFileName")
+            }
+            Log.d(TAG, "Wake word model buffer size: ${modelBuffer.capacity()} bytes")
             
-            currentModel = modelName
-            Log.d(TAG, "Wake word model '$modelName' loaded successfully")
+            try {
+                wakeWordInterpreter = Interpreter(modelBuffer, options)
+                Log.d(TAG, "Wake word interpreter created")
+                
+                // Pre-allocate tensors
+                try {
+                    wakeWordInterpreter?.allocateTensors()
+                    Log.d(TAG, "Wake word model tensors allocated")
+                } catch (allocError: Exception) {
+                    Log.w(TAG, "Could not allocate wake word tensors: ${allocError.message}")
+                }
+                
+                currentModel = modelName
+                Log.d(TAG, "Wake word model '$modelName' loaded successfully")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to initialize wake word interpreter: ${e.message}")
+                throw e
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load wake word model '$modelName': ${e.message}", e)
             throw e
@@ -208,18 +354,22 @@ class OpenWakeWordEngine(private val context: Context) {
     
     private fun extractMelSpectrogram(audioData: FloatArray): FloatArray {
         return try {
-            val inputName = melSession?.inputNames?.iterator()?.next()
-            val shape = longArrayOf(1, audioData.size.toLong())
-            val inputTensor = OnnxTensor.createTensor(ortEnvironment, FloatBuffer.wrap(audioData), shape)
+            // Prepare input and output buffers
+            val inputBuffer = Array(1) { audioData }
+            val outputShape = melInterpreter?.getOutputTensor(0)?.shape() ?: intArrayOf(1, MEL_SPEC_SIZE, 80)
+            val outputBuffer = Array(1) { Array(outputShape[1]) { FloatArray(outputShape[2]) } }
             
-            val inputs = Collections.singletonMap(inputName, inputTensor)
-            val output = melSession?.run(inputs)
+            // Run inference
+            melInterpreter?.run(inputBuffer, outputBuffer)
             
-            val result = output?.get(0)?.value as Array<*>
-            val melSpec = (result[0] as FloatArray)
-            
-            inputTensor.close()
-            output?.close()
+            // Flatten the output
+            val melSpec = FloatArray(outputShape[1] * outputShape[2])
+            var idx = 0
+            for (i in 0 until outputShape[1]) {
+                for (j in 0 until outputShape[2]) {
+                    melSpec[idx++] = outputBuffer[0][i][j]
+                }
+            }
             
             melSpec
         } catch (e: Exception) {
@@ -230,20 +380,14 @@ class OpenWakeWordEngine(private val context: Context) {
     
     private fun generateEmbedding(melSpectrogram: FloatArray): FloatArray {
         return try {
-            val inputName = embeddingSession?.inputNames?.iterator()?.next()
-            val shape = longArrayOf(1, melSpectrogram.size.toLong())
-            val inputTensor = OnnxTensor.createTensor(ortEnvironment, FloatBuffer.wrap(melSpectrogram), shape)
+            // Prepare input and output buffers
+            val inputBuffer = Array(1) { melSpectrogram }
+            val outputBuffer = Array(1) { FloatArray(EMBEDDING_SIZE) }
             
-            val inputs = Collections.singletonMap(inputName, inputTensor)
-            val output = embeddingSession?.run(inputs)
+            // Run inference
+            embeddingInterpreter?.run(inputBuffer, outputBuffer)
             
-            val result = output?.get(0)?.value as Array<*>
-            val embedding = (result[0] as FloatArray)
-            
-            inputTensor.close()
-            output?.close()
-            
-            embedding
+            outputBuffer[0]
         } catch (e: Exception) {
             Log.e(TAG, "Error generating embedding: ${e.message}", e)
             FloatArray(EMBEDDING_SIZE) // Return empty array with expected size
@@ -252,25 +396,21 @@ class OpenWakeWordEngine(private val context: Context) {
     
     private fun classifyWakeWord(embedding: FloatArray): Float {
         return try {
-            val inputName = wakeWordSession?.inputNames?.iterator()?.next()
-            val shape = longArrayOf(1, embedding.size.toLong())
-            val inputTensor = OnnxTensor.createTensor(ortEnvironment, FloatBuffer.wrap(embedding), shape)
+            // Prepare input and output buffers
+            val inputBuffer = Array(1) { embedding }
+            val outputBuffer = Array(1) { FloatArray(1) }
             
-            val inputs = Collections.singletonMap(inputName, inputTensor)
-            val output = wakeWordSession?.run(inputs)
+            // Run inference
+            wakeWordInterpreter?.run(inputBuffer, outputBuffer)
             
-            val result = output?.get(0)?.value as Array<*>
-            val scores = (result[0] as FloatArray)
-            
-            inputTensor.close()
-            output?.close()
+            val rawScore = outputBuffer[0][0]
             
             // Apply sigmoid to get confidence score
-            val confidence = sigmoid(scores[0])
+            val confidence = sigmoid(rawScore)
             
             // Log detailed confidence info for significant scores
             if (confidence > 0.1f) {
-                Log.d(TAG, "🎯 CLASSIFICATION: Raw score: ${String.format("%.4f", scores[0])}, Confidence: ${String.format("%.4f", confidence)}, Model: $currentModel")
+                Log.d(TAG, "🎯 CLASSIFICATION: Raw score: ${String.format("%.4f", rawScore)}, Confidence: ${String.format("%.4f", confidence)}, Model: $currentModel")
             }
             
             confidence
@@ -284,15 +424,41 @@ class OpenWakeWordEngine(private val context: Context) {
         return 1.0f / (1.0f + kotlin.math.exp(-x))
     }
     
-    private fun loadModelFromAssets(fileName: String): ByteArray {
+    private fun loadModelBufferFromAssets(fileName: String): MappedByteBuffer {
         return try {
-            val assetManager: AssetManager = context.assets
-            val inputStream: InputStream = assetManager.open(fileName)
-            val bytes = inputStream.readBytes()
-            inputStream.close()
+            // Copy asset to internal storage first
+            val modelFile = File(context.filesDir, fileName.replace("/", "_"))
             
-            Log.d(TAG, "Loaded model $fileName (${bytes.size} bytes)")
-            bytes
+            if (!modelFile.exists() || modelFile.length() == 0L) {
+                Log.d(TAG, "Copying model from assets to internal storage: $fileName")
+                val assetManager: AssetManager = context.assets
+                val inputStream: InputStream = assetManager.open(fileName)
+                val outputStream = FileOutputStream(modelFile)
+                
+                inputStream.use { input ->
+                    outputStream.use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                Log.d(TAG, "Model copied successfully: ${modelFile.length()} bytes")
+            } else {
+                Log.d(TAG, "Using cached model: $fileName (${modelFile.length()} bytes)")
+            }
+            
+            // Memory-map the file
+            val fileInputStream = java.io.FileInputStream(modelFile)
+            val fileChannel = fileInputStream.channel
+            val mappedBuffer = fileChannel.map(
+                FileChannel.MapMode.READ_ONLY,
+                0,
+                fileChannel.size()
+            )
+            
+            fileChannel.close()
+            fileInputStream.close()
+            
+            Log.d(TAG, "Model mapped successfully: $fileName")
+            mappedBuffer
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load model from assets: $fileName", e)
             throw e
@@ -311,15 +477,13 @@ class OpenWakeWordEngine(private val context: Context) {
         try {
             Log.d(TAG, "Cleaning up OpenWakeWord engine...")
             
-            wakeWordSession?.close()
-            melSession?.close()
-            embeddingSession?.close()
-            ortEnvironment?.close()
+            wakeWordInterpreter?.close()
+            melInterpreter?.close()
+            embeddingInterpreter?.close()
             
-            wakeWordSession = null
-            melSession = null
-            embeddingSession = null
-            ortEnvironment = null
+            wakeWordInterpreter = null
+            melInterpreter = null
+            embeddingInterpreter = null
             
             audioBuffer.clear()
             isInitialized = false
@@ -331,6 +495,6 @@ class OpenWakeWordEngine(private val context: Context) {
     }
     
     fun isReady(): Boolean {
-        return isInitialized && wakeWordSession != null && melSession != null && embeddingSession != null
+        return isInitialized && wakeWordInterpreter != null && melInterpreter != null && embeddingInterpreter != null
     }
 }

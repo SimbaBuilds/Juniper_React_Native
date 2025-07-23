@@ -17,6 +17,7 @@ import { SettingsTextInput } from './components/SettingsTextInput';
 import { SettingsArrayInput } from './components/SettingsArrayInput';
 import { SettingsSlider } from './components/SettingsSlider';
 import { VoiceSelectionDropdown } from './components/VoiceSelectionDropdown';
+import { PermissionsCard } from './components/PermissionsCard';
 import WakeWordService from '../wakeword/WakeWordService';
 
 // Voice Settings interface
@@ -31,6 +32,8 @@ export interface VoiceSettings {
   // XAI LiveSearch settings
   xaiLiveSearchEnabled: boolean;
   xaiLiveSearchSafeSearch: boolean;
+  // Timezone setting
+  timezone: string;
 }
 
 // Available wake words from Picovoice (built-in + custom)
@@ -42,6 +45,48 @@ const AVAILABLE_WAKE_WORDS = [
   { label: 'Picovoice', value: 'PICOVOICE' },
   { label: 'Porcupine', value: 'PORCUPINE' },
   { label: 'Terminator', value: 'TERMINATOR' },
+];
+
+// Available timezones (common ones)
+const AVAILABLE_TIMEZONES = [
+  // US Timezones
+  { label: 'Pacific Time (PT)', value: 'America/Los_Angeles' },
+  { label: 'Mountain Time (MT)', value: 'America/Denver' },
+  { label: 'Central Time (CT)', value: 'America/Chicago' },
+  { label: 'Eastern Time (ET)', value: 'America/New_York' },
+  { label: 'Alaska Time (AKT)', value: 'America/Anchorage' },
+  { label: 'Hawaii Time (HST)', value: 'Pacific/Honolulu' },
+  
+  // Major International Timezones
+  { label: 'UTC', value: 'UTC' },
+  { label: 'London (GMT/BST)', value: 'Europe/London' },
+  { label: 'Paris (CET/CEST)', value: 'Europe/Paris' },
+  { label: 'Berlin (CET/CEST)', value: 'Europe/Berlin' },
+  { label: 'Moscow (MSK)', value: 'Europe/Moscow' },
+  { label: 'Dubai (GST)', value: 'Asia/Dubai' },
+  { label: 'Mumbai (IST)', value: 'Asia/Kolkata' },
+  { label: 'Bangkok (ICT)', value: 'Asia/Bangkok' },
+  { label: 'Singapore (SGT)', value: 'Asia/Singapore' },
+  { label: 'Tokyo (JST)', value: 'Asia/Tokyo' },
+  { label: 'Seoul (KST)', value: 'Asia/Seoul' },
+  { label: 'Sydney (AEDT/AEST)', value: 'Australia/Sydney' },
+  { label: 'Auckland (NZDT/NZST)', value: 'Pacific/Auckland' },
+  
+  // Additional US Cities
+  { label: 'Phoenix (MST)', value: 'America/Phoenix' },
+  { label: 'Detroit (EST/EDT)', value: 'America/Detroit' },
+  
+  // Canada
+  { label: 'Toronto (EST/EDT)', value: 'America/Toronto' },
+  { label: 'Vancouver (PST/PDT)', value: 'America/Vancouver' },
+  
+  // South America
+  { label: 'São Paulo (BRT)', value: 'America/Sao_Paulo' },
+  { label: 'Buenos Aires (ART)', value: 'America/Argentina/Buenos_Aires' },
+  
+  // Africa
+  { label: 'Cairo (EET)', value: 'Africa/Cairo' },
+  { label: 'Johannesburg (SAST)', value: 'Africa/Johannesburg' },
 ];
 
 // Available Deepgram Aura voices
@@ -147,8 +192,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const [localGeneralInstructions, setLocalGeneralInstructions] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // State for permissions tooltip
-  const [showPermissionsTooltip, setShowPermissionsTooltip] = useState(false);
+
 
   // Initialize and sync local state when settings load or change
   useEffect(() => {
@@ -340,57 +384,28 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         )}
         
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderWithInfo}>
-            <Text style={styles.sectionTitle}>Permissions</Text>
-            <TouchableOpacity
-              style={styles.infoIcon}
-              onPress={() => setShowPermissionsTooltip(!showPermissionsTooltip)}
-            >
-              <Ionicons name="information-circle-outline" size={20} color="#B0B0B0" />
-            </TouchableOpacity>
-          </View>
-          
-          {showPermissionsTooltip && (
-            <View style={styles.permissionsTooltip}>
-              <Text style={styles.explanationText}>
-                Your assistant cannot change permissions for you
-              </Text>
-            </View>
-          )}
-          
-          <View style={styles.permissionItem}>
-            <Text style={styles.permissionTitle}>Microphone Access</Text>
-            <Text style={styles.permissionStatus}>
-              Status: {hasMicrophonePermission ? '✅ Granted' : '❌ Denied'}
-            </Text>
-            {!hasMicrophonePermission && (
-              <Text 
-                style={styles.permissionButton}
-                onPress={requestMicrophone}
-              >
-                Request Permission
-              </Text>
-            )}
-          </View>
+        {/* Permissions Section */}
+        <PermissionsCard
+          hasMicrophonePermission={hasMicrophonePermission}
+          hasBatteryOptimizationExemption={hasBatteryOptimizationExemption}
+          requestMicrophone={requestMicrophone}
+          requestBatteryExemption={requestBatteryExemption}
+        />
 
-          {Platform.OS === 'android' && (
-            <View style={styles.permissionItem}>
-              <Text style={styles.permissionTitle}>Battery Optimization</Text>
-              <Text style={styles.permissionStatus}>
-                Status: {hasBatteryOptimizationExemption ? '✅ Optimized' : '❌ Not Optimized'}
-              </Text>
-              {!hasBatteryOptimizationExemption && (
-                <Text 
-                  style={styles.permissionButton}
-                  onPress={requestBatteryExemption}
-                >
-                  Optimize Battery Usage
-                </Text>
-              )}
-            </View>
-          )}
-        </View>
+        {/* Timezone Section */}
+        <SettingsDropdown
+          label="Timezone"
+          value={settings.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'}
+          options={AVAILABLE_TIMEZONES}
+          onValueChange={async (timezone) => {
+            console.log('🌍 TIMEZONE: Timezone changed in settings screen');
+            console.log('🌍 TIMEZONE: Previous timezone:', settings.timezone || 'auto-detected');
+            console.log('🌍 TIMEZONE: New timezone:', timezone);
+            await handleVoiceSettingsUpdate({ timezone });
+            console.log('🌍 TIMEZONE: ✅ Timezone setting update completed');
+          }}
+          description="Your local timezone. This helps your assistant provide accurate time-based responses and scheduling."
+        />
 
         {/* Voice Settings Section */}
         <View style={styles.section}>
@@ -652,20 +667,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#FFFFFF',
   },
-  sectionHeaderWithInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  infoIcon: {
-    marginLeft: 8,
-  },
-  permissionsTooltip: {
-    backgroundColor: '#1E1E1E',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
   wakeWordExplanation: {
     backgroundColor: '#1E1E1E',
     padding: 16,
@@ -676,25 +677,6 @@ const styles = StyleSheet.create({
     color: '#B0B0B0',
     fontSize: 14,
     lineHeight: 20,
-  },
-  permissionItem: {
-    marginBottom: 16,
-  },
-  permissionTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
-  },
-  permissionStatus: {
-    fontSize: 14,
-    color: '#B0B0B0',
-    marginTop: 4,
-  },
-  permissionButton: {
-    color: '#4A90E2',
-    marginTop: 8,
-    fontSize: 14,
-    fontWeight: '500',
   },
   accountSection: {
     backgroundColor: '#1E1E1E',
