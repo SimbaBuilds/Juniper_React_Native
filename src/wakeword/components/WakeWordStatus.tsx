@@ -6,7 +6,7 @@ import { useVoice } from '../../voice/VoiceContext';
 export const WakeWordStatus: React.FC = () => {
     const { isEnabled, isRunning } = useWakeWord();
     const { voiceSettings } = useVoice();
-    const selectedWakeWord = voiceSettings?.selectedWakeWord || 'Jarvis';
+    const selectedWakeWord = voiceSettings?.selectedWakeWord || 'Hey Jarvis';
 
     const getStatusColor = () => {
         if (!isEnabled) return '#666666';

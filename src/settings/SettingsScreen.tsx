@@ -36,15 +36,23 @@ export interface VoiceSettings {
   timezone: string;
 }
 
-// Available wake words from Picovoice (built-in + custom)
+// Available wake words from OpenWakeWord (native Android)
 const AVAILABLE_WAKE_WORDS = [
-  { label: 'Bumblebee', value: 'BUMBLEBEE' },
-  { label: 'Grasshopper', value: 'GRASSHOPPER' },
-  { label: 'Jarvis', value: 'JARVIS' },
-  { label: 'Juniper', value: 'JUNIPER' },
-  { label: 'Picovoice', value: 'PICOVOICE' },
-  { label: 'Porcupine', value: 'PORCUPINE' },
-  { label: 'Terminator', value: 'TERMINATOR' },
+  { label: 'Hey Jarvis', value: 'Hey Jarvis' },
+  { label: 'Hey Juni', value: 'Hey Juni' },
+  { label: 'Hey Jasmine', value: 'Hey Jasmine' },
+  { label: 'Hey Jade', value: 'Hey Jade' },
+  { label: 'Hey Jay', value: 'Hey Jay' },
+  { label: 'Hey Jasper', value: 'Hey Jasper' },
+  { label: 'Hey Jerry', value: 'Hey Jerry' },
+  { label: 'Alexa', value: 'Alexa' },
+  { label: 'Alex', value: 'Alex' },
+  { label: 'Aloe', value: 'Aloe' },
+  { label: 'Hey Mycroft', value: 'Hey Mycroft' },
+  { label: 'Hey Michael', value: 'Hey Michael' },
+  { label: 'Hey Mulberry', value: 'Hey Mulberry' },
+  { label: 'Hey Myrillis', value: 'Hey Myrillis' },
+  { label: 'Hey Marigold', value: 'Hey Marigold' },
 ];
 
 // Available timezones (common ones)
@@ -448,11 +456,11 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.wakeWordSettingsCard}>
               <SettingsDropdown
                 label="Wake Word"
-                value={settings.selectedWakeWord || 'JARVIS'}
+                value={settings.selectedWakeWord || 'Hey Jarvis'}
                 options={AVAILABLE_WAKE_WORDS}
                 onValueChange={async (selectedWakeWord) => {
                   console.log('🎯 WAKEWORD_SELECTION: Wake word changed in settings screen');
-                  console.log('🎯 WAKEWORD_SELECTION: Previous wake word:', settings.selectedWakeWord || 'JARVIS');
+                  console.log('🎯 WAKEWORD_SELECTION: Previous wake word:', settings.selectedWakeWord || 'Hey Jarvis');
                   console.log('🎯 WAKEWORD_SELECTION: New wake word:', selectedWakeWord);
                   console.log('🎯 WAKEWORD_SELECTION: Available options:', AVAILABLE_WAKE_WORDS.map(w => w.value));
                   

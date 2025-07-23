@@ -12,13 +12,15 @@ const defaultVoiceSettings: VoiceSettings = {
   deepgramEnabled: false,
   baseLanguageModel: 'claude-sonnet-4-20250514',
   generalInstructions: '',
-  selectedWakeWord: 'JARVIS',
+  selectedWakeWord: 'Hey Jarvis',
   wakeWordSensitivity: 0.3,
   wakeWordDetectionEnabled: false,
   selectedDeepgramVoice: 'aura-2-thalia-en',
   // XAI LiveSearch settings
   xaiLiveSearchEnabled: false,
   xaiLiveSearchSafeSearch: true,
+  // Timezone setting
+  timezone: 'UTC',
 };
 
 export const useVoiceSettings = () => {

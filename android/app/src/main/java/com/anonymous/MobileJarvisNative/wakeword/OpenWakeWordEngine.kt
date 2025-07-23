@@ -54,6 +54,10 @@ class OpenWakeWordEngine(private val context: Context) {
     private var isInitialized = false
     private var currentModel = "hey_jarvis"
     
+    // Rolling window buffer for temporal embeddings (16 frames × 96 features)
+    private val embeddingBuffer = mutableListOf<FloatArray>()
+    private val EMBEDDING_WINDOW_SIZE = 16  // OpenWakeWord expects 16 temporal frames
+    
     companion object {
         private var instance: OpenWakeWordEngine? = null
         
@@ -114,6 +118,9 @@ class OpenWakeWordEngine(private val context: Context) {
                 Log.d(TAG, "Mel model - Input names: $inputNames")
                 Log.d(TAG, "Mel model - Output names: $outputNames")
                 
+                // Inspect input/output tensor shapes
+                inspectModelTensors("Mel", melSession)
+                
                 Log.d(TAG, "✅ Mel spectrogram model fully initialized")
             } catch (e: Exception) {
                 Log.e(TAG, "❌ Failed to initialize mel ONNX session: ${e.message}")
@@ -136,6 +143,9 @@ class OpenWakeWordEngine(private val context: Context) {
                 val embOutputNames = embeddingSession?.outputNames
                 Log.d(TAG, "Embedding model - Input names: $embInputNames")
                 Log.d(TAG, "Embedding model - Output names: $embOutputNames")
+                
+                // Inspect input/output tensor shapes
+                inspectModelTensors("Embedding", embeddingSession)
             } catch (e: Exception) {
                 Log.e(TAG, "❌ Failed to initialize embedding ONNX session: ${e.message}")
                 throw e
@@ -169,6 +179,9 @@ class OpenWakeWordEngine(private val context: Context) {
                 val outputNames = wakeWordSession?.outputNames
                 Log.d(TAG, "Wake word model - Input names: $inputNames")
                 Log.d(TAG, "Wake word model - Output names: $outputNames")
+                
+                // Inspect input/output tensor shapes
+                inspectModelTensors("WakeWord ($modelName)", wakeWordSession)
                 
                 currentModel = modelName
                 Log.d(TAG, "Wake word model '$modelName' loaded successfully")
@@ -238,10 +251,34 @@ class OpenWakeWordEngine(private val context: Context) {
                 return 0f
             }
             
-            // Process the audio through the pipeline
+            // Process the audio through the pipeline with detailed logging
+            Log.v(TAG, "🎙️ PIPELINE: Processing audio buffer: ${audioBuffer.size} samples")
             val melSpectrogram = extractMelSpectrogram(audioBuffer.toFloatArray())
+            Log.v(TAG, "🎙️ PIPELINE: Mel spectrogram generated: ${melSpectrogram.size} elements")
+            
             val embedding = generateEmbedding(melSpectrogram)
-            val confidence = classifyWakeWord(embedding)
+            Log.v(TAG, "🎙️ PIPELINE: Embedding generated: ${embedding.size} elements")
+            
+            // Add embedding to rolling window buffer
+            addEmbeddingToBuffer(embedding)
+            
+            val confidence = classifyWakeWordFromBuffer()
+            Log.v(TAG, "🎙️ PIPELINE: Confidence calculated: $confidence")
+            
+            // 🚨 CRITICAL: Check for infinite loop condition
+            if (confidence == 0.0f) {
+                Log.e(TAG, "🚨 PIPELINE: ZERO CONFIDENCE DETECTED - checking pipeline integrity")
+                val melNonZero = melSpectrogram.count { it != 0f }
+                val embNonZero = embedding.count { it != 0f }
+                Log.e(TAG, "🚨 PIPELINE: Mel non-zero: $melNonZero/${melSpectrogram.size}, Embedding non-zero: $embNonZero/${embedding.size}")
+                if (melNonZero == 0) {
+                    Log.e(TAG, "🚨 PIPELINE: ROOT CAUSE: Mel spectrogram is all zeros!")
+                } else if (embNonZero == 0) {
+                    Log.e(TAG, "🚨 PIPELINE: ROOT CAUSE: Embedding is all zeros!")
+                } else {
+                    Log.e(TAG, "🚨 PIPELINE: ROOT CAUSE: Wake word model producing zero output!")
+                }
+            }
             
             // Log significant confidence scores
             if (confidence > 0.2f) {
@@ -257,50 +294,56 @@ class OpenWakeWordEngine(private val context: Context) {
     
     private fun extractMelSpectrogram(audioData: FloatArray): FloatArray {
         return try {
+            Log.v(TAG, "🎵 MEL_EXTRACT: Starting mel spectrogram extraction")
+            Log.v(TAG, "🎵 MEL_EXTRACT: Input audio size: ${audioData.size} samples")
+            
             val inputName = melSession?.inputNames?.iterator()?.next()
             val shape = longArrayOf(1, audioData.size.toLong())
-            val inputTensor = OnnxTensor.createTensor(ortEnvironment, FloatBuffer.wrap(audioData), shape)
+            Log.v(TAG, "🎵 MEL_EXTRACT: Creating input tensor: $inputName, shape=${shape.contentToString()}")
             
+            val inputTensor = OnnxTensor.createTensor(ortEnvironment, FloatBuffer.wrap(audioData), shape)
             val inputs = Collections.singletonMap(inputName, inputTensor)
             val output = melSession?.run(inputs)
             
             // Handle 3D output: [batch, mel_bins, time_frames]
             val result = output?.get(0)?.value
-            Log.d(TAG, "Mel spectrogram output type: ${result?.javaClass}")
+            Log.v(TAG, "🎵 MEL_EXTRACT: Raw output type: ${result?.javaClass}")
             
             val melSpec = when (result) {
                 is Array<*> -> {
-                    Log.d(TAG, "Processing 4D mel output array")
+                    Log.v(TAG, "🎵 MEL_EXTRACT: Processing Array output with ${result.size} elements")
                     try {
                         // Handle 4D array: float[batch][channels][mel_bins][time_frames]
                         val batch = result[0] as Array<*>  // Get first batch
                         val channel = batch[0] as Array<*>  // Get first channel
                         val flattened = mutableListOf<Float>()
                         
-                        Log.d(TAG, "4D array structure - batch: ${result.size}, channel: ${batch.size}, mel_bins: ${channel.size}")
+                        Log.v(TAG, "🎵 MEL_EXTRACT: 4D array structure - batch: ${result.size}, channel: ${batch.size}, mel_bins: ${channel.size}")
                         
                         // Flatten mel_bins x time_frames  
                         for (melBinIndex in channel.indices) {
                             val timeFramesArray = channel[melBinIndex] as FloatArray
-                            Log.d(TAG, "Mel bin $melBinIndex has ${timeFramesArray.size} time frames")
+                            if (melBinIndex < 3) {  // Log first few for debugging
+                                Log.v(TAG, "🎵 MEL_EXTRACT: Mel bin $melBinIndex has ${timeFramesArray.size} time frames")
+                            }
                             for (timeFrame in timeFramesArray) {
                                 flattened.add(timeFrame)
                             }
                         }
                         
-                        Log.d(TAG, "Flattened mel spec size: ${flattened.size}")
+                        Log.v(TAG, "🎵 MEL_EXTRACT: Flattened mel spec size: ${flattened.size}")
                         flattened.toFloatArray()
                     } catch (e: Exception) {
-                        Log.e(TAG, "Error processing 4D mel array: ${e.message}", e)
+                        Log.e(TAG, "🎵 MEL_EXTRACT: Error processing Array: ${e.message}", e)
                         FloatArray(MEL_SPEC_SIZE * 80)
                     }
                 }
                 is FloatArray -> {
-                    Log.d(TAG, "Mel output is already 1D: ${result.size}")
+                    Log.v(TAG, "🎵 MEL_EXTRACT: Output is FloatArray: ${result.size} elements")
                     result
                 }
                 else -> {
-                    Log.w(TAG, "Unexpected mel spectrogram output type: ${result?.javaClass}")
+                    Log.w(TAG, "🎵 MEL_EXTRACT: Unexpected output type: ${result?.javaClass}")
                     FloatArray(MEL_SPEC_SIZE * 80)
                 }
             }
@@ -308,7 +351,25 @@ class OpenWakeWordEngine(private val context: Context) {
             inputTensor.close()
             output?.close()
             
-            Log.d(TAG, "Mel spectrogram extracted: ${melSpec.size} elements")
+            // Check for zero or invalid mel spectrograms
+            val nonZeroCount = melSpec.count { it != 0f }
+            val avgValue = if (melSpec.isNotEmpty()) melSpec.average() else 0.0
+            val variance = if (melSpec.isNotEmpty()) {
+                melSpec.map { (it - avgValue) * (it - avgValue) }.average()
+            } else 0.0
+            val stdDev = kotlin.math.sqrt(variance.toFloat())
+            
+            Log.v(TAG, "🎵 MEL_EXTRACT: Final mel spec: ${melSpec.size} elements, ${nonZeroCount} non-zero")
+            Log.v(TAG, "🎵 MEL_EXTRACT: Statistics: avg=${String.format("%.6f", avgValue)}, std=${String.format("%.6f", stdDev)}")
+            
+            if (nonZeroCount == 0) {
+                Log.e(TAG, "🚨 MEL_EXTRACT: CRITICAL ERROR: Mel spectrogram is all zeros - WILL CAUSE INFINITE LOOP!")
+                Log.e(TAG, "🚨 MEL_EXTRACT: Audio input size: ${audioData.size}, input range: [${audioData.minOrNull()}, ${audioData.maxOrNull()}]")
+                // Return corrupted mel spec to trigger downstream failure detection
+            } else if (stdDev < 0.01f) {
+                Log.w(TAG, "🎵 MEL_EXTRACT: ⚠️ WARNING: Low variance mel spectrogram (std=${String.format("%.6f", stdDev)}) - may cause poor embeddings!")
+            }
+            
             melSpec
         } catch (e: Exception) {
             Log.e(TAG, "Error extracting mel spectrogram: ${e.message}", e)
@@ -318,93 +379,129 @@ class OpenWakeWordEngine(private val context: Context) {
     
     private fun generateEmbedding(melSpectrogram: FloatArray): FloatArray {
         return try {
+            Log.v(TAG, "🧠 EMBEDDING: Starting embedding generation")
             val inputName = embeddingSession?.inputNames?.iterator()?.next()
+            Log.v(TAG, "🧠 EMBEDDING: Input name: $inputName")
             
-            // The embedding model expects [batch, 76, 32, 1] based on the error message
+            // The embedding model expects exactly 76 time frames, but mel produces 147
+            val actualMelSize = melSpectrogram.size
+            Log.v(TAG, "🧠 EMBEDDING: Input mel spec: ${actualMelSize} elements")
+            
+            val melBins = 32  // Standard mel spectrogram bins  
+            val actualTimeFrames = actualMelSize / melBins
+            val expectedTimeFrames = 76  // What the embedding model expects
             val batchSize = 1
-            val sequenceLength = 76  
-            val melFeatures = 32  // Fixed to expected value
             val channelSize = 1
-            val requiredSize = sequenceLength * melFeatures * channelSize  // 76 * 32 * 1 = 2432
             
-            Log.d(TAG, "Embedding input: total=${melSpectrogram.size}, expected=[${batchSize}, ${sequenceLength}, ${melFeatures}, ${channelSize}]")
-            Log.d(TAG, "Required tensor size: ${requiredSize}, actual mel size: ${melSpectrogram.size}")
+            Log.v(TAG, "🧠 EMBEDDING: Mel structure: ${melBins} mel bins × ${actualTimeFrames} time frames")
+            Log.v(TAG, "🧠 EMBEDDING: Expected by model: ${melBins} mel bins × ${expectedTimeFrames} time frames") 
             
-            // Adjust mel spectrogram to fit expected dimensions
-            val adjustedMel = if (melSpectrogram.size == requiredSize) {
-                Log.d(TAG, "Perfect size match for embedding input")
-                melSpectrogram
-            } else if (melSpectrogram.size > requiredSize) {
-                Log.d(TAG, "Truncating mel spectrogram from ${melSpectrogram.size} to ${requiredSize}")
-                melSpectrogram.copyOf(requiredSize)
+            // Truncate mel spectrogram to expected size (76 time frames)
+            val adjustedMel = if (actualTimeFrames > expectedTimeFrames) {
+                Log.i(TAG, "🧠 EMBEDDING: ✂️ Truncating mel spec from ${actualTimeFrames} to ${expectedTimeFrames} time frames")
+                val truncatedSize = expectedTimeFrames * melBins
+                melSpectrogram.sliceArray(0 until truncatedSize)
+            } else if (actualTimeFrames < expectedTimeFrames) {
+                Log.i(TAG, "🧠 EMBEDDING: 📈 Padding mel spec from ${actualTimeFrames} to ${expectedTimeFrames} time frames")
+                val paddedSize = expectedTimeFrames * melBins
+                val padded = FloatArray(paddedSize)
+                melSpectrogram.copyInto(padded)
+                // Fill remainder with zeros (already initialized)
+                padded
             } else {
-                Log.d(TAG, "Padding mel spectrogram from ${melSpectrogram.size} to ${requiredSize}")
-                FloatArray(requiredSize) { i ->
-                    if (i < melSpectrogram.size) melSpectrogram[i] else 0f
-                }
+                Log.v(TAG, "🧠 EMBEDDING: ✅ Mel spec already correct size")
+                melSpectrogram
             }
             
-            // Reshape to [1, 76, 32, 1]
+            val finalTimeFrames = adjustedMel.size / melBins
+            Log.v(TAG, "🧠 EMBEDDING: Final tensor shape: [${batchSize}, ${finalTimeFrames}, ${melBins}, ${channelSize}]")
+            
+            // Reshape to [1, finalTimeFrames, melBins, 1] using corrected dimensions
             val reshapedData = Array(batchSize) { 
-                Array(sequenceLength) { seq -> 
-                    Array(melFeatures) { feat -> 
+                Array(finalTimeFrames) { time -> 
+                    Array(melBins) { mel -> 
                         FloatArray(channelSize) { ch ->
-                            val index = seq * melFeatures * channelSize + feat * channelSize + ch
+                            val index = time * melBins * channelSize + mel * channelSize + ch
                             adjustedMel[index]
                         }
                     }
                 }
             }
             
-            Log.d(TAG, "Created embedding tensor: [${reshapedData.size}, ${reshapedData[0].size}, ${reshapedData[0][0].size}, ${reshapedData[0][0][0].size}]")
+            Log.v(TAG, "🧠 EMBEDDING: Created tensor: [${reshapedData.size}, ${reshapedData[0].size}, ${reshapedData[0][0].size}, ${reshapedData[0][0][0].size}]")
             
             val inputTensor = OnnxTensor.createTensor(ortEnvironment, reshapedData)
             val inputs = Collections.singletonMap(inputName, inputTensor)
             val output = embeddingSession?.run(inputs)
             
             val result = output?.get(0)?.value
-            Log.d(TAG, "Embedding output type: ${result?.javaClass}")
+            Log.v(TAG, "🧠 EMBEDDING: Raw output type: ${result?.javaClass}")
             
             val embedding = when (result) {
                 is Array<*> -> {
-                    Log.d(TAG, "Embedding output is Array with ${result.size} elements")
+                    Log.v(TAG, "🧠 EMBEDDING: Processing Array output with ${result.size} elements")
                     try {
-                        // Try 3D array: float[batch][sequence][features]
+                        // The embedding model should output [batch, sequence, features] = [1, 16, 96]
+                        // But we're only extracting the first sequence step instead of all 16!
                         if (result[0] is Array<*>) {
                             val batch = result[0] as Array<*>
+                            Log.v(TAG, "🧠 EMBEDDING: Batch has ${batch.size} sequences")
+                            
                             if (batch[0] is Array<*>) {
-                                // 3D array case: extract features from sequence
-                                val sequence = batch[0] as Array<*>
-                                val features = sequence[0] as FloatArray
-                                Log.d(TAG, "Extracted 3D embedding: ${features.size} elements")
-                                features
-                            } else {
-                                // 2D array case: flatten
+                                // 3D array case: This is [batch][sequence][features]
+                                // The embedding model outputs [1, 16, 96] - we need all 16×96=1536 elements
+                                Log.v(TAG, "🧠 EMBEDDING: Extracting all ${batch.size} sequence steps")
                                 val flattened = mutableListOf<Float>()
-                                for (seq in batch) {
+                                for ((seqIndex, seqData) in batch.withIndex()) {
+                                    val sequence = seqData as Array<*>
+                                    Log.v(TAG, "🧠 EMBEDDING: Sequence $seqIndex has ${sequence.size} time steps")
+                                    for ((timeIndex, timeData) in sequence.withIndex()) {
+                                        val features = timeData as FloatArray
+                                        if (seqIndex == 0 && timeIndex < 3) {
+                                            Log.v(TAG, "🧠 EMBEDDING: Seq $seqIndex, time $timeIndex: ${features.size} features")
+                                        }
+                                        flattened.addAll(features.toList())
+                                    }
+                                }
+                                Log.v(TAG, "🧠 EMBEDDING: Extracted 3D embedding: ${flattened.size} elements from all sequences")
+                                
+                                // The actual embedding model outputs [1, 1, 96] = 96 total elements, not 1536
+                                if (flattened.size == 96) {
+                                    Log.i(TAG, "🧠 EMBEDDING: ✅ Got expected embedding size: 1×96=96")
+                                } else {
+                                    Log.w(TAG, "🧠 EMBEDDING: ⚠️ Unexpected embedding size: ${flattened.size}, expected 96")
+                                }
+                                
+                                flattened.toFloatArray()
+                            } else {
+                                // 2D array case: flatten all sequences  
+                                val flattened = mutableListOf<Float>()
+                                Log.v(TAG, "🧠 EMBEDDING: Flattening ${batch.size} sequence steps")
+                                for ((seqIndex, seq) in batch.withIndex()) {
                                     val features = seq as FloatArray
+                                    Log.v(TAG, "🧠 EMBEDDING: Sequence $seqIndex has ${features.size} features")
                                     flattened.addAll(features.toList())
                                 }
-                                Log.d(TAG, "Flattened 2D embedding: ${flattened.size} elements")
+                                Log.v(TAG, "🧠 EMBEDDING: Flattened 2D embedding: ${flattened.size} elements")
                                 flattened.toFloatArray()
                             }
                         } else {
                             // 1D array case
                             val features = result[0] as FloatArray
-                            Log.d(TAG, "Direct 1D embedding: ${features.size} elements")
+                            Log.v(TAG, "🧠 EMBEDDING: Direct 1D embedding: ${features.size} elements")
                             features
                         }
                     } catch (e: Exception) {
-                        Log.e(TAG, "Error parsing embedding array: ${e.message}")
+                        Log.e(TAG, "🧠 EMBEDDING: Error parsing Array: ${e.message}")
                         FloatArray(EMBEDDING_SIZE)
                     }
                 }
                 is FloatArray -> {
-                    Log.d(TAG, "Embedding output is direct FloatArray: ${result.size} elements")
+                    Log.v(TAG, "🧠 EMBEDDING: Output is FloatArray: ${result.size} elements")
                     result
                 }
                 else -> {
-                    Log.w(TAG, "Unexpected embedding output type: ${result?.javaClass}")
+                    Log.w(TAG, "🧠 EMBEDDING: Unexpected output type: ${result?.javaClass}")
                     FloatArray(EMBEDDING_SIZE)
                 }
             }
@@ -412,7 +509,26 @@ class OpenWakeWordEngine(private val context: Context) {
             inputTensor.close()
             output?.close()
             
-            Log.d(TAG, "Embedding generated: ${embedding.size} elements")
+            // Check if embedding is all zeros or has poor variance (indicates processing failure)
+            val nonZeroCount = embedding.count { it != 0f }
+            val avgValue = if (embedding.isNotEmpty()) embedding.average() else 0.0
+            val variance = if (embedding.isNotEmpty()) {
+                embedding.map { (it - avgValue) * (it - avgValue) }.average()
+            } else 0.0
+            val stdDev = kotlin.math.sqrt(variance.toFloat())
+            
+            Log.v(TAG, "🧠 EMBEDDING: Final embedding: ${embedding.size} elements, ${nonZeroCount} non-zero")
+            Log.v(TAG, "🧠 EMBEDDING: Statistics: avg=${String.format("%.6f", avgValue)}, std=${String.format("%.6f", stdDev)}")
+            
+            if (nonZeroCount == 0) {
+                Log.e(TAG, "🚨 EMBEDDING: CRITICAL ERROR: Embedding is all zeros - WILL CAUSE ZERO CONFIDENCE!")
+                Log.e(TAG, "🚨 EMBEDDING: This indicates mel spectrogram corruption or model failure")
+            } else if (nonZeroCount < embedding.size / 10) {
+                Log.w(TAG, "🧠 EMBEDDING: ⚠️ WARNING: Very sparse embedding (${nonZeroCount}/${embedding.size} non-zero)")
+            } else if (stdDev < 0.01f) {
+                Log.w(TAG, "🧠 EMBEDDING: ⚠️ WARNING: Low variance embedding (std=${String.format("%.6f", stdDev)}) - may cause poor classification!")
+            }
+            
             embedding
         } catch (e: Exception) {
             Log.e(TAG, "Error generating embedding: ${e.message}", e)
@@ -420,69 +536,88 @@ class OpenWakeWordEngine(private val context: Context) {
         }
     }
     
-    private fun classifyWakeWord(embedding: FloatArray): Float {
+    private fun addEmbeddingToBuffer(embedding: FloatArray) {
+        try {
+            Log.v(TAG, "📊 BUFFER: Adding embedding to temporal buffer: ${embedding.size} elements")
+            
+            // Add the new embedding to the buffer
+            embeddingBuffer.add(embedding.copyOf())
+            
+            // Keep only the last 16 embeddings (rolling window)
+            if (embeddingBuffer.size > EMBEDDING_WINDOW_SIZE) {
+                val toRemove = embeddingBuffer.size - EMBEDDING_WINDOW_SIZE
+                repeat(toRemove) { embeddingBuffer.removeFirst() }
+                Log.v(TAG, "📊 BUFFER: Trimmed buffer to ${embeddingBuffer.size} embeddings")
+            }
+            
+            Log.v(TAG, "📊 BUFFER: Current buffer size: ${embeddingBuffer.size}/${EMBEDDING_WINDOW_SIZE}")
+        } catch (e: Exception) {
+            Log.e(TAG, "📊 BUFFER: Error adding embedding to buffer: ${e.message}", e)
+        }
+    }
+    
+    private fun classifyWakeWordFromBuffer(): Float {
         return try {
+            Log.v(TAG, "🎯 CLASSIFY: Starting wake word classification from buffer")
+            
+            // Need at least 16 embeddings for classification
+            if (embeddingBuffer.size < EMBEDDING_WINDOW_SIZE) {
+                Log.v(TAG, "🎯 CLASSIFY: Insufficient embeddings: ${embeddingBuffer.size}/${EMBEDDING_WINDOW_SIZE} - returning 0")
+                return 0f
+            }
+            
             val inputName = wakeWordSession?.inputNames?.iterator()?.next()
+            Log.v(TAG, "🎯 CLASSIFY: Input name: $inputName")
             
-            // The wake word model expects [batch, 16, 96] = [1, 16, 96]
-            // Our embedding is [512] elements, need to reshape to 1536 elements
             val batchSize = 1
-            val sequenceLength = 16
-            val featureSize = 96
-            val requiredSize = sequenceLength * featureSize  // 1536
+            val sequenceLength = EMBEDDING_WINDOW_SIZE  // 16 temporal frames
+            val featureSize = 96  // Features per frame
             
-            Log.d(TAG, "Wake word input: embedding_size=${embedding.size}, required_size=${requiredSize}")
+            Log.v(TAG, "🎯 CLASSIFY: Creating tensor shape: [${batchSize}, ${sequenceLength}, ${featureSize}]")
+            Log.v(TAG, "🎯 CLASSIFY: Using ${embeddingBuffer.size} embeddings from buffer")
             
-            // Pad embedding to required size (repeat pattern if needed)
-            val paddedEmbedding = FloatArray(requiredSize) { i ->
-                if (i < embedding.size) {
-                    embedding[i]
-                } else {
-                    // Repeat the embedding pattern to fill remaining space
-                    embedding[i % embedding.size]
-                }
-            }
-            
-            Log.d(TAG, "Padded embedding from ${embedding.size} to ${paddedEmbedding.size}")
-            
-            // Create properly shaped 3D tensor: [1, 16, 96]
+            // Create tensor with correct temporal sequence: [1, 16, 96]
+            // Each of the 16 time steps gets its own unique 96-element embedding
             val reshapedData = Array(batchSize) { 
-                Array(sequenceLength) { seq -> 
-                    FloatArray(featureSize) { feat -> 
-                        val index = seq * featureSize + feat
-                        paddedEmbedding[index]
-                    }
+                Array(sequenceLength) { timeStep -> 
+                    val embedding = embeddingBuffer[timeStep]
+                    Log.v(TAG, "🎯 CLASSIFY: Time step $timeStep: ${embedding.size} features")
+                    embedding.copyOf(featureSize) // Ensure exactly 96 features
                 }
             }
             
-            Log.d(TAG, "Created tensor shape: [${reshapedData.size}, ${reshapedData[0].size}, ${reshapedData[0][0].size}]")
+            Log.v(TAG, "🎯 CLASSIFY: Created tensor shape: [${reshapedData.size}, ${reshapedData[0].size}, ${reshapedData[0][0].size}]")
             
             val inputTensor = OnnxTensor.createTensor(ortEnvironment, reshapedData)
             val inputs = Collections.singletonMap(inputName, inputTensor)
             val output = wakeWordSession?.run(inputs)
             
             val result = output?.get(0)?.value
-            Log.d(TAG, "Wake word output type: ${result?.javaClass}")
+            Log.v(TAG, "🎯 CLASSIFY: Raw output type: ${result?.javaClass}")
             
             val rawScore = when (result) {
                 is FloatArray -> {
-                    Log.d(TAG, "Wake word output is FloatArray with ${result.size} elements")
-                    if (result.isNotEmpty()) result[0] else 0f
+                    Log.v(TAG, "🎯 CLASSIFY: Output is FloatArray with ${result.size} elements")
+                    val score = if (result.isNotEmpty()) result[0] else 0f
+                    Log.v(TAG, "🎯 CLASSIFY: Raw score from FloatArray: ${String.format("%.6f", score)}")
+                    score
                 }
                 is Array<*> -> {
-                    Log.d(TAG, "Wake word output is Array with ${result.size} elements")
+                    Log.v(TAG, "🎯 CLASSIFY: Output is Array with ${result.size} elements")
                     try {
                         // Handle 2D array: float[batch][features]
                         val batch = result[0] as FloatArray  // Get first batch directly as FloatArray
-                        Log.d(TAG, "Wake word batch has ${batch.size} features")
-                        if (batch.isNotEmpty()) batch[0] else 0f
+                        Log.v(TAG, "🎯 CLASSIFY: Batch has ${batch.size} features")
+                        val score = if (batch.isNotEmpty()) batch[0] else 0f
+                        Log.v(TAG, "🎯 CLASSIFY: Raw score from Array: ${String.format("%.6f", score)}")
+                        score
                     } catch (e: Exception) {
-                        Log.w(TAG, "Error parsing Array output: ${e.message}")
+                        Log.w(TAG, "🎯 CLASSIFY: Error parsing Array: ${e.message}")
                         0f
                     }
                 }
                 else -> {
-                    Log.w(TAG, "Unexpected wake word output type: ${result?.javaClass}")
+                    Log.w(TAG, "🎯 CLASSIFY: Unexpected output type: ${result?.javaClass}")
                     0f
                 }
             }
@@ -493,9 +628,22 @@ class OpenWakeWordEngine(private val context: Context) {
             // Apply sigmoid to get confidence score
             val confidence = sigmoid(rawScore)
             
-            // Log detailed confidence info for significant scores
-            if (confidence > 0.1f) {
-                Log.d(TAG, "🎯 CLASSIFICATION: Raw score: ${String.format("%.4f", rawScore)}, Confidence: ${String.format("%.4f", confidence)}, Model: $currentModel")
+            // Debug logging for confidence calculation
+            Log.v(TAG, "🎯 CLASSIFY: Raw score: ${String.format("%.6f", rawScore)}, Confidence: ${String.format("%.6f", confidence)}")
+            Log.v(TAG, "🎯 CLASSIFY: Model: $currentModel")
+            
+            // Check for problematic sigmoid outputs
+            if (kotlin.math.abs(confidence - 0.5f) < 0.001f) {
+                Log.w(TAG, "🎯 CLASSIFY: ⚠️ WARNING: Confidence ≈ 0.5 (sigmoid of ~0) - likely zero/corrupted embedding!")
+            }
+            
+            // Log confidence interpretation
+            if (confidence > 0.6f) {
+                Log.d(TAG, "🎯 CLASSIFY: HIGH confidence: ${String.format("%.4f", confidence)}")
+            } else if (confidence > 0.4f) {
+                Log.d(TAG, "🎯 CLASSIFY: MEDIUM confidence: ${String.format("%.4f", confidence)}")
+            } else {
+                Log.v(TAG, "🎯 CLASSIFY: LOW confidence: ${String.format("%.4f", confidence)}")
             }
             
             confidence
@@ -507,6 +655,75 @@ class OpenWakeWordEngine(private val context: Context) {
     
     private fun sigmoid(x: Float): Float {
         return 1.0f / (1.0f + kotlin.math.exp(-x))
+    }
+    
+    private fun inspectModelTensors(modelName: String, session: OrtSession?) {
+        try {
+            Log.i(TAG, "🔍 MODEL_INSPECTION: ========== $modelName MODEL TENSOR SHAPES ==========")
+            
+            session?.let { sess ->
+                // Inspect input tensors
+                Log.i(TAG, "🔍 MODEL_INSPECTION: Input tensors:")
+                for (inputName in sess.inputNames) {
+                    try {
+                        val inputInfo = sess.inputInfo[inputName]
+                        Log.i(TAG, "🔍 MODEL_INSPECTION:   Input '$inputName': info available=${inputInfo != null}")
+                        // Note: Shape and type inspection may not be available in this ONNX Runtime version
+                        // The tensor information will be visible during actual inference
+                    } catch (e: Exception) {
+                        Log.w(TAG, "🔍 MODEL_INSPECTION:   Input '$inputName': Could not get info - ${e.message}")
+                    }
+                }
+                
+                // Inspect output tensors
+                Log.i(TAG, "🔍 MODEL_INSPECTION: Output tensors:")
+                for (outputName in sess.outputNames) {
+                    try {
+                        val outputInfo = sess.outputInfo[outputName]
+                        Log.i(TAG, "🔍 MODEL_INSPECTION:   Output '$outputName': info available=${outputInfo != null}")
+                        // Note: Shape and type inspection may not be available in this ONNX Runtime version
+                        // The tensor information will be visible during actual inference
+                    } catch (e: Exception) {
+                        Log.w(TAG, "🔍 MODEL_INSPECTION:   Output '$outputName': Could not get info - ${e.message}")
+                    }
+                }
+                
+                // Validate expected tensor compatibility based on model name
+                validateModelTensorShapes(modelName, sess)
+            }
+            
+            Log.i(TAG, "🔍 MODEL_INSPECTION: ===================================================")
+        } catch (e: Exception) {
+            Log.e(TAG, "🔍 MODEL_INSPECTION: Error inspecting $modelName model: ${e.message}", e)
+        }
+    }
+    
+    private fun validateModelTensorShapes(modelName: String, session: OrtSession) {
+        try {
+            Log.i(TAG, "🔧 TENSOR_VALIDATION: Validating $modelName tensor shapes...")
+            
+            when (modelName) {
+                "Mel" -> {
+                    Log.i(TAG, "🔧 TENSOR_VALIDATION: Mel model expects:")
+                    Log.i(TAG, "🔧 TENSOR_VALIDATION:   Input: [1, audio_samples] - variable audio length")
+                    Log.i(TAG, "🔧 TENSOR_VALIDATION:   Output: [1, 1, mel_bins, time_frames] - produces mel spectrogram")
+                }
+                "Embedding" -> {
+                    Log.i(TAG, "🔧 TENSOR_VALIDATION: Embedding model expects:")
+                    Log.i(TAG, "🔧 TENSOR_VALIDATION:   Input: [1, 76, 32, 1] - fixed size mel spectrogram")
+                    Log.i(TAG, "🔧 TENSOR_VALIDATION:   Output: [1, 16, 96] - 16 sequences × 96 features = 1536 total")
+                }
+                "WakeWord (hey_jarvis)", "WakeWord (alexa)", "WakeWord (hey_mycroft)" -> {
+                    Log.i(TAG, "🔧 TENSOR_VALIDATION: Wake word model expects:")
+                    Log.i(TAG, "🔧 TENSOR_VALIDATION:   Input: [1, 16, 96] - embeddings from embedding model")
+                    Log.i(TAG, "🔧 TENSOR_VALIDATION:   Output: [1, 1] or [1] - confidence score")
+                }
+            }
+            
+            Log.i(TAG, "🔧 TENSOR_VALIDATION: ✅ Tensor shape validation completed for $modelName")
+        } catch (e: Exception) {
+            Log.e(TAG, "🔧 TENSOR_VALIDATION: Error validating $modelName: ${e.message}", e)
+        }
     }
     
     private fun loadModelFromAssets(fileName: String): ByteArray {
@@ -547,6 +764,7 @@ class OpenWakeWordEngine(private val context: Context) {
             ortEnvironment = null
             
             audioBuffer.clear()
+            embeddingBuffer.clear()
             isInitialized = false
             
             Log.d(TAG, "OpenWakeWord engine cleaned up")

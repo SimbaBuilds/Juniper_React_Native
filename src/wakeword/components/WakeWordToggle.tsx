@@ -9,7 +9,7 @@ export const WakeWordToggle: React.FC = () => {
     const { voiceSettings } = useVoice();
     const [detectionAnimation] = useState(new Animated.Value(0));
     const [isDetected, setIsDetected] = useState(false);
-    const selectedWakeWord = voiceSettings?.selectedWakeWord || 'Jarvis';
+    const selectedWakeWord = voiceSettings?.selectedWakeWord || 'Hey Jarvis';
 
     // Listen for wake word detection events
     useEffect(() => {
@@ -63,7 +63,7 @@ export const WakeWordToggle: React.FC = () => {
     };
 
     // Use the wake word from voice settings if available
-    const currentWakeWord = voiceSettings?.selectedWakeWord || 'JARVIS';
+    const currentWakeWord = voiceSettings?.selectedWakeWord || 'Hey Jarvis';
 
     return (
         <View style={styles.container}>

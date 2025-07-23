@@ -200,9 +200,10 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const subscription = WakeWordService.addListener('wakeWordDetected', (event) => {
             const eventTime = event.timestamp ? new Date(event.timestamp) : new Date();
             const timeString = eventTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            const wakeWord = event.wakeWord || 'Hey Jarvis';
             
             console.log('\n');
-            console.log(`⏰ Time: ${timeString}, 🎤 WAKE WORD "JARVIS" DETECTED in React Native! 🎤`);
+            console.log(`⏰ Time: ${timeString}, 🎤 WAKE WORD "${wakeWord}" DETECTED in React Native! 🎤`);
             
             // Skip wake word activation if not in IDLE state
             // More specific check using enum values rather than string comparison

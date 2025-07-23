@@ -575,7 +575,7 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     fun getWakeWordThreshold(promise: Promise) {
         try {
             val prefs = reactApplicationContext.getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
-            val threshold = prefs.getFloat("wake_word_threshold", 0.5f)
+            val threshold = prefs.getFloat("wake_word_threshold", 0.3f)  // Match WakeWordService default
             
             val result = Arguments.createMap()
             result.putDouble("threshold", threshold.toDouble())

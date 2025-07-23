@@ -13,7 +13,7 @@ export class UserProfileService {
         deepgram_enabled: false,
         base_language_model: 'claude-sonnet-4-20250514',
         general_instructions: '',
-        wake_word: 'Juniper',
+        wake_word: 'Hey Jarvis',
         wake_word_sensitivity: 0.3,
         wake_word_detection_enabled: true,
         selected_deepgram_voice: 'aura-2-mars-en',

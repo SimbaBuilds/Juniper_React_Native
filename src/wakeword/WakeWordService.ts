@@ -429,14 +429,14 @@ class WakeWordService {
   async getAvailableWakeWords(): Promise<string[]> {
     try {
       if (Platform.OS !== 'android') {
-        return ['BUMBLEBEE', 'GRASSHOPPER', 'JARVIS', 'JUNIPER', 'PICOVOICE', 'PORCUPINE', 'TERMINATOR']; // Default for non-Android platforms
+        return ['Hey Jarvis', 'Hey Juni', 'Hey Jasmine', 'Hey Jade', 'Hey Jay', 'Hey Jasper', 'Hey Jerry', 'Alexa', 'Alex', 'Aloe', 'Hey Mycroft', 'Hey Michael', 'Hey Mulberry', 'Hey Myrillis', 'Hey Marigold']; // Default for non-Android platforms
       }
       
       const result = await WakeWordModule.getAvailableWakeWords();
-      return result.wakeWords || ['BUMBLEBEE', 'GRASSHOPPER', 'JARVIS', 'JUNIPER', 'PICOVOICE', 'PORCUPINE', 'TERMINATOR'];
+      return result.wakeWords || ['Hey Jarvis', 'Hey Juni', 'Hey Jasmine', 'Hey Jade', 'Hey Jay', 'Hey Jasper', 'Hey Jerry', 'Alexa', 'Alex', 'Aloe', 'Hey Mycroft', 'Hey Michael', 'Hey Mulberry', 'Hey Myrillis', 'Hey Marigold'];
     } catch (error) {
       console.error('Error getting available wake words:', error);
-      return ['BUMBLEBEE', 'GRASSHOPPER', 'JARVIS', 'JUNIPER', 'PICOVOICE', 'PORCUPINE', 'TERMINATOR'];
+      return ['Hey Jarvis', 'Hey Juni', 'Hey Jasmine', 'Hey Jade', 'Hey Jay', 'Hey Jasper', 'Hey Jerry', 'Alexa', 'Alex', 'Aloe', 'Hey Mycroft', 'Hey Michael', 'Hey Mulberry', 'Hey Myrillis', 'Hey Marigold'];
     }
   }
 
@@ -479,20 +479,20 @@ class WakeWordService {
     try {
       if (Platform.OS !== 'android') {
         console.warn('🎯 WAKEWORD_SELECTION: Wake word selection only supported on Android, returning default');
-        return 'JARVIS'; // Default for non-Android platforms
+        return 'Hey Jarvis'; // Default for non-Android platforms
       }
       
      
       const result = await WakeWordModule.getSelectedWakeWord();
      
       
-      const wakeWord = result.wakeWord || 'JARVIS';
+      const wakeWord = result.wakeWord || 'Hey Jarvis';
      
       
       return wakeWord;
     } catch (error) {
      
-      return 'JARVIS';
+      return 'Hey Jarvis';
     }
   }
 

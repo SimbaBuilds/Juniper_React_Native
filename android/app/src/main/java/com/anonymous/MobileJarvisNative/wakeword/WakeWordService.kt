@@ -45,7 +45,20 @@ class WakeWordService : Service() {
     private lateinit var prefs: SharedPreferences
     private lateinit var configManager: ConfigManager
     private lateinit var brWakeWordPause: BroadcastReceiver
-    private var wakeWordThreshold = 0.5f
+    private var wakeWordThreshold = 0.3f  // Lowered from 0.5 to avoid false triggers from sigmoid noise
+    private var lastWakeWordTime = 0L
+    private val WAKE_WORD_COOLDOWN_MS = 3000L // 3 second cooldown
+    private var lastLowConfidenceLogTime = 0L
+    private val LOW_CONFIDENCE_LOG_INTERVAL_MS = 10000L // Log low confidence warnings every 10 seconds
+    private var consecutiveLowConfidenceCount = 0
+    private val MAX_CONSECUTIVE_LOW_CONFIDENCE = 100 // Skip processing after 100 consecutive low confidence results
+    
+    // Emergency circuit breaker for infinite loop detection
+    private var lastProcessingTime = 0L
+    private var processingCallCount = 0
+    private val LOOP_DETECTION_WINDOW_MS = 10000L // 10 seconds
+    private val MAX_PROCESSING_CALLS = 200 // Max calls per 10 seconds
+    private var circuitBreakerTripped = false
     
     // Audio recording constants
     private val SAMPLE_RATE = 16000
@@ -218,13 +231,42 @@ class WakeWordService : Service() {
         
         stateMonitorJob = serviceScope.launch {
             try {
+                // Log initial voice state
+                val initialState = voiceManager.voiceState.value
+                Log.i(TAG, "Initial voice state: $initialState")
+                
+                // Give the system a moment to settle before monitoring
+                delay(2000)
+                
+                var stuckInListeningCounter = 0
+                val STUCK_THRESHOLD = 10 // 10 seconds for faster recovery
+                
                 while (true) {
                     delay(1000)
                     val currentState = voiceManager.voiceState.value
+                    Log.d(TAG, "Voice state monitor: Current state = $currentState")
+                    
                     if (currentState !is VoiceManager.VoiceState.IDLE) {
+                        Log.d(TAG, "Voice state is not IDLE - pausing wake word detection")
                         pauseWakeWordDetection()
+                        
+                        // Check if stuck in LISTENING state
+                        if (currentState is VoiceManager.VoiceState.LISTENING) {
+                            stuckInListeningCounter++
+                            if (stuckInListeningCounter >= STUCK_THRESHOLD) {
+                                Log.w(TAG, "⚠️ Voice state stuck in LISTENING for ${stuckInListeningCounter}s - forcing stop")
+                                voiceManager.stopListening()
+                                stuckInListeningCounter = 0
+                            } else if (stuckInListeningCounter % 5 == 0) {
+                                Log.d(TAG, "Voice state in LISTENING for ${stuckInListeningCounter}s...")
+                            }
+                        } else {
+                            stuckInListeningCounter = 0
+                        }
                     } else {
+                        Log.d(TAG, "Voice state is IDLE - resuming wake word detection")
                         resumeWakeWordDetection()
+                        stuckInListeningCounter = 0
                     }
                 }
             } catch (e: Exception) {
@@ -282,7 +324,14 @@ class WakeWordService : Service() {
     }
     
     private fun getWakeWordThreshold(): Float {
-        return prefs.getFloat("wake_word_threshold", 0.5f)
+        // EMERGENCY FIX: Hard-code very low threshold to stop infinite loop
+        // This bypasses SharedPreferences completely until root cause is fixed
+        val emergencyThreshold = 0.1f
+        Log.w(TAG, "🚨 EMERGENCY: Using hard-coded threshold $emergencyThreshold to prevent infinite loop")
+        return emergencyThreshold
+        
+        // Original code (commented out until loop is resolved):
+        // return prefs.getFloat("wake_word_threshold", 0.3f)
     }
     
     private fun initWakeWordDetection() {
@@ -312,14 +361,29 @@ class WakeWordService : Service() {
             Log.i(TAG, "🎯 WAKEWORD_SETUP: Selected wake word: '$selectedWakeWord'")
             Log.i(TAG, "🎯 WAKEWORD_SETUP: Threshold: $threshold")
             Log.i(TAG, "🎯 WAKEWORD_SETUP: Available wake words: ${AVAILABLE_WAKE_WORDS}")
+            
+            // 🚨 EMERGENCY THRESHOLD DEBUGGING 🚨
+            Log.w(TAG, "🔍 THRESHOLD_DEBUG: ========== COMPREHENSIVE THRESHOLD AUDIT ==========")
+            Log.w(TAG, "🔍 THRESHOLD_DEBUG: getWakeWordThreshold() returned: $threshold")
+            val prefsThreshold = prefs.getFloat("wake_word_threshold", -999f)
+            Log.w(TAG, "🔍 THRESHOLD_DEBUG: Direct SharedPreferences read: $prefsThreshold")
+            Log.w(TAG, "🔍 THRESHOLD_DEBUG: Field wakeWordThreshold before assignment: $wakeWordThreshold")
+            wakeWordThreshold = threshold
+            Log.w(TAG, "🔍 THRESHOLD_DEBUG: Field wakeWordThreshold after assignment: $wakeWordThreshold") 
+            Log.w(TAG, "🔍 THRESHOLD_DEBUG: Final threshold that will be used: $wakeWordThreshold")
+            Log.w(TAG, "🔍 THRESHOLD_DEBUG: =====================================================")
+            
             Log.i(TAG, "🎯 WAKEWORD_SETUP: =======================================")
             
             // Set the wake phrase in the engine
             openWakeWordEngine?.setWakePhrase(selectedWakeWord)
-            wakeWordThreshold = threshold
             
             // Set up audio recording
             setupAudioRecording()
+            
+            // Ensure we start in resumed state
+            isPaused = false
+            Log.i(TAG, "Wake word detection initial state: isPaused = $isPaused")
             
             Log.i(TAG, "✅ Wake word detection started successfully ✅")
             serviceScope.launch(Dispatchers.Main) {
@@ -399,11 +463,109 @@ class WakeWordService : Service() {
                 }
                 
                 if (readCount > 0 && !isPaused) {
+                    val currentTime = System.currentTimeMillis()
+                    
+                    // 🚨 EMERGENCY CIRCUIT BREAKER 🚨
+                    // Reset processing counter every window
+                    if (currentTime - lastProcessingTime > LOOP_DETECTION_WINDOW_MS) {
+                        processingCallCount = 0
+                        lastProcessingTime = currentTime
+                        if (circuitBreakerTripped) {
+                            Log.i(TAG, "🔄 CIRCUIT_BREAKER: Resetting after cooldown period")
+                            circuitBreakerTripped = false
+                        }
+                    }
+                    
+                    // Check for excessive processing calls (infinite loop detection)
+                    processingCallCount++
+                    if (processingCallCount > MAX_PROCESSING_CALLS && !circuitBreakerTripped) {
+                        circuitBreakerTripped = true
+                        Log.e(TAG, "🚨 CIRCUIT_BREAKER: TRIPPED! ${processingCallCount} calls in ${LOOP_DETECTION_WINDOW_MS}ms - INFINITE LOOP DETECTED")
+                        Log.e(TAG, "🚨 CIRCUIT_BREAKER: Disabling wake word processing for safety")
+                        continue
+                    }
+                    
+                    if (circuitBreakerTripped) {
+                        // Circuit breaker is tripped - skip all processing
+                        continue
+                    }
+                    
+                    // Skip processing if we've had too many consecutive low confidence results
+                    if (consecutiveLowConfidenceCount >= MAX_CONSECUTIVE_LOW_CONFIDENCE) {
+                        // Reset counter every 30 seconds to retry
+                        if ((currentTime - lastLowConfidenceLogTime) > 30000L) {
+                            consecutiveLowConfidenceCount = 0
+                            Log.i(TAG, "🎯 WAKEWORD_TRIGGER: Resetting low confidence counter - retrying processing")
+                        } else {
+                            continue // Skip this audio chunk
+                        }
+                    }
+                    
                     val confidence = openWakeWordEngine?.processAudioChunk(buffer) ?: 0f
                     
-                    if (confidence > wakeWordThreshold) {
+                    // 🚨 EMERGENCY ZERO CONFIDENCE DETECTION 🚨
+                    if (confidence == 0.0f) {
+                        consecutiveLowConfidenceCount++
+                        if (consecutiveLowConfidenceCount > 50) { // Stop after 50 consecutive zeros
+                            Log.e(TAG, "🚨 EMERGENCY: Detected ${consecutiveLowConfidenceCount} consecutive zero confidence values - MODEL FAILURE")
+                            Log.e(TAG, "🚨 EMERGENCY: Stopping wake word processing to prevent infinite loop")
+                            isRunning = false
+                            break
+                        }
+                        continue
+                    } else {
+                        consecutiveLowConfidenceCount = 0
+                    }
+                    
+                    // 🚨 EMERGENCY MULTI-LAYER FILTERING 🚨
+                    // Layer 1: Hard threshold check (should catch ~0.5001 values)
+                    Log.v(TAG, "🔍 THRESHOLD_CHECK: Confidence=${String.format("%.6f", confidence)}, Threshold=${String.format("%.6f", wakeWordThreshold)}, Pass=${confidence > wakeWordThreshold}")
+                    
+                    if (confidence <= wakeWordThreshold) {
+                        // This is normal - below threshold, no action needed
+                        if (consecutiveLowConfidenceCount > 0) {
+                            consecutiveLowConfidenceCount = 0 // Reset counter
+                        }
+                        continue
+                    }
+                    
+                    // Layer 2: Sigmoid noise detection (catch values very close to 0.5)
+                    // Expanded range to catch the ~0.5006 values we're seeing
+                    if (confidence >= 0.495f && confidence <= 0.510f) {
+                        // This is likely sigmoid noise from corrupted input - ignore completely
+                        Log.v(TAG, "🎯 SIGMOID_FILTER: Ignoring sigmoid noise: ${String.format("%.6f", confidence)}")
+                        continue
+                    }
+                    
+                    // Layer 3: High confidence requirement
+                    val isHighConfidence = confidence > 0.7f
+                    val isCooldownExpired = (currentTime - lastWakeWordTime) > WAKE_WORD_COOLDOWN_MS
+                    
+                    // Layer 4: Emergency sanity check
+                    if (confidence > 0.99f) {
+                        Log.w(TAG, "🚨 EMERGENCY: Suspiciously high confidence ${confidence} - possible model error")
+                        continue
+                    }
+                    
+                    if (isHighConfidence && isCooldownExpired) {
                         Log.i(TAG, "🎯 WAKEWORD_TRIGGER: ⚡ WAKE WORD DETECTED! Confidence: ${String.format("%.4f", confidence)} (threshold: $wakeWordThreshold)")
+                        lastWakeWordTime = currentTime
+                        consecutiveLowConfidenceCount = 0 // Reset counter on successful detection
                         onWakeWordDetected(confidence)
+                    } else if (!isHighConfidence) {
+                        consecutiveLowConfidenceCount++
+                        
+                        // Throttle low-confidence warnings to prevent log spam
+                        if ((currentTime - lastLowConfidenceLogTime) > LOW_CONFIDENCE_LOG_INTERVAL_MS) {
+                            Log.w(TAG, "🎯 WAKEWORD_TRIGGER: ⚠️ Medium confidence trigger ignored: ${String.format("%.4f", confidence)} (count: $consecutiveLowConfidenceCount, need >0.7)")
+                            lastLowConfidenceLogTime = currentTime
+                            
+                            if (consecutiveLowConfidenceCount >= MAX_CONSECUTIVE_LOW_CONFIDENCE) {
+                                Log.w(TAG, "🎯 WAKEWORD_TRIGGER: ⚠️ Disabling processing due to consistent poor results - will retry in 30s")
+                            }
+                        }
+                    } else if (!isCooldownExpired) {
+                        Log.d(TAG, "🎯 WAKEWORD_TRIGGER: ⏰ High confidence trigger ignored - in cooldown period")
                     }
                 } else if (readCount <= 0) {
                     Log.w(TAG, "🎙️ AUDIO_LOOP: No audio data read (readCount: $readCount)")
