@@ -529,13 +529,8 @@ class WakeWordService : Service() {
                         continue
                     }
                     
-                    // Layer 2: Sigmoid noise detection (catch values very close to 0.5)
-                    // Expanded range to catch the ~0.5006 values we're seeing
-                    if (confidence >= 0.495f && confidence <= 0.510f) {
-                        // This is likely sigmoid noise from corrupted input - ignore completely
-                        Log.v(TAG, "🎯 SIGMOID_FILTER: Ignoring sigmoid noise: ${String.format("%.6f", confidence)}")
-                        continue
-                    }
+                    // Layer 2: Remove sigmoid filter - OpenWakeWord outputs probability values directly
+                    // Low confidence values (< 0.01) are normal for silence/background noise
                     
                     // Layer 3: High confidence requirement
                     val isHighConfidence = confidence > 0.7f

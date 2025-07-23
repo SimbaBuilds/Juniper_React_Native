@@ -351,15 +351,22 @@ class OpenWakeWordEngine(private val context: Context) {
             inputTensor.close()
             output?.close()
             
+            // CRITICAL: Apply OpenWakeWord's required transformation: output = (value / 10.0) + 2.0
+            Log.v(TAG, "🎵 MEL_EXTRACT: Applying OpenWakeWord transformation: (value / 10.0) + 2.0")
+            val transformedMelSpec = melSpec.map { value ->
+                (value / 10.0f) + 2.0f
+            }.toFloatArray()
+            Log.v(TAG, "🎵 MEL_EXTRACT: Transformation complete: ${transformedMelSpec.size} elements")
+            
             // Check for zero or invalid mel spectrograms
-            val nonZeroCount = melSpec.count { it != 0f }
-            val avgValue = if (melSpec.isNotEmpty()) melSpec.average() else 0.0
-            val variance = if (melSpec.isNotEmpty()) {
-                melSpec.map { (it - avgValue) * (it - avgValue) }.average()
+            val nonZeroCount = transformedMelSpec.count { it != 0f }
+            val avgValue = if (transformedMelSpec.isNotEmpty()) transformedMelSpec.average() else 0.0
+            val variance = if (transformedMelSpec.isNotEmpty()) {
+                transformedMelSpec.map { (it - avgValue) * (it - avgValue) }.average()
             } else 0.0
             val stdDev = kotlin.math.sqrt(variance.toFloat())
             
-            Log.v(TAG, "🎵 MEL_EXTRACT: Final mel spec: ${melSpec.size} elements, ${nonZeroCount} non-zero")
+            Log.v(TAG, "🎵 MEL_EXTRACT: Final transformed mel spec: ${transformedMelSpec.size} elements, ${nonZeroCount} non-zero")
             Log.v(TAG, "🎵 MEL_EXTRACT: Statistics: avg=${String.format("%.6f", avgValue)}, std=${String.format("%.6f", stdDev)}")
             
             if (nonZeroCount == 0) {
@@ -370,7 +377,7 @@ class OpenWakeWordEngine(private val context: Context) {
                 Log.w(TAG, "🎵 MEL_EXTRACT: ⚠️ WARNING: Low variance mel spectrogram (std=${String.format("%.6f", stdDev)}) - may cause poor embeddings!")
             }
             
-            melSpec
+            transformedMelSpec
         } catch (e: Exception) {
             Log.e(TAG, "Error extracting mel spectrogram: ${e.message}", e)
             FloatArray(MEL_SPEC_SIZE * 80) // Return empty array with expected size
@@ -625,16 +632,17 @@ class OpenWakeWordEngine(private val context: Context) {
             inputTensor.close()
             output?.close()
             
-            // Apply sigmoid to get confidence score
-            val confidence = sigmoid(rawScore)
+            // OpenWakeWord models output probability values (0-1), not logits
+            // No sigmoid transformation needed - the output IS the confidence score
+            val confidence = rawScore.coerceIn(0f, 1f)  // Ensure valid probability range
             
             // Debug logging for confidence calculation
-            Log.v(TAG, "🎯 CLASSIFY: Raw score: ${String.format("%.6f", rawScore)}, Confidence: ${String.format("%.6f", confidence)}")
+            Log.v(TAG, "🎯 CLASSIFY: Model output score: ${String.format("%.6f", rawScore)}, Final confidence: ${String.format("%.6f", confidence)}")
             Log.v(TAG, "🎯 CLASSIFY: Model: $currentModel")
             
-            // Check for problematic sigmoid outputs
-            if (kotlin.math.abs(confidence - 0.5f) < 0.001f) {
-                Log.w(TAG, "🎯 CLASSIFY: ⚠️ WARNING: Confidence ≈ 0.5 (sigmoid of ~0) - likely zero/corrupted embedding!")
+            // Check for very low confidence (silence/background noise)
+            if (confidence < 0.01f) {
+                Log.v(TAG, "🎯 CLASSIFY: Very low confidence: ${String.format("%.6f", confidence)} - likely silence/background noise")
             }
             
             // Log confidence interpretation
