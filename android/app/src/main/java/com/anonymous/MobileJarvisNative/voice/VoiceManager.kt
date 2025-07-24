@@ -359,30 +359,126 @@ class VoiceManager private constructor() {
             Log.d(TAG, "🎤 SPEECH_RECOGNITION: Current audio focus holder: ${currentRequest?.requestType ?: "None"}")
             Log.d(TAG, "🎤 SPEECH_RECOGNITION: Current request ID: ${currentRequest?.requestId ?: "None"}")
             
-            // If there's an existing request, release it first to ensure clean handoff
+            // Only release focus if it's a different type or lower priority
             if (currentRequest != null) {
-                Log.i(TAG, "🎤 SPEECH_RECOGNITION: 🔄 Releasing existing audio focus (${currentRequest.requestType}) for clean handoff")
-                audioManager.releaseAudioFocus(currentRequest.requestId)
+                val currentPriority = currentRequest.requestType.priority
+                val speechRecognitionPriority = com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION.priority
                 
-                // Brief delay to allow the release to process
-                Thread.sleep(50)
+                if (currentPriority > speechRecognitionPriority) {
+                    Log.i(TAG, "🎤 SPEECH_RECOGNITION: 🔄 Releasing lower priority focus (${currentRequest.requestType}) for speech recognition")
+                    audioManager.releaseAudioFocus(currentRequest.requestId)
+                    
+                    // Brief delay to allow the release to process
+                    Thread.sleep(50)
+                } else if (currentRequest.requestType == com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION) {
+                    Log.d(TAG, "🎤 SPEECH_RECOGNITION: Speech recognition focus already active, no need to release")
+                } else {
+                    Log.w(TAG, "🎤 SPEECH_RECOGNITION: Higher priority focus (${currentRequest.requestType}) active, will queue speech recognition")
+                }
             }
             
             // Now request audio focus for speech recognition
-            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Requesting audio focus for speech recognition...")
+            val focusRequestTimestamp = System.currentTimeMillis()
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Requesting audio focus for speech recognition at $focusRequestTimestamp...")
             val focusResult = audioManager.requestAudioFocus(
                 com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION, 
                 "speech_recognition",
                 onFocusGained = {
-                    Log.i(TAG, "🎤 SPEECH_RECOGNITION: 🎵 Audio focus GAINED during recognition")
+                    val gainTimestamp = System.currentTimeMillis()
+                    val gainDelay = gainTimestamp - focusRequestTimestamp
+                    Log.i(TAG, "🎤 SPEECH_RECOGNITION: 🎵 Audio focus GAINED at $gainTimestamp (${gainDelay}ms after request)")
+                    
+                    // Start monitoring for unexpected focus loss
+                    coroutineScope.launch {
+                        var checkCount = 0
+                        repeat(20) { // Check every 10ms for 200ms total
+                            kotlinx.coroutines.delay(10)
+                            checkCount++
+                            val currentTime = System.currentTimeMillis()
+                            val timeSinceGain = currentTime - gainTimestamp
+                            val hasFocus = audioManager.hasAudioFocus()
+                            
+                            if (!hasFocus) {
+                                Log.w(TAG, "🔥 FOCUS_THEFT_DEBUG: Audio focus STOLEN at ${timeSinceGain}ms after gain (check #$checkCount)")
+                                return@launch
+                            }
+                            
+                            // Log specific timing checkpoints
+                            when (timeSinceGain.toInt()) {
+                                in 85..95 -> Log.w(TAG, "🔥 FOCUS_THEFT_DEBUG: Critical 90ms window - focus still held at ${timeSinceGain}ms")
+                                100 -> Log.i(TAG, "🔥 FOCUS_THEFT_DEBUG: Passed 100ms mark - focus still held")
+                            }
+                        }
+                        Log.i(TAG, "🔥 FOCUS_THEFT_DEBUG: Completed 200ms monitoring - focus retained")
+                    }
                 },
                 onFocusLost = {
-                    Log.w(TAG, "🎤 SPEECH_RECOGNITION: 🔇 Audio focus LOST during recognition - stopping speech recognizer")
-                    // Stop recognition immediately when focus is lost
-                    Handler(Looper.getMainLooper()).post {
-                        if (isListening) {
-                            speechRecognizer?.stopListening()
-                            _voiceState.value = VoiceState.ERROR("Audio focus lost during speech recognition")
+                    val lossTimestamp = System.currentTimeMillis()
+                    val timeSinceRequest = lossTimestamp - focusRequestTimestamp
+                    Log.w(TAG, "🔥 FOCUS_THEFT_DEBUG: ========== AUDIO FOCUS STOLEN ===========")
+                    Log.w(TAG, "🔥 FOCUS_THEFT_DEBUG: Focus lost at $lossTimestamp")
+                    Log.w(TAG, "🔥 FOCUS_THEFT_DEBUG: Time since request: ${timeSinceRequest}ms")
+                    Log.w(TAG, "🔥 FOCUS_THEFT_DEBUG: Thread: ${Thread.currentThread().name}")
+                    Log.w(TAG, "🔥 FOCUS_THEFT_DEBUG: Current voice state: ${_voiceState.value}")
+                    Log.w(TAG, "🔥 FOCUS_THEFT_DEBUG: Speech recognizer listening: $isListening")
+                    
+                    // Log call stack to see what caused the loss
+                    val stackTrace = Thread.currentThread().stackTrace
+                    Log.w(TAG, "🔥 FOCUS_THEFT_DEBUG: Call stack when focus lost:")
+                    stackTrace.take(8).forEachIndexed { index, element ->
+                        Log.w(TAG, "🔥 FOCUS_THEFT_DEBUG: [$index] ${element.className}.${element.methodName}:${element.lineNumber}")
+                    }
+                    Log.w(TAG, "🔥 FOCUS_THEFT_DEBUG: =============================================")
+                    
+                    Log.w(TAG, "🎤 SPEECH_RECOGNITION: 🔇 Audio focus LOST during recognition")
+                    
+                    // Check if this is a transient loss that might recover
+                    val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                    val isTransientLoss = audioManager.isInTransientFocusLoss()
+                    
+                    if (isTransientLoss) {
+                        Log.i(TAG, "🎤 SPEECH_RECOGNITION: Focus loss is transient - waiting for recovery before stopping")
+                        
+                        // Give transient loss more time to recover during active recognition
+                        coroutineScope.launch {
+                            var recoveryCheckCount = 0
+                            val maxRecoveryChecks = 150 // Check for 1.5 seconds (10ms intervals)
+                            
+                            while (recoveryCheckCount < maxRecoveryChecks && isListening) {
+                                kotlinx.coroutines.delay(10)
+                                recoveryCheckCount++
+                                
+                                val currentAudioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                                val hasRecovered = currentAudioManager.hasAudioFocus()
+                                val stillTransient = currentAudioManager.isInTransientFocusLoss()
+                                
+                                if (hasRecovered && !stillTransient) {
+                                    Log.i(TAG, "🎤 SPEECH_RECOGNITION: ✅ Audio focus RECOVERED after ${recoveryCheckCount * 10}ms - continuing recognition")
+                                    return@launch // Successfully recovered
+                                }
+                                
+                                if (!stillTransient) {
+                                    Log.w(TAG, "🎤 SPEECH_RECOGNITION: Transient loss became permanent after ${recoveryCheckCount * 10}ms")
+                                    break
+                                }
+                            }
+                            
+                            // If we get here, either recovery failed or timeout occurred
+                            Log.w(TAG, "🎤 SPEECH_RECOGNITION: Recovery failed or timed out - stopping recognition")
+                            Handler(Looper.getMainLooper()).post {
+                                if (isListening) {
+                                    speechRecognizer?.stopListening()
+                                    _voiceState.value = VoiceState.ERROR("Audio focus lost during speech recognition")
+                                }
+                            }
+                        }
+                    } else {
+                        Log.w(TAG, "🎤 SPEECH_RECOGNITION: Focus loss is permanent - stopping immediately")
+                        Handler(Looper.getMainLooper()).post {
+                            if (isListening) {
+                                speechRecognizer?.stopListening()
+                                _voiceState.value = VoiceState.ERROR("Audio focus lost during speech recognition")
+                            }
                         }
                     }
                 }
@@ -427,11 +523,15 @@ class VoiceManager private constructor() {
             }
             
             // Verify focus was actually granted
-            val hasAudioFocus = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()
-            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Post-request audio focus verification: $hasAudioFocus")
+            val postReqAudioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+            val hasAudioFocus = postReqAudioManager.hasAudioFocus()
+            val isTransientAtVerification = postReqAudioManager.isInTransientFocusLoss()
             
-            if (!hasAudioFocus) {
-                Log.e(TAG, "🎤 SPEECH_RECOGNITION: Audio focus verification failed, aborting recognition")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Post-request audio focus verification: $hasAudioFocus")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Is transient at verification: $isTransientAtVerification")
+            
+            if (!hasAudioFocus && !isTransientAtVerification) {
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: Audio focus verification failed and not transient, aborting recognition")
                 _voiceState.value = VoiceState.ERROR("Audio focus verification failed")
                 
                 // Auto-recovery: reset to IDLE after a brief delay
@@ -440,6 +540,25 @@ class VoiceManager private constructor() {
                     Log.i(TAG, "🔄 AUTO_RECOVERY: Resetting to IDLE after audio focus verification failure")
                     resetToIdle()
                 }
+                return
+            } else if (isTransientAtVerification) {
+                Log.i(TAG, "🎤 SPEECH_RECOGNITION: Verification shows transient loss - proceeding with recognition")
+            }
+            
+            // Add stabilization delay to ensure audio focus is stable before starting recognizer
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Adding 50ms stabilization delay for audio focus")
+            Thread.sleep(50)
+            
+            // Final focus verification after stabilization delay
+            val finalAudioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+            val finalFocus = finalAudioManager.hasAudioFocus()
+            val finalTransient = finalAudioManager.isInTransientFocusLoss()
+            
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Final focus check after stabilization - focus: $finalFocus, transient: $finalTransient")
+            
+            if (!finalFocus && !finalTransient) {
+                Log.w(TAG, "🎤 SPEECH_RECOGNITION: Focus lost during stabilization delay - aborting")
+                _voiceState.value = VoiceState.ERROR("Audio focus lost during stabilization")
                 return
             }
             
@@ -554,30 +673,69 @@ class VoiceManager private constructor() {
     private fun createRecognitionListener(): RecognitionListener {
         return object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
-                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Ready for speech")
+                val readyTimestamp = System.currentTimeMillis()
+                val timeSinceStart = readyTimestamp - lastRecognitionStartTime
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Ready for speech at $readyTimestamp")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Time since start: ${timeSinceStart}ms")
                 Log.d(TAG, "🎤 SPEECH_RECOGNITION: Parameters: $params")
                 
                 // Critical: Verify audio focus is still available when ready for speech
-                val hasAudioFocus = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()
-                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Audio focus state when ready: $hasAudioFocus")
+                val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                val hasAudioFocus = audioManager.hasAudioFocus()
+                val isTransient = audioManager.isInTransientFocusLoss()
+                val transientDuration = audioManager.getTransientLossDuration()
                 
-                if (!hasAudioFocus) {
-                    Log.w(TAG, "🎤 SPEECH_RECOGNITION: Audio focus lost between start and ready, attempting recovery...")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Audio focus state when ready: $hasAudioFocus")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Is in transient loss: $isTransient (${transientDuration}ms)")
+                
+                // Start intensive monitoring from this point
+                coroutineScope.launch {
+                    var monitorCount = 0
+                    repeat(50) { // Monitor every 5ms for 250ms
+                        kotlinx.coroutines.delay(5)
+                        monitorCount++
+                        val currentTime = System.currentTimeMillis()
+                        val timeSinceReady = currentTime - readyTimestamp
+                        val currentFocus = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()
+                        
+                        if (!currentFocus) {
+                            Log.w(TAG, "🔥 READY_FOCUS_DEBUG: Focus lost ${timeSinceReady}ms after ready (monitor #$monitorCount)")
+                            return@launch
+                        }
+                        
+                        // Log critical timing windows
+                        when (timeSinceReady.toInt()) {
+                            in 85..95 -> Log.w(TAG, "🔥 READY_FOCUS_DEBUG: Critical window - ${timeSinceReady}ms after ready")
+                            in 185..195 -> Log.w(TAG, "🔥 READY_FOCUS_DEBUG: Extended window - ${timeSinceReady}ms after ready")
+                        }
+                    }
+                    Log.i(TAG, "🔥 READY_FOCUS_DEBUG: Completed 250ms ready monitoring - focus retained")
+                }
+                
+                if (!hasAudioFocus && !isTransient) {
+                    Log.w(TAG, "🎤 SPEECH_RECOGNITION: Audio focus permanently lost between start and ready, attempting recovery...")
                     
                     // Attempt to recover audio focus with callbacks
-                    val focusRecoveryResult = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().requestAudioFocus(
+                    val focusRecoveryResult = audioManager.requestAudioFocus(
                         com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION, 
                         "speech_recognition_recovery",
                         onFocusGained = {
                             Log.i(TAG, "🎤 SPEECH_RECOGNITION: 🎵 Audio focus RECOVERED during recognition")
                         },
                         onFocusLost = {
-                            Log.w(TAG, "🎤 SPEECH_RECOGNITION: 🔇 Audio focus LOST again during recovery")
-                            Handler(Looper.getMainLooper()).post {
-                                if (isListening) {
-                                    speechRecognizer?.stopListening()
-                                    _voiceState.value = VoiceState.ERROR("Audio focus lost during recovery")
+                            val recoveryAudioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                            val isTransientRecovery = recoveryAudioManager.isInTransientFocusLoss()
+                            
+                            if (!isTransientRecovery) {
+                                Log.w(TAG, "🎤 SPEECH_RECOGNITION: 🔇 Audio focus PERMANENTLY LOST again during recovery")
+                                Handler(Looper.getMainLooper()).post {
+                                    if (isListening) {
+                                        speechRecognizer?.stopListening()
+                                        _voiceState.value = VoiceState.ERROR("Audio focus permanently lost during recovery")
+                                    }
                                 }
+                            } else {
+                                Log.i(TAG, "🎤 SPEECH_RECOGNITION: 🔄 Transient focus loss during recovery - continuing")
                             }
                         }
                     )
@@ -591,31 +749,84 @@ class VoiceManager private constructor() {
                     }
                     
                     // Verify recovery was successful
-                    val recoveryVerification = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()
+                    val recoveryVerification = audioManager.hasAudioFocus()
                     Log.d(TAG, "🎤 SPEECH_RECOGNITION: Focus recovery verification: $recoveryVerification")
                     
-                    if (!recoveryVerification) {
-                        Log.e(TAG, "🎤 SPEECH_RECOGNITION: Focus recovery verification failed, stopping recognition")
+                    if (!recoveryVerification && !audioManager.isInTransientFocusLoss()) {
+                        Log.e(TAG, "🎤 SPEECH_RECOGNITION: Focus recovery verification failed and not transient, stopping recognition")
                         speechRecognizer?.stopListening()
                         _voiceState.value = VoiceState.ERROR("Audio focus recovery verification failed")
                         return
+                    } else if (audioManager.isInTransientFocusLoss()) {
+                        Log.i(TAG, "🎤 SPEECH_RECOGNITION: Recovery verification shows transient loss - continuing with recognition")
                     }
                     
                     Log.i(TAG, "🎤 SPEECH_RECOGNITION: ✅ Audio focus successfully recovered")
+                } else if (isTransient) {
+                    Log.i(TAG, "🎤 SPEECH_RECOGNITION: Focus loss is transient (${transientDuration}ms) - continuing with recognition")
+                    
+                    // If we're in transient loss but recognizer is ready, it's likely safe to continue
+                    // The extended grace period (1000ms) should handle this case
+                    if (transientDuration < 800) { // Allow more time for transient recovery
+                        Log.i(TAG, "🎤 SPEECH_RECOGNITION: Transient loss duration acceptable (${transientDuration}ms < 800ms), proceeding")
+                    } else {
+                        Log.w(TAG, "🎤 SPEECH_RECOGNITION: Transient loss duration concerning (${transientDuration}ms >= 800ms), but recognizer ready - continuing cautiously")
+                    }
                 }
                 
-                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Recognition start time: ${System.currentTimeMillis()}")
+                val actualStartTime = System.currentTimeMillis() 
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Recognition start time: $actualStartTime")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Time from lastRecognitionStartTime to actual start: ${actualStartTime - lastRecognitionStartTime}ms")
                 isListening = true
-                lastRecognitionStartTime = System.currentTimeMillis()
+                lastRecognitionStartTime = actualStartTime
                 speechRecognitionRetryCount = 0 // Reset retry count on successful start
+                
+                // Begin continuous focus monitoring during speech recognition
+                coroutineScope.launch {
+                    var focusCheckCount = 0
+                    while (isListening && focusCheckCount < 1000) { // Monitor for up to 10 seconds
+                        kotlinx.coroutines.delay(10) // Check every 10ms
+                        focusCheckCount++
+                        val currentTime = System.currentTimeMillis()
+                        val listeningDuration = currentTime - actualStartTime
+                        val hasFocus = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()
+                        
+                        if (!hasFocus) {
+                            Log.w(TAG, "🔥 LISTENING_FOCUS_DEBUG: Focus lost ${listeningDuration}ms into listening session")
+                            return@launch
+                        }
+                        
+                        // Log specific time markers
+                        if (listeningDuration.toInt() in listOf(50, 100, 200, 500, 1000, 2000, 5000)) {
+                            Log.d(TAG, "🔥 LISTENING_FOCUS_DEBUG: Still listening at ${listeningDuration}ms mark")
+                        }
+                    }
+                    if (isListening) {
+                        Log.i(TAG, "🔥 LISTENING_FOCUS_DEBUG: Completed extended monitoring - session still active")
+                    }
+                }
             }
             
             override fun onBeginningOfSpeech() {
                 val now = System.currentTimeMillis()
                 val timeSinceStart = now - lastRecognitionStartTime
-                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Beginning of speech detected")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Beginning of speech detected at $now")
                 Log.d(TAG, "🎤 SPEECH_RECOGNITION: Speech start timing: ${timeSinceStart}ms after ready")
-                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Audio focus state: ${com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()}")
+                val currentFocus = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Audio focus state: $currentFocus")
+                
+                if (!currentFocus) {
+                    val speechAudioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                    val isTransient = speechAudioManager.isInTransientFocusLoss()
+                    val transientDuration = speechAudioManager.getTransientLossDuration()
+                    
+                    Log.w(TAG, "🔥 SPEECH_START_DEBUG: WARNING - Speech detected but no audio focus!")
+                    Log.w(TAG, "🔥 SPEECH_START_DEBUG: Is transient loss: $isTransient (${transientDuration}ms)")
+                    
+                    if (!isTransient) {
+                        Log.e(TAG, "🔥 SPEECH_START_DEBUG: CRITICAL - Speech started without permanent audio focus!")
+                    }
+                }
             }
             
             override fun onRmsChanged(rmsdB: Float) {
@@ -1039,20 +1250,42 @@ class VoiceManager private constructor() {
             is VoiceState.IDLE -> {
                 // Only re-enable wake word detection when returning to IDLE
                 Log.d(TAG, "Conversation completed, re-enabling wake word detection")
-                try {
-                    voiceProcessor.start()
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error re-enabling wake word detection", e)
+                
+                // Add delay to ensure speech recognition audio focus is fully released
+                coroutineScope.launch {
+                    delay(200) // Give time for audio focus cleanup
+                    try {
+                        voiceProcessor.start()
+                        Log.d(TAG, "Wake word detection re-enabled after cleanup delay")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error re-enabling wake word detection", e)
+                    }
                 }
             }
-            is VoiceState.WAKE_WORD_DETECTED,
+            is VoiceState.WAKE_WORD_DETECTED -> {
+                // Immediately stop wake word detection when wake word is detected
+                Log.d(TAG, "Wake word detected, immediately stopping wake word detection")
+                try {
+                    voiceProcessor.stop()
+                    
+                    // Also ensure any pending wake word audio focus requests are cancelled
+                    val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                    val currentRequest = audioManager.getCurrentRequestInfo()
+                    if (currentRequest?.requestType == com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.BACKGROUND_AUDIO) {
+                        Log.d(TAG, "Releasing wake word audio focus to make way for speech recognition")
+                        audioManager.releaseAudioFocus(currentRequest.requestId)
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error stopping wake word detection", e)
+                }
+            }
             is VoiceState.LISTENING,
             is VoiceState.PROCESSING,
             is VoiceState.RESPONDING,
             is VoiceState.SPEAKING,
             is VoiceState.ERROR -> {
-                // Ensure wake word detection is paused during active conversation
-                Log.d(TAG, "Active conversation state (${newState.javaClass.simpleName}), pausing wake word detection")
+                // Ensure wake word detection stays paused during active conversation
+                Log.d(TAG, "Active conversation state (${newState.javaClass.simpleName}), ensuring wake word detection is paused")
                 try {
                     voiceProcessor.stop()
                     
@@ -1063,7 +1296,7 @@ class VoiceManager private constructor() {
                         startListening()
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error pausing wake word detection", e)
+                    Log.e(TAG, "Error ensuring wake word detection is paused", e)
                 }
             }
         }
