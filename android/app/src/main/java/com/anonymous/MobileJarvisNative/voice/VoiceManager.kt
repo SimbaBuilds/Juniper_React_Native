@@ -147,13 +147,22 @@ class VoiceManager private constructor() {
      * Initialize speech recognition
      */
     private fun initializeSpeechRecognition() {
+        // Ensure we're on the main thread for SpeechRecognizer initialization
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            Log.d(TAG, "initializeSpeechRecognition called from background thread, posting to main thread")
+            Handler(Looper.getMainLooper()).post {
+                initializeSpeechRecognition()
+            }
+            return
+        }
+        
         try {
             if (SpeechRecognizer.isRecognitionAvailable(context)) {
                 speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
                 // Set the recognition listener
                 speechRecognizer?.setRecognitionListener(createRecognitionListener())
                 isSpeechRecognitionInitialized = true
-                Log.d(TAG, "Speech recognizer initialized")
+                Log.d(TAG, "Speech recognizer initialized on main thread")
             } else {
                 Log.e(TAG, "Speech recognition not available on this device")
                 isSpeechRecognitionInitialized = false
@@ -321,12 +330,43 @@ class VoiceManager private constructor() {
             return
         }
         
+        // Ensure we're on the main thread for speech recognizer operations
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            Log.d(TAG, "startListening called from background thread, posting to main thread")
+            Handler(Looper.getMainLooper()).post {
+                startListening()
+            }
+            return
+        }
+        
         // Check if speechRecognizer is still valid and reinitialize if needed
         if (speechRecognizer == null || !isSpeechRecognitionInitialized) {
             Log.w(TAG, "Speech recognizer was null or not initialized, reinitializing...")
             initializeSpeechRecognition()
+            
+            // If initialization is async (posted to main thread), we need to wait
+            // Schedule the actual listening to start after initialization
+            if (!isSpeechRecognitionInitialized) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    if (isSpeechRecognitionInitialized) {
+                        startListeningInternal()
+                    } else {
+                        Log.e(TAG, "Speech recognition initialization failed, cannot start listening")
+                        isListening = false
+                        _voiceState.value = VoiceState.ERROR("Speech recognition not available")
+                    }
+                }, 100) // Small delay to allow initialization
+                return
+            }
         }
         
+        startListeningInternal()
+    }
+    
+    /**
+     * Internal method to start listening (must be called on main thread)
+     */
+    private fun startListeningInternal() {
         try {
             // Update state before starting recognition
             isListening = true
@@ -353,8 +393,18 @@ class VoiceManager private constructor() {
             Log.d(TAG, "stopListening() called. Stopping speech recognition...")
             isListening = false
             _voiceState.value = VoiceState.IDLE
-            speechRecognizer?.stopListening()
-            Log.i(TAG, "SpeechRecognizer stopped listening.")
+            
+            // Ensure we're on the main thread for speech recognizer operations
+            if (Looper.myLooper() != Looper.getMainLooper()) {
+                Log.d(TAG, "stopListening called from background thread, posting to main thread")
+                Handler(Looper.getMainLooper()).post {
+                    speechRecognizer?.stopListening()
+                    Log.i(TAG, "SpeechRecognizer stopped listening.")
+                }
+            } else {
+                speechRecognizer?.stopListening()
+                Log.i(TAG, "SpeechRecognizer stopped listening.")
+            }
         }
     }
     
@@ -506,8 +556,18 @@ class VoiceManager private constructor() {
         try {
             // Stop listening and release speech recognition resources
             isListening = false
-            speechRecognizer?.stopListening()
-            speechRecognizer?.cancel()
+            
+            // Ensure we're on the main thread for speech recognizer operations
+            if (Looper.myLooper() != Looper.getMainLooper()) {
+                Log.d(TAG, "Stopping speech recognizer from background thread, posting to main thread")
+                Handler(Looper.getMainLooper()).post {
+                    speechRecognizer?.stopListening()
+                    speechRecognizer?.cancel()
+                }
+            } else {
+                speechRecognizer?.stopListening()
+                speechRecognizer?.cancel()
+            }
             
             // Explicitly release audio focus from centralized manager
             val centralAudioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
@@ -739,8 +799,8 @@ class VoiceManager private constructor() {
                     // For LISTENING state, make sure speech recognizer is active
                     if (newState is VoiceState.LISTENING && !isListening) {
                         Log.d(TAG, "LISTENING state detected but isListening=false, reactivating speech recognizer")
-                        isListening = true
-                        speechRecognizer?.startListening(createRecognizerIntent())
+                        // Use startListening() which handles threading properly
+                        startListening()
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error pausing wake word detection", e)
@@ -799,8 +859,17 @@ class VoiceManager private constructor() {
         
         // Clean up speech recognition
         try {
-            speechRecognizer?.destroy()
-            speechRecognizer = null
+            // Ensure we're on the main thread for speech recognizer operations
+            if (Looper.myLooper() != Looper.getMainLooper()) {
+                Log.d(TAG, "Destroying speech recognizer from background thread, posting to main thread")
+                Handler(Looper.getMainLooper()).post {
+                    speechRecognizer?.destroy()
+                    speechRecognizer = null
+                }
+            } else {
+                speechRecognizer?.destroy()
+                speechRecognizer = null
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error destroying speech recognition", e)
         }

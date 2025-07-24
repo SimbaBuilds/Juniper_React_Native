@@ -36,6 +36,7 @@ export class VoiceService {
     private eventEmitter: NativeEventEmitter;
     private listeners: EmitterSubscription[] = [];
     private isInitialized: boolean = false;
+    private cachedVoiceState: VoiceState = VoiceState.IDLE;
 
     private constructor() {
         this.eventEmitter = new NativeEventEmitter(VoiceModule);
@@ -185,10 +186,41 @@ export class VoiceService {
 
     public async getVoiceState(): Promise<VoiceState> {
         try {
-            return await VoiceModule.getVoiceState();
+            const nativeState = await VoiceModule.getVoiceState();
+            // Update cached state with fresh native state
+            this.cachedVoiceState = nativeState as VoiceState;
+            return nativeState;
         } catch (error) {
             console.error('Error getting voice state:', error);
             throw error;
+        }
+    }
+
+    /**
+     * Get cached voice state immediately (synchronous)
+     * Use this for atomic state checks to avoid race conditions
+     */
+    public getCurrentVoiceStateSync(): VoiceState {
+        return this.cachedVoiceState;
+    }
+
+    /**
+     * Get current voice state with cache update (async but faster than full native call)
+     */
+    public async getCurrentVoiceStateAsync(): Promise<VoiceState> {
+        try {
+            // First return cached state immediately
+            const cachedState = this.cachedVoiceState;
+            
+            // Then update cache with fresh native state in background
+            this.getVoiceState().catch(err => {
+                console.warn('Background voice state update failed:', err);
+            });
+            
+            return cachedState;
+        } catch (error) {
+            console.error('Error getting current voice state:', error);
+            return this.cachedVoiceState;
         }
     }
 
@@ -221,7 +253,14 @@ export class VoiceService {
     }
 
     public onVoiceStateChange(callback: (event: VoiceStateChangeEvent) => void): () => void {
-        const subscription = this.eventEmitter.addListener(EVENT_VOICE_STATE_CHANGE, callback);
+        const subscription = this.eventEmitter.addListener(EVENT_VOICE_STATE_CHANGE, (event: VoiceStateChangeEvent) => {
+            // Update cached state immediately when we receive state changes
+            this.cachedVoiceState = event.state;
+            console.log('🔄 VOICE_SERVICE: Cached state updated to:', event.state);
+            
+            // Call the original callback
+            callback(event);
+        });
         this.listeners.push(subscription);
         
         return () => {

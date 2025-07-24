@@ -37,6 +37,10 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
     init {
         voiceManager.initialize(reactContext)
         
+        // CRITICAL: Set up state flow listener immediately to ensure immediate state propagation
+        Log.d(TAG, "🚀 VOICE_MODULE_INIT: Setting up state flow listener immediately for instant state sync")
+        setupStateFlowListener()
+        
         // Set up API callback for processing text using the new direct method
         voiceManager.setReactNativeApiCallback { text, onResult ->
             Log.d(TAG, "🔵 VOICE_MODULE: API callback triggered, calling processTextFromNative")
@@ -179,15 +183,41 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
     }
 
     /**
-     * Initialize state flow listener
+     * Initialize state flow listener with enhanced debugging and timing
      */
     private fun setupStateFlowListener() {
+        Log.d(TAG, "🔄 STATE_FLOW: Setting up voice state flow listener")
         voiceManager.voiceState
             .onEach { state ->
-                // Send the state update to JS
-                sendEvent(Constants.Actions.VOICE_STATE_CHANGE, mapOf("state" to state.toString()))
+                val stateUpdateTime = System.currentTimeMillis()
+                val performanceTime = System.nanoTime()
+                
+                Log.d(TAG, "🔄 STATE_FLOW: ========== NATIVE STATE CHANGE ==========")
+                Log.d(TAG, "🔄 STATE_FLOW: New state: $state")
+                Log.d(TAG, "🔄 STATE_FLOW: Timestamp: $stateUpdateTime")
+                Log.d(TAG, "🔄 STATE_FLOW: Performance time: $performanceTime")
+                Log.d(TAG, "🔄 STATE_FLOW: Thread: ${Thread.currentThread().name}")
+                
+                try {
+                    // Send the state update to JS with timing
+                    val eventStartTime = System.nanoTime()
+                    sendEvent(Constants.Actions.VOICE_STATE_CHANGE, mapOf(
+                        "state" to state.toString(),
+                        "timestamp" to stateUpdateTime,
+                        "nativeUpdateTime" to performanceTime
+                    ))
+                    val eventEndTime = System.nanoTime()
+                    val eventLatency = (eventEndTime - eventStartTime) / 1_000_000.0 // Convert to ms
+                    
+                    Log.d(TAG, "🔄 STATE_FLOW: ✅ State change event sent to RN")
+                    Log.d(TAG, "🔄 STATE_FLOW: Event emission latency: ${eventLatency}ms")
+                    Log.d(TAG, "🔄 STATE_FLOW: =============================================")
+                } catch (e: Exception) {
+                    Log.e(TAG, "🔄 STATE_FLOW: ❌ Error sending state change event", e)
+                }
             }
             .launchIn(coroutineScope)
+        Log.d(TAG, "🔄 STATE_FLOW: ✅ Voice state flow listener initialized")
     }
 
     /**

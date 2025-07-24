@@ -27,9 +27,36 @@ export function useVoiceState() {
         console.error('Error getting initial voice state:', err);
       });
 
-    // Listen for state changes from native
+    // Listen for state changes from native with enhanced timing logging
     const unsubscribe = VoiceService.getInstance().onVoiceStateChange((event: VoiceStateChangeEvent) => {
+      const eventReceiveTime = performance.now();
+      const eventReceiveTimestamp = Date.now();
+      
+      console.log('🔄 VOICE_STATE_HOOK: ========== RN STATE UPDATE RECEIVED ==========');
+      console.log('🔄 VOICE_STATE_HOOK: New state from native:', event.state);
+      console.log('🔄 VOICE_STATE_HOOK: Event receive time (performance.now):', eventReceiveTime);
+      console.log('🔄 VOICE_STATE_HOOK: Event receive timestamp:', eventReceiveTimestamp);
+      console.log('🔄 VOICE_STATE_HOOK: Previous RN state:', voiceState);
+      console.log('🔄 VOICE_STATE_HOOK: State change needed:', event.state !== voiceState);
+      
+      // Add native timing info if available
+      if ((event as any).timestamp) {
+        const nativeToRnLatency = eventReceiveTimestamp - (event as any).timestamp;
+        console.log('🔄 VOICE_STATE_HOOK: Native to RN latency:', nativeToRnLatency, 'ms');
+      }
+      
+      if ((event as any).nativeUpdateTime) {
+        const nativeProcessingTime = (performance.now() * 1_000_000) - (event as any).nativeUpdateTime;
+        console.log('🔄 VOICE_STATE_HOOK: Native processing time:', nativeProcessingTime / 1_000_000, 'ms');
+      }
+      
+      const stateUpdateStartTime = performance.now();
       setVoiceState(event.state);
+      const stateUpdateEndTime = performance.now();
+      
+      console.log('🔄 VOICE_STATE_HOOK: ✅ RN state updated in:', stateUpdateEndTime - stateUpdateStartTime, 'ms');
+      console.log('🔄 VOICE_STATE_HOOK: ✅ Total event processing time:', stateUpdateEndTime - eventReceiveTime, 'ms');
+      console.log('🔄 VOICE_STATE_HOOK: ===================================================');
     });
 
     // Clean up listener

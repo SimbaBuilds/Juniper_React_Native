@@ -1,4 +1,5 @@
 import { NativeModules, NativeEventEmitter, DeviceEventEmitter, EmitterSubscription, Platform } from 'react-native';
+import { VoiceService } from '../voice/VoiceService';
 
 // Define the interface for responses from the native module
 interface WakeWordAvailabilityResponse {
@@ -540,6 +541,34 @@ class WakeWordService {
     } catch (error) {
      
       return 0.3;
+    }
+  }
+
+  /**
+   * Get current voice state from VoiceService for debugging state synchronization
+   */
+  async getCurrentVoiceState(): Promise<string> {
+    try {
+      const voiceService = VoiceService.getInstance();
+      const state = await voiceService.getCurrentVoiceStateAsync();
+      return state;
+    } catch (error) {
+      console.error('Error getting current voice state:', error);
+      return 'UNKNOWN';
+    }
+  }
+
+  /**
+   * Get current voice state synchronously from cached value
+   */
+  getCurrentVoiceStateSync(): string {
+    try {
+      const voiceService = VoiceService.getInstance();
+      const state = voiceService.getCurrentVoiceStateSync();
+      return state;
+    } catch (error) {
+      console.error('Error getting sync voice state:', error);
+      return 'UNKNOWN';
     }
   }
 }
