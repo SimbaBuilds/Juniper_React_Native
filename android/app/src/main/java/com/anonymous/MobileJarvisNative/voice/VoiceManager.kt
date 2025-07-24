@@ -236,8 +236,14 @@ class VoiceManager private constructor() {
             // Initialize Whisper client for speech recognition
             initializeWhisperClient()
             
-            // Start listening for speech (system beep will provide audio feedback)
-            startListening()
+            // Add delay to allow any competing audio focus requests to settle
+            Log.d(TAG, "Adding 300ms delay before starting speech recognition to avoid conflicts")
+            coroutineScope.launch {
+                delay(300)
+                Log.d(TAG, "Delay completed, starting speech recognition")
+                // Start listening for speech (system beep will provide audio feedback)
+                startListening()
+            }
             
             return true
         } catch (e: Exception) {
@@ -377,6 +383,21 @@ class VoiceManager private constructor() {
                 }
             }
             
+            // Check if Google Assistant might be active
+            try {
+                val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+                val runningTasks = activityManager.getRunningTasks(1)
+                if (runningTasks.isNotEmpty()) {
+                    val topActivity = runningTasks[0].topActivity
+                    if (topActivity?.packageName?.contains("com.google.android.googlequicksearchbox") == true) {
+                        Log.w(TAG, "🎤 SPEECH_RECOGNITION: Google Assistant appears to be active, adding extra delay")
+                        Thread.sleep(500)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Could not check for Google Assistant: ${e.message}")
+            }
+            
             // Now request audio focus for speech recognition
             val focusRequestTimestamp = System.currentTimeMillis()
             Log.d(TAG, "🎤 SPEECH_RECOGNITION: Requesting audio focus for speech recognition at $focusRequestTimestamp...")
@@ -432,52 +453,76 @@ class VoiceManager private constructor() {
                     
                     Log.w(TAG, "🎤 SPEECH_RECOGNITION: 🔇 Audio focus LOST during recognition")
                     
-                    // Check if this is a transient loss that might recover
-                    val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
-                    val isTransientLoss = audioManager.isInTransientFocusLoss()
-                    
-                    if (isTransientLoss) {
-                        Log.i(TAG, "🎤 SPEECH_RECOGNITION: Focus loss is transient - waiting for recovery before stopping")
+                    // Check if this is an early focus loss that suggests a conflict
+                    if (timeSinceRequest < 500 && speechRecognitionRetryCount < 1) {
+                        Log.w(TAG, "🎤 SPEECH_RECOGNITION: Early focus loss detected (${timeSinceRequest}ms) - likely conflict with another app")
+                        Log.i(TAG, "🎤 SPEECH_RECOGNITION: Will retry once after delay")
                         
-                        // Give transient loss more time to recover during active recognition
-                        coroutineScope.launch {
-                            var recoveryCheckCount = 0
-                            val maxRecoveryChecks = 150 // Check for 1.5 seconds (10ms intervals)
-                            
-                            while (recoveryCheckCount < maxRecoveryChecks && isListening) {
-                                kotlinx.coroutines.delay(10)
-                                recoveryCheckCount++
+                        speechRecognitionRetryCount++
+                        
+                        // Stop current recognition and retry after delay
+                        Handler(Looper.getMainLooper()).post {
+                            if (isListening) {
+                                speechRecognizer?.stopListening()
+                                isListening = false
                                 
-                                val currentAudioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
-                                val hasRecovered = currentAudioManager.hasAudioFocus()
-                                val stillTransient = currentAudioManager.isInTransientFocusLoss()
-                                
-                                if (hasRecovered && !stillTransient) {
-                                    Log.i(TAG, "🎤 SPEECH_RECOGNITION: ✅ Audio focus RECOVERED after ${recoveryCheckCount * 10}ms - continuing recognition")
-                                    return@launch // Successfully recovered
-                                }
-                                
-                                if (!stillTransient) {
-                                    Log.w(TAG, "🎤 SPEECH_RECOGNITION: Transient loss became permanent after ${recoveryCheckCount * 10}ms")
-                                    break
+                                // Retry after additional delay
+                                coroutineScope.launch {
+                                    Log.d(TAG, "🎤 SPEECH_RECOGNITION: Waiting 300ms before retry...")
+                                    delay(300)
+                                    Log.d(TAG, "🎤 SPEECH_RECOGNITION: Retrying speech recognition (attempt ${speechRecognitionRetryCount + 1})")
+                                    startListening()
                                 }
                             }
+                        }
+                    } else {
+                        // Check if this is a transient loss that might recover
+                        val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                        val isTransientLoss = audioManager.isInTransientFocusLoss()
+                        
+                        if (isTransientLoss) {
+                            Log.i(TAG, "🎤 SPEECH_RECOGNITION: Focus loss is transient - waiting for recovery before stopping")
                             
-                            // If we get here, either recovery failed or timeout occurred
-                            Log.w(TAG, "🎤 SPEECH_RECOGNITION: Recovery failed or timed out - stopping recognition")
+                            // Give transient loss more time to recover during active recognition
+                            coroutineScope.launch {
+                                var recoveryCheckCount = 0
+                                val maxRecoveryChecks = 150 // Check for 1.5 seconds (10ms intervals)
+                                
+                                while (recoveryCheckCount < maxRecoveryChecks && isListening) {
+                                    kotlinx.coroutines.delay(10)
+                                    recoveryCheckCount++
+                                    
+                                    val currentAudioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                                    val hasRecovered = currentAudioManager.hasAudioFocus()
+                                    val stillTransient = currentAudioManager.isInTransientFocusLoss()
+                                    
+                                    if (hasRecovered && !stillTransient) {
+                                        Log.i(TAG, "🎤 SPEECH_RECOGNITION: ✅ Audio focus RECOVERED after ${recoveryCheckCount * 10}ms - continuing recognition")
+                                        return@launch // Successfully recovered
+                                    }
+                                    
+                                    if (!stillTransient) {
+                                        Log.w(TAG, "🎤 SPEECH_RECOGNITION: Transient loss became permanent after ${recoveryCheckCount * 10}ms")
+                                        break
+                                    }
+                                }
+                                
+                                // If we get here, either recovery failed or timeout occurred
+                                Log.w(TAG, "🎤 SPEECH_RECOGNITION: Recovery failed or timed out - stopping recognition")
+                                Handler(Looper.getMainLooper()).post {
+                                    if (isListening) {
+                                        speechRecognizer?.stopListening()
+                                        _voiceState.value = VoiceState.ERROR("Audio focus lost during speech recognition")
+                                    }
+                                }
+                            }
+                        } else {
+                            Log.w(TAG, "🎤 SPEECH_RECOGNITION: Focus loss is permanent - stopping immediately")
                             Handler(Looper.getMainLooper()).post {
                                 if (isListening) {
                                     speechRecognizer?.stopListening()
                                     _voiceState.value = VoiceState.ERROR("Audio focus lost during speech recognition")
                                 }
-                            }
-                        }
-                    } else {
-                        Log.w(TAG, "🎤 SPEECH_RECOGNITION: Focus loss is permanent - stopping immediately")
-                        Handler(Looper.getMainLooper()).post {
-                            if (isListening) {
-                                speechRecognizer?.stopListening()
-                                _voiceState.value = VoiceState.ERROR("Audio focus lost during speech recognition")
                             }
                         }
                     }
@@ -678,6 +723,9 @@ class VoiceManager private constructor() {
                 Log.d(TAG, "🎤 SPEECH_RECOGNITION: Ready for speech at $readyTimestamp")
                 Log.d(TAG, "🎤 SPEECH_RECOGNITION: Time since start: ${timeSinceStart}ms")
                 Log.d(TAG, "🎤 SPEECH_RECOGNITION: Parameters: $params")
+                
+                // Reset retry count on successful initialization
+                speechRecognitionRetryCount = 0
                 
                 // Critical: Verify audio focus is still available when ready for speech
                 val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()

@@ -165,8 +165,8 @@ class AudioManager private constructor() {
             val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val audioFocusRequest = AudioFocusRequest.Builder(focusGain)
                     .setAudioAttributes(audioAttributes)
-                    .setAcceptsDelayedFocusGain(false)
-                    .setWillPauseWhenDucked(false)
+                    .setAcceptsDelayedFocusGain(requestInfo.requestType == AudioRequestType.SPEECH_RECOGNITION)
+                    .setWillPauseWhenDucked(requestInfo.requestType != AudioRequestType.SPEECH_RECOGNITION)
                     .setOnAudioFocusChangeListener { focusChange ->
                         val changeTimestamp = System.currentTimeMillis()
                         val timeSinceRequest = changeTimestamp - requestTimestamp
@@ -450,7 +450,7 @@ class AudioManager private constructor() {
     private fun getAudioFocusGain(requestType: AudioRequestType): Int {
         return when (requestType) {
             AudioRequestType.TTS, AudioRequestType.WAKE_WORD_RESPONSE -> AndroidAudioManager.AUDIOFOCUS_GAIN_TRANSIENT
-            AudioRequestType.SPEECH_RECOGNITION -> AndroidAudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE
+            AudioRequestType.SPEECH_RECOGNITION -> AndroidAudioManager.AUDIOFOCUS_GAIN
             AudioRequestType.BACKGROUND_AUDIO -> AndroidAudioManager.AUDIOFOCUS_GAIN
         }
     }
