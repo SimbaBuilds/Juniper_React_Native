@@ -76,6 +76,16 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const isSpeaking = voiceStateFromHook.isSpeaking;
   const isError = voiceStateFromHook.isError;
   
+  // Log whenever VoiceContext state changes
+  useEffect(() => {
+    console.log('🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========');
+    console.log('🔄 VOICE_CONTEXT: Context voiceState:', voiceState);
+    console.log('🔄 VOICE_CONTEXT: Context isListening:', isListening);
+    console.log('🔄 VOICE_CONTEXT: Context isSpeaking:', isSpeaking);
+    console.log('🔄 VOICE_CONTEXT: Context isError:', isError);
+    console.log('🔄 VOICE_CONTEXT: ====================================================');
+  }, [voiceState, isListening, isSpeaking, isError]);
+  
   // Auth context for user ID
   const { user } = useAuth();
   
@@ -385,6 +395,19 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     // Listen for text processing requests from native
     const processTextSub = DeviceEventEmitter.addListener('processTextFromNative', async (event) => {
       const { text, requestId } = event;
+      
+      console.log('🔍 RN_BRIDGE_DEBUG: ========== PROCESS TEXT FROM NATIVE ==========');
+      console.log('🔍 RN_BRIDGE_DEBUG: Event received at:', new Date().toISOString());
+      console.log('🔍 RN_BRIDGE_DEBUG: Event data:', JSON.stringify(event, null, 2));
+      console.log('🔍 RN_BRIDGE_DEBUG: Text to process:', text);
+      console.log('🔍 RN_BRIDGE_DEBUG: Request ID:', requestId);
+      console.log('🔍 RN_BRIDGE_DEBUG: Current voice state:', voiceState);
+      console.log('🔍 RN_BRIDGE_DEBUG: Chat history length:', chatHistory.length);
+      console.log('🔍 RN_BRIDGE_DEBUG: API loading state:', isLoading);
+      console.log('🔍 RN_BRIDGE_DEBUG: Thread info:', {
+        performanceNow: performance.now(),
+        timestamp: Date.now()
+      });
 
       try {
         console.log(`🟡 VOICE_SERVICE: Adding user message to chat history`);
@@ -414,10 +437,23 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               // Start polling immediately when request begins
               setRequestStatus('pending');
               
+              console.log('🔍 RN_BRIDGE_DEBUG: ========== STARTING API CALL ==========');
+              console.log('🔍 RN_BRIDGE_DEBUG: API call start time:', Date.now());
+              console.log('🔍 RN_BRIDGE_DEBUG: Text being sent to API:', text);
+              console.log('🔍 RN_BRIDGE_DEBUG: History entries count:', updatedHistory.length);
+              
+              const apiStartTime = performance.now();
               const response = await sendMessage(text, updatedHistory, (requestId) => {
                 console.log('📊 REQUEST_STATUS: Setting request ID for polling:', requestId);
+                console.log('🔍 RN_BRIDGE_DEBUG: Request ID assigned:', requestId);
                 setCurrentRequestId(requestId);
               });
+              const apiEndTime = performance.now();
+              
+              console.log('🔍 RN_BRIDGE_DEBUG: ========== API CALL COMPLETED ==========');
+              console.log('🔍 RN_BRIDGE_DEBUG: API call duration:', (apiEndTime - apiStartTime), 'ms');
+              console.log('🔍 RN_BRIDGE_DEBUG: Response received at:', Date.now());
+              console.log('🔍 RN_BRIDGE_DEBUG: Response data:', JSON.stringify(response, null, 2));
               console.log('🟠 VOICE_CONTEXT: Received API response');
               console.log('🔄 VOICE_CONTEXT: Response settings_updated flag:', response.settings_updated);
               

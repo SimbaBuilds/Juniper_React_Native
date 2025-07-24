@@ -150,7 +150,27 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   };
 
   if (isError) {
-    throw isError; // This will be caught by the error boundary
+    let errorMessage = 'Voice service error occurred';
+    
+    // Extract error message from voice state
+    if (typeof voiceState === 'object' && voiceState?.message) {
+      errorMessage = voiceState.message;
+    } else if (typeof voiceState === 'string' && voiceState.includes('message=')) {
+      // Parse ERROR(message=...) format
+      const match = voiceState.match(/message=([^)]+)/);
+      if (match && match[1]) {
+        errorMessage = match[1];
+      }
+    }
+    
+    // Make error messages more user-friendly
+    if (errorMessage.includes('Failed to acquire audio focus')) {
+      errorMessage = 'Audio system is busy. Please try again in a moment.';
+    } else if (errorMessage.includes('Audio focus lost')) {
+      errorMessage = 'Audio interrupted. Please try speaking again.';
+    }
+    
+    throw new Error(errorMessage);
   }
   
   return (

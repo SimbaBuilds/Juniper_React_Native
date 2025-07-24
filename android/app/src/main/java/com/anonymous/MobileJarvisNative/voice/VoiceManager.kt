@@ -236,10 +236,7 @@ class VoiceManager private constructor() {
             // Initialize Whisper client for speech recognition
             initializeWhisperClient()
             
-            // Play "Sir?" response using Deepgram TTS
-            playWakeWordResponse()
-            
-            // Start listening for speech
+            // Start listening for speech (system beep will provide audio feedback)
             startListening()
             
             return true
@@ -273,66 +270,38 @@ class VoiceManager private constructor() {
         }
     }
     
-    /**
-     * Play wake word response sound
-     */
-    private fun playWakeWordResponse() {
-        Log.d(TAG, "Attempting to play wake word response...")
-        
-        // Use local TTS by default to avoid delays
-        try {
-            TextToSpeechManager.speak("Sir?")
-            Log.i(TAG, "Played wake word response using local TTS")
-            
-            // Try Deepgram in the background for next use
-            prepareDeepgramForFutureUse()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error playing wake word response: ${e.message}", e)
-        }
-    }
-    
-    /**
-     * Prepare Deepgram for future use without blocking current flow
-     */
-    private fun prepareDeepgramForFutureUse() {
-        coroutineScope.launch {
-            try {
-                // Initialize Deepgram client if needed
-                if (!::deepgramClient.isInitialized) {
-                    deepgramClient = DeepgramClient.getInstance(context)
-                }
-                deepgramClient.initialize()
-                Log.d(TAG, "Deepgram client initialized for future use")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error initializing Deepgram for future use: ${e.message}", e)
-            }
-        }
-    }
     
     /**
      * Start listening for speech input
      */
     fun startListening() {
-        Log.d(TAG, "startListening() called. Attempting to start speech recognition...")
+        Log.d(TAG, "🎤 SPEECH_RECOGNITION: ========== START LISTENING CALLED ==========")
+        Log.d(TAG, "🎤 SPEECH_RECOGNITION: Current thread: ${Thread.currentThread().name}")
+        Log.d(TAG, "🎤 SPEECH_RECOGNITION: Is main thread: ${Looper.myLooper() == Looper.getMainLooper()}")
+        Log.d(TAG, "🎤 SPEECH_RECOGNITION: Current listening state: $isListening")
+        Log.d(TAG, "🎤 SPEECH_RECOGNITION: Current voice state: ${_voiceState.value}")
+        Log.d(TAG, "🎤 SPEECH_RECOGNITION: Speech recognizer null: ${speechRecognizer == null}")
+        Log.d(TAG, "🎤 SPEECH_RECOGNITION: Speech recognition initialized: $isSpeechRecognitionInitialized")
+        Log.d(TAG, "🎤 SPEECH_RECOGNITION: Audio focus state: ${com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()}")
         
         // Always ensure wake word detection is paused when actively listening
         try {
             val intent = Intent("com.anonymous.MobileJarvisNative.PAUSE_WAKE_WORD_KEEP_LISTENING")
             context.sendBroadcast(intent)
-            Log.d(TAG, "Sent broadcast to pause wake word detection during listening")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Sent broadcast to pause wake word detection during listening")
         } catch (e: Exception) {
-            Log.e(TAG, "Error sending pause wake word broadcast: ${e.message}", e)
+            Log.e(TAG, "🎤 SPEECH_RECOGNITION: Error sending pause wake word broadcast: ${e.message}", e)
         }
         
         // Check if we're already listening to avoid duplicate requests
         if (isListening) {
-            Log.d(TAG, "Already listening, ignoring startListening() call")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Already listening, ignoring startListening() call")
             return
         }
         
         // Ensure we're on the main thread for speech recognizer operations
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            Log.d(TAG, "startListening called from background thread, posting to main thread")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: startListening called from background thread, posting to main thread")
             Handler(Looper.getMainLooper()).post {
                 startListening()
             }
@@ -341,17 +310,19 @@ class VoiceManager private constructor() {
         
         // Check if speechRecognizer is still valid and reinitialize if needed
         if (speechRecognizer == null || !isSpeechRecognitionInitialized) {
-            Log.w(TAG, "Speech recognizer was null or not initialized, reinitializing...")
+            Log.w(TAG, "🎤 SPEECH_RECOGNITION: Speech recognizer was null or not initialized, reinitializing...")
             initializeSpeechRecognition()
             
             // If initialization is async (posted to main thread), we need to wait
             // Schedule the actual listening to start after initialization
             if (!isSpeechRecognitionInitialized) {
+                Log.w(TAG, "🎤 SPEECH_RECOGNITION: Initialization not complete, scheduling retry...")
                 Handler(Looper.getMainLooper()).postDelayed({
                     if (isSpeechRecognitionInitialized) {
+                        Log.d(TAG, "🎤 SPEECH_RECOGNITION: Initialization completed, starting internal...")
                         startListeningInternal()
                     } else {
-                        Log.e(TAG, "Speech recognition initialization failed, cannot start listening")
+                        Log.e(TAG, "🎤 SPEECH_RECOGNITION: Speech recognition initialization failed, cannot start listening")
                         isListening = false
                         _voiceState.value = VoiceState.ERROR("Speech recognition not available")
                     }
@@ -360,6 +331,7 @@ class VoiceManager private constructor() {
             }
         }
         
+        Log.d(TAG, "🎤 SPEECH_RECOGNITION: Proceeding to internal start...")
         startListeningInternal()
     }
     
@@ -368,18 +340,123 @@ class VoiceManager private constructor() {
      */
     private fun startListeningInternal() {
         try {
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: ========== START LISTENING INTERNAL ==========")
+            
             // Update state before starting recognition
             isListening = true
             updateState(VoiceState.LISTENING)
             
-            // Start the actual speech recognizer
-            speechRecognizer?.startListening(createRecognizerIntent())
-            Log.i(TAG, "SpeechRecognizer started listening.")
+            // Create recognizer intent with enhanced logging
+            val intent = createRecognizerIntent()
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Recognizer intent created")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Intent extras: ${intent.extras}")
+            
+            // Check current audio focus state and handle accordingly
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Checking current audio focus state...")
+            val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+            val currentRequest = audioManager.getCurrentRequestInfo()
+            
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Current audio focus holder: ${currentRequest?.requestType ?: "None"}")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Current request ID: ${currentRequest?.requestId ?: "None"}")
+            
+            // If there's an existing request, release it first to ensure clean handoff
+            if (currentRequest != null) {
+                Log.i(TAG, "🎤 SPEECH_RECOGNITION: 🔄 Releasing existing audio focus (${currentRequest.requestType}) for clean handoff")
+                audioManager.releaseAudioFocus(currentRequest.requestId)
+                
+                // Brief delay to allow the release to process
+                Thread.sleep(50)
+            }
+            
+            // Now request audio focus for speech recognition
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Requesting audio focus for speech recognition...")
+            val focusResult = audioManager.requestAudioFocus(
+                com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION, 
+                "speech_recognition",
+                onFocusGained = {
+                    Log.i(TAG, "🎤 SPEECH_RECOGNITION: 🎵 Audio focus GAINED during recognition")
+                },
+                onFocusLost = {
+                    Log.w(TAG, "🎤 SPEECH_RECOGNITION: 🔇 Audio focus LOST during recognition - stopping speech recognizer")
+                    // Stop recognition immediately when focus is lost
+                    Handler(Looper.getMainLooper()).post {
+                        if (isListening) {
+                            speechRecognizer?.stopListening()
+                            _voiceState.value = VoiceState.ERROR("Audio focus lost during speech recognition")
+                        }
+                    }
+                }
+            )
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Audio focus request result: $focusResult")
+            
+            if (!focusResult) {
+                Log.w(TAG, "🎤 SPEECH_RECOGNITION: Initial focus request failed, attempting retry...")
+                
+                // Wait briefly and retry once
+                Thread.sleep(100)
+                val retryFocusResult = audioManager.requestAudioFocus(
+                    com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION, 
+                    "speech_recognition_retry",
+                    onFocusGained = {
+                        Log.i(TAG, "🎤 SPEECH_RECOGNITION: 🎵 Audio focus GAINED on retry")
+                    },
+                    onFocusLost = {
+                        Log.w(TAG, "🎤 SPEECH_RECOGNITION: 🔇 Audio focus LOST after retry")
+                        Handler(Looper.getMainLooper()).post {
+                            if (isListening) {
+                                speechRecognizer?.stopListening()
+                                _voiceState.value = VoiceState.ERROR("Audio focus lost during speech recognition")
+                            }
+                        }
+                    }
+                )
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Focus retry result: $retryFocusResult")
+                
+                if (!retryFocusResult) {
+                    Log.e(TAG, "🎤 SPEECH_RECOGNITION: Focus retry also failed, aborting recognition")
+                    _voiceState.value = VoiceState.ERROR("Failed to acquire audio focus for speech recognition after retry")
+                    
+                    // Auto-recovery: reset to IDLE after a brief delay
+                    coroutineScope.launch {
+                        delay(2000) // Wait 2 seconds
+                        Log.i(TAG, "🔄 AUTO_RECOVERY: Resetting to IDLE after audio focus failure")
+                        resetToIdle()
+                    }
+                    return
+                }
+            }
+            
+            // Verify focus was actually granted
+            val hasAudioFocus = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Post-request audio focus verification: $hasAudioFocus")
+            
+            if (!hasAudioFocus) {
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: Audio focus verification failed, aborting recognition")
+                _voiceState.value = VoiceState.ERROR("Audio focus verification failed")
+                
+                // Auto-recovery: reset to IDLE after a brief delay
+                coroutineScope.launch {
+                    delay(2000) // Wait 2 seconds
+                    Log.i(TAG, "🔄 AUTO_RECOVERY: Resetting to IDLE after audio focus verification failure")
+                    resetToIdle()
+                }
+                return
+            }
             
             // Set timestamp to detect potential hangs
             lastRecognitionStartTime = System.currentTimeMillis()
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Starting recognition at timestamp: $lastRecognitionStartTime")
+            
+            // Start the actual speech recognizer
+            speechRecognizer?.startListening(intent)
+            Log.i(TAG, "🎤 SPEECH_RECOGNITION: SpeechRecognizer.startListening() called successfully")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: ===================================")
+            
         } catch (e: Exception) {
-            Log.e(TAG, "Error starting speech recognition: ${e.message}", e)
+            Log.e(TAG, "🎤 SPEECH_RECOGNITION: ========== ERROR STARTING RECOGNITION ==========")
+            Log.e(TAG, "🎤 SPEECH_RECOGNITION: Error message: ${e.message}")
+            Log.e(TAG, "🎤 SPEECH_RECOGNITION: Error stack trace:", e)
+            Log.e(TAG, "🎤 SPEECH_RECOGNITION: ===================================")
             isListening = false
             _voiceState.value = VoiceState.ERROR("Failed to start speech recognition: ${e.message}")
         }
@@ -412,31 +489,62 @@ class VoiceManager private constructor() {
      * Create speech recognizer intent
      */
     private fun createRecognizerIntent(): Intent {
+        Log.d(TAG, "🎤 SPEECH_RECOGNITION: Creating recognizer intent...")
+        
         return Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            // Basic parameters
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+            
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Basic parameters set:")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: - Language model: ${RecognizerIntent.LANGUAGE_MODEL_FREE_FORM}")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: - Partial results: true")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: - Max results: 1")
             
             // Get timing parameters from ConfigManager
             val minLengthMs = configManager.getSpeechRecognitionMinimumLengthMs()
             val completeSilenceMs = configManager.getSpeechRecognitionCompleteSilenceMs()
             val possibleSilenceMs = configManager.getSpeechRecognitionPossibleSilenceMs()
+            val useCustomParams = configManager.useCustomRecognizerParams()
             
             // Log the values regardless of whether they'll be used
-            Log.d(TAG, "Speech recognition parameters: minLength=$minLengthMs, " +
-                      "completeSilence=$completeSilenceMs, possibleSilence=$possibleSilenceMs")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Timing parameters from config:")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: - Min length: ${minLengthMs}ms")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: - Complete silence: ${completeSilenceMs}ms") 
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: - Possible silence: ${possibleSilenceMs}ms")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: - Use custom params: $useCustomParams")
             
             // Only apply custom parameters if explicitly enabled in config
-            if (configManager.useCustomRecognizerParams()) {
-                Log.i(TAG, "Applying custom timing parameters to SpeechRecognizer")
+            if (useCustomParams) {
+                Log.i(TAG, "🎤 SPEECH_RECOGNITION: Applying custom timing parameters to SpeechRecognizer")
                 putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, minLengthMs)
                 putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, completeSilenceMs)
                 putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, possibleSilenceMs)
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Custom timing parameters applied")
             } else {
-                Log.i(TAG, "Using Android default timing parameters for SpeechRecognizer")
+                Log.i(TAG, "🎤 SPEECH_RECOGNITION: Using Android default timing parameters for SpeechRecognizer")
                 // Use Android defaults for RecognizerIntent parameters, but still use our
                 // custom timing values for the rest of the voice processing pipeline
             }
+            
+            // Log all extras for debugging
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Final intent extras:")
+            extras?.keySet()?.forEach { key ->
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: - $key: ${extras?.get(key)}")
+            }
+            
+            // Log system speech recognition availability
+            val packageManager = context.packageManager
+            val activities = packageManager.queryIntentActivities(this, 0)
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Available speech recognition services: ${activities.size}")
+            activities.forEach { activity ->
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: - Service: ${activity.activityInfo.packageName}:${activity.activityInfo.name}")
+            }
+            
+            // Log additional system info
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: System audio info: ${checkAudioPermissions()}")
+            Log.d(TAG, "🎤 SPEECH_RECOGNITION: Available audio inputs: ${getAvailableAudioInputs()}")
         }
     }
     
@@ -446,31 +554,113 @@ class VoiceManager private constructor() {
     private fun createRecognitionListener(): RecognitionListener {
         return object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
-                Log.d(TAG, "Ready for speech")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Ready for speech")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Parameters: $params")
+                
+                // Critical: Verify audio focus is still available when ready for speech
+                val hasAudioFocus = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Audio focus state when ready: $hasAudioFocus")
+                
+                if (!hasAudioFocus) {
+                    Log.w(TAG, "🎤 SPEECH_RECOGNITION: Audio focus lost between start and ready, attempting recovery...")
+                    
+                    // Attempt to recover audio focus with callbacks
+                    val focusRecoveryResult = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().requestAudioFocus(
+                        com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION, 
+                        "speech_recognition_recovery",
+                        onFocusGained = {
+                            Log.i(TAG, "🎤 SPEECH_RECOGNITION: 🎵 Audio focus RECOVERED during recognition")
+                        },
+                        onFocusLost = {
+                            Log.w(TAG, "🎤 SPEECH_RECOGNITION: 🔇 Audio focus LOST again during recovery")
+                            Handler(Looper.getMainLooper()).post {
+                                if (isListening) {
+                                    speechRecognizer?.stopListening()
+                                    _voiceState.value = VoiceState.ERROR("Audio focus lost during recovery")
+                                }
+                            }
+                        }
+                    )
+                    Log.d(TAG, "🎤 SPEECH_RECOGNITION: Focus recovery attempt result: $focusRecoveryResult")
+                    
+                    if (!focusRecoveryResult) {
+                        Log.e(TAG, "🎤 SPEECH_RECOGNITION: Focus recovery failed, stopping recognition")
+                        speechRecognizer?.stopListening()
+                        _voiceState.value = VoiceState.ERROR("Audio focus lost and recovery failed")
+                        return
+                    }
+                    
+                    // Verify recovery was successful
+                    val recoveryVerification = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()
+                    Log.d(TAG, "🎤 SPEECH_RECOGNITION: Focus recovery verification: $recoveryVerification")
+                    
+                    if (!recoveryVerification) {
+                        Log.e(TAG, "🎤 SPEECH_RECOGNITION: Focus recovery verification failed, stopping recognition")
+                        speechRecognizer?.stopListening()
+                        _voiceState.value = VoiceState.ERROR("Audio focus recovery verification failed")
+                        return
+                    }
+                    
+                    Log.i(TAG, "🎤 SPEECH_RECOGNITION: ✅ Audio focus successfully recovered")
+                }
+                
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Recognition start time: ${System.currentTimeMillis()}")
                 isListening = true
+                lastRecognitionStartTime = System.currentTimeMillis()
                 speechRecognitionRetryCount = 0 // Reset retry count on successful start
             }
             
             override fun onBeginningOfSpeech() {
-                Log.d(TAG, "Beginning of speech")
+                val now = System.currentTimeMillis()
+                val timeSinceStart = now - lastRecognitionStartTime
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Beginning of speech detected")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Speech start timing: ${timeSinceStart}ms after ready")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Audio focus state: ${com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()}")
             }
             
             override fun onRmsChanged(rmsdB: Float) {
-                // Not used
+                // Enhanced RMS logging to track audio input levels
+                Log.v(TAG, "🎤 SPEECH_RECOGNITION: RMS changed: ${rmsdB}dB")
+                
+                // Log significant audio level changes
+                if (rmsdB > -10) {
+                    Log.d(TAG, "🎤 SPEECH_RECOGNITION: High audio level detected: ${rmsdB}dB")
+                } else if (rmsdB < -40) {
+                    Log.v(TAG, "🎤 SPEECH_RECOGNITION: Low audio level: ${rmsdB}dB")
+                }
             }
             
             override fun onBufferReceived(buffer: ByteArray?) {
-                // Not used
+                Log.v(TAG, "🎤 SPEECH_RECOGNITION: Audio buffer received: ${buffer?.size} bytes")
             }
             
             override fun onEndOfSpeech() {
-                Log.d(TAG, "End of speech")
+                val now = System.currentTimeMillis()
+                val totalListeningTime = now - lastRecognitionStartTime
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: End of speech detected")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Total listening time: ${totalListeningTime}ms")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Audio focus state: ${com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()}")
                 isListening = false
             }
             
             override fun onError(error: Int) {
+                val now = System.currentTimeMillis()
+                val totalListeningTime = now - lastRecognitionStartTime
                 val errorMessage = getSpeechRecognitionErrorMessage(error)
-                Log.e(TAG, "Speech recognition error: $errorMessage")
+                
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: ========== ERROR OCCURRED ==========")
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: Error code: $error")
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: Error message: $errorMessage")
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: Total listening time: ${totalListeningTime}ms")
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: Audio focus state: ${com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()}")
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: Current retry count: $speechRecognitionRetryCount")
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: No speech retry count: $noSpeechRetryCount")
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: Current voice state: ${_voiceState.value.javaClass.simpleName}")
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: Speech recognizer initialized: $isSpeechRecognitionInitialized")
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: Is listening flag: $isListening")
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: Thread: ${Thread.currentThread().name}")
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: Available audio inputs: ${getAvailableAudioInputs()}")
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: Audio permissions: ${checkAudioPermissions()}")
                 
                 // Reset state flags
                 isListening = false
@@ -479,7 +669,7 @@ class VoiceManager private constructor() {
                 if (error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS && 
                    speechRecognitionRetryCount < MAX_SPEECH_RECOGNITION_RETRY_COUNT) {
                     speechRecognitionRetryCount++
-                    Log.w(TAG, "Permission error, will retry speech recognition (attempt $speechRecognitionRetryCount)")
+                    Log.w(TAG, "🎤 SPEECH_RECOGNITION: Permission error, will retry speech recognition (attempt $speechRecognitionRetryCount)")
                     
                     Handler(Looper.getMainLooper()).postDelayed({
                         startListening()
@@ -489,25 +679,47 @@ class VoiceManager private constructor() {
                 
                 // Special handling for "No speech detected" errors
                 if (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+                    Log.w(TAG, "🎤 SPEECH_RECOGNITION: No speech/match detected, delegating to handleNoSpeechDetected()")
                     handleNoSpeechDetected()
                     return
                 }
                 
                 // Otherwise update state to error
+                Log.e(TAG, "🎤 SPEECH_RECOGNITION: ===========================")
                 _voiceState.value = VoiceState.ERROR("Speech recognition error: $errorMessage")
             }
             
             override fun onResults(results: Bundle?) {
+                val now = System.currentTimeMillis()
+                val totalListeningTime = now - lastRecognitionStartTime
                 isListening = false
                 
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: ========== RESULTS RECEIVED ==========")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Total listening time: ${totalListeningTime}ms")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Results bundle: $results")
+                
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                val confidences = results?.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES)
+                
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Recognition matches: $matches")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Confidence scores: ${confidences?.contentToString()}")
+                
                 val text = matches?.get(0) ?: ""
+                val confidence = confidences?.get(0) ?: 0.0f
+                
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Selected text: '$text'")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Confidence: $confidence")
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: Audio focus state: ${com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()}")
                 
                 if (text.isNotBlank()) {
+                    Log.d(TAG, "🎤 SPEECH_RECOGNITION: Text is valid, processing...")
                     onSpeechRecognized(text)
                 } else {
+                    Log.w(TAG, "🎤 SPEECH_RECOGNITION: Text is blank, handling as no speech")
                     handleNoSpeechDetected()
                 }
+                
+                Log.d(TAG, "🎤 SPEECH_RECOGNITION: ===========================")
             }
             
             override fun onPartialResults(partialResults: Bundle?) {
@@ -535,6 +747,54 @@ class VoiceManager private constructor() {
             SpeechRecognizer.ERROR_SERVER -> "Server error"
             SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "No speech input"
             else -> "Unknown error $errorCode"
+        }
+    }
+    
+    /**
+     * Get available audio input information for debugging
+     */
+    private fun getAvailableAudioInputs(): String {
+        return try {
+            val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+            val devices = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                audioManager.getDevices(android.media.AudioManager.GET_DEVICES_INPUTS)
+            } else {
+                emptyArray()
+            }
+            
+            if (devices.isEmpty()) {
+                "None detected (API < 23 or no devices)"
+            } else {
+                devices.joinToString(", ") { device ->
+                    "${device.type}:${device.productName}"
+                }
+            }
+        } catch (e: Exception) {
+            "Error getting audio inputs: ${e.message}"
+        }
+    }
+    
+    /**
+     * Check and log audio permissions and microphone access
+     */
+    private fun checkAudioPermissions(): String {
+        return try {
+            val hasRecordPermission = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                context.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == 
+                    android.content.pm.PackageManager.PERMISSION_GRANTED
+            } else {
+                true // Assume granted on older versions
+            }
+            
+            val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+            val isMicrophoneMuted = audioManager.isMicrophoneMute
+            val mode = audioManager.mode
+            val isBluetoothScoOn = audioManager.isBluetoothScoOn
+            val isSpeakerphoneOn = audioManager.isSpeakerphoneOn
+            
+            "RecordPermission:$hasRecordPermission, MicMuted:$isMicrophoneMuted, Mode:$mode, BluetoothSco:$isBluetoothScoOn, Speakerphone:$isSpeakerphoneOn"
+        } catch (e: Exception) {
+            "Error checking permissions: ${e.message}"
         }
     }
     
@@ -885,7 +1145,16 @@ class VoiceManager private constructor() {
      * Handle the case when no speech was detected
      */
     fun handleNoSpeechDetected() {
-        Log.d(TAG, "No speech detected")
+        Log.d(TAG, "🔍 NO_SPEECH_DEBUG: ========== NO SPEECH DETECTED ==========")
+        Log.d(TAG, "🔍 NO_SPEECH_DEBUG: Current retry count: $noSpeechRetryCount")
+        Log.d(TAG, "🔍 NO_SPEECH_DEBUG: Max retries allowed: $MAX_NO_SPEECH_RETRIES")
+        Log.d(TAG, "🔍 NO_SPEECH_DEBUG: Current voice state: ${_voiceState.value.javaClass.simpleName}")
+        Log.d(TAG, "🔍 NO_SPEECH_DEBUG: Audio focus state: ${com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().hasAudioFocus()}")
+        Log.d(TAG, "🔍 NO_SPEECH_DEBUG: Speech recognizer initialized: $isSpeechRecognitionInitialized")
+        Log.d(TAG, "🔍 NO_SPEECH_DEBUG: Is listening flag: $isListening")
+        Log.d(TAG, "🔍 NO_SPEECH_DEBUG: Available audio inputs: ${getAvailableAudioInputs()}")
+        Log.d(TAG, "🔍 NO_SPEECH_DEBUG: Audio permissions: ${checkAudioPermissions()}")
+        Log.d(TAG, "🔍 NO_SPEECH_DEBUG: Thread: ${Thread.currentThread().name}")
         
         // Increment retry counter
         noSpeechRetryCount++

@@ -212,6 +212,19 @@ class WakeWordService : Service() {
             audioRecord?.stop()
             audioRecord?.release()
             openWakeWordEngine?.cleanup()
+            
+            // Release audio focus
+            try {
+                val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                val currentRequest = audioManager.getCurrentRequestInfo()
+                if (currentRequest?.requestId == "wake_word_detection") {
+                    Log.i(TAG, "🎵 CLEANUP: Releasing wake word audio focus")
+                    audioManager.releaseAudioFocus(currentRequest.requestId)
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Error releasing audio focus during cleanup: ${e.message}", e)
+            }
+            
             recordingThread = null
             audioRecord = null
             openWakeWordEngine = null
@@ -406,6 +419,32 @@ class WakeWordService : Service() {
     
     private fun setupAudioRecording() {
         try {
+            // Request audio focus for wake word detection
+            try {
+                val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                audioManager.initialize(this)
+                
+                Log.i(TAG, "🎵 WAKE_WORD_SETUP: Requesting audio focus for wake word detection...")
+                val focusResult = audioManager.requestAudioFocus(
+                    com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.BACKGROUND_AUDIO,
+                    "wake_word_detection",
+                    onFocusGained = {
+                        Log.i(TAG, "🎵 WAKE_WORD_SETUP: Audio focus GAINED for wake word detection")
+                    },
+                    onFocusLost = {
+                        Log.w(TAG, "🎵 WAKE_WORD_SETUP: Audio focus LOST for wake word detection")
+                    }
+                )
+                
+                if (focusResult) {
+                    Log.i(TAG, "🎵 WAKE_WORD_SETUP: ✅ Audio focus acquired for wake word detection")
+                } else {
+                    Log.w(TAG, "🎵 WAKE_WORD_SETUP: ⚠️ Failed to acquire audio focus for wake word detection, continuing anyway...")
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Error requesting audio focus for wake word detection: ${e.message}", e)
+            }
+            
             val minBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
             val bufferSize = maxOf(minBufferSize, BUFFER_SIZE * 2)
             
@@ -707,6 +746,20 @@ class WakeWordService : Service() {
             Log.i(TAG, "⏸️ PAUSE_RESUME: ========== PAUSING WAKE WORD DETECTION ==========")
             Log.i(TAG, "⏸️ PAUSE_RESUME: Timestamp: ${System.currentTimeMillis()}")
             Log.i(TAG, "⏸️ PAUSE_RESUME: Reason: Voice session active - keeping mic active")
+            
+            // Release any audio focus held by wake word service to allow speech recognition
+            try {
+                val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                val currentRequest = audioManager.getCurrentRequestInfo()
+                if (currentRequest?.requestId == "wake_word_detection") {
+                    Log.i(TAG, "⏸️ PAUSE_RESUME: 🎵 Releasing wake word audio focus for speech recognition handoff")
+                    audioManager.releaseAudioFocus(currentRequest.requestId)
+                } else {
+                    Log.d(TAG, "⏸️ PAUSE_RESUME: No wake word audio focus to release (current: ${currentRequest?.requestId})")
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "⏸️ PAUSE_RESUME: Error releasing audio focus: ${e.message}", e)
+            }
             
             isPaused = true
             updateNotification("Voice active", "Listening for your command...")

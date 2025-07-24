@@ -236,23 +236,50 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             console.log('\n');
             console.log(`⏰ Time: ${timeString}, 🎤 WAKE WORD "${wakeWord}" DETECTED in React Native! 🎤`);
             
+            // Helper function to extract state from Java object string or direct value
+            const extractStateValue = (state: any): string => {
+                if (typeof state === 'string') {
+                    // Handle Java object string format: "com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@xxxxx"
+                    if (state.includes('$')) {
+                        const parts = state.split('$');
+                        if (parts.length >= 3) {
+                            // Extract the actual state name (3rd part after splitting on $)
+                            const statePart = parts[2];
+                            // Extract state name before the @ symbol
+                            const stateValue = statePart.split('@')[0];
+                            return stateValue;
+                        }
+                    }
+                    // Direct string state value
+                    return state;
+                }
+                return String(state);
+            };
+
             // Enhanced atomic state checking with timing and verification
             const stateCheckStartTime = performance.now();
             console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Starting atomic state check at:', stateCheckStartTime);
             console.log('🎧 WAKE_WORD_CONTEXT: 🔍 VoiceState.IDLE value:', VoiceState.IDLE);
             console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Current voiceState value:', voiceState);
             console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Type of voiceState:', typeof voiceState);
-            console.log('🎧 WAKE_WORD_CONTEXT: 🔍 voiceState === VoiceState.IDLE:', voiceState === VoiceState.IDLE);
-            console.log('🎧 WAKE_WORD_CONTEXT: 🔍 voiceState !== VoiceState.IDLE:', voiceState !== VoiceState.IDLE);
+            
+            // Extract clean state values for comparison
+            const cleanRnState = extractStateValue(voiceState);
+            const cleanRnStateIsIdle = cleanRnState === 'IDLE';
+            
+            console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Extracted RN state:', cleanRnState);
+            console.log('🎧 WAKE_WORD_CONTEXT: 🔍 RN state is IDLE:', cleanRnStateIsIdle);
             
             // ATOMIC STATE CHECK: Perform immediate synchronous and async verification
-            const isCurrentlyIdle = voiceState === VoiceState.IDLE;
+            const isCurrentlyIdle = cleanRnStateIsIdle;
             
             // Get cached native state immediately (synchronous)
             const cachedNativeState = wakeWordService.getCurrentVoiceStateSync();
-            const cachedNativeIsIdle = cachedNativeState === VoiceState.IDLE || cachedNativeState === 'IDLE';
+            const cleanCachedNativeState = extractStateValue(cachedNativeState);
+            const cachedNativeIsIdle = cleanCachedNativeState === 'IDLE';
             
             console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Cached native state (sync):', cachedNativeState);
+            console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Extracted cached native state:', cleanCachedNativeState);
             console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Cached native state is IDLE:', cachedNativeIsIdle);
             console.log('🎧 WAKE_WORD_CONTEXT: 🔍 State consistency (RN vs Native):', isCurrentlyIdle, 'vs', cachedNativeIsIdle);
             
@@ -263,11 +290,14 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 console.log('🎧 WAKE_WORD_CONTEXT: ❌ Rejection time:', rejectTime);
                 console.log('🎧 WAKE_WORD_CONTEXT: ❌ Total processing time:', rejectTime - eventReceiveTime, 'ms');
                 console.log('🎧 WAKE_WORD_CONTEXT: ❌ RN state:', voiceState, 'Cached native state:', cachedNativeState);
+                console.log('🎧 WAKE_WORD_CONTEXT: ❌ Extracted states - RN:', cleanRnState, 'Native:', cleanCachedNativeState);
                 console.log('🎧 WAKE_WORD_CONTEXT: ❌ Reason:', !isCurrentlyIdle ? 'RN not IDLE' : 'Native not IDLE');
                 
                 // Optional: Double-check with fresh native state for debugging
                 wakeWordService.getCurrentVoiceState().then((freshNativeState) => {
+                    const cleanFreshNativeState = extractStateValue(freshNativeState);
                     console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Post-rejection fresh native state:', freshNativeState);
+                    console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Extracted fresh native state:', cleanFreshNativeState);
                     console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Cached vs Fresh native:', cachedNativeState, 'vs', freshNativeState);
                 }).catch((err) => {
                     console.error('🎧 WAKE_WORD_CONTEXT: ❌ Fresh native state check failed:', err);
@@ -280,11 +310,13 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const verificationStartTime = performance.now();
             const freshStatePromise = wakeWordService.getCurrentVoiceState().then((freshNativeState) => {
                 const verificationEndTime = performance.now();
+                const cleanFreshNativeState = extractStateValue(freshNativeState);
                 console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Fresh native state verification completed in:', verificationEndTime - verificationStartTime, 'ms');
                 console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Fresh native state:', freshNativeState);
-                console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Fresh state matches IDLE:', freshNativeState === VoiceState.IDLE || freshNativeState === 'IDLE');
+                console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Extracted fresh native state:', cleanFreshNativeState);
+                console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Fresh state matches IDLE:', cleanFreshNativeState === 'IDLE');
                 console.log('🎧 WAKE_WORD_CONTEXT: 🔍 Cached vs Fresh consistency:', cachedNativeState === freshNativeState);
-                return freshNativeState === VoiceState.IDLE || freshNativeState === 'IDLE';
+                return cleanFreshNativeState === 'IDLE';
             }).catch((err) => {
                 console.error('🎧 WAKE_WORD_CONTEXT: ❌ Fresh native state verification failed:', err);
                 return false;

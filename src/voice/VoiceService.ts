@@ -254,12 +254,23 @@ export class VoiceService {
 
     public onVoiceStateChange(callback: (event: VoiceStateChangeEvent) => void): () => void {
         const subscription = this.eventEmitter.addListener(EVENT_VOICE_STATE_CHANGE, (event: VoiceStateChangeEvent) => {
+            console.log('🔄 VOICE_SERVICE: ========== NATIVE EVENT RECEIVED ==========');
+            console.log('🔄 VOICE_SERVICE: Event from native:', event.state);
+            console.log('🔄 VOICE_SERVICE: Previous cached state:', this.cachedVoiceState);
+            console.log('🔄 VOICE_SERVICE: Cache update needed:', event.state !== this.cachedVoiceState);
+            
             // Update cached state immediately when we receive state changes
             this.cachedVoiceState = event.state;
             console.log('🔄 VOICE_SERVICE: Cached state updated to:', event.state);
+            console.log('🔄 VOICE_SERVICE: About to call React callback with event...');
             
             // Call the original callback
+            const callbackStartTime = performance.now();
             callback(event);
+            const callbackEndTime = performance.now();
+            
+            console.log('🔄 VOICE_SERVICE: React callback completed in:', callbackEndTime - callbackStartTime, 'ms');
+            console.log('🔄 VOICE_SERVICE: ===============================================');
         });
         this.listeners.push(subscription);
         
