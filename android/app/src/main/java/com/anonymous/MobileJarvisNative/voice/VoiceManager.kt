@@ -313,9 +313,10 @@ class VoiceManager private constructor() {
             return
         }
         
-        // Check if we're already in a listening state to avoid conflicts
-        if (isListening || _voiceState.value == VoiceState.LISTENING) {
-            Log.d(TAG, "Already in listening state (isListening=$isListening, state=${_voiceState.value.javaClass.simpleName}), skipping startListening")
+        // Check if we're already actively listening to avoid conflicts
+        // Only skip if the speech recognizer is actually listening (isListening=true)
+        if (isListening) {
+            Log.d(TAG, "Already actively listening (isListening=$isListening), skipping startListening")
             return
         }
         
@@ -849,12 +850,19 @@ class VoiceManager private constructor() {
                 try {
                     voiceProcessor.stop()
                     
-                    // Remove the problematic reactivation logic that causes audio focus conflicts
-                    // The speech recognizer will be properly managed by the RecognitionListener callbacks
-                    // if (newState is VoiceState.LISTENING && !isListening) {
-                    //     Log.d(TAG, "LISTENING state detected but isListening=false, reactivating speech recognizer")
-                    //     startListening()
-                    // }
+                    // Reactivate speech recognizer when transitioning to LISTENING state
+                    // This is needed to resume listening after TTS completion
+                    if (newState is VoiceState.LISTENING && !isListening) {
+                        Log.d(TAG, "LISTENING state detected but isListening=false, reactivating speech recognizer")
+                        // Add a small delay to ensure smooth audio focus transition
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            // Only restart if we're still in LISTENING state and not already listening
+                            if (_voiceState.value is VoiceState.LISTENING && !isListening) {
+                                Log.d(TAG, "Restarting speech recognition for continuous conversation")
+                                startListening()
+                            }
+                        }, 100)
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error pausing wake word detection", e)
                 }
