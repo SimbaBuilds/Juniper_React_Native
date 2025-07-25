@@ -6,11 +6,11 @@ const { VoiceModule } = NativeModules;
  * Clear native state to prevent persistence across chat sessions
  * This is specifically important on Android where cancellation state can persist
  */
-export const clearNativeState = async (): Promise<boolean> => {
+export const clearNativeState = async (requestId?: string): Promise<boolean> => {
   try {
     if (Platform.OS === 'android' && VoiceModule?.clearNativeState) {
-      console.log('🧹 NATIVE_CLEANUP: Clearing Android native state...');
-      await VoiceModule.clearNativeState();
+      console.log(`🧹 NATIVE_CLEANUP: Clearing Android native state${requestId ? ` for request: ${requestId}` : ' (all requests)'}...`);
+      await VoiceModule.clearNativeState(requestId || null);
       console.log('🧹 NATIVE_CLEANUP: ✅ Android native state cleared successfully');
       return true;
     } else {

@@ -107,14 +107,13 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
       const cancelled = await ServerApiService.cancelCurrentRequest();
       
       // Clear native state to prevent persistence across chats
-      if (Platform.OS === 'android' && VoiceModule?.clearNativeState) {
-        try {
-          await VoiceModule.clearNativeState();
-          console.log('🧹 CANCEL: ✅ Native state cleared after cancellation');
-        } catch (nativeError) {
-          console.warn('🧹 CANCEL: ⚠️ Failed to clear native state:', nativeError);
-          // Don't fail the whole cancellation if native cleanup fails
-        }
+      const { clearNativeState } = await import('../utils/nativeCleanup');
+      try {
+        await clearNativeState();
+        console.log('🧹 CANCEL: ✅ Native state cleared after cancellation');
+      } catch (nativeError) {
+        console.warn('🧹 CANCEL: ⚠️ Failed to clear native state:', nativeError);
+        // Don't fail the whole cancellation if native cleanup fails
       }
       
       if (cancelled) {

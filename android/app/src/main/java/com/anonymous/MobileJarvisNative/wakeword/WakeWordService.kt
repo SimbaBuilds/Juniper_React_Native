@@ -29,6 +29,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.isActive
+import kotlin.coroutines.coroutineContext
 
 class WakeWordService : Service() {
     
@@ -92,7 +95,27 @@ class WakeWordService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.i(TAG, "🚀 SERVICE_LIFECYCLE: ========== WAKE WORD SERVICE CREATED ==========")
+        
+        // Clean up any stale state from previous instance
+        Log.i(TAG, "🚀 SERVICE_LIFECYCLE: Cleaning up any stale state from previous instance...")
+        instance?.let { oldInstance ->
+            Log.w(TAG, "🚀 SERVICE_LIFECYCLE: ⚠️ Previous service instance found - cleaning up...")
+            oldInstance.cleanup()
+            instance = null
+        }
+        
+        // Reset the OpenWakeWord singleton to ensure fresh state
+        try {
+            OpenWakeWordEngine.resetInstance()
+            Log.i(TAG, "🚀 SERVICE_LIFECYCLE: OpenWakeWordEngine singleton reset on service creation")
+        } catch (e: Exception) {
+            Log.w(TAG, "🚀 SERVICE_LIFECYCLE: Error resetting OpenWakeWordEngine: ${e.message}")
+        }
    
+        // Initialize fresh service scope to prevent stale references from previous instances
+        serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+        Log.i(TAG, "🚀 SERVICE_LIFECYCLE: Fresh service scope initialized")
+        
         instance = this
         isServiceRunning = true
         prefs = getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
@@ -205,7 +228,12 @@ class WakeWordService : Service() {
 
     private fun cleanup() {
         try {
+            // Cancel all coroutines first to prevent any lingering operations
+            Log.i(TAG, "🧹 CLEANUP: Cancelling service scope and all running coroutines...")
             stateMonitorJob?.cancel()
+            serviceScope.cancel()
+            Log.i(TAG, "🧹 CLEANUP: ✅ All coroutines cancelled successfully")
+            
             recordingThread?.interrupt()
             audioRecord?.stop()
             audioRecord?.release()
@@ -348,6 +376,9 @@ class WakeWordService : Service() {
     
     private fun initWakeWordDetection() {
         try {
+            Log.i(TAG, "🎯 WAKEWORD_INIT: ========== INITIALIZING WAKE WORD DETECTION ==========")
+            Log.i(TAG, "🎯 WAKEWORD_INIT: Service running: $isServiceRunning, isRunning: $isRunning")
+            
             if (!PermissionUtils.hasPermission(this, Manifest.permission.RECORD_AUDIO)) {
                 Log.e(TAG, "Missing RECORD_AUDIO permission")
                 Toast.makeText(
@@ -387,9 +418,12 @@ class WakeWordService : Service() {
             
             // Ensure we start in resumed state
             isPaused = false
-            Log.i(TAG, "Wake word detection initial state: isPaused = $isPaused")
+            Log.i(TAG, "🎯 WAKEWORD_INIT: Wake word detection initial state: isPaused = $isPaused")
+            Log.i(TAG, "🎯 WAKEWORD_INIT: Service starting in resumed state")
             
-            Log.i(TAG, "✅ Wake word detection started successfully ✅")
+            Log.i(TAG, "✅ WAKEWORD_INIT: Wake word detection initialized and ready ✅")
+            Log.i(TAG, "🎯 WAKEWORD_INIT: ====================================================")
+            
             serviceScope.launch(Dispatchers.Main) {
                 Toast.makeText(
                     applicationContext,
@@ -788,17 +822,21 @@ class WakeWordService : Service() {
             Log.i(TAG, "⏸️ PAUSE_RESUME: Setting 2-minute auto-resume timer...")
             
             // Set a timer to automatically resume
-            serviceScope.launch {
+            val autoResumeJob = serviceScope.launch {
                 try {
+                    Log.i(TAG, "⏸️ PAUSE_RESUME: 🕐 Starting 2-minute auto-resume timer (coroutine: ${coroutineContext[Job]})")
                     delay(2 * 60 * 1000L) // 2 minutes
                     if (isPaused) {
                         Log.w(TAG, "⏸️ PAUSE_RESUME: ⚠️ Auto-resume triggered after 2 minutes")
                         resumeWakeWordDetectionFromPaused()
+                    } else {
+                        Log.i(TAG, "⏸️ PAUSE_RESUME: Auto-resume timer expired but service no longer paused")
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "⏸️ PAUSE_RESUME: ❌ Error in auto-resume timer: ${e.message}", e)
                 }
             }
+            Log.i(TAG, "⏸️ PAUSE_RESUME: Auto-resume timer job created: $autoResumeJob")
             
             Log.i(TAG, "⏸️ PAUSE_RESUME: ====================================================")
         } catch (e: Exception) {
@@ -809,6 +847,13 @@ class WakeWordService : Service() {
     private fun resumeWakeWordDetectionFromPaused() {
         if (!isPaused) {
             Log.d(TAG, "▶️ PAUSE_RESUME: Wake word detection not paused")
+            return
+        }
+        
+        // Defensive check: Ensure service is still running and not destroyed
+        if (!isServiceRunning || serviceScope.isActive == false) {
+            Log.w(TAG, "▶️ PAUSE_RESUME: ⚠️ Service is not running or scope is cancelled - skipping resume")
+            Log.w(TAG, "▶️ PAUSE_RESUME: isServiceRunning: $isServiceRunning, scopeActive: ${serviceScope.isActive}")
             return
         }
         

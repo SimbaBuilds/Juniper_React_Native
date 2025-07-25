@@ -11,6 +11,7 @@ import ai.onnxruntime.OrtSession.SessionOptions
 import java.io.InputStream
 import java.nio.FloatBuffer
 import java.util.Collections
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.sqrt
 
 class OpenWakeWordEngine(private val context: Context) {
@@ -49,13 +50,13 @@ class OpenWakeWordEngine(private val context: Context) {
         "Hey Marigold" to "hey_mycroft"
     )
     
-    // Audio processing buffer
-    private val audioBuffer = mutableListOf<Float>()
+    // Thread-safe audio processing buffer using CopyOnWriteArrayList for concurrent access
+    private val audioBuffer = CopyOnWriteArrayList<Float>()
     private var isInitialized = false
     private var currentModel = "hey_jarvis"
     
-    // Rolling window buffer for temporal embeddings (16 frames × 96 features)
-    private val embeddingBuffer = mutableListOf<FloatArray>()
+    // Thread-safe rolling window buffer for temporal embeddings (16 frames × 96 features)
+    private val embeddingBuffer = CopyOnWriteArrayList<FloatArray>()
     private val EMBEDDING_WINDOW_SIZE = 16  // OpenWakeWord expects 16 temporal frames
     
     companion object {
@@ -257,46 +258,55 @@ class OpenWakeWordEngine(private val context: Context) {
                 audioData[i].toFloat() / 32768.0f
             }
             
-            // Add to circular buffer
+            // Add to circular buffer - thread-safe operation
             audioBuffer.addAll(floatAudio.toList())
             
-            // Keep only last 1.5 seconds (24000 samples)
-            if (audioBuffer.size > SAMPLE_RATE * 3 / 2) {
-                val toRemove = audioBuffer.size - (SAMPLE_RATE * 3 / 2)
-                repeat(toRemove) { audioBuffer.removeFirst() }
+            // Keep only last 1.5 seconds (24000 samples) - thread-safe cleanup
+            val maxBufferSize = SAMPLE_RATE * 3 / 2
+            while (audioBuffer.size > maxBufferSize) {
+                // Remove from front safely
+                if (audioBuffer.isNotEmpty()) {
+                    audioBuffer.removeAt(0)
+                } else {
+                    break
+                }
             }
             
             // Need at least 1.5 seconds of audio for processing
-            if (audioBuffer.size < SAMPLE_RATE * 3 / 2) {
+            if (audioBuffer.size < maxBufferSize) {
+                return 0f
+            }
+            
+            // Create a defensive copy to avoid concurrent modification during processing
+            val audioBufferCopy = try {
+                // Thread-safe copy of the buffer to prevent concurrent modification
+                audioBuffer.toList().filterNotNull().toFloatArray()
+            } catch (e: Exception) {
+                return 0f
+            }
+            
+            // Validate the copy before processing
+            if (audioBufferCopy.isEmpty()) {
                 return 0f
             }
             
             // Process the audio through the pipeline with detailed logging
-            Log.v(TAG, "🎙️ PIPELINE: Processing audio buffer: ${audioBuffer.size} samples")
-            val melSpectrogram = extractMelSpectrogram(audioBuffer.toFloatArray())
-            Log.v(TAG, "🎙️ PIPELINE: Mel spectrogram generated: ${melSpectrogram.size} elements")
+            val melSpectrogram = extractMelSpectrogram(audioBufferCopy)
             
             val embedding = generateEmbedding(melSpectrogram)
-            Log.v(TAG, "🎙️ PIPELINE: Embedding generated: ${embedding.size} elements")
             
             // Add embedding to rolling window buffer
             addEmbeddingToBuffer(embedding)
             
             val confidence = classifyWakeWordFromBuffer()
-            Log.v(TAG, "🎙️ PIPELINE: Confidence calculated: $confidence")
             
             // 🚨 CRITICAL: Check for infinite loop condition
             if (confidence == 0.0f) {
-                Log.e(TAG, "🚨 PIPELINE: ZERO CONFIDENCE DETECTED - checking pipeline integrity")
                 val melNonZero = melSpectrogram.count { it != 0f }
                 val embNonZero = embedding.count { it != 0f }
-                Log.e(TAG, "🚨 PIPELINE: Mel non-zero: $melNonZero/${melSpectrogram.size}, Embedding non-zero: $embNonZero/${embedding.size}")
                 if (melNonZero == 0) {
-                    Log.e(TAG, "🚨 PIPELINE: ROOT CAUSE: Mel spectrogram is all zeros!")
                 } else if (embNonZero == 0) {
-                    Log.e(TAG, "🚨 PIPELINE: ROOT CAUSE: Embedding is all zeros!")
                 } else {
-                    Log.e(TAG, "🚨 PIPELINE: ROOT CAUSE: Wake word model producing zero output!")
                 }
             }
             
@@ -314,12 +324,9 @@ class OpenWakeWordEngine(private val context: Context) {
     
     private fun extractMelSpectrogram(audioData: FloatArray): FloatArray {
         return try {
-            Log.v(TAG, "🎵 MEL_EXTRACT: Starting mel spectrogram extraction")
-            Log.v(TAG, "🎵 MEL_EXTRACT: Input audio size: ${audioData.size} samples")
             
             val inputName = melSession?.inputNames?.iterator()?.next()
             val shape = longArrayOf(1, audioData.size.toLong())
-            Log.v(TAG, "🎵 MEL_EXTRACT: Creating input tensor: $inputName, shape=${shape.contentToString()}")
             
             val inputTensor = OnnxTensor.createTensor(ortEnvironment, FloatBuffer.wrap(audioData), shape)
             val inputs = Collections.singletonMap(inputName, inputTensor)
@@ -327,43 +334,35 @@ class OpenWakeWordEngine(private val context: Context) {
             
             // Handle 3D output: [batch, mel_bins, time_frames]
             val result = output?.get(0)?.value
-            Log.v(TAG, "🎵 MEL_EXTRACT: Raw output type: ${result?.javaClass}")
             
             val melSpec = when (result) {
                 is Array<*> -> {
-                    Log.v(TAG, "🎵 MEL_EXTRACT: Processing Array output with ${result.size} elements")
                     try {
                         // Handle 4D array: float[batch][channels][mel_bins][time_frames]
                         val batch = result[0] as Array<*>  // Get first batch
                         val channel = batch[0] as Array<*>  // Get first channel
                         val flattened = mutableListOf<Float>()
                         
-                        Log.v(TAG, "🎵 MEL_EXTRACT: 4D array structure - batch: ${result.size}, channel: ${batch.size}, mel_bins: ${channel.size}")
                         
                         // Flatten mel_bins x time_frames  
                         for (melBinIndex in channel.indices) {
                             val timeFramesArray = channel[melBinIndex] as FloatArray
                             if (melBinIndex < 3) {  // Log first few for debugging
-                                Log.v(TAG, "🎵 MEL_EXTRACT: Mel bin $melBinIndex has ${timeFramesArray.size} time frames")
                             }
                             for (timeFrame in timeFramesArray) {
                                 flattened.add(timeFrame)
                             }
                         }
                         
-                        Log.v(TAG, "🎵 MEL_EXTRACT: Flattened mel spec size: ${flattened.size}")
                         flattened.toFloatArray()
                     } catch (e: Exception) {
-                        Log.e(TAG, "🎵 MEL_EXTRACT: Error processing Array: ${e.message}", e)
                         FloatArray(MEL_SPEC_SIZE * 80)
                     }
                 }
                 is FloatArray -> {
-                    Log.v(TAG, "🎵 MEL_EXTRACT: Output is FloatArray: ${result.size} elements")
                     result
                 }
                 else -> {
-                    Log.w(TAG, "🎵 MEL_EXTRACT: Unexpected output type: ${result?.javaClass}")
                     FloatArray(MEL_SPEC_SIZE * 80)
                 }
             }
@@ -372,11 +371,9 @@ class OpenWakeWordEngine(private val context: Context) {
             output?.close()
             
             // CRITICAL: Apply OpenWakeWord's required transformation: output = (value / 10.0) + 2.0
-            Log.v(TAG, "🎵 MEL_EXTRACT: Applying OpenWakeWord transformation: (value / 10.0) + 2.0")
             val transformedMelSpec = melSpec.map { value ->
                 (value / 10.0f) + 2.0f
             }.toFloatArray()
-            Log.v(TAG, "🎵 MEL_EXTRACT: Transformation complete: ${transformedMelSpec.size} elements")
             
             // Check for zero or invalid mel spectrograms
             val nonZeroCount = transformedMelSpec.count { it != 0f }
@@ -386,15 +383,10 @@ class OpenWakeWordEngine(private val context: Context) {
             } else 0.0
             val stdDev = kotlin.math.sqrt(variance.toFloat())
             
-            Log.v(TAG, "🎵 MEL_EXTRACT: Final transformed mel spec: ${transformedMelSpec.size} elements, ${nonZeroCount} non-zero")
-            Log.v(TAG, "🎵 MEL_EXTRACT: Statistics: avg=${String.format("%.6f", avgValue)}, std=${String.format("%.6f", stdDev)}")
             
             if (nonZeroCount == 0) {
-                Log.e(TAG, "🚨 MEL_EXTRACT: CRITICAL ERROR: Mel spectrogram is all zeros - WILL CAUSE INFINITE LOOP!")
-                Log.e(TAG, "🚨 MEL_EXTRACT: Audio input size: ${audioData.size}, input range: [${audioData.minOrNull()}, ${audioData.maxOrNull()}]")
                 // Return corrupted mel spec to trigger downstream failure detection
             } else if (stdDev < 0.01f) {
-                Log.w(TAG, "🎵 MEL_EXTRACT: ⚠️ WARNING: Low variance mel spectrogram (std=${String.format("%.6f", stdDev)}) - may cause poor embeddings!")
             }
             
             transformedMelSpec
@@ -406,13 +398,10 @@ class OpenWakeWordEngine(private val context: Context) {
     
     private fun generateEmbedding(melSpectrogram: FloatArray): FloatArray {
         return try {
-            Log.v(TAG, "🧠 EMBEDDING: Starting embedding generation")
             val inputName = embeddingSession?.inputNames?.iterator()?.next()
-            Log.v(TAG, "🧠 EMBEDDING: Input name: $inputName")
             
             // The embedding model expects exactly 76 time frames, but mel produces 147
             val actualMelSize = melSpectrogram.size
-            Log.v(TAG, "🧠 EMBEDDING: Input mel spec: ${actualMelSize} elements")
             
             val melBins = 32  // Standard mel spectrogram bins  
             val actualTimeFrames = actualMelSize / melBins
@@ -420,28 +409,21 @@ class OpenWakeWordEngine(private val context: Context) {
             val batchSize = 1
             val channelSize = 1
             
-            Log.v(TAG, "🧠 EMBEDDING: Mel structure: ${melBins} mel bins × ${actualTimeFrames} time frames")
-            Log.v(TAG, "🧠 EMBEDDING: Expected by model: ${melBins} mel bins × ${expectedTimeFrames} time frames") 
-            
             // Truncate mel spectrogram to expected size (76 time frames)
             val adjustedMel = if (actualTimeFrames > expectedTimeFrames) {
-                Log.i(TAG, "🧠 EMBEDDING: ✂️ Truncating mel spec from ${actualTimeFrames} to ${expectedTimeFrames} time frames")
                 val truncatedSize = expectedTimeFrames * melBins
                 melSpectrogram.sliceArray(0 until truncatedSize)
             } else if (actualTimeFrames < expectedTimeFrames) {
-                Log.i(TAG, "🧠 EMBEDDING: 📈 Padding mel spec from ${actualTimeFrames} to ${expectedTimeFrames} time frames")
                 val paddedSize = expectedTimeFrames * melBins
                 val padded = FloatArray(paddedSize)
                 melSpectrogram.copyInto(padded)
                 // Fill remainder with zeros (already initialized)
                 padded
             } else {
-                Log.v(TAG, "🧠 EMBEDDING: ✅ Mel spec already correct size")
                 melSpectrogram
             }
             
             val finalTimeFrames = adjustedMel.size / melBins
-            Log.v(TAG, "🧠 EMBEDDING: Final tensor shape: [${batchSize}, ${finalTimeFrames}, ${melBins}, ${channelSize}]")
             
             // Reshape to [1, finalTimeFrames, melBins, 1] using corrected dimensions
             val reshapedData = Array(batchSize) { 
@@ -455,80 +437,57 @@ class OpenWakeWordEngine(private val context: Context) {
                 }
             }
             
-            Log.v(TAG, "🧠 EMBEDDING: Created tensor: [${reshapedData.size}, ${reshapedData[0].size}, ${reshapedData[0][0].size}, ${reshapedData[0][0][0].size}]")
-            
             val inputTensor = OnnxTensor.createTensor(ortEnvironment, reshapedData)
             val inputs = Collections.singletonMap(inputName, inputTensor)
             val output = embeddingSession?.run(inputs)
             
             val result = output?.get(0)?.value
-            Log.v(TAG, "🧠 EMBEDDING: Raw output type: ${result?.javaClass}")
             
             val embedding = when (result) {
                 is Array<*> -> {
-                    Log.v(TAG, "🧠 EMBEDDING: Processing Array output with ${result.size} elements")
                     try {
                         // The embedding model should output [batch, sequence, features] = [1, 16, 96]
                         // But we're only extracting the first sequence step instead of all 16!
                         if (result[0] is Array<*>) {
                             val batch = result[0] as Array<*>
-                            Log.v(TAG, "🧠 EMBEDDING: Batch has ${batch.size} sequences")
                             
                             if (batch[0] is Array<*>) {
                                 // 3D array case: This is [batch][sequence][features]
                                 // The embedding model outputs [1, 16, 96] - we need all 16×96=1536 elements
-                                Log.v(TAG, "🧠 EMBEDDING: Extracting all ${batch.size} sequence steps")
                                 val flattened = mutableListOf<Float>()
                                 for ((seqIndex, seqData) in batch.withIndex()) {
                                     val sequence = seqData as Array<*>
-                                    Log.v(TAG, "🧠 EMBEDDING: Sequence $seqIndex has ${sequence.size} time steps")
                                     for ((timeIndex, timeData) in sequence.withIndex()) {
                                         val features = timeData as FloatArray
-                                        if (seqIndex == 0 && timeIndex < 3) {
-                                            Log.v(TAG, "🧠 EMBEDDING: Seq $seqIndex, time $timeIndex: ${features.size} features")
-                                        }
                                         flattened.addAll(features.toList())
                                     }
-                                }
-                                Log.v(TAG, "🧠 EMBEDDING: Extracted 3D embedding: ${flattened.size} elements from all sequences")
-                                
-                                // The actual embedding model outputs [1, 1, 96] = 96 total elements, not 1536
-                                if (flattened.size == 96) {
-                                    Log.i(TAG, "🧠 EMBEDDING: ✅ Got expected embedding size: 1×96=96")
-                                } else {
-                                    Log.w(TAG, "🧠 EMBEDDING: ⚠️ Unexpected embedding size: ${flattened.size}, expected 96")
                                 }
                                 
                                 flattened.toFloatArray()
                             } else {
                                 // 2D array case: flatten all sequences  
                                 val flattened = mutableListOf<Float>()
-                                Log.v(TAG, "🧠 EMBEDDING: Flattening ${batch.size} sequence steps")
                                 for ((seqIndex, seq) in batch.withIndex()) {
                                     val features = seq as FloatArray
-                                    Log.v(TAG, "🧠 EMBEDDING: Sequence $seqIndex has ${features.size} features")
                                     flattened.addAll(features.toList())
                                 }
-                                Log.v(TAG, "🧠 EMBEDDING: Flattened 2D embedding: ${flattened.size} elements")
                                 flattened.toFloatArray()
                             }
                         } else {
                             // 1D array case
                             val features = result[0] as FloatArray
-                            Log.v(TAG, "🧠 EMBEDDING: Direct 1D embedding: ${features.size} elements")
                             features
                         }
                     } catch (e: Exception) {
-                        Log.e(TAG, "🧠 EMBEDDING: Error parsing Array: ${e.message}")
+                        Log.e(TAG, "Error parsing Array: ${e.message}")
                         FloatArray(EMBEDDING_SIZE)
                     }
                 }
                 is FloatArray -> {
-                    Log.v(TAG, "🧠 EMBEDDING: Output is FloatArray: ${result.size} elements")
                     result
                 }
                 else -> {
-                    Log.w(TAG, "🧠 EMBEDDING: Unexpected output type: ${result?.javaClass}")
+                    Log.w(TAG, "Unexpected output type: ${result?.javaClass}")
                     FloatArray(EMBEDDING_SIZE)
                 }
             }
@@ -544,16 +503,9 @@ class OpenWakeWordEngine(private val context: Context) {
             } else 0.0
             val stdDev = kotlin.math.sqrt(variance.toFloat())
             
-            Log.v(TAG, "🧠 EMBEDDING: Final embedding: ${embedding.size} elements, ${nonZeroCount} non-zero")
-            Log.v(TAG, "🧠 EMBEDDING: Statistics: avg=${String.format("%.6f", avgValue)}, std=${String.format("%.6f", stdDev)}")
-            
             if (nonZeroCount == 0) {
                 Log.e(TAG, "🚨 EMBEDDING: CRITICAL ERROR: Embedding is all zeros - WILL CAUSE ZERO CONFIDENCE!")
                 Log.e(TAG, "🚨 EMBEDDING: This indicates mel spectrogram corruption or model failure")
-            } else if (nonZeroCount < embedding.size / 10) {
-                Log.w(TAG, "🧠 EMBEDDING: ⚠️ WARNING: Very sparse embedding (${nonZeroCount}/${embedding.size} non-zero)")
-            } else if (stdDev < 0.01f) {
-                Log.w(TAG, "🧠 EMBEDDING: ⚠️ WARNING: Low variance embedding (std=${String.format("%.6f", stdDev)}) - may cause poor classification!")
             }
             
             embedding
@@ -565,86 +517,83 @@ class OpenWakeWordEngine(private val context: Context) {
     
     private fun addEmbeddingToBuffer(embedding: FloatArray) {
         try {
-            Log.v(TAG, "📊 BUFFER: Adding embedding to temporal buffer: ${embedding.size} elements")
             
-            // Add the new embedding to the buffer
+            // Add the new embedding to the buffer - thread-safe operation
             embeddingBuffer.add(embedding.copyOf())
             
-            // Keep only the last 16 embeddings (rolling window)
-            if (embeddingBuffer.size > EMBEDDING_WINDOW_SIZE) {
-                val toRemove = embeddingBuffer.size - EMBEDDING_WINDOW_SIZE
-                repeat(toRemove) { embeddingBuffer.removeFirst() }
-                Log.v(TAG, "📊 BUFFER: Trimmed buffer to ${embeddingBuffer.size} embeddings")
+            // Keep only the last 16 embeddings (rolling window) - thread-safe cleanup
+            while (embeddingBuffer.size > EMBEDDING_WINDOW_SIZE) {
+                if (embeddingBuffer.isNotEmpty()) {
+                    embeddingBuffer.removeAt(0)
+                } else {
+                    break
+                }
             }
             
-            Log.v(TAG, "📊 BUFFER: Current buffer size: ${embeddingBuffer.size}/${EMBEDDING_WINDOW_SIZE}")
         } catch (e: Exception) {
-            Log.e(TAG, "📊 BUFFER: Error adding embedding to buffer: ${e.message}", e)
         }
     }
     
     private fun classifyWakeWordFromBuffer(): Float {
         return try {
-            Log.v(TAG, "🎯 CLASSIFY: Starting wake word classification from buffer")
-            
             // Need at least 16 embeddings for classification
             if (embeddingBuffer.size < EMBEDDING_WINDOW_SIZE) {
-                Log.v(TAG, "🎯 CLASSIFY: Insufficient embeddings: ${embeddingBuffer.size}/${EMBEDDING_WINDOW_SIZE} - returning 0")
+                return 0f
+            }
+            
+            // Create a defensive copy of the embedding buffer to prevent concurrent modification
+            val embeddingBufferCopy = try {
+                embeddingBuffer.toList()
+            } catch (e: Exception) {
+                Log.e(TAG, "🚨 CLASSIFY: Error creating defensive copy of embedding buffer: ${e.message}", e)
+                return 0f
+            }
+            
+            // Validate the copy
+            if (embeddingBufferCopy.size < EMBEDDING_WINDOW_SIZE) {
+                Log.w(TAG, "🚨 CLASSIFY: Embedding buffer copy too small: ${embeddingBufferCopy.size}")
                 return 0f
             }
             
             val inputName = wakeWordSession?.inputNames?.iterator()?.next()
-            Log.v(TAG, "🎯 CLASSIFY: Input name: $inputName")
             
             val batchSize = 1
             val sequenceLength = EMBEDDING_WINDOW_SIZE  // 16 temporal frames
             val featureSize = 96  // Features per frame
             
-            Log.v(TAG, "🎯 CLASSIFY: Creating tensor shape: [${batchSize}, ${sequenceLength}, ${featureSize}]")
-            Log.v(TAG, "🎯 CLASSIFY: Using ${embeddingBuffer.size} embeddings from buffer")
-            
             // Create tensor with correct temporal sequence: [1, 16, 96]
             // Each of the 16 time steps gets its own unique 96-element embedding
             val reshapedData = Array(batchSize) { 
                 Array(sequenceLength) { timeStep -> 
-                    val embedding = embeddingBuffer[timeStep]
-                    Log.v(TAG, "🎯 CLASSIFY: Time step $timeStep: ${embedding.size} features")
+                    val embedding = embeddingBufferCopy[timeStep]
                     embedding.copyOf(featureSize) // Ensure exactly 96 features
                 }
             }
-            
-            Log.v(TAG, "🎯 CLASSIFY: Created tensor shape: [${reshapedData.size}, ${reshapedData[0].size}, ${reshapedData[0][0].size}]")
             
             val inputTensor = OnnxTensor.createTensor(ortEnvironment, reshapedData)
             val inputs = Collections.singletonMap(inputName, inputTensor)
             val output = wakeWordSession?.run(inputs)
             
             val result = output?.get(0)?.value
-            Log.v(TAG, "🎯 CLASSIFY: Raw output type: ${result?.javaClass}")
             
             val rawScore = when (result) {
                 is FloatArray -> {
-                    Log.v(TAG, "🎯 CLASSIFY: Output is FloatArray with ${result.size} elements")
                     val score = if (result.isNotEmpty()) result[0] else 0f
-                    Log.v(TAG, "🎯 CLASSIFY: Raw score from FloatArray: ${String.format("%.6f", score)}")
                     score
                 }
                 is Array<*> -> {
-                    Log.v(TAG, "🎯 CLASSIFY: Output is Array with ${result.size} elements")
                     try {
                         // Handle 2D array: float[batch][features]
                         val batch = result[0] as FloatArray  // Get first batch directly as FloatArray
-                        Log.v(TAG, "🎯 CLASSIFY: Batch has ${batch.size} features")
                         val score = if (batch.isNotEmpty()) batch[0] else 0f
-                        Log.v(TAG, "🎯 CLASSIFY: Raw score from Array: ${String.format("%.6f", score)}")
                         score
                     } catch (e: Exception) {
-                        Log.w(TAG, "🎯 CLASSIFY: Error parsing Array: ${e.message}")
+                        Log.w(TAG, "Error parsing Array: ${e.message}")
                         0f
                     }
                 }
                 else -> {
-                    Log.w(TAG, "🎯 CLASSIFY: Unexpected output type: ${result?.javaClass}")
+                    Log.w(TAG, "Unexpected output type: ${result?.javaClass}")
                     0f
                 }
             }
@@ -655,24 +604,6 @@ class OpenWakeWordEngine(private val context: Context) {
             // OpenWakeWord models output probability values (0-1), not logits
             // No sigmoid transformation needed - the output IS the confidence score
             val confidence = rawScore.coerceIn(0f, 1f)  // Ensure valid probability range
-            
-            // Debug logging for confidence calculation
-            Log.v(TAG, "🎯 CLASSIFY: Model output score: ${String.format("%.6f", rawScore)}, Final confidence: ${String.format("%.6f", confidence)}")
-            Log.v(TAG, "🎯 CLASSIFY: Model: $currentModel")
-            
-            // Check for very low confidence (silence/background noise)
-            if (confidence < 0.01f) {
-                Log.v(TAG, "🎯 CLASSIFY: Very low confidence: ${String.format("%.6f", confidence)} - likely silence/background noise")
-            }
-            
-            // Log confidence interpretation
-            if (confidence > 0.6f) {
-                Log.d(TAG, "🎯 CLASSIFY: HIGH confidence: ${String.format("%.4f", confidence)}")
-            } else if (confidence > 0.4f) {
-                Log.d(TAG, "🎯 CLASSIFY: MEDIUM confidence: ${String.format("%.4f", confidence)}")
-            } else {
-                Log.v(TAG, "🎯 CLASSIFY: LOW confidence: ${String.format("%.4f", confidence)}")
-            }
             
             confidence
         } catch (e: Exception) {
@@ -825,9 +756,24 @@ class OpenWakeWordEngine(private val context: Context) {
                 return false
             }
             
-            // Validate embedding buffer state
-            if (embeddingBuffer.any { it.isEmpty() }) {
-                Log.w(TAG, "🔍 STATE_CHECK: Found empty embeddings in buffer")
+            // Validate embedding buffer state - thread-safe check
+            try {
+                val bufferCopy = embeddingBuffer.toList()
+                if (bufferCopy.any { it.isEmpty() }) {
+                    Log.w(TAG, "🔍 STATE_CHECK: Found empty embeddings in buffer")
+                    return false
+                }
+                
+                // Check for any null elements in audio buffer
+                if (audioBuffer.size > 0) {
+                    val audioSample = audioBuffer.toList()
+                    if (audioSample.any { it == null }) {
+                        Log.w(TAG, "🔍 STATE_CHECK: Found null elements in audio buffer")
+                        return false
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "🔍 STATE_CHECK: Error validating buffer state: ${e.message}", e)
                 return false
             }
             
@@ -845,10 +791,15 @@ class OpenWakeWordEngine(private val context: Context) {
         return try {
             Log.i(TAG, "🔧 STATE_RECOVERY: Starting automatic state recovery...")
             
-            // Clear potentially corrupted buffers
-            audioBuffer.clear()
-            embeddingBuffer.clear()
-            Log.i(TAG, "🔧 STATE_RECOVERY: Cleared audio and embedding buffers")
+            // Clear potentially corrupted buffers - thread-safe operations
+            try {
+                audioBuffer.clear()
+                embeddingBuffer.clear()
+                Log.i(TAG, "🔧 STATE_RECOVERY: Cleared audio and embedding buffers successfully")
+            } catch (e: Exception) {
+                Log.e(TAG, "🔧 STATE_RECOVERY: Error clearing buffers: ${e.message}", e)
+                // Continue with recovery attempt even if clearing fails
+            }
             
             // Validate ONNX sessions and reinitialize if needed
             if (wakeWordSession == null || melSession == null || embeddingSession == null) {

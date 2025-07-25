@@ -65,12 +65,15 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                 Log.d(TAG, "🔵 VOICE_MODULE: ✅ Successfully sent processTextFromNative event")
                 
                 // Set timeout for the request
-                Handler(Looper.getMainLooper()).postDelayed({
+                val timeoutHandler = Runnable {
                     pendingApiCallbacks.remove(requestId)?.let { callback ->
                         Log.w(TAG, "🔵 VOICE_MODULE: Timeout for request: $requestId")
                         callback("I'm sorry, there was a timeout processing your request. Please try again.")
                     }
-                }, 30000)
+                    pendingTimeoutHandlers.remove(requestId)
+                }
+                pendingTimeoutHandlers[requestId] = timeoutHandler
+                Handler(Looper.getMainLooper()).postDelayed(timeoutHandler, 30000)
                 
             } catch (e: Exception) {
                 Log.e(TAG, "🔵 VOICE_MODULE: ❌ Error emitting processTextFromNative event", e)
@@ -644,7 +647,12 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
             
             Log.d(TAG, "🟢 NATIVE: ✅ VoiceResponseUpdate event emitted successfully")
             
-            // First, handle the pending callback if it exists
+            // First, cancel the timeout and handle the pending callback if it exists
+            pendingTimeoutHandlers.remove(requestId)?.let { timeoutHandler ->
+                Handler(Looper.getMainLooper()).removeCallbacks(timeoutHandler)
+                Log.d(TAG, "🟢 NATIVE: ✅ Cancelled timeout for requestId: $requestId")
+            }
+            
             pendingApiCallbacks.remove(requestId)?.let { callback ->
                 Log.i(TAG, "🟢 NATIVE: Found pending callback for requestId: $requestId")
                 
@@ -788,8 +796,9 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         return true
     }
 
-    // Store pending callbacks
+    // Store pending callbacks and timeout handlers
     private val pendingApiCallbacks = mutableMapOf<String, (String) -> Unit>()
+    private val pendingTimeoutHandlers = mutableMapOf<String, Runnable>()
 
     /**
      * Process text using React Native API with authentication (called from React Native)
@@ -1377,6 +1386,45 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         } catch (e: Exception) {
             Log.e(TAG, "🎵 DEEPGRAM_ENABLED: ❌ Error getting Deepgram enabled state: ${e.message}", e)
             promise.reject("GET_DEEPGRAM_ENABLED_ERROR", "Failed to get Deepgram enabled state: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Clear native state and cancel pending timeouts (for request cancellation)
+     */
+    @ReactMethod
+    fun clearNativeState(requestId: String?, promise: Promise) {
+        Log.d(TAG, "🚫 CLEAR_NATIVE: clearNativeState called with requestId: $requestId")
+        try {
+            if (requestId != null) {
+                // Cancel specific request timeout
+                pendingTimeoutHandlers.remove(requestId)?.let { timeoutHandler ->
+                    Handler(Looper.getMainLooper()).removeCallbacks(timeoutHandler)
+                    Log.d(TAG, "🚫 CLEAR_NATIVE: ✅ Cancelled timeout for requestId: $requestId")
+                }
+                
+                // Remove pending callback
+                pendingApiCallbacks.remove(requestId)?.let {
+                    Log.d(TAG, "🚫 CLEAR_NATIVE: ✅ Removed pending callback for requestId: $requestId")
+                }
+            } else {
+                // Clear all pending timeouts and callbacks
+                val timeoutCount = pendingTimeoutHandlers.size
+                val callbackCount = pendingApiCallbacks.size
+                
+                pendingTimeoutHandlers.values.forEach { timeoutHandler ->
+                    Handler(Looper.getMainLooper()).removeCallbacks(timeoutHandler)
+                }
+                pendingTimeoutHandlers.clear()
+                pendingApiCallbacks.clear()
+                
+                Log.d(TAG, "🚫 CLEAR_NATIVE: ✅ Cleared all timeouts ($timeoutCount) and callbacks ($callbackCount)")
+            }
+            
+            promise.resolve(true)
+        } catch (e: Exception) {
+            Log.e(TAG, "🚫 CLEAR_NATIVE: ❌ Error clearing native state: ${e.message}", e)
+            promise.reject("CLEAR_STATE_ERROR", "Failed to clear native state: ${e.message}", e)
         }
     }
 
