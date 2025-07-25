@@ -415,14 +415,14 @@ class WakeWordService {
   async getAvailableWakeWords(): Promise<string[]> {
     try {
       if (Platform.OS !== 'android') {
-        return ['Hey Jarvis', 'Hey Juni', 'Hey Jasmine', 'Hey Jade', 'Hey Jay', 'Hey Jasper', 'Hey Jerry', 'Alexa', 'Alex', 'Aloe', 'Hey Mycroft', 'Hey Michael', 'Hey Mulberry', 'Hey Myrillis', 'Hey Marigold']; // Default for non-Android platforms
+        return ['Hey Jarvis', 'Hey Juni', 'Hey Jasmine', 'Hey Jade', 'Hey Jay', 'Hey Jasper', 'Hey Jerry', 'Alex', 'Aloe', 'Hey Michael', 'Hey Mulberry', 'Hey Myrillis', 'Hey Marigold']; // Default for non-Android platforms
       }
       
       const result = await WakeWordModule.getAvailableWakeWords();
-      return result.wakeWords || ['Hey Jarvis', 'Hey Juni', 'Hey Jasmine', 'Hey Jade', 'Hey Jay', 'Hey Jasper', 'Hey Jerry', 'Alexa', 'Alex', 'Aloe', 'Hey Mycroft', 'Hey Michael', 'Hey Mulberry', 'Hey Myrillis', 'Hey Marigold'];
+      return result.wakeWords || ['Hey Jarvis', 'Hey Juni', 'Hey Jasmine', 'Hey Jade', 'Hey Jay', 'Hey Jasper', 'Hey Jerry', 'Alex', 'Aloe', 'Hey Michael', 'Hey Mulberry', 'Hey Myrillis', 'Hey Marigold'];
     } catch (error) {
       console.error('Error getting available wake words:', error);
-      return ['Hey Jarvis', 'Hey Juni', 'Hey Jasmine', 'Hey Jade', 'Hey Jay', 'Hey Jasper', 'Hey Jerry', 'Alexa', 'Alex', 'Aloe', 'Hey Mycroft', 'Hey Michael', 'Hey Mulberry', 'Hey Myrillis', 'Hey Marigold'];
+      return ['Hey Jarvis', 'Hey Juni', 'Hey Jasmine', 'Hey Jade', 'Hey Jay', 'Hey Jasper', 'Hey Jerry', 'Alex', 'Aloe', 'Hey Michael', 'Hey Mulberry', 'Hey Myrillis', 'Hey Marigold'];
     }
   }
 

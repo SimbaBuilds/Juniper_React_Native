@@ -87,7 +87,7 @@ class WakeWordService : Service() {
         val AVAILABLE_WAKE_WORDS: Set<String>
             get() = setOf(
                 "Hey Jarvis", "Hey Juni", "Hey Jasmine", "Hey Jade", "Hey Jay", "Hey Jasper", "Hey Jerry",
-                "Alexa", "Alex", "Aloe",
+                "Alex", "Aloe",
                 "Hey Mycroft", "Hey Michael", "Hey Mulberry", "Hey Myrillis", "Hey Marigold"
             )
     }
@@ -585,8 +585,8 @@ class WakeWordService : Service() {
                     // Layer 2: Remove sigmoid filter - OpenWakeWord outputs probability values directly
                     // Low confidence values (< 0.01) are normal for silence/background noise
                     
-                    // Layer 3: High confidence requirement
-                    val isHighConfidence = confidence > 0.7f
+                    // Layer 3: High confidence requirement (using user-configured sensitivity)
+                    val isHighConfidence = confidence > wakeWordThreshold
                     val isCooldownExpired = (currentTime - lastWakeWordTime) > WAKE_WORD_COOLDOWN_MS
                     val isResumeCooldownExpired = (currentTime - lastResumeTime) > RESUME_COOLDOWN_MS
                     
@@ -606,7 +606,7 @@ class WakeWordService : Service() {
                         
                         // Throttle low-confidence warnings to prevent log spam
                         if ((currentTime - lastLowConfidenceLogTime) > LOW_CONFIDENCE_LOG_INTERVAL_MS) {
-                            Log.w(TAG, "🎯 WAKEWORD_TRIGGER: ⚠️ Medium confidence trigger ignored: ${String.format("%.4f", confidence)} (count: $consecutiveLowConfidenceCount, need >0.7)")
+                            Log.w(TAG, "🎯 WAKEWORD_TRIGGER: ⚠️ Medium confidence trigger ignored: ${String.format("%.4f", confidence)} (count: $consecutiveLowConfidenceCount, need >$wakeWordThreshold)")
                             lastLowConfidenceLogTime = currentTime
                             
                                                     if (consecutiveLowConfidenceCount >= MAX_CONSECUTIVE_LOW_CONFIDENCE) {
