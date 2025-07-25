@@ -836,8 +836,16 @@ class VoiceManager private constructor() {
                     
                     // Also send broadcast to WakeWordService to ensure it resumes
                     val intent = Intent(Constants.Actions.RESUME_WAKE_WORD)
-                    context.sendBroadcast(intent)
-                    Log.d(TAG, "Sent broadcast to resume wake word detection")
+                    intent.setPackage(context.packageName) // Ensure broadcast stays within our app
+                    val result = context.sendBroadcast(intent)
+                    Log.i(TAG, "🔄 WAKE_WORD_RESUME: Sent broadcast to resume wake word detection")
+                    Log.d(TAG, "🔄 WAKE_WORD_RESUME: Broadcast action: ${Constants.Actions.RESUME_WAKE_WORD}")
+                    Log.d(TAG, "🔄 WAKE_WORD_RESUME: Package name: ${context.packageName}")
+                    
+                    // Add a small delay and then check if we should try alternative methods
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        Log.d(TAG, "🔄 WAKE_WORD_RESUME: Broadcast sent, WakeWordService should have resumed by now")
+                    }, 500)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error re-enabling wake word detection", e)
                 }

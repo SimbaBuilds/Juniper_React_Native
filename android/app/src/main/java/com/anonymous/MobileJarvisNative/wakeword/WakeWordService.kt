@@ -48,6 +48,8 @@ class WakeWordService : Service() {
     private var wakeWordThreshold = 0.3f  // Lowered from 0.5 to avoid false triggers from sigmoid noise
     private var lastWakeWordTime = 0L
     private val WAKE_WORD_COOLDOWN_MS = 3000L // 3 second cooldown
+    private var lastResumeTime = 0L
+    private val RESUME_COOLDOWN_MS = 2000L // 2 second cooldown after resume to prevent false detections
     private var lastLowConfidenceLogTime = 0L
     private val LOW_CONFIDENCE_LOG_INTERVAL_MS = 10000L // Log low confidence warnings every 10 seconds
     private var consecutiveLowConfidenceCount = 0
@@ -90,15 +92,11 @@ class WakeWordService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.i(TAG, "🚀 SERVICE_LIFECYCLE: ========== WAKE WORD SERVICE CREATED ==========")
-        Log.i(TAG, "🚀 SERVICE_LIFECYCLE: Timestamp: ${System.currentTimeMillis()}")
-        Log.i(TAG, "🚀 SERVICE_LIFECYCLE: Process ID: ${android.os.Process.myPid()}")
-        Log.i(TAG, "🚀 SERVICE_LIFECYCLE: Thread: ${Thread.currentThread().name}")
-        
+   
         instance = this
         isServiceRunning = true
         prefs = getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
         
-        Log.i(TAG, "🚀 SERVICE_LIFECYCLE: Creating notification channel...")
         createNotificationChannel()
         
         Log.i(TAG, "🚀 SERVICE_LIFECYCLE: Starting foreground service...")
@@ -257,10 +255,8 @@ class WakeWordService : Service() {
                 while (true) {
                     delay(1000)
                     val currentState = voiceManager.voiceState.value
-                    Log.d(TAG, "Voice state monitor: Current state = $currentState")
                     
                     if (currentState !is VoiceManager.VoiceState.IDLE) {
-                        Log.d(TAG, "Voice state is not IDLE - pausing wake word detection")
                         pauseWakeWordDetection()
                         
                         // Check if stuck in LISTENING state
@@ -270,14 +266,11 @@ class WakeWordService : Service() {
                                 Log.w(TAG, "⚠️ Voice state stuck in LISTENING for ${stuckInListeningCounter}s - forcing stop")
                                 voiceManager.stopListening()
                                 stuckInListeningCounter = 0
-                            } else if (stuckInListeningCounter % 5 == 0) {
-                                Log.d(TAG, "Voice state in LISTENING for ${stuckInListeningCounter}s...")
                             }
                         } else {
                             stuckInListeningCounter = 0
                         }
                     } else {
-                        Log.d(TAG, "Voice state is IDLE - resuming wake word detection")
                         resumeWakeWordDetection()
                         stuckInListeningCounter = 0
                     }
@@ -340,7 +333,6 @@ class WakeWordService : Service() {
         // EMERGENCY FIX: Hard-code very low threshold to stop infinite loop
         // This bypasses SharedPreferences completely until root cause is fixed
         val emergencyThreshold = 0.1f
-        Log.w(TAG, "🚨 EMERGENCY: Using hard-coded threshold $emergencyThreshold to prevent infinite loop")
         return emergencyThreshold
         
         // Original code (commented out until loop is resolved):
@@ -375,16 +367,8 @@ class WakeWordService : Service() {
             Log.i(TAG, "🎯 WAKEWORD_SETUP: Threshold: $threshold")
             Log.i(TAG, "🎯 WAKEWORD_SETUP: Available wake words: ${AVAILABLE_WAKE_WORDS}")
             
-            // 🚨 EMERGENCY THRESHOLD DEBUGGING 🚨
-            Log.w(TAG, "🔍 THRESHOLD_DEBUG: ========== COMPREHENSIVE THRESHOLD AUDIT ==========")
-            Log.w(TAG, "🔍 THRESHOLD_DEBUG: getWakeWordThreshold() returned: $threshold")
-            val prefsThreshold = prefs.getFloat("wake_word_threshold", -999f)
-            Log.w(TAG, "🔍 THRESHOLD_DEBUG: Direct SharedPreferences read: $prefsThreshold")
-            Log.w(TAG, "🔍 THRESHOLD_DEBUG: Field wakeWordThreshold before assignment: $wakeWordThreshold")
+            // Set threshold
             wakeWordThreshold = threshold
-            Log.w(TAG, "🔍 THRESHOLD_DEBUG: Field wakeWordThreshold after assignment: $wakeWordThreshold") 
-            Log.w(TAG, "🔍 THRESHOLD_DEBUG: Final threshold that will be used: $wakeWordThreshold")
-            Log.w(TAG, "🔍 THRESHOLD_DEBUG: =====================================================")
             
             Log.i(TAG, "🎯 WAKEWORD_SETUP: =======================================")
             
@@ -493,10 +477,10 @@ class WakeWordService : Service() {
                 val readCount = audioRecord?.read(buffer, 0, buffer.size) ?: 0
                 chunkCount++
                 
-                // Log audio processing stats every 5 seconds
+                // Log audio processing stats every 30 seconds (reduced frequency)
                 val currentTime = System.currentTimeMillis()
-                if (currentTime - lastLogTime > 5000) {
-                    Log.d(TAG, "🎙️ AUDIO_LOOP: Processed $chunkCount chunks in 5s (isPaused: $isPaused)")
+                if (currentTime - lastLogTime > 30000) {
+                    Log.d(TAG, "🎙️ AUDIO_LOOP: Processed $chunkCount chunks in 30s (isPaused: $isPaused)")
                     lastLogTime = currentTime
                     chunkCount = 0
                 }
@@ -504,28 +488,23 @@ class WakeWordService : Service() {
                 if (readCount > 0 && !isPaused) {
                     val currentTime = System.currentTimeMillis()
                     
-                    // 🚨 EMERGENCY CIRCUIT BREAKER 🚨
-                    // Reset processing counter every window
+                    // Circuit breaker logic (silent operation)
                     if (currentTime - lastProcessingTime > LOOP_DETECTION_WINDOW_MS) {
                         processingCallCount = 0
                         lastProcessingTime = currentTime
                         if (circuitBreakerTripped) {
-                            Log.i(TAG, "🔄 CIRCUIT_BREAKER: Resetting after cooldown period")
                             circuitBreakerTripped = false
                         }
                     }
                     
-                    // Check for excessive processing calls (infinite loop detection)
                     processingCallCount++
                     if (processingCallCount > MAX_PROCESSING_CALLS && !circuitBreakerTripped) {
                         circuitBreakerTripped = true
                         Log.e(TAG, "🚨 CIRCUIT_BREAKER: TRIPPED! ${processingCallCount} calls in ${LOOP_DETECTION_WINDOW_MS}ms - INFINITE LOOP DETECTED")
-                        Log.e(TAG, "🚨 CIRCUIT_BREAKER: Disabling wake word processing for safety")
                         continue
                     }
                     
                     if (circuitBreakerTripped) {
-                        // Circuit breaker is tripped - skip all processing
                         continue
                     }
                     
@@ -534,7 +513,6 @@ class WakeWordService : Service() {
                         // Reset counter every 30 seconds to retry
                         if ((currentTime - lastLowConfidenceLogTime) > 30000L) {
                             consecutiveLowConfidenceCount = 0
-                            Log.i(TAG, "🎯 WAKEWORD_TRIGGER: Resetting low confidence counter - retrying processing")
                         } else {
                             continue // Skip this audio chunk
                         }
@@ -558,7 +536,6 @@ class WakeWordService : Service() {
                     
                     // 🚨 EMERGENCY MULTI-LAYER FILTERING 🚨
                     // Layer 1: Hard threshold check (should catch ~0.5001 values)
-                    Log.v(TAG, "🔍 THRESHOLD_CHECK: Confidence=${String.format("%.6f", confidence)}, Threshold=${String.format("%.6f", wakeWordThreshold)}, Pass=${confidence > wakeWordThreshold}")
                     
                     if (confidence <= wakeWordThreshold) {
                         // This is normal - below threshold, no action needed
@@ -574,6 +551,7 @@ class WakeWordService : Service() {
                     // Layer 3: High confidence requirement
                     val isHighConfidence = confidence > 0.7f
                     val isCooldownExpired = (currentTime - lastWakeWordTime) > WAKE_WORD_COOLDOWN_MS
+                    val isResumeCooldownExpired = (currentTime - lastResumeTime) > RESUME_COOLDOWN_MS
                     
                     // Layer 4: Emergency sanity check
                     if (confidence > 0.99f) {
@@ -581,7 +559,7 @@ class WakeWordService : Service() {
                         continue
                     }
                     
-                    if (isHighConfidence && isCooldownExpired) {
+                    if (isHighConfidence && isCooldownExpired && isResumeCooldownExpired) {
                         Log.i(TAG, "🎯 WAKEWORD_TRIGGER: ⚡ WAKE WORD DETECTED! Confidence: ${String.format("%.4f", confidence)} (threshold: $wakeWordThreshold)")
                         lastWakeWordTime = currentTime
                         consecutiveLowConfidenceCount = 0 // Reset counter on successful detection
@@ -594,15 +572,22 @@ class WakeWordService : Service() {
                             Log.w(TAG, "🎯 WAKEWORD_TRIGGER: ⚠️ Medium confidence trigger ignored: ${String.format("%.4f", confidence)} (count: $consecutiveLowConfidenceCount, need >0.7)")
                             lastLowConfidenceLogTime = currentTime
                             
-                            if (consecutiveLowConfidenceCount >= MAX_CONSECUTIVE_LOW_CONFIDENCE) {
-                                Log.w(TAG, "🎯 WAKEWORD_TRIGGER: ⚠️ Disabling processing due to consistent poor results - will retry in 30s")
-                            }
+                                                    if (consecutiveLowConfidenceCount >= MAX_CONSECUTIVE_LOW_CONFIDENCE) {
+                            // Processing disabled due to poor results - will retry in 30s
+                        }
                         }
                     } else if (!isCooldownExpired) {
-                        Log.d(TAG, "🎯 WAKEWORD_TRIGGER: ⏰ High confidence trigger ignored - in cooldown period")
+                        // Cooldown active - no logging needed
+                    } else if (!isResumeCooldownExpired) {
+                        // Resume cooldown active - log once per occurrence
+                        if ((currentTime - lastLowConfidenceLogTime) > LOW_CONFIDENCE_LOG_INTERVAL_MS) {
+                            val timeRemaining = RESUME_COOLDOWN_MS - (currentTime - lastResumeTime)
+                            Log.d(TAG, "🎯 WAKEWORD_TRIGGER: ⏳ High confidence detection blocked by resume cooldown (${timeRemaining}ms remaining)")
+                            lastLowConfidenceLogTime = currentTime
+                        }
                     }
                 } else if (readCount <= 0) {
-                    Log.w(TAG, "🎙️ AUDIO_LOOP: No audio data read (readCount: $readCount)")
+                    // No audio data read - normal during pauses
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "🎙️ AUDIO_LOOP: ❌ Error in audio processing loop: ${e.message}", e)
@@ -716,8 +701,12 @@ class WakeWordService : Service() {
                     Log.i(TAG, "Received broadcast to pause wake word detection but keep mic active")
                     pauseWakeWordButKeepMicActive()
                 } else if (intent.action == Constants.Actions.RESUME_WAKE_WORD) {
-                    Log.i(TAG, "Received broadcast to resume wake word detection")
+                    Log.i(TAG, "🔄 WAKE_WORD_RESUME: ========== RESUME BROADCAST RECEIVED ==========")
+                    Log.i(TAG, "🔄 WAKE_WORD_RESUME: Action: ${intent.action}")
+                    Log.i(TAG, "🔄 WAKE_WORD_RESUME: Package: ${intent.getPackage()}")
+                    Log.i(TAG, "🔄 WAKE_WORD_RESUME: Calling resumeWakeWordDetectionFromPaused()")
                     resumeWakeWordDetectionFromPaused()
+                    Log.i(TAG, "🔄 WAKE_WORD_RESUME: ======================================")
                 }
             }
         }
@@ -810,6 +799,36 @@ class WakeWordService : Service() {
             Log.i(TAG, "▶️ PAUSE_RESUME: Timestamp: ${System.currentTimeMillis()}")
             Log.i(TAG, "▶️ PAUSE_RESUME: Previous state: Paused")
             
+            // CRITICAL: Reset openWakeWordEngine state to prevent false detections
+            Log.i(TAG, "▶️ PAUSE_RESUME: Resetting openWakeWordEngine state...")
+            try {
+                openWakeWordEngine?.cleanup()
+                openWakeWordEngine = OpenWakeWordEngine.getInstance(this)
+                val initialized = openWakeWordEngine?.initialize() ?: false
+                
+                if (initialized) {
+                    val selectedWakeWord = prefs.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
+                    openWakeWordEngine?.setWakePhrase(selectedWakeWord)
+                    Log.i(TAG, "▶️ PAUSE_RESUME: ✅ OpenWakeWordEngine reset and reinitialized")
+                    Log.i(TAG, "▶️ PAUSE_RESUME: Active wake phrase: '$selectedWakeWord'")
+                } else {
+                    Log.e(TAG, "▶️ PAUSE_RESUME: ❌ Failed to reinitialize openWakeWordEngine")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "▶️ PAUSE_RESUME: ❌ Error resetting openWakeWordEngine: ${e.message}", e)
+            }
+            
+            // Reset detection tracking variables to prevent stale state
+            val currentTime = System.currentTimeMillis()
+            lastWakeWordTime = 0L
+            lastResumeTime = currentTime
+            consecutiveLowConfidenceCount = 0
+            processingCallCount = 0
+            lastProcessingTime = currentTime
+            circuitBreakerTripped = false
+            Log.i(TAG, "▶️ PAUSE_RESUME: ✅ Detection state variables reset")
+            Log.i(TAG, "▶️ PAUSE_RESUME: Resume cooldown active for ${RESUME_COOLDOWN_MS}ms to prevent false detections")
+            
             // Reinitialize AudioRecord if it was released
             if (audioRecord == null) {
                 Log.i(TAG, "▶️ PAUSE_RESUME: Reinitializing AudioRecord for wake word detection")
@@ -826,7 +845,6 @@ class WakeWordService : Service() {
             isPaused = false
             
             val selectedWakeWord = prefs.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
-            Log.i(TAG, "▶️ PAUSE_RESUME: Active wake phrase: '$selectedWakeWord'")
             Log.i(TAG, "▶️ PAUSE_RESUME: Wake word threshold: $wakeWordThreshold")
             
             updateNotification("Listening for wake word", "Say '$selectedWakeWord' to activate")

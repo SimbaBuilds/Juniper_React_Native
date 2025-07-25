@@ -86,17 +86,6 @@ class AudioManager private constructor() {
      */
     fun initialize(context: Context) {
         androidAudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AndroidAudioManager
-        
-        // TROUBLESHOOTING STEP 2: Add global audio focus listener to monitor all focus changes
-        Log.i(TAG, "🎵 GLOBAL_FOCUS: Setting up global audio focus monitoring")
-        try {
-            // Note: Android doesn't provide a direct way to monitor all app focus changes,
-            // but we can monitor our own requests more thoroughly
-            Log.d(TAG, "🎵 GLOBAL_FOCUS: AudioManager initialized with enhanced focus monitoring")
-        } catch (e: Exception) {
-            Log.e(TAG, "🎵 GLOBAL_FOCUS: Error setting up global focus monitoring", e)
-        }
-        
         Log.i(TAG, "AudioManager initialized")
     }
     
@@ -110,26 +99,7 @@ class AudioManager private constructor() {
         onFocusLost: (() -> Unit)? = null,
         onFocusDucked: (() -> Unit)? = null
     ): Boolean {
-        // Enhanced logging to track audio focus requests
-        Log.i(TAG, "🎵 AUDIO_FOCUS_REQUEST: $requestType (ID: $requestId) - Priority: ${requestType.priority}")
-        
-        // Log the calling stack to identify who's requesting audio focus
-        Log.d(TAG, "🎵 AUDIO_FOCUS_REQUESTER: Stack trace:")
-        Thread.currentThread().stackTrace.take(8).forEach { element ->
-            Log.d(TAG, "🎵 AUDIO_FOCUS_CALLER: ${element.className}.${element.methodName}:${element.lineNumber}")
-        }
-        
-        // TROUBLESHOOTING STEP 2: Log potential internal conflicts
-        currentRequestInfo?.let { current ->
-            Log.d(TAG, "🎵 INTERNAL_CONFLICT_CHECK: New request $requestType (priority: ${requestType.priority}) while ${current.requestType} (priority: ${current.requestType.priority}) is active")
-            if (current.requestType == AudioRequestType.TTS && requestType == AudioRequestType.SPEECH_RECOGNITION) {
-                Log.i(TAG, "🎵 INTERNAL_CONFLICT_CHECK: ✅ SPEECH_RECOGNITION (priority: ${requestType.priority}) will interrupt TTS (priority: ${current.requestType.priority}) - this is expected behavior")
-            } else if (current.requestType == AudioRequestType.SPEECH_RECOGNITION && requestType == AudioRequestType.TTS) {
-                Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: ⚠️ TTS requesting focus while SPEECH_RECOGNITION is active - TTS will be queued")
-            } else {
-                Log.d(TAG, "🎵 INTERNAL_CONFLICT_CHECK: No specific conflict detected")
-            }
-        }
+        Log.d(TAG, "Requesting audio focus: $requestType (ID: $requestId)")
         
         val requestInfo = AudioFocusRequestInfo(
             requestType = requestType,
@@ -144,32 +114,27 @@ class AudioManager private constructor() {
         if (currentRequest != null) {
             // Handle same type requests (like SPEECH_RECOGNITION retries)
             if (currentRequest.requestType == requestType) {
-                Log.d(TAG, "🎵 Same type request detected ($requestType), ensuring proper cleanup before new request")
+                Log.d(TAG, "Same type request detected ($requestType), ensuring proper cleanup before new request")
                 releaseCurrentAudioFocus()
                 // Add a small delay to ensure cleanup completes
                 try {
                     Thread.sleep(100)
                 } catch (e: InterruptedException) {
-                    Log.w(TAG, "🎵 Interrupted during audio focus cleanup delay")
+                    Log.w(TAG, "Interrupted during audio focus cleanup delay")
                 }
             } else if (requestType.priority < currentRequest.requestType.priority) {
                 // Higher priority request - interrupt current
-                Log.i(TAG, "🎵 PRIORITY_INTERRUPT: Higher priority request ($requestType, priority: ${requestType.priority}) interrupting current (${currentRequest.requestType}, priority: ${currentRequest.requestType.priority})")
-                if (requestType == AudioRequestType.SPEECH_RECOGNITION) {
-                    Log.i(TAG, "🎵 SPEECH_RECOGNITION_PRIORITY: Speech recognition taking priority over ${currentRequest.requestType}")
-                }
+                Log.i(TAG, "Higher priority request ($requestType) interrupting current (${currentRequest.requestType})")
                 interruptCurrentRequest()
             } else if (requestType.priority > currentRequest.requestType.priority) {
                 // Lower priority - queue it
-                Log.i(TAG, "🎵 AUDIO_FOCUS_QUEUED: Lower priority request ($requestType, priority: ${requestType.priority}) queued behind current (${currentRequest.requestType}, priority: ${currentRequest.requestType.priority})")
+                Log.d(TAG, "Lower priority request ($requestType) queued behind current (${currentRequest.requestType})")
                 requestQueue.offer(requestInfo)
-                Log.d(TAG, "🎵 AUDIO_FOCUS_QUEUE_SIZE: Queue now contains ${requestQueue.size} request(s)")
                 return false
             } else {
                 // Same priority but different type - queue it
-                Log.i(TAG, "🎵 AUDIO_FOCUS_QUEUED: Same priority request ($requestType, priority: ${requestType.priority}) queued")
+                Log.d(TAG, "Same priority request ($requestType) queued")
                 requestQueue.offer(requestInfo)
-                Log.d(TAG, "🎵 AUDIO_FOCUS_QUEUE_SIZE: Queue now contains ${requestQueue.size} request(s)")
                 return false
             }
         }
@@ -215,23 +180,10 @@ class AudioManager private constructor() {
             if (success) {
                 currentRequestInfo = requestInfo
                 _audioFocusState.value = AudioFocusState.GAINED
-                Log.i(TAG, "🎵 AUDIO_FOCUS_GRANTED: ${requestInfo.requestType} (ID: ${requestInfo.requestId}) - Priority: ${requestInfo.requestType.priority}")
-                
-                // Log current audio focus holders
-                Log.d(TAG, "🎵 AUDIO_FOCUS_HOLDERS: Current focus: ${requestInfo.requestType}, Queue size: ${requestQueue.size}")
-                
+                Log.i(TAG, "Audio focus granted: ${requestInfo.requestType} (ID: ${requestInfo.requestId})")
                 requestInfo.onFocusGained?.invoke()
             } else {
-                Log.w(TAG, "🎵 AUDIO_FOCUS_DENIED: ${requestInfo.requestType} (ID: ${requestInfo.requestId}) - Priority: ${requestInfo.requestType.priority}")
-                
-                // Log why focus was denied
-                val resultDescription = when (result) {
-                    AndroidAudioManager.AUDIOFOCUS_REQUEST_GRANTED -> "GRANTED"
-                    AndroidAudioManager.AUDIOFOCUS_REQUEST_FAILED -> "FAILED"
-                    AndroidAudioManager.AUDIOFOCUS_REQUEST_DELAYED -> "DELAYED"
-                    else -> "UNKNOWN ($result)"
-                }
-                Log.w(TAG, "🎵 AUDIO_FOCUS_DENIAL_REASON: $resultDescription")
+                Log.w(TAG, "Audio focus denied: ${requestInfo.requestType} (ID: ${requestInfo.requestId})")
             }
             
             success
@@ -245,55 +197,27 @@ class AudioManager private constructor() {
      * Handle audio focus changes
      */
     private fun handleAudioFocusChange(focusChange: Int, requestInfo: AudioFocusRequestInfo) {
-        // Enhanced logging to identify audio focus changes
-        val focusChangeDescription = when (focusChange) {
-            AndroidAudioManager.AUDIOFOCUS_GAIN -> "AUDIOFOCUS_GAIN (1)"
-            AndroidAudioManager.AUDIOFOCUS_LOSS -> "AUDIOFOCUS_LOSS (-1)"
-            AndroidAudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> "AUDIOFOCUS_LOSS_TRANSIENT (-2)"
-            AndroidAudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK (-3)"
-            else -> "UNKNOWN ($focusChange)"
-        }
-        
-        Log.i(TAG, "🎵 AUDIO_FOCUS_CHANGE: $focusChangeDescription for ${requestInfo.requestType} (ID: ${requestInfo.requestId})")
-        
-        // Log stack trace for focus losses to identify the source
-        if (focusChange < 0) {
-            Log.w(TAG, "🎵 AUDIO_FOCUS_LOSS_DETECTED: $focusChangeDescription - Stack trace:")
-            Thread.currentThread().stackTrace.take(10).forEach { element ->
-                Log.w(TAG, "🎵 AUDIO_FOCUS_STACK: ${element.className}.${element.methodName}:${element.lineNumber}")
-            }
-            
-            // Log current audio session state
-            try {
-                val currentVolume = androidAudioManager?.getStreamVolume(AndroidAudioManager.STREAM_MUSIC)
-                val maxVolume = androidAudioManager?.getStreamMaxVolume(AndroidAudioManager.STREAM_MUSIC)
-                Log.w(TAG, "🎵 AUDIO_FOCUS_STATE: Current volume: $currentVolume/$maxVolume")
-            } catch (e: Exception) {
-                Log.w(TAG, "🎵 AUDIO_FOCUS_STATE: Could not get volume info: ${e.message}")
-            }
-        }
-        
         when (focusChange) {
             AndroidAudioManager.AUDIOFOCUS_GAIN -> {
                 _audioFocusState.value = AudioFocusState.GAINED
-                Log.d(TAG, "🎵 FOCUS_GAINED: Audio focus gained for ${requestInfo.requestType}")
+                Log.d(TAG, "Audio focus gained for ${requestInfo.requestType}")
                 requestInfo.onFocusGained?.invoke()
             }
             AndroidAudioManager.AUDIOFOCUS_LOSS -> {
                 _audioFocusState.value = AudioFocusState.LOST
-                Log.d(TAG, "🎵 FOCUS_LOST: Permanent audio focus loss for ${requestInfo.requestType}")
+                Log.i(TAG, "Permanent audio focus loss for ${requestInfo.requestType}")
                 requestInfo.onFocusLost?.invoke()
                 processNextRequest()
             }
             AndroidAudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
                 _audioFocusState.value = AudioFocusState.LOST_TRANSIENT
-                Log.d(TAG, "🎵 FOCUS_LOST_TRANSIENT: Transient focus loss for ${requestInfo.requestType}")
+                Log.i(TAG, "Transient focus loss for ${requestInfo.requestType}")
                 requestInfo.onFocusLost?.invoke()
                 processNextRequest()
             }
             AndroidAudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
                 _audioFocusState.value = AudioFocusState.DUCKED
-                Log.d(TAG, "🎵 FOCUS_DUCKED: Audio focus ducked for ${requestInfo.requestType}")
+                Log.d(TAG, "Audio focus ducked for ${requestInfo.requestType}")
                 requestInfo.onFocusDucked?.invoke()
             }
         }
@@ -303,17 +227,11 @@ class AudioManager private constructor() {
      * Release audio focus for a specific request
      */
     fun releaseAudioFocus(requestId: String) {
-        Log.i(TAG, "🎵 AUDIO_FOCUS_RELEASE: Requested for ID: $requestId")
-        
-        // Log the calling stack to identify who's releasing audio focus
-        Log.d(TAG, "🎵 AUDIO_FOCUS_RELEASER: Stack trace:")
-        Thread.currentThread().stackTrace.take(6).forEach { element ->
-            Log.d(TAG, "🎵 AUDIO_FOCUS_RELEASE_CALLER: ${element.className}.${element.methodName}:${element.lineNumber}")
-        }
+        Log.d(TAG, "Releasing audio focus for ID: $requestId")
         
         val currentRequest = currentRequestInfo
         if (currentRequest?.requestId == requestId) {
-            Log.i(TAG, "🎵 AUDIO_FOCUS_RELEASING: Current focus holder ${currentRequest.requestType} (ID: $requestId)")
+            Log.i(TAG, "Releasing current focus holder ${currentRequest.requestType} (ID: $requestId)")
             releaseCurrentAudioFocus()
             processNextRequest()
         } else {
@@ -321,9 +239,9 @@ class AudioManager private constructor() {
             val removedCount = requestQueue.count { it.requestId == requestId }
             requestQueue.removeAll { it.requestId == requestId }
             if (removedCount > 0) {
-                Log.d(TAG, "🎵 AUDIO_FOCUS_REMOVED_FROM_QUEUE: Removed $removedCount request(s) with ID $requestId")
+                Log.d(TAG, "Removed $removedCount request(s) with ID $requestId from queue")
             } else {
-                Log.w(TAG, "🎵 AUDIO_FOCUS_RELEASE_WARNING: No active request found with ID $requestId")
+                Log.w(TAG, "No active request found with ID $requestId")
             }
         }
     }
@@ -334,27 +252,21 @@ class AudioManager private constructor() {
     private fun releaseCurrentAudioFocus() {
         try {
             currentRequestInfo?.let { request ->
-                Log.i(TAG, "🎵 AUDIO_FOCUS_ABANDONING: ${request.requestType} (ID: ${request.requestId})")
+                Log.i(TAG, "Abandoning audio focus: ${request.requestType} (ID: ${request.requestId})")
             }
             
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && currentAudioFocusRequest != null) {
-                Log.d(TAG, "🎵 AUDIO_FOCUS_ABANDON: Using AudioFocusRequest.abandonAudioFocusRequest()")
                 androidAudioManager?.abandonAudioFocusRequest(currentAudioFocusRequest!!)
                 currentAudioFocusRequest = null
             } else {
-                Log.d(TAG, "🎵 AUDIO_FOCUS_ABANDON: Using deprecated abandonAudioFocus()")
                 @Suppress("DEPRECATION")
                 androidAudioManager?.abandonAudioFocus(null)
-            }
-            
-            currentRequestInfo?.let { request ->
-                Log.i(TAG, "🎵 AUDIO_FOCUS_ABANDONED: ${request.requestType} (ID: ${request.requestId})")
             }
             
             currentRequestInfo = null
             _audioFocusState.value = AudioFocusState.NONE
         } catch (e: Exception) {
-            Log.e(TAG, "🎵 AUDIO_FOCUS_ABANDON_ERROR: Error releasing audio focus", e)
+            Log.e(TAG, "Error releasing audio focus", e)
         }
     }
     
@@ -363,7 +275,7 @@ class AudioManager private constructor() {
      */
     private fun interruptCurrentRequest() {
         currentRequestInfo?.let { current ->
-            Log.i(TAG, "🎵 AUDIO_FOCUS_INTERRUPT: Interrupting current request ${current.requestType} (ID: ${current.requestId}) for higher priority")
+            Log.i(TAG, "Interrupting current request ${current.requestType} (ID: ${current.requestId}) for higher priority")
         }
         currentRequestInfo?.onFocusLost?.invoke()
         releaseCurrentAudioFocus()
@@ -376,10 +288,8 @@ class AudioManager private constructor() {
         coroutineScope.launch {
             val nextRequest = requestQueue.poll()
             if (nextRequest != null) {
-                Log.i(TAG, "🎵 AUDIO_FOCUS_NEXT_REQUEST: Processing queued request ${nextRequest.requestType} (ID: ${nextRequest.requestId}) - Priority: ${nextRequest.requestType.priority}")
+                Log.i(TAG, "Processing queued request ${nextRequest.requestType} (ID: ${nextRequest.requestId})")
                 processAudioFocusRequest(nextRequest)
-            } else {
-                Log.d(TAG, "🎵 AUDIO_FOCUS_QUEUE_EMPTY: No more requests in queue")
             }
         }
     }
@@ -435,7 +345,7 @@ class AudioManager private constructor() {
      * Clear all pending requests (for cleanup)
      */
     fun clearAllRequests() {
-        Log.d(TAG, "🎵 Clearing all audio focus requests")
+        Log.d(TAG, "Clearing all audio focus requests")
         requestQueue.clear()
         releaseCurrentAudioFocus()
     }

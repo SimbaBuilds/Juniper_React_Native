@@ -79,7 +79,7 @@ class ConfigManager: NSObject {
     }
     
     func getMaxRetries() -> Int {
-        return Int(config["speech.max.retries"] ?? "3") ?? 3
+        return Int(config["speech.max.retries"] ?? "1") ?? 1
     }
     
     func getRetryDelay() -> Double {
