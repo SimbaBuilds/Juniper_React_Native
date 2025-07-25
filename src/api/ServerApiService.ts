@@ -262,7 +262,7 @@ class ServerApiService {
             headers: { 
               'Content-Type': 'multipart/form-data'
             },
-            timeout: 240000, // 240 second timeout for Android
+            timeout: 300000, // 240 second timeout for Android
             signal: this.currentRequestController.signal // Add AbortController signal
           }).catch((error: unknown) => {
             console.error('🔴 SERVER_API: ❌ API request error:', error);

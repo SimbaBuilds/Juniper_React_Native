@@ -7,17 +7,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.SupervisorJob
 import kotlin.coroutines.suspendCoroutine
 import kotlin.coroutines.resume
-import org.json.JSONObject
 import java.io.File
 import com.anonymous.MobileJarvisNative.voice.DeepgramClient
-import android.speech.tts.TextToSpeech
-import com.facebook.react.modules.core.DeviceEventManagerModule
-import com.anonymous.MobileJarvisNative.utils.Constants
-import android.os.Handler
-import android.os.Looper
 
 /**
  * Interface for voice processing strategy
@@ -44,13 +37,6 @@ interface VoiceProcessor {
      */
     fun processText(text: String, onResult: (String) -> Unit)
     
-    /**
-     * Process audio data directly (for fallback STT)
-     * 
-     * @param audioData Raw audio data to process
-     * @param onResult Callback for when result is ready
-     */
-    fun processAudio(audioData: ByteArray, onResult: (String) -> Unit)
     
     /**
      * Speak a response using text-to-speech
@@ -72,22 +58,12 @@ interface VoiceProcessor {
      */
     fun interrupt(): Boolean
     
-    /**
-     * Check if currently speaking
-     * 
-     * @return True if currently speaking, false otherwise
-     */
-    fun isSpeaking(): Boolean
     
     /**
      * Shutdown and clean up resources
      */
     fun shutdown()
 
-    /**
-     * Called when no speech is detected after the wake word
-     */
-    fun onNoSpeechDetected()
     
     /**
      * Set API processing callback
@@ -159,41 +135,6 @@ class ModularVoiceProcessor(private val context: Context) : VoiceProcessor {
         }
     }
     
-    override fun processAudio(audioData: ByteArray, onResult: (String) -> Unit) {
-        Log.i(TAG, "Processing audio with modular processor (${audioData.size} bytes)")
-        try {
-            // Use Whisper for speech recognition - launching in a coroutine
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    // This would be replaced with actual Whisper API call
-                    // Simplified example implementation
-                    val recognizedText = "Example transcribed text from audio data"
-                    
-                    if (recognizedText.isNotEmpty()) {
-                        Log.i(TAG, "Whisper STT result: \"$recognizedText\"")
-                        
-                        // Now process the recognized text with React Native
-                        withContext(Dispatchers.Main) {
-                            processText(recognizedText, onResult)
-                        }
-                    } else {
-                        Log.w(TAG, "Empty result from Whisper STT")
-                        withContext(Dispatchers.Main) {
-                            onResult("I couldn't understand what you said. Please try again.")
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error in STT processing coroutine", e)
-                    withContext(Dispatchers.Main) {
-                        onResult("Error processing your speech: ${e.message}")
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error processing audio with modular processor", e)
-            onResult("Error processing your speech: ${e.message}")
-        }
-    }
     
     override fun speak(text: String, onComplete: () -> Unit) {
         try {
@@ -355,9 +296,6 @@ class ModularVoiceProcessor(private val context: Context) : VoiceProcessor {
         }
     }
     
-    override fun isSpeaking(): Boolean {
-        return isSpeaking || TextToSpeechManager.isSpeaking()
-    }
     
     override fun shutdown() {
         Log.i(TAG, "Shutting down modular voice processor")
@@ -393,9 +331,4 @@ class ModularVoiceProcessor(private val context: Context) : VoiceProcessor {
         }
     }
     
-    override fun onNoSpeechDetected() {
-        Log.i(TAG, "No speech detected in Modular processor")
-        // Get VoiceManager instance and delegate handling to it
-        VoiceManager.getInstance().handleNoSpeechDetected()
-    }
 } 
