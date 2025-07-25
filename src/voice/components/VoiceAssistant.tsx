@@ -170,7 +170,37 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       errorMessage = 'Audio interrupted. Please try speaking again.';
     }
     
-    throw new Error(errorMessage);
+    // Instead of throwing an error, show a user-friendly error message
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <VoiceStatusIndicator />
+        </View>
+        
+        <View style={styles.errorContainer}>
+          <View style={styles.errorContent}>
+            <Ionicons name="warning-outline" size={48} color="#FF6B6B" />
+            <Text style={styles.errorTitle}>Voice Assistant Error</Text>
+            <Text style={styles.errorMessage}>{errorMessage}</Text>
+            
+            <TouchableOpacity 
+              style={styles.retryButton}
+              onPress={async () => {
+                try {
+                  console.log('🔄 Retrying voice recognition after error...');
+                  await startListening();
+                } catch (retryError) {
+                  console.error('❌ Error retrying voice recognition:', retryError);
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.retryButtonText}>Try Again</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
   }
   
   return (
@@ -502,5 +532,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
     paddingVertical: 8,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  errorContent: {
+    backgroundColor: '#FF6B6B',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '100%',
+  },
+  errorTitle: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  errorMessage: {
+    color: 'white',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: 'white',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FF6B6B',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

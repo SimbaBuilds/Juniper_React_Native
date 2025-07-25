@@ -479,7 +479,6 @@ class VoiceManager private constructor() {
             override fun onRmsChanged(rmsdB: Float) {
                 // Log RMS changes to verify audio input
                 if (rmsdB > 0) {
-                    Log.v(TAG, "Audio level: $rmsdB dB")
                 }
             }
             
@@ -498,6 +497,15 @@ class VoiceManager private constructor() {
                 
                 // Reset state flags
                 isListening = false
+                
+                // Critical: Don't retry if we're already processing or responding
+                val currentState = _voiceState.value
+                if (currentState == VoiceState.PROCESSING || 
+                    currentState is VoiceState.RESPONDING) {
+                    Log.d(TAG, "Ignoring speech recognition error during PROCESSING/RESPONDING state")
+                    releaseSpeechRecognitionAudioFocus()
+                    return
+                }
                 
                 // Handle permission error by retrying
                 if (error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS && 

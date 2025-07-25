@@ -353,7 +353,7 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             console.log('🎧 WAKE_WORD_CONTEXT: Cleaning up wake word event listener');
             subscription?.remove();
         };
-    }, [voiceState]);
+    }, []); // Empty dependency array - listener should be set up once and persist
 
     const setEnabled = async (enabled: boolean) => {
         try {
