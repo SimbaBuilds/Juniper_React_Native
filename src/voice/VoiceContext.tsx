@@ -599,7 +599,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     if (Platform.OS === 'android' && VoiceModule?.clearNativeState) {
       try {
         console.log('🧹 CLEAR_CHAT: Clearing native state...');
-        await VoiceModule.clearNativeState();
+        await VoiceModule.clearNativeState(null);
         console.log('🧹 CLEAR_CHAT: ✅ Native state cleared');
       } catch (nativeError) {
         console.warn('🧹 CLEAR_CHAT: ⚠️ Failed to clear native state:', nativeError);

@@ -1421,6 +1421,12 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                 Log.d(TAG, "🚫 CLEAR_NATIVE: ✅ Cleared all timeouts ($timeoutCount) and callbacks ($callbackCount)")
             }
             
+            // Reset VoiceManager to IDLE state to trigger wake word resume
+            // This ensures cancelled requests follow the same wake word resume flow as completed requests
+            Log.d(TAG, "🚫 CLEAR_NATIVE: Resetting VoiceManager state to IDLE to resume wake word...")
+            voiceManager.updateState(VoiceManager.VoiceState.IDLE)
+            Log.d(TAG, "🚫 CLEAR_NATIVE: ✅ VoiceManager state reset to IDLE")
+            
             promise.resolve(true)
         } catch (e: Exception) {
             Log.e(TAG, "🚫 CLEAR_NATIVE: ❌ Error clearing native state: ${e.message}", e)
