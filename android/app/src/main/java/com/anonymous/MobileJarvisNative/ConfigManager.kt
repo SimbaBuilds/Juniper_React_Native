@@ -63,7 +63,7 @@ class ConfigManager private constructor(private val context: Context) {
      * Get the server API base URL
      */
     fun getServerApiBaseUrl(): String {
-        val propertyValue = properties.getProperty(Constants.Config.SERVER_API_BASE_URL, "http://192.168.1.131:8000")
+        val propertyValue = properties.getProperty(Constants.Config.SERVER_API_BASE_URL, "http://192.168.1.145:8000")
         return prefs.getString(Constants.Config.SERVER_API_BASE_URL, propertyValue) ?: propertyValue
     }
     
@@ -131,7 +131,7 @@ class ConfigManager private constructor(private val context: Context) {
      * Get max no speech retries
      */
     fun getMaxNoSpeechRetries(): Int {
-        val defaultValue = 2
+        val defaultValue = 1
         val propertyValue = properties.getProperty(Constants.Config.SPEECH_MAX_NO_SPEECH_RETRIES, defaultValue.toString())
         return propertyValue.toIntOrNull() ?: defaultValue
     }

@@ -403,7 +403,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       console.log('🔍 RN_BRIDGE_DEBUG: Request ID:', requestId);
       console.log('🔍 RN_BRIDGE_DEBUG: Current voice state:', voiceState);
       console.log('🔍 RN_BRIDGE_DEBUG: Chat history length:', chatHistory.length);
-      console.log('🔍 RN_BRIDGE_DEBUG: API loading state:', isLoading);
+      console.log('🔍 RN_BRIDGE_DEBUG: API loading state:', isRequestInProgress);
       console.log('🔍 RN_BRIDGE_DEBUG: Thread info:', {
         performanceNow: performance.now(),
         timestamp: Date.now()

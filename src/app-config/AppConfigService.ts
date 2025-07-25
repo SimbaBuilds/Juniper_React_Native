@@ -33,7 +33,7 @@ class SettingsService {
       console.error('Error getting server API config:', error);
       // Return default values on error
       return {
-        baseUrl: 'http://192.168.1.131:8000',
+        baseUrl: 'http://192.168.1.145:8000',
         apiEndpoint: '/api/chat'
       };
     }

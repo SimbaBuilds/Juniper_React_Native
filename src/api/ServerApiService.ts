@@ -20,7 +20,7 @@ function toSnakeCase(str: string): string {
 
 // Default server configuration
 const DEFAULT_SERVER_CONFIG = {
-  baseUrl: 'http://192.168.1.131:8000',
+  baseUrl: 'http://192.168.1.145:8000',
   apiEndpoint: '/api/chat'
 };
 
