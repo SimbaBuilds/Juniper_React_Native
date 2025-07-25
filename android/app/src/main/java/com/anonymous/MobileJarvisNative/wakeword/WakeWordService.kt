@@ -736,8 +736,14 @@ class WakeWordService : Service() {
             Log.i(TAG, "⏸️ PAUSE_RESUME: Timestamp: ${System.currentTimeMillis()}")
             Log.i(TAG, "⏸️ PAUSE_RESUME: Reason: Voice session active - releasing mic for speech recognition")
             
-            // Stop and release AudioRecord to allow SpeechRecognizer to use the microphone
+            // Stop recording thread and release AudioRecord to allow SpeechRecognizer to use the microphone
             try {
+                // First stop the recording loop
+                Log.i(TAG, "⏸️ PAUSE_RESUME: Stopping recording thread...")
+                isRunning = false
+                recordingThread?.interrupt()
+                
+                // Then stop and release AudioRecord
                 if (audioRecord?.state == AudioRecord.STATE_INITIALIZED) {
                     Log.i(TAG, "⏸️ PAUSE_RESUME: Stopping and releasing AudioRecord for mic handoff")
                     audioRecord?.stop()
@@ -745,8 +751,13 @@ class WakeWordService : Service() {
                     audioRecord = null
                     Log.i(TAG, "⏸️ PAUSE_RESUME: ✅ AudioRecord released - mic available for speech recognition")
                 }
+                
+                // Wait for thread to finish and clean up
+                recordingThread?.join(1000) // Wait up to 1 second for thread to finish
+                recordingThread = null
+                Log.i(TAG, "⏸️ PAUSE_RESUME: ✅ Recording thread stopped and cleaned up")
             } catch (e: Exception) {
-                Log.e(TAG, "⏸️ PAUSE_RESUME: Error releasing AudioRecord: ${e.message}", e)
+                Log.e(TAG, "⏸️ PAUSE_RESUME: Error stopping recording thread/AudioRecord: ${e.message}", e)
             }
             
             // Release any audio focus held by wake word service to allow speech recognition
@@ -829,17 +840,23 @@ class WakeWordService : Service() {
             Log.i(TAG, "▶️ PAUSE_RESUME: ✅ Detection state variables reset")
             Log.i(TAG, "▶️ PAUSE_RESUME: Resume cooldown active for ${RESUME_COOLDOWN_MS}ms to prevent false detections")
             
-            // Reinitialize AudioRecord if it was released
-            if (audioRecord == null) {
-                Log.i(TAG, "▶️ PAUSE_RESUME: Reinitializing AudioRecord for wake word detection")
-                setupAudioRecording()
+            // Reinitialize AudioRecord and recording thread if they were released
+            if (audioRecord == null || recordingThread == null || !isRunning) {
+                Log.i(TAG, "▶️ PAUSE_RESUME: Reinitializing AudioRecord and recording thread for wake word detection")
                 
-                // Start recording thread
-                recordingThread = Thread {
-                    processAudioLoop()
+                // Ensure any old thread is completely stopped
+                if (recordingThread != null) {
+                    isRunning = false
+                    recordingThread?.interrupt()
+                    recordingThread?.join(1000)
+                    recordingThread = null
                 }
-                recordingThread?.start()
-                Log.i(TAG, "▶️ PAUSE_RESUME: ✅ AudioRecord reinitialized and recording started")
+                
+                // Setup new AudioRecord and start recording
+                setupAudioRecording()
+                Log.i(TAG, "▶️ PAUSE_RESUME: ✅ AudioRecord and recording thread reinitialized and started")
+            } else {
+                Log.i(TAG, "▶️ PAUSE_RESUME: AudioRecord and recording thread already active")
             }
             
             isPaused = false
