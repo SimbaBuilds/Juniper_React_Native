@@ -1,8 +1,9 @@
 import React, { useCallback } from 'react';
-import { TouchableOpacity, StyleSheet, View, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, StyleSheet, View, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useVoiceState } from '../VoiceContext';
 import { VoiceState } from '../VoiceService';
+import { useWakeWord } from '../../wakeword/WakeWordContext';
 
 interface VoiceButtonProps {
   size?: number;
@@ -24,6 +25,9 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
 }) => {
   const { voiceState, isListening, isSpeaking, isError, startListening, stopListening, interruptSpeech } = useVoiceState();
   
+  // Get wake word context to check and toggle wake word state
+  const { isEnabled: isWakeWordEnabled, setEnabled: setWakeWordEnabled } = useWakeWord();
+  
   // Handle button press based on current state
   const handlePress = useCallback(async () => {
     if (onPress) {
@@ -37,10 +41,23 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
       // If currently speaking, interrupt the speech
       await interruptSpeech();
     } else {
-      // Otherwise, start listening
+      // Otherwise, start listening - but first check if wake word is enabled
+      if (Platform.OS === 'android' && isWakeWordEnabled) {
+        console.log('🎤 VOICE_BUTTON: Wake word is enabled, auto-toggling off before starting chat');
+        try {
+          // Auto-toggle wake word off before starting chat
+          await setWakeWordEnabled(false);
+          console.log('✅ VOICE_BUTTON: Wake word toggled off successfully');
+        } catch (error) {
+          console.error('❌ VOICE_BUTTON: Error toggling wake word off:', error);
+          // Continue with starting chat even if wake word toggle fails
+        }
+      }
+      
+      // Start listening
       await startListening();
     }
-  }, [isListening, isSpeaking, startListening, stopListening, interruptSpeech, onPress]);
+  }, [isListening, isSpeaking, startListening, stopListening, interruptSpeech, onPress, isWakeWordEnabled, setWakeWordEnabled]);
   
   // Determine the icon based on state
   const getIcon = () => {
