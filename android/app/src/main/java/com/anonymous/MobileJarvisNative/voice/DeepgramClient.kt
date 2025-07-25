@@ -830,8 +830,18 @@ class DeepgramClient private constructor(private val context: Context) {
      */
     private fun requestAudioFocus(): Boolean {
         return try {
+            // TROUBLESHOOTING STEP 2: Check for internal conflicts with speech recognition
+            val currentRequest = centralAudioManager?.getCurrentRequestInfo()
+            if (currentRequest?.requestType == com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION) {
+                Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: ⚠️ Deepgram TTS requesting audio focus while SPEECH_RECOGNITION is active!")
+                Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: Current speech recognition request ID: ${currentRequest.requestId}")
+                Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: Deepgram TTS will be queued behind higher priority SPEECH_RECOGNITION")
+            }
+            
             val requestId = "deepgram_${UUID.randomUUID()}"
             currentRequestId = requestId
+            
+            Log.d(TAG, "🎵 Deepgram: Requesting audio focus (ID: $requestId)")
             
             val success = centralAudioManager?.requestAudioFocus(
                 requestType = AudioManager.AudioRequestType.TTS,

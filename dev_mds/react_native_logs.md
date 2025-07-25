@@ -1,230 +1,44 @@
- LOG  🔄 VOICE_SERVICE: ========== NATIVE EVENT RECEIVED ==========
- LOG  🔄 VOICE_SERVICE: Event from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: Previous cached state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@c6c7874
- LOG  🔄 VOICE_SERVICE: Cache update needed: true
- LOG  🔄 VOICE_SERVICE: Cached state updated to: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: About to call React callback with event...
- LOG  🔄 VOICE_STATE_HOOK: ========== RN STATE UPDATE RECEIVED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw state from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Normalized new state: WAKE_WORD_DETECTED
- LOG  🔄 VOICE_STATE_HOOK: Event receive time (performance.now): 1305176750.873255
- LOG  🔄 VOICE_STATE_HOOK: Event receive timestamp: 1753409074555
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@c6c7874
- LOG  🔄 VOICE_STATE_HOOK: Current normalized state: IDLE
- LOG  🔄 VOICE_STATE_HOOK: Normalized state change needed: true
- LOG  🔄 VOICE_STATE_HOOK: Raw state change needed: true
- LOG  🔄 VOICE_STATE_HOOK: Native to RN latency: 5 ms
- LOG  🔄 VOICE_STATE_HOOK: Native processing time: 18.102231 ms
- LOG  🔄 VOICE_STATE_HOOK: About to call setVoiceState with: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@c6c7874
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: ✅ RN state updated in: 12.443383932113647 ms
- LOG  🔄 VOICE_STATE_HOOK: ✅ Total event processing time: 27.764999866485596 ms
- LOG  🔄 VOICE_STATE_HOOK: ===================================================
- LOG  🔄 VOICE_SERVICE: React callback completed in: 28.684614896774292 ms
- LOG  🔄 VOICE_SERVICE: ===============================================
- LOG  🔄 VOICE_SERVICE: ========== NATIVE EVENT RECEIVED ==========
- LOG  🔄 VOICE_SERVICE: Event from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: Previous cached state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: Cache update needed: false
- LOG  🔄 VOICE_SERVICE: Cached state updated to: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: About to call React callback with event...
- LOG  🔄 VOICE_STATE_HOOK: ========== RN STATE UPDATE RECEIVED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw state from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Normalized new state: WAKE_WORD_DETECTED
- LOG  🔄 VOICE_STATE_HOOK: Event receive time (performance.now): 1305176780.398178
- LOG  🔄 VOICE_STATE_HOOK: Event receive timestamp: 1753409074585
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@c6c7874
- LOG  🔄 VOICE_STATE_HOOK: Current normalized state: IDLE
- LOG  🔄 VOICE_STATE_HOOK: Normalized state change needed: true
- LOG  🔄 VOICE_STATE_HOOK: Raw state change needed: true
- LOG  🔄 VOICE_STATE_HOOK: Native to RN latency: 35 ms
- LOG  🔄 VOICE_STATE_HOOK: Native processing time: 35.467461 ms
- LOG  🔄 VOICE_STATE_HOOK: About to call setVoiceState with: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@c6c7874
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🎧 WAKE_WORD_CONTEXT: Cleaning up wake word event listener
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw voiceState from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Normalized state value: WAKE_WORD_DETECTED
- LOG  🔄 VOICE_STATE_HOOK: State normalization needed: true
- LOG  🔄 VOICE_STATE_HOOK: Derived states - isListening: true isSpeaking: false isError: false
- LOG  🔄 VOICE_STATE_HOOK: ========================================================
- LOG  🎧 WAKE_WORD_CONTEXT: Setting up wake word event listener...
- LOG  🎧 WAKE_WORD_CONTEXT: Current voice state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔊 WAKE_WORD_SERVICE: Adding DeviceEventEmitter listener for event: wakeWordDetected
- LOG  🔊 WAKE_WORD_SERVICE: DeviceEventEmitter available: true
- LOG  🔊 WAKE_WORD_SERVICE: DeviceEventEmitter listener added successfully, subscription: true
- LOG  🎧 WAKE_WORD_CONTEXT: ✅ Wake word listener registered successfully
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: ✅ RN state updated in: 52.80530786514282 ms
- LOG  🔄 VOICE_STATE_HOOK: ✅ Total event processing time: 54.099769830703735 ms
- LOG  🔄 VOICE_STATE_HOOK: ===================================================
- LOG  🔄 VOICE_SERVICE: React callback completed in: 54.7267689704895 ms
- LOG  🔄 VOICE_SERVICE: ===============================================
- LOG  🔄 VOICE_SERVICE: ========== NATIVE EVENT RECEIVED ==========
- LOG  🔄 VOICE_SERVICE: Event from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: Previous cached state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: Cache update needed: false
- LOG  🔄 VOICE_SERVICE: Cached state updated to: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: About to call React callback with event...
- LOG  🔄 VOICE_STATE_HOOK: ========== RN STATE UPDATE RECEIVED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw state from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Normalized new state: WAKE_WORD_DETECTED
- LOG  🔄 VOICE_STATE_HOOK: Event receive time (performance.now): 1305176837.462255
- LOG  🔄 VOICE_STATE_HOOK: Event receive timestamp: 1753409074642
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Current normalized state: WAKE_WORD_DETECTED
- LOG  🔄 VOICE_STATE_HOOK: Normalized state change needed: false
- LOG  🔄 VOICE_STATE_HOOK: Raw state change needed: false
- LOG  🔄 VOICE_STATE_HOOK: Native to RN latency: 89 ms
- LOG  🔄 VOICE_STATE_HOOK: Native processing time: 90.078231 ms
- LOG  🔄 VOICE_STATE_HOOK: About to call setVoiceState with: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw voiceState from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Normalized state value: WAKE_WORD_DETECTED
- LOG  🔄 VOICE_STATE_HOOK: State normalization needed: true
- LOG  🔄 VOICE_STATE_HOOK: Derived states - isListening: true isSpeaking: false isError: false
- LOG  🔄 VOICE_STATE_HOOK: ========================================================
- LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
- LOG  🔄 VOICE_CONTEXT: Context voiceState: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_CONTEXT: Context isListening: true
- LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
- LOG  🔄 VOICE_CONTEXT: Context isError: false
- LOG  🔄 VOICE_CONTEXT: ====================================================
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: ✅ RN state updated in: 4.819383859634399 ms
- LOG  🔄 VOICE_STATE_HOOK: ✅ Total event processing time: 6.3171539306640625 ms
- LOG  🔄 VOICE_STATE_HOOK: ===================================================
- LOG  🔄 VOICE_SERVICE: React callback completed in: 7.028231143951416 ms
- LOG  🔄 VOICE_SERVICE: ===============================================
- LOG  🔄 VOICE_SERVICE: ========== NATIVE EVENT RECEIVED ==========
- LOG  🔄 VOICE_SERVICE: Event from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: Previous cached state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: Cache update needed: false
- LOG  🔄 VOICE_SERVICE: Cached state updated to: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: About to call React callback with event...
- LOG  🔄 VOICE_STATE_HOOK: ========== RN STATE UPDATE RECEIVED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw state from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Normalized new state: WAKE_WORD_DETECTED
- LOG  🔄 VOICE_STATE_HOOK: Event receive time (performance.now): 1305176845.344948
- LOG  🔄 VOICE_STATE_HOOK: Event receive timestamp: 1753409074649
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Current normalized state: WAKE_WORD_DETECTED
- LOG  🔄 VOICE_STATE_HOOK: Normalized state change needed: false
- LOG  🔄 VOICE_STATE_HOOK: Raw state change needed: false
- LOG  🔄 VOICE_STATE_HOOK: Native to RN latency: 96 ms
- LOG  🔄 VOICE_STATE_HOOK: Native processing time: 99.101847 ms
- LOG  🔄 VOICE_STATE_HOOK: About to call setVoiceState with: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: ✅ RN state updated in: 0.2738461494445801 ms
- LOG  🔄 VOICE_STATE_HOOK: ✅ Total event processing time: 2.971461057662964 ms
- LOG  🔄 VOICE_STATE_HOOK: ===================================================
- LOG  🔄 VOICE_SERVICE: React callback completed in: 3.3633840084075928 ms
- LOG  🔄 VOICE_SERVICE: ===============================================
- LOG  🔄 VOICE_SERVICE: ========== NATIVE EVENT RECEIVED ==========
- LOG  🔄 VOICE_SERVICE: Event from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: Previous cached state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: Cache update needed: false
- LOG  🔄 VOICE_SERVICE: Cached state updated to: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: About to call React callback with event...
- LOG  🔄 VOICE_STATE_HOOK: ========== RN STATE UPDATE RECEIVED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw state from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Normalized new state: WAKE_WORD_DETECTED
- LOG  🔄 VOICE_STATE_HOOK: Event receive time (performance.now): 1305176850.45364
- LOG  🔄 VOICE_STATE_HOOK: Event receive timestamp: 1753409074655
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Current normalized state: WAKE_WORD_DETECTED
- LOG  🔄 VOICE_STATE_HOOK: Normalized state change needed: false
- LOG  🔄 VOICE_STATE_HOOK: Raw state change needed: false
- LOG  🔄 VOICE_STATE_HOOK: Native to RN latency: 100 ms
- LOG  🔄 VOICE_STATE_HOOK: Native processing time: 100.594154 ms
- LOG  🔄 VOICE_STATE_HOOK: About to call setVoiceState with: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: ✅ RN state updated in: 0.2033848762512207 ms
- LOG  🔄 VOICE_STATE_HOOK: ✅ Total event processing time: 1.5100769996643066 ms
- LOG  🔄 VOICE_STATE_HOOK: ===================================================
- LOG  🔄 VOICE_SERVICE: React callback completed in: 1.949923038482666 ms
- LOG  🔄 VOICE_SERVICE: ===============================================
- LOG  🔄 VOICE_SERVICE: ========== NATIVE EVENT RECEIVED ==========
- LOG  🔄 VOICE_SERVICE: Event from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: Previous cached state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: Cache update needed: false
- LOG  🔄 VOICE_SERVICE: Cached state updated to: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: About to call React callback with event...
- LOG  🔄 VOICE_STATE_HOOK: ========== RN STATE UPDATE RECEIVED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw state from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Normalized new state: WAKE_WORD_DETECTED
- LOG  🔄 VOICE_STATE_HOOK: Event receive time (performance.now): 1305176853.067486
- LOG  🔄 VOICE_STATE_HOOK: Event receive timestamp: 1753409074657
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Current normalized state: WAKE_WORD_DETECTED
- LOG  🔄 VOICE_STATE_HOOK: Normalized state change needed: false
- LOG  🔄 VOICE_STATE_HOOK: Raw state change needed: false
- LOG  🔄 VOICE_STATE_HOOK: Native to RN latency: 102 ms
- LOG  🔄 VOICE_STATE_HOOK: Native processing time: 103.203462 ms
- LOG  🔄 VOICE_STATE_HOOK: About to call setVoiceState with: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: ✅ RN state updated in: 3.1765389442443848 ms
- LOG  🔄 VOICE_STATE_HOOK: ✅ Total event processing time: 4.662384986877441 ms
- LOG  🔄 VOICE_STATE_HOOK: ===================================================
- LOG  🔄 VOICE_SERVICE: React callback completed in: 5.236384868621826 ms
- LOG  🔄 VOICE_SERVICE: ===============================================
- LOG  🔊 WAKE_WORD_SERVICE: Event received from native via DeviceEventEmitter: wakeWordDetected {"confidence": 0.9642401933670044, "timestamp": 1753409074533, "wakeWord": "Hey Juni"}
- LOG  🔊 WAKE_WORD_SERVICE: Event received from native via DeviceEventEmitter: wakeWordDetected {"confidence": 0.9642401933670044, "timestamp": 1753409074533, "wakeWord": "Hey Juni"}
- LOG  🎧 WAKE_WORD_CONTEXT: ========== WAKE WORD EVENT RECEIVED ==========
- LOG  🎧 WAKE_WORD_CONTEXT: Event receive time (performance.now): 1305176873.633255
- LOG  🎧 WAKE_WORD_CONTEXT: Event receive timestamp: 1753409074678
- LOG  🎧 WAKE_WORD_CONTEXT: Raw event data: {"confidence": 0.9642401933670044, "timestamp": 1753409074533, "wakeWord": "Hey Juni"}
- LOG  🎧 WAKE_WORD_CONTEXT: ⏰ Time: 21:04:34
- LOG  🎧 WAKE_WORD_CONTEXT: 🎯 Wake word: Hey Juni
- LOG  🎧 WAKE_WORD_CONTEXT: 📊 Confidence: 0.9642401933670044
- LOG  🎧 WAKE_WORD_CONTEXT: ⚡ Event latency (ms): 145
- LOG  🎧 WAKE_WORD_CONTEXT: 🎵 Current voice state at event receive: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  
- LOG  ⏰ Time: 21:04:34, 🎤 WAKE WORD "Hey Juni" DETECTED in React Native! 🎤
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 Starting atomic state check at: 1305176979.110178
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 VoiceState.IDLE value: IDLE
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 Current voiceState value: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 Type of voiceState: string
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 Extracted RN state: WAKE_WORD_DETECTED
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 RN state is IDLE: false
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 Cached native state (sync): com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 Extracted cached native state: WAKE_WORD_DETECTED
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 Cached native state is IDLE: false
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 State consistency (RN vs Native): false vs false
- LOG  🎧 WAKE_WORD_CONTEXT: ❌ REJECTED (Atomic) - State not IDLE
- LOG  🎧 WAKE_WORD_CONTEXT: ❌ Rejection time: 1305176984.928717
- LOG  🎧 WAKE_WORD_CONTEXT: ❌ Total processing time: 111.29546189308167 ms
- LOG  🎧 WAKE_WORD_CONTEXT: ❌ RN state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b Cached native state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🎧 WAKE_WORD_CONTEXT: ❌ Extracted states - RN: WAKE_WORD_DETECTED Native: WAKE_WORD_DETECTED
- LOG  🎧 WAKE_WORD_CONTEXT: ❌ Reason: RN not IDLE
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 Native state check time: 10.223384857177734 ms
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 Native voice state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 RN voice state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 State sync mismatch: false
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 Post-rejection fresh native state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 Extracted fresh native state: WAKE_WORD_DETECTED
- LOG  🎧 WAKE_WORD_CONTEXT: 🔍 Cached vs Fresh native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b vs com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: ========== NATIVE EVENT RECEIVED ==========
- LOG  🔄 VOICE_SERVICE: Event from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@8ea0389
- LOG  🔄 VOICE_SERVICE: Previous cached state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_SERVICE: Cache update needed: true
- LOG  🔄 VOICE_SERVICE: Cached state updated to: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@8ea0389
- LOG  🔄 VOICE_SERVICE: About to call React callback with event...
- LOG  🔄 VOICE_STATE_HOOK: ========== RN STATE UPDATE RECEIVED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw state from native: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@8ea0389
- LOG  🔄 VOICE_STATE_HOOK: Normalized new state: LISTENING
- LOG  🔄 VOICE_STATE_HOOK: Event receive time (performance.now): 1305177412.935794
- LOG  🔄 VOICE_STATE_HOOK: Event receive timestamp: 1753409075217
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$WAKE_WORD_DETECTED@a5ec0b
- LOG  🔄 VOICE_STATE_HOOK: Current normalized state: WAKE_WORD_DETECTED
+07-24 23:39:16.881 21812 22078 I VoiceManager: Wake word detected, stopping wake word detection but keeping listening on...
+07-24 23:39:16.881 21812 22078 D VoiceManager: Voice state transition: IDLE -> WAKE_WORD_DETECTED
+07-24 23:39:16.881 21812 22078 D VoiceManager: Active conversation state (WAKE_WORD_DETECTED), pausing wake word detection
+07-24 23:39:16.883 21812 22078 D VoiceManager: Sent broadcast to pause wake word detection but keep mic active
+07-24 23:39:16.883 21812 22078 I VoiceManager: Initializing OpenAI Whisper client
+07-24 23:39:16.884 21812 22078 D VoiceManager: Whisper client initialized successfully
+07-24 23:39:16.885 21812 22078 D AudioManager: 🎵 Audio focus release requested for ID: wake_word_detection
+07-24 23:39:16.888 21812 22078 D AudioManager: 🎵 Audio focus released for BACKGROUND_AUDIO (ID: wake_word_detection)
+07-24 23:39:16.899 21812 21812 D VoiceManager: Deepgram client initialized for future use
+07-24 23:39:16.900 21812 21812 D VoiceManager: Starting speech recognition on main thread after wake word
+07-24 23:39:16.900 21812 21812 D VoiceManager: startListening() called. Attempting to start speech recognition...
+07-24 23:39:16.901 21812 21812 D VoiceManager: Sent broadcast to pause wake word detection during listening
+07-24 23:39:16.902 21812 21812 D VoiceManager: Requesting audio focus for SPEECH_RECOGNITION
+07-24 23:39:16.902 21812 21812 D AudioManager: 🎵 Audio focus requested: SPEECH_RECOGNITION (ID: speech_recognition_1753418356902)
+07-24 23:39:16.905 21812 21812 D AudioManager: 🎵 Audio focus granted for SPEECH_RECOGNITION (ID: speech_recognition_1753418356902)
+07-24 23:39:16.905 21812 21812 D VoiceManager: 🎵 SPEECH_RECOGNITION: Audio focus gained for speech recognition
+07-24 23:39:16.905 21812 21812 I VoiceManager: Starting SpeechRecognizer on main thread
+07-24 23:39:16.906 21812 21812 D VoiceManager: Voice state transition: WAKE_WORD_DETECTED -> LISTENING
+07-24 23:39:16.907 21812 21812 D VoiceManager: Active conversation state (LISTENING), pausing wake word detection
+07-24 23:39:16.909 21812 21812 D VoiceManager: Speech recognition parameters: minLength=1000, completeSilence=3000, possibleSilence=1500
+07-24 23:39:16.909 21812 21812 I VoiceManager: Using Android default timing parameters for SpeechRecognizer
+07-24 23:39:16.917 21812 21812 I VoiceManager: SpeechRecognizer started listening.
+07-24 23:39:16.956 21812 21812 D AudioManager: dispatching onAudioFocusChange(-2) to android.media.AudioManager@5851bf5com.anonymous.MobileJarvisNative.utils.AudioManager$$ExternalSyntheticLambda0@2f95317
+07-24 23:39:16.957 21812 21812 D AudioManager: 🎵 Audio focus change: -2 for SPEECH_RECOGNITION (ID: speech_recognition_1753418356902)
+07-24 23:39:16.957 21812 21812 D AudioManager: 🎵 TRANSIENT_LOSS: Transient focus loss for SPEECH_RECOGNITION, waiting to regain focus
+07-24 23:39:16.957 21812 21812 D AudioManager: 🎵 TRANSIENT_RECOVERY: Scheduled recovery attempt in 2000ms
+07-24 23:39:17.055 21812 21812 D VoiceManager: Ready for speech
+07-24 23:39:18.957 21812 21812 D AudioManager: 🎵 TRANSIENT_RECOVERY: Retrying audio focus after transient loss for SPEECH_RECOGNITION
+07-24 23:39:18.961  6783  6783 D AudioManager: dispatching onAudioFocusChange(-2) to android.media.AudioManager@f92abb8eoj@f0bd8a3
+07-24 23:39:18.961 21812 21812 D AudioManager: 🎵 Audio focus granted for SPEECH_RECOGNITION (ID: speech_recognition_1753418356902)
+07-24 23:39:18.961 21812 21812 D VoiceManager: 🎵 SPEECH_RECOGNITION: Audio focus gained for speech recognition
+07-24 23:39:22.173 21812 21812 E VoiceManager: Speech recognition error: No recognition match
+07-24 23:39:22.173 21812 21812 D VoiceManager: No speech detected
+07-24 23:39:22.173 21812 21812 I VoiceManager: Message: I didn't hear anything. Listening again...
+07-24 23:39:22.180 21812 21812 D VoiceManager: Will retry speech recognition after 1000 ms
+07-24 23:39:23.182 21812 21812 D VoiceManager: Retrying speech recognition (attempt 1)
+07-24 23:39:23.182 21812 21812 D VoiceManager: Starting speech recognition retry on main thread
+07-24 23:39:23.182 21812 21812 D VoiceManager: startListening() called. Attempting to start speech recognition...
+07-24 23:39:23.184 21812 21812 D VoiceManager: Sent broadcast to pause wake word detection during listening
+07-24 23:39:23.184 21812 21812 D VoiceManager: Requesting audio focus for SPEECH_RECOGNITION
+07-24 23:39:23.184 21812 21812 D AudioManager: 🎵 Audio focus requested: SPEECH_RECOGNITION (ID: speech_recognition_1753418363184)
+07-24 23:39:23.185 21812 21812 D AudioManager: 🎵 INTERNAL_CONFLICT_CHECK: New request SPEECH_RECOGNITION while SPEECH_RECOGNITION is active
+07-24 23:39:23.185 21812 21812 D AudioManager: 🎵 Same priority request (SPEECH_RECOGNITION) queued
+07-24 23:39:23.185 21812 21812 E VoiceManager: Failed to gain audio focus for speech recognition

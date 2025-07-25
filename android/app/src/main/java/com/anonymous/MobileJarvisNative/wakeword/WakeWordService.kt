@@ -745,7 +745,20 @@ class WakeWordService : Service() {
         try {
             Log.i(TAG, "⏸️ PAUSE_RESUME: ========== PAUSING WAKE WORD DETECTION ==========")
             Log.i(TAG, "⏸️ PAUSE_RESUME: Timestamp: ${System.currentTimeMillis()}")
-            Log.i(TAG, "⏸️ PAUSE_RESUME: Reason: Voice session active - keeping mic active")
+            Log.i(TAG, "⏸️ PAUSE_RESUME: Reason: Voice session active - releasing mic for speech recognition")
+            
+            // Stop and release AudioRecord to allow SpeechRecognizer to use the microphone
+            try {
+                if (audioRecord?.state == AudioRecord.STATE_INITIALIZED) {
+                    Log.i(TAG, "⏸️ PAUSE_RESUME: Stopping and releasing AudioRecord for mic handoff")
+                    audioRecord?.stop()
+                    audioRecord?.release()
+                    audioRecord = null
+                    Log.i(TAG, "⏸️ PAUSE_RESUME: ✅ AudioRecord released - mic available for speech recognition")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "⏸️ PAUSE_RESUME: Error releasing AudioRecord: ${e.message}", e)
+            }
             
             // Release any audio focus held by wake word service to allow speech recognition
             try {
@@ -764,7 +777,7 @@ class WakeWordService : Service() {
             isPaused = true
             updateNotification("Voice active", "Listening for your command...")
             
-            Log.i(TAG, "⏸️ PAUSE_RESUME: ✅ Wake word detection paused (mic still active)")
+            Log.i(TAG, "⏸️ PAUSE_RESUME: ✅ Wake word detection paused (mic released for speech recognition)")
             Log.i(TAG, "⏸️ PAUSE_RESUME: Setting 2-minute auto-resume timer...")
             
             // Set a timer to automatically resume
@@ -796,6 +809,19 @@ class WakeWordService : Service() {
             Log.i(TAG, "▶️ PAUSE_RESUME: ========== RESUMING WAKE WORD DETECTION ==========")
             Log.i(TAG, "▶️ PAUSE_RESUME: Timestamp: ${System.currentTimeMillis()}")
             Log.i(TAG, "▶️ PAUSE_RESUME: Previous state: Paused")
+            
+            // Reinitialize AudioRecord if it was released
+            if (audioRecord == null) {
+                Log.i(TAG, "▶️ PAUSE_RESUME: Reinitializing AudioRecord for wake word detection")
+                setupAudioRecording()
+                
+                // Start recording thread
+                recordingThread = Thread {
+                    processAudioLoop()
+                }
+                recordingThread?.start()
+                Log.i(TAG, "▶️ PAUSE_RESUME: ✅ AudioRecord reinitialized and recording started")
+            }
             
             isPaused = false
             
