@@ -5,7 +5,6 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager as AndroidAudioManager
 import android.os.Build
-import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
@@ -38,9 +37,6 @@ class AudioManager private constructor() {
     // Coroutine scope for async operations
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
     
-    // Handler for transient focus loss recovery
-    private val mainHandler = Handler(Looper.getMainLooper())
-    private var transientLossRecoveryRunnable: Runnable? = null
     
     companion object {
         @Volatile
@@ -246,10 +242,10 @@ class AudioManager private constructor() {
     }
     
     /**
-     * Handle audio focus changes - TROUBLESHOOTING STEP 1: Improved transient loss handling
+     * Handle audio focus changes
      */
     private fun handleAudioFocusChange(focusChange: Int, requestInfo: AudioFocusRequestInfo) {
-        // Enhanced logging to identify audio focus thieves
+        // Enhanced logging to identify audio focus changes
         val focusChangeDescription = when (focusChange) {
             AndroidAudioManager.AUDIOFOCUS_GAIN -> "AUDIOFOCUS_GAIN (1)"
             AndroidAudioManager.AUDIOFOCUS_LOSS -> "AUDIOFOCUS_LOSS (-1)"
@@ -277,54 +273,27 @@ class AudioManager private constructor() {
             }
         }
         
-        // Cancel any pending transient loss recovery
-        transientLossRecoveryRunnable?.let { runnable ->
-            mainHandler.removeCallbacks(runnable)
-            transientLossRecoveryRunnable = null
-        }
-        
         when (focusChange) {
             AndroidAudioManager.AUDIOFOCUS_GAIN -> {
                 _audioFocusState.value = AudioFocusState.GAINED
-                Log.d(TAG, "🎵 TRANSIENT_RECOVERY: Audio focus regained for ${requestInfo.requestType}")
+                Log.d(TAG, "🎵 FOCUS_GAINED: Audio focus gained for ${requestInfo.requestType}")
                 requestInfo.onFocusGained?.invoke()
             }
             AndroidAudioManager.AUDIOFOCUS_LOSS -> {
                 _audioFocusState.value = AudioFocusState.LOST
-                Log.d(TAG, "🎵 PERMANENT_LOSS: Permanent audio focus loss for ${requestInfo.requestType}")
+                Log.d(TAG, "🎵 FOCUS_LOST: Permanent audio focus loss for ${requestInfo.requestType}")
                 requestInfo.onFocusLost?.invoke()
                 processNextRequest()
             }
             AndroidAudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
                 _audioFocusState.value = AudioFocusState.LOST_TRANSIENT
-                Log.d(TAG, "🎵 TRANSIENT_LOSS: Transient focus loss for ${requestInfo.requestType}, waiting to regain focus")
-                
-                // TROUBLESHOOTING STEP 1: Don't immediately stop, wait for potential regain
-                // For SPEECH_RECOGNITION, give more time to recover
-                val recoveryDelayMs = if (requestInfo.requestType == AudioRequestType.SPEECH_RECOGNITION) {
-                    500L // 500ms for speech recognition - faster recovery for higher priority
-                } else {
-                    1000L // 1 second for other types
-                }
-                
-                transientLossRecoveryRunnable = Runnable {
-                    if (_audioFocusState.value == AudioFocusState.LOST_TRANSIENT) {
-                        Log.d(TAG, "🎵 TRANSIENT_RECOVERY: Retrying audio focus after transient loss for ${requestInfo.requestType}")
-                        // Try to regain focus
-                        val regainSuccess = processAudioFocusRequest(requestInfo)
-                        if (!regainSuccess) {
-                            Log.w(TAG, "🎵 TRANSIENT_RECOVERY: Failed to regain focus, treating as permanent loss")
-                            requestInfo.onFocusLost?.invoke()
-                        }
-                    }
-                }
-                
-                mainHandler.postDelayed(transientLossRecoveryRunnable!!, recoveryDelayMs)
-                Log.d(TAG, "🎵 TRANSIENT_RECOVERY: Scheduled recovery attempt in ${recoveryDelayMs}ms")
+                Log.d(TAG, "🎵 FOCUS_LOST_TRANSIENT: Transient focus loss for ${requestInfo.requestType}")
+                requestInfo.onFocusLost?.invoke()
+                processNextRequest()
             }
             AndroidAudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
                 _audioFocusState.value = AudioFocusState.DUCKED
-                Log.d(TAG, "🎵 DUCKED: Audio focus ducked for ${requestInfo.requestType}")
+                Log.d(TAG, "🎵 FOCUS_DUCKED: Audio focus ducked for ${requestInfo.requestType}")
                 requestInfo.onFocusDucked?.invoke()
             }
         }

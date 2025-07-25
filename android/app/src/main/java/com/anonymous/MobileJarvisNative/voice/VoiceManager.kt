@@ -91,8 +91,8 @@ class VoiceManager private constructor() {
         
         // Constants
         private const val RECOGNITION_DEBOUNCE_MS = 3000L
-        private const val MAX_SPEECH_RECOGNITION_RETRY_COUNT = 3
-        private var MAX_NO_SPEECH_RETRIES = 2 // Will be overridden from config
+        private const val MAX_SPEECH_RECOGNITION_RETRY_COUNT = 1
+        private var MAX_NO_SPEECH_RETRIES = 1 // Will be overridden from config
         
         fun getInstance(): VoiceManager {
             return instance ?: synchronized(this) {
@@ -370,7 +370,6 @@ class VoiceManager private constructor() {
                     // Check if this is a permanent loss or if we're already in an error state
                     if (_voiceState.value !is VoiceState.ERROR && audioManager.audioFocusState.value == com.anonymous.MobileJarvisNative.utils.AudioManager.AudioFocusState.LOST) {
                         Log.w(TAG, "🎵 SPEECH_RECOGNITION: Permanent audio focus loss - stopping speech recognition")
-                        _voiceState.value = VoiceState.ERROR("Audio focus lost permanently")
                         stopListening()
                     } else {
                         Log.d(TAG, "🎵 SPEECH_RECOGNITION: Transient audio focus loss - will wait for recovery")
@@ -547,7 +546,6 @@ class VoiceManager private constructor() {
                 }
                 
                 // Otherwise update state to error
-                _voiceState.value = VoiceState.ERROR("Speech recognition error: $errorMessage")
             }
             
             override fun onResults(results: Bundle?) {
@@ -589,7 +587,7 @@ class VoiceManager private constructor() {
     private fun getSpeechRecognitionErrorMessage(errorCode: Int): String {
         return when (errorCode) {
             SpeechRecognizer.ERROR_AUDIO -> "Audio recording error"
-            SpeechRecognizer.ERROR_CLIENT -> "Client side error"
+            SpeechRecognizer.ERROR_CLIENT -> "Client error"
             SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Insufficient permissions"
             SpeechRecognizer.ERROR_NETWORK -> "Network error"
             SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Network timeout"
@@ -835,6 +833,11 @@ class VoiceManager private constructor() {
                 Log.d(TAG, "Conversation completed, re-enabling wake word detection")
                 try {
                     voiceProcessor.start()
+                    
+                    // Also send broadcast to WakeWordService to ensure it resumes
+                    val intent = Intent(Constants.Actions.RESUME_WAKE_WORD)
+                    context.sendBroadcast(intent)
+                    Log.d(TAG, "Sent broadcast to resume wake word detection")
                 } catch (e: Exception) {
                     Log.e(TAG, "Error re-enabling wake word detection", e)
                 }

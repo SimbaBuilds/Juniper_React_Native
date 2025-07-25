@@ -15,7 +15,7 @@ export const WakeWordStatus: React.FC = () => {
 
     const getStatusText = () => {
         if (!isEnabled) return 'Wake Word Disabled';
-        return isRunning ? `Listening for "${selectedWakeWord}"` : 'Wake Word Paused';
+        return isRunning ? `Listening for "${selectedWakeWord}"` : '';
     };
 
     return (

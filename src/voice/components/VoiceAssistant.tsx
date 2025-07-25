@@ -153,8 +153,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     let errorMessage = 'Voice service error occurred';
     
     // Extract error message from voice state
-    if (typeof voiceState === 'object' && voiceState?.message) {
-      errorMessage = voiceState.message;
+    if (typeof voiceState === 'object' && voiceState && 'message' in voiceState) {
+      errorMessage = (voiceState as any).message;
     } else if (typeof voiceState === 'string' && voiceState.includes('message=')) {
       // Parse ERROR(message=...) format
       const match = voiceState.match(/message=([^)]+)/);
