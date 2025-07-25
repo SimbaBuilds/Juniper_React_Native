@@ -365,13 +365,9 @@ class WakeWordService : Service() {
     }
     
     private fun getWakeWordThreshold(): Float {
-        // EMERGENCY FIX: Hard-code very low threshold to stop infinite loop
-        // This bypasses SharedPreferences completely until root cause is fixed
-        val emergencyThreshold = 0.1f
-        return emergencyThreshold
-        
-        // Original code (commented out until loop is resolved):
-        // return prefs.getFloat("wake_word_threshold", 0.3f)
+        // Read the wake word sensitivity from SharedPreferences (set by React Native)
+        // The sensitivity is stored as "wake_word_sensitivity" and should be used as the threshold
+        return prefs.getFloat("wake_word_sensitivity", 0.3f)
     }
     
     private fun initWakeWordDetection() {

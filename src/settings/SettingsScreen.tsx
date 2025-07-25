@@ -15,7 +15,7 @@ import { ExpandableSettingsToggle } from './components/ExpandableSettingsToggle'
 import { SettingsDropdown } from './components/SettingsDropdown';
 import { SettingsTextInput } from './components/SettingsTextInput';
 import { SettingsArrayInput } from './components/SettingsArrayInput';
-import { SettingsSlider } from './components/SettingsSlider';
+import { SettingsNumberInput } from './components/SettingsNumberInput';
 import { VoiceSelectionDropdown } from './components/VoiceSelectionDropdown';
 import { PermissionsCard } from './components/PermissionsCard';
 import WakeWordService from '../wakeword/WakeWordService';
@@ -498,50 +498,50 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               />
 
               <View style={styles.indentedSetting}>
-                <SettingsSlider
+                <SettingsNumberInput
                   label="Wake Word Sensitivity"
                   value={settings.wakeWordSensitivity || 0.3}
-                onValueChange={async (wakeWordSensitivity) => {
-                  console.log('🎚️ WAKEWORD_SENSITIVITY: Sensitivity changed in settings screen');
-                  console.log('🎚️ WAKEWORD_SENSITIVITY: Previous sensitivity:', settings.wakeWordSensitivity || 0.3);
-                  console.log('🎚️ WAKEWORD_SENSITIVITY: New sensitivity:', wakeWordSensitivity);
-                  console.log('🎚️ WAKEWORD_SENSITIVITY: Percentage:', `${Math.round(wakeWordSensitivity * 100)}%`);
-                  
-                  // Update both the voice settings and the native wake word module
-                  await Promise.all([
-                    handleVoiceSettingsUpdate({ wakeWordSensitivity }),
-                    (async () => {
-                      try {
-                        const wakeWordService = WakeWordService.getInstance();
-                        const success = await wakeWordService.setWakeWordSensitivity(wakeWordSensitivity);
-                        if (success) {
-                          console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Successfully synced sensitivity to native module');
-                          
-                          // Restart wake word detection if currently running to apply changes
-                          const isRunning = await wakeWordService.isWakeWordDetectionRunning();
-                          if (isRunning) {
-                            console.log('🔄 Restarting wake word detection to apply new sensitivity...');
-                            await wakeWordService.stopWakeWordDetection();
-                            await new Promise(resolve => setTimeout(resolve, 500));
-                            await wakeWordService.startWakeWordDetection();
-                            console.log('✅ Wake word detection restarted with new sensitivity');
+                  onSave={async (wakeWordSensitivity) => {
+                    console.log('🎚️ WAKEWORD_SENSITIVITY: Sensitivity changed in settings screen');
+                    console.log('🎚️ WAKEWORD_SENSITIVITY: Previous sensitivity:', settings.wakeWordSensitivity || 0.3);
+                    console.log('🎚️ WAKEWORD_SENSITIVITY: New sensitivity:', wakeWordSensitivity);
+                    console.log('🎚️ WAKEWORD_SENSITIVITY: Percentage:', `${Math.round(wakeWordSensitivity * 100)}%`);
+                    
+                    // Update both the voice settings and the native wake word module
+                    await Promise.all([
+                      handleVoiceSettingsUpdate({ wakeWordSensitivity }),
+                      (async () => {
+                        try {
+                          const wakeWordService = WakeWordService.getInstance();
+                          const success = await wakeWordService.setWakeWordSensitivity(wakeWordSensitivity);
+                          if (success) {
+                            console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Successfully synced sensitivity to native module');
+                            
+                            // Restart wake word detection if currently running to apply changes
+                            const isRunning = await wakeWordService.isWakeWordDetectionRunning();
+                            if (isRunning) {
+                              console.log('🔄 Restarting wake word detection to apply new sensitivity...');
+                              await wakeWordService.stopWakeWordDetection();
+                              await new Promise(resolve => setTimeout(resolve, 500));
+                              await wakeWordService.startWakeWordDetection();
+                              console.log('✅ Wake word detection restarted with new sensitivity');
+                            }
+                          } else {
+                            console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Failed to sync sensitivity to native module');
                           }
-                        } else {
-                          console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Failed to sync sensitivity to native module');
+                        } catch (error) {
+                          console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Error syncing sensitivity to native module:', error);
                         }
-                      } catch (error) {
-                        console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Error syncing sensitivity to native module:', error);
-                      }
-                    })()
-                  ]);
-                  
-                  console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Sensitivity setting update completed');
-                }}
-                minimumValue={0}
-                maximumValue={1}
-                step={0.1}
-                description="The sensitivity level for wake word detection (0 = less sensitive, 1 = more sensitive)."
-                formatValue={(value) => `${Math.round(value * 100)}%`}
+                      })()
+                    ]);
+                    
+                    console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Sensitivity setting update completed');
+                  }}
+                  minimumValue={0}
+                  maximumValue={1}
+                  step={0.01}
+                  description="The sensitivity level for wake word detection (0 = less sensitive, 1 = more sensitive)."
+                  formatValue={(value) => `${Math.round(value * 100)}%`}
                 />
               </View>
             </View>
