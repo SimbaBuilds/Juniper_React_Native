@@ -209,7 +209,14 @@ class WakeWordService : Service() {
             recordingThread?.interrupt()
             audioRecord?.stop()
             audioRecord?.release()
-            openWakeWordEngine?.cleanup()
+            
+            // Use resetInstance to properly cleanup the singleton
+            try {
+                OpenWakeWordEngine.resetInstance()
+                Log.i(TAG, "🧹 CLEANUP: OpenWakeWordEngine singleton reset during cleanup")
+            } catch (e: Exception) {
+                Log.w(TAG, "Error resetting OpenWakeWordEngine singleton during cleanup: ${e.message}", e)
+            }
             
             // Release audio focus
             try {
@@ -810,23 +817,48 @@ class WakeWordService : Service() {
             Log.i(TAG, "▶️ PAUSE_RESUME: Timestamp: ${System.currentTimeMillis()}")
             Log.i(TAG, "▶️ PAUSE_RESUME: Previous state: Paused")
             
-            // CRITICAL: Reset openWakeWordEngine state to prevent false detections
-            Log.i(TAG, "▶️ PAUSE_RESUME: Resetting openWakeWordEngine state...")
+            // CRITICAL: Reset openWakeWordEngine singleton to prevent false detections
+            Log.i(TAG, "▶️ PAUSE_RESUME: Resetting openWakeWordEngine singleton state...")
             try {
-                openWakeWordEngine?.cleanup()
+                // Use the new resetInstance method to properly reset the singleton
+                OpenWakeWordEngine.resetInstance()
+                Log.i(TAG, "▶️ PAUSE_RESUME: ✅ OpenWakeWordEngine singleton reset successfully")
+                
+                // Get fresh instance and initialize
                 openWakeWordEngine = OpenWakeWordEngine.getInstance(this)
                 val initialized = openWakeWordEngine?.initialize() ?: false
                 
                 if (initialized) {
                     val selectedWakeWord = prefs.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
                     openWakeWordEngine?.setWakePhrase(selectedWakeWord)
-                    Log.i(TAG, "▶️ PAUSE_RESUME: ✅ OpenWakeWordEngine reset and reinitialized")
-                    Log.i(TAG, "▶️ PAUSE_RESUME: Active wake phrase: '$selectedWakeWord'")
+                    
+                    // Defensive check: Verify engine is ready before proceeding
+                    val isReady = openWakeWordEngine?.isReady() ?: false
+                    if (isReady) {
+                        Log.i(TAG, "▶️ PAUSE_RESUME: ✅ Fresh OpenWakeWordEngine instance initialized and ready")
+                        Log.i(TAG, "▶️ PAUSE_RESUME: Active wake phrase: '$selectedWakeWord'")
+                    } else {
+                        Log.e(TAG, "▶️ PAUSE_RESUME: ❌ OpenWakeWordEngine initialized but not ready - state may be corrupted")
+                        // Attempt one more reset
+                        try {
+                            OpenWakeWordEngine.resetInstance()
+                            openWakeWordEngine = OpenWakeWordEngine.getInstance(this)
+                            val secondAttempt = openWakeWordEngine?.initialize() ?: false
+                            if (secondAttempt) {
+                                openWakeWordEngine?.setWakePhrase(selectedWakeWord) 
+                                Log.i(TAG, "▶️ PAUSE_RESUME: ✅ Second initialization attempt successful")
+                            } else {
+                                Log.e(TAG, "▶️ PAUSE_RESUME: ❌ Second initialization attempt also failed")
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "▶️ PAUSE_RESUME: ❌ Error in second initialization attempt: ${e.message}", e)
+                        }
+                    }
                 } else {
-                    Log.e(TAG, "▶️ PAUSE_RESUME: ❌ Failed to reinitialize openWakeWordEngine")
+                    Log.e(TAG, "▶️ PAUSE_RESUME: ❌ Failed to initialize fresh openWakeWordEngine instance")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "▶️ PAUSE_RESUME: ❌ Error resetting openWakeWordEngine: ${e.message}", e)
+                Log.e(TAG, "▶️ PAUSE_RESUME: ❌ Error resetting openWakeWordEngine singleton: ${e.message}", e)
             }
             
             // Reset detection tracking variables to prevent stale state

@@ -648,21 +648,19 @@ class VoiceManager private constructor() {
                     _voiceState.value = VoiceState.RESPONDING(response)
                     Log.i(TAG, "Processing complete, responding to user")
                     
-                    // Additional delay to ensure audio focus is fully released
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        Log.d(TAG, "🎵 TTS_START: Starting TTS after audio focus release delay")
+                    // Start TTS immediately - audio focus ducking issue fixed in AudioManager
+                    Log.d(TAG, "🎵 TTS_START: Starting TTS with fixed audio focus handling")
+                    
+                    // Speak the response
+                    voiceProcessor.speak(response) {
+                        // Don't return to idle when done speaking, set to LISTENING instead
+                        Log.i(TAG, "TTS complete, setting state to LISTENING to continue conversation")
                         
-                        // Speak the response
-                        voiceProcessor.speak(response) {
-                            // Don't return to idle when done speaking, set to LISTENING instead
-                            Log.i(TAG, "TTS complete, setting state to LISTENING to continue conversation")
-                            
-                            // Add a short delay for better transition
-                            Handler(Looper.getMainLooper()).postDelayed({
-                                updateState(VoiceState.LISTENING)
-                            }, 300)
-                        }
-                    }, 100) // Reduced from 500ms to 100ms for faster response (text format TTS is much faster)
+                        // Add a short delay for better transition
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            updateState(VoiceState.LISTENING)
+                        }, 300)
+                    }
                 } else {
                     Log.w(TAG, "Received empty response from voice processor")
                     _voiceState.value = VoiceState.ERROR("No response received")

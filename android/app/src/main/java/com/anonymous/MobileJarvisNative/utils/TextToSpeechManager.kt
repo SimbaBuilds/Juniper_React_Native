@@ -69,7 +69,7 @@ object TextToSpeechManager {
                         // Set audio attributes for better audio handling
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                             val audioAttributes = AudioAttributes.Builder()
-                                .setUsage(AudioAttributes.USAGE_ASSISTANT)
+                                .setUsage(AudioAttributes.USAGE_MEDIA)
                                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                                 .build()
                             textToSpeech?.setAudioAttributes(audioAttributes)

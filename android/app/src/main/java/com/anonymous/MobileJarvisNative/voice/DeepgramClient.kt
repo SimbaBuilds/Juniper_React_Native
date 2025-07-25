@@ -634,7 +634,7 @@ class DeepgramClient private constructor(private val context: Context) {
                 testMediaPlayer.setAudioAttributes(
                     AudioAttributes.Builder()
                         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                        .setUsage(AudioAttributes.USAGE_ASSISTANT)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
                         .build()
                 )
                 Log.d(TAG, "🎵 DEEPGRAM_AUDIO_TEST: ✅ Audio attributes set successfully")
@@ -773,7 +773,7 @@ class DeepgramClient private constructor(private val context: Context) {
             try {
                 val audioAttrs = AudioAttributes.Builder()
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                    .setUsage(AudioAttributes.USAGE_ASSISTANT)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
                     .build()
                 
                 results["audio_attributes_supported"] = true
@@ -1392,7 +1392,7 @@ class DeepgramClient private constructor(private val context: Context) {
             mediaPlayer?.setAudioAttributes(
                 AudioAttributes.Builder()
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                    .setUsage(AudioAttributes.USAGE_ASSISTANT)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
                     .setLegacyStreamType(android.media.AudioManager.STREAM_MUSIC)
                     .build()
             )

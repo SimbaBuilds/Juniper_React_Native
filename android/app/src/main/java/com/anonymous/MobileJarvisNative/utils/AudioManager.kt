@@ -212,8 +212,15 @@ class AudioManager private constructor() {
             AndroidAudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
                 _audioFocusState.value = AudioFocusState.LOST_TRANSIENT
                 Log.i(TAG, "Transient focus loss for ${requestInfo.requestType}")
-                requestInfo.onFocusLost?.invoke()
-                processNextRequest()
+                
+                // For TTS, treat transient loss as ducking to avoid stopping speech
+                if (requestInfo.requestType == AudioRequestType.TTS) {
+                    Log.d(TAG, "🎵 TTS transient loss - treating as duck to preserve speech")
+                    requestInfo.onFocusDucked?.invoke()
+                } else {
+                    requestInfo.onFocusLost?.invoke()
+                    processNextRequest()
+                }
             }
             AndroidAudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
                 _audioFocusState.value = AudioFocusState.DUCKED
@@ -299,7 +306,7 @@ class AudioManager private constructor() {
      */
     private fun getAudioUsage(requestType: AudioRequestType): Int {
         return when (requestType) {
-            AudioRequestType.TTS, AudioRequestType.WAKE_WORD_RESPONSE -> AudioAttributes.USAGE_ASSISTANT
+            AudioRequestType.TTS, AudioRequestType.WAKE_WORD_RESPONSE -> AudioAttributes.USAGE_MEDIA
             AudioRequestType.SPEECH_RECOGNITION -> AudioAttributes.USAGE_VOICE_COMMUNICATION
             AudioRequestType.BACKGROUND_AUDIO -> AudioAttributes.USAGE_MEDIA
         }
@@ -321,7 +328,9 @@ class AudioManager private constructor() {
      */
     private fun getAudioFocusGain(requestType: AudioRequestType): Int {
         return when (requestType) {
-            AudioRequestType.SPEECH_RECOGNITION -> AndroidAudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
+            // Changed from AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK to AUDIOFOCUS_GAIN_TRANSIENT
+            // to prevent audio ducking state from affecting subsequent TTS volume
+            AudioRequestType.SPEECH_RECOGNITION -> AndroidAudioManager.AUDIOFOCUS_GAIN_TRANSIENT
             AudioRequestType.TTS, AudioRequestType.WAKE_WORD_RESPONSE -> AndroidAudioManager.AUDIOFOCUS_GAIN_TRANSIENT
             AudioRequestType.BACKGROUND_AUDIO -> AndroidAudioManager.AUDIOFOCUS_GAIN
         }

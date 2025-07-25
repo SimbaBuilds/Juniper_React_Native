@@ -67,6 +67,15 @@ class OpenWakeWordEngine(private val context: Context) {
             }
             return instance!!
         }
+        
+        /**
+         * Reset the singleton instance to force fresh initialization.
+         * This should be called when the app restarts or when wake word detection needs to be completely reset.
+         */
+        fun resetInstance() {
+            instance?.cleanup()
+            instance = null
+        }
     }
     
     fun initialize(): Boolean {
@@ -224,6 +233,17 @@ class OpenWakeWordEngine(private val context: Context) {
         if (!isInitialized) {
             Log.w(TAG, "🎙️ AUDIO_PROC: Engine not initialized - returning 0")
             return 0f
+        }
+        
+        // Defensive check: Validate engine state integrity
+        if (!isEngineStateValid()) {
+            Log.e(TAG, "🚨 AUDIO_PROC: Engine state corrupted, attempting automatic recovery...")
+            if (attemptStateRecovery()) {
+                Log.i(TAG, "✅ AUDIO_PROC: Engine state recovery successful, continuing processing")
+            } else {
+                Log.e(TAG, "❌ AUDIO_PROC: Engine state recovery failed, returning 0")
+                return 0f
+            }
         }
         
         if (audioData.size != CHUNK_SIZE) {
@@ -775,7 +795,10 @@ class OpenWakeWordEngine(private val context: Context) {
             embeddingBuffer.clear()
             isInitialized = false
             
-            Log.d(TAG, "OpenWakeWord engine cleaned up")
+            // Reset singleton instance to ensure fresh initialization on next use
+            instance = null
+            
+            Log.d(TAG, "OpenWakeWord engine cleaned up and singleton instance reset")
         } catch (e: Exception) {
             Log.e(TAG, "Error during cleanup: ${e.message}", e)
         }
@@ -783,5 +806,79 @@ class OpenWakeWordEngine(private val context: Context) {
     
     fun isReady(): Boolean {
         return isInitialized && wakeWordSession != null && melSession != null && embeddingSession != null
+    }
+    
+    /**
+     * Validate that the engine state is healthy and ready for processing
+     */
+    private fun isEngineStateValid(): Boolean {
+        return try {
+            // Check if all required components are initialized
+            if (!isInitialized || wakeWordSession == null || melSession == null || embeddingSession == null) {
+                Log.w(TAG, "🔍 STATE_CHECK: Engine components not properly initialized")
+                return false
+            }
+            
+            // Check if ONNX environment is still valid
+            if (ortEnvironment == null) {
+                Log.w(TAG, "🔍 STATE_CHECK: ONNX environment is null")
+                return false
+            }
+            
+            // Validate embedding buffer state
+            if (embeddingBuffer.any { it.isEmpty() }) {
+                Log.w(TAG, "🔍 STATE_CHECK: Found empty embeddings in buffer")
+                return false
+            }
+            
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "🔍 STATE_CHECK: Exception during state validation: ${e.message}", e)
+            false
+        }
+    }
+    
+    /**
+     * Attempt to recover from corrupted engine state
+     */
+    private fun attemptStateRecovery(): Boolean {
+        return try {
+            Log.i(TAG, "🔧 STATE_RECOVERY: Starting automatic state recovery...")
+            
+            // Clear potentially corrupted buffers
+            audioBuffer.clear()
+            embeddingBuffer.clear()
+            Log.i(TAG, "🔧 STATE_RECOVERY: Cleared audio and embedding buffers")
+            
+            // Validate ONNX sessions and reinitialize if needed
+            if (wakeWordSession == null || melSession == null || embeddingSession == null) {
+                Log.i(TAG, "🔧 STATE_RECOVERY: Detected null ONNX sessions, reinitializing...")
+                
+                // Reset and reinitialize
+                cleanup()
+                val recovered = initialize()
+                
+                if (recovered) {
+                    // Restore wake phrase if it was set
+                    val restoredPhrase = getCurrentWakePhrase()
+                    if (restoredPhrase != "Hey Jarvis") {
+                        setWakePhrase(restoredPhrase)
+                    }
+                    Log.i(TAG, "🔧 STATE_RECOVERY: ✅ Full engine recovery successful")
+                } else {
+                    Log.e(TAG, "🔧 STATE_RECOVERY: ❌ Full engine recovery failed")
+                }
+                
+                return recovered
+            }
+            
+            // If sessions are valid but state seems corrupted, just clear buffers
+            Log.i(TAG, "🔧 STATE_RECOVERY: ✅ Buffer reset recovery successful")
+            true
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "🔧 STATE_RECOVERY: ❌ Recovery attempt failed: ${e.message}", e)
+            false
+        }
     }
 }
