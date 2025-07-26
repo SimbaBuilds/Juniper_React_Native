@@ -72,6 +72,15 @@ class TTSManager: NSObject {
     /**
      * Speak text using the configured TTS provider
      */
+    func speak(_ text: String, completion: @escaping () -> Void) {
+        speakText(text) { success in
+            completion()
+        }
+    }
+    
+    /**
+     * Speak text using the configured TTS provider with success callback
+     */
     func speakText(_ text: String, completion: @escaping (Bool) -> Void) {
         print("🎵 TTS_MANAGER: ========== SPEAKING TEXT ==========")
         print("🎵 TTS_MANAGER: Text: '\(text.prefix(100))\(text.count > 100 ? "..." : "")'")
@@ -114,6 +123,13 @@ class TTSManager: NSObject {
                 }
             }
         }
+    }
+    
+    /**
+     * Interrupt current speech (matching Android pattern)
+     */
+    func interruptSpeech() {
+        stopSpeaking()
     }
     
     /**
@@ -183,6 +199,21 @@ class TTSManager: NSObject {
      */
     func isTTSSpeaking() -> Bool {
         return isSpeaking
+    }
+    
+    /**
+     * Check if TTS is speaking (alias for compatibility)
+     */
+    func isSpeaking() -> Bool {
+        return isTTSSpeaking()
+    }
+    
+    /**
+     * Check if TTS is initialized
+     */
+    func isInitialized() -> Bool {
+        // Check if we have necessary configuration
+        return configManager.getDeepgramAPIKey() != nil || currentProvider == .native
     }
     
     // MARK: - Private Implementation

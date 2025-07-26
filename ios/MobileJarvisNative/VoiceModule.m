@@ -14,6 +14,9 @@ RCT_EXTERN_METHOD(startListening:(RCTPromiseResolveBlock)resolve
 RCT_EXTERN_METHOD(stopListening:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(startContinuousConversation:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(getCurrentState:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 

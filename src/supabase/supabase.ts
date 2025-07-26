@@ -855,8 +855,8 @@ export const DatabaseService = {
     }
   },
 
-  // System integration management (Twitter/X and Perplexity)
-  async updateSystemIntegration(userId: string, integration: 'twitter_x' | 'perplexity', enabled: boolean) {
+  // System integration management (generic for any system integration)
+  async updateSystemIntegration(userId: string, integration: string, enabled: boolean) {
     const currentProfile = await this.getUserProfile(userId);
     const enabledIntegrations = currentProfile?.enabled_integrations || {
       twitter_x: true,
@@ -881,7 +881,7 @@ export const DatabaseService = {
     };
   },
 
-  async isSystemIntegrationEnabled(userId: string, integration: 'twitter_x' | 'perplexity'): Promise<boolean> {
+  async isSystemIntegrationEnabled(userId: string, integration: string): Promise<boolean> {
     const systemIntegrations = await this.getSystemIntegrations(userId);
     return systemIntegrations[integration] ?? true; // Default to true if not set
   },

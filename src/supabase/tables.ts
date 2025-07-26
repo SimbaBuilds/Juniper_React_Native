@@ -212,6 +212,7 @@ export type UserProfile = {
     tag_3_id?: string; // Foreign key to Tag.id
     tag_4_id?: string; // Foreign key to Tag.id
     tag_5_id?: string; // Foreign key to Tag.id
+    public: boolean;
     // Interaction tracking
     interactions_day: number;
     interactions_week: number;
@@ -222,7 +223,7 @@ export type UserProfile = {
     'id', 'created_at', 'service_name', 'num_users', 'config_form_id',
     'refresh_script', 'tools', 'integration_method',
     'description', 'type', 'tag_1_id', 'tag_2_id', 'tag_3_id', 'tag_4_id', 'tag_5_id',
-    'interactions_day', 'interactions_week', 'interactions_month'
+    'interactions_day', 'interactions_week', 'interactions_month', 'public'
   ] as const;
   export type ServiceField = (typeof serviceFields)[number];
 

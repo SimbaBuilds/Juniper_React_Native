@@ -3,7 +3,7 @@ import Speech
 import AVFoundation
 
 // MARK: - STT Provider Types
-enum STTProvider: String, CaseIterable {
+enum STTProviderType: String, CaseIterable {
     case native = "ios_native"
     case deepgram = "deepgram"
     case whisper = "whisper"
@@ -33,9 +33,10 @@ class VoiceManager: NSObject {
     private var audioEngine = AVAudioEngine()
     
     // MARK: - STT Provider Management
-    private var currentSTTProvider: STTProvider = .native
+    private var currentSTTProvider: STTProviderType = .native
     private let deepgramAPI = DeepgramAPI.shared
     private let whisperAPI = WhisperAPI.shared
+    private var deepgramSTTProvider: DeepgramSTTProvider?
     
     // MARK: - TTS Integration
     private let ttsManager = TTSManager.shared
@@ -128,7 +129,7 @@ class VoiceManager: NSObject {
     // MARK: - STT Provider Loading
     private func loadSTTProvider() {
         let defaultProvider = config.getDefaultSTTProvider()
-        currentSTTProvider = STTProvider(rawValue: defaultProvider) ?? .native
+        currentSTTProvider = STTProviderType(rawValue: defaultProvider) ?? .native
         print("🎙️ VoiceManager: Loaded STT provider: \(currentSTTProvider.displayName)")
     }
     
@@ -303,17 +304,41 @@ class VoiceManager: NSObject {
     
     // MARK: - Deepgram STT Setup
     private func setupDeepgramSTT() {
-        // For now, fallback to native STT since Deepgram STT implementation in DeepgramAPI.swift
-        // is primarily structured for TTS. The STT would require WebSocket streaming implementation.
-        print("⚠️ VoiceManager: Deepgram STT not fully implemented, falling back to Native STT")
-        setupNativeSTT()
+        print("🎙️ VoiceManager: Setting up Deepgram WebSocket STT...")
         
-        // TODO: Implement Deepgram WebSocket streaming STT
-        // This would require:
-        // 1. WebSocket connection to Deepgram streaming endpoint
-        // 2. Real-time audio streaming
-        // 3. Parsing streaming JSON responses
-        // 4. Handling connection errors and reconnection
+        // Initialize Deepgram STT provider if not already done
+        if deepgramSTTProvider == nil {
+            deepgramSTTProvider = DeepgramSTTProvider()
+            deepgramSTTProvider?.delegate = self
+        }
+        
+        // Validate configuration
+        guard let provider = deepgramSTTProvider else {
+            print("❌ VoiceManager: Failed to initialize Deepgram STT provider")
+            fallbackToNativeSTT()
+            return
+        }
+        
+        let validation = provider.validateConfiguration()
+        if !validation.isValid {
+            print("❌ VoiceManager: Deepgram STT configuration invalid: \(validation.issues.joined(separator: ", "))")
+            fallbackToNativeSTT()
+            return
+        }
+        
+        // Start listening with Deepgram
+        provider.startListening()
+        setState(.listening)
+        isListening = true
+        startTimers()
+        
+        print("✅ VoiceManager: Deepgram WebSocket STT started, listening for speech")
+    }
+    
+    private func fallbackToNativeSTT() {
+        print("⚠️ VoiceManager: Falling back to Native STT")
+        currentSTTProvider = .native
+        setupNativeSTT()
     }
     
     // MARK: - Whisper STT Setup  
@@ -669,6 +694,23 @@ class VoiceManager: NSObject {
         isListening = false
         stopAllTimers()
         
+        // Stop based on current provider
+        switch currentSTTProvider {
+        case .native:
+            stopNativeSTT()
+        case .deepgram:
+            stopDeepgramSTT()
+        case .whisper:
+            stopWhisperSTT()
+        }
+        
+        // Release audio focus when stopping listening
+        audioManager.releaseAudioFocus()
+        
+        setState(.idle)
+    }
+    
+    private func stopNativeSTT() {
         // Stop audio engine
         if audioEngine.isRunning {
             audioEngine.stop()
@@ -682,11 +724,15 @@ class VoiceManager: NSObject {
         // Reset
         recognitionTask = nil
         recognitionRequest = nil
-        
-        // Release audio focus when stopping listening
-        audioManager.releaseAudioFocus()
-        
-        setState(.idle)
+    }
+    
+    private func stopDeepgramSTT() {
+        deepgramSTTProvider?.stopListening()
+    }
+    
+    private func stopWhisperSTT() {
+        // TODO: Implement Whisper STT stop logic
+        print("⚠️ VoiceManager: Whisper STT stop not implemented")
     }
     
     // MARK: - Error Handling
@@ -740,7 +786,7 @@ class VoiceManager: NSObject {
      * Set STT provider (matching Android pattern)
      */
     @objc func setSTTProvider(_ provider: String) {
-        guard let sttProvider = STTProvider(rawValue: provider) else {
+        guard let sttProvider = STTProviderType(rawValue: provider) else {
             print("❌ VoiceManager: Invalid STT provider: \(provider)")
             return
         }
@@ -770,14 +816,14 @@ class VoiceManager: NSObject {
      * Get available STT providers (matching Android pattern)
      */
     @objc func getAvailableSTTProviders() -> [String] {
-        return STTProvider.allCases.map { $0.rawValue }
+        return STTProviderType.allCases.map { $0.rawValue }
     }
     
     /**
      * Get available STT providers with display names
      */
     @objc func getAvailableSTTProvidersWithNames() -> [[String: String]] {
-        return STTProvider.allCases.map { provider in
+        return STTProviderType.allCases.map { provider in
             [
                 "value": provider.rawValue,
                 "displayName": provider.displayName
@@ -789,7 +835,7 @@ class VoiceManager: NSObject {
      * Test STT provider connectivity
      */
     @objc func testSTTProvider(_ provider: String, completion: @escaping (Bool, String) -> Void) {
-        guard let sttProvider = STTProvider(rawValue: provider) else {
+        guard let sttProvider = STTProviderType(rawValue: provider) else {
             completion(false, "Invalid STT provider: \(provider)")
             return
         }
@@ -832,6 +878,47 @@ extension VoiceManager: SFSpeechRecognizerDelegate {
         
         if !available {
             handleError(.speechRecognitionFailed, "Speech recognition became unavailable")
+        }
+    }
+}
+
+// MARK: - STTProviderDelegate
+extension VoiceManager: STTProviderDelegate {
+    
+    func sttProvider(_ provider: STTProvider, didRecognizeSpeech text: String) {
+        print("🎙️ VoiceManager: STT Provider recognized speech: '\(text)'")
+        
+        // Store final result and process it
+        finalResult = text
+        finishListening()
+    }
+    
+    func sttProvider(_ provider: STTProvider, didReceivePartialTranscript transcript: String) {
+        print("🎙️ VoiceManager: STT Provider partial transcript: '\(transcript)'")
+        
+        // Track speech activity
+        if !hasSpeechStarted && !transcript.isEmpty {
+            hasSpeechStarted = true
+            speechStartTime = Date()
+            print("🗣️ VoiceManager: Speech started")
+        }
+        
+        // Update partial result and emit event
+        partialResult = transcript
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.onPartialResult?(transcript)
+        }
+    }
+    
+    func sttProvider(_ provider: STTProvider, didEncounterError error: Error) {
+        print("❌ VoiceManager: STT Provider error: \(error)")
+        
+        // Handle error based on current retry count
+        if currentRetryCount < maxRetries {
+            scheduleRetry()
+        } else {
+            handleError(.speechRecognitionFailed, error.localizedDescription)
         }
     }
 } 
