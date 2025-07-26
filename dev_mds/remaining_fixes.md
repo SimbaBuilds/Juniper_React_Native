@@ -1,3 +1,0 @@
-- [ ]  resume WWD no longer auto triggering a false WWD state after retries exhausted, but not actually working and detecting wake word when I say it
-- [ ]  still 3 retries even though I've changed 3 --> 1 in every place I can find.  I only want one retry on no speech detected, then wake word detection should resume
-- [ ]  Volume is muted on initial system sounds and first TTS, then volume increases/goes back to normal

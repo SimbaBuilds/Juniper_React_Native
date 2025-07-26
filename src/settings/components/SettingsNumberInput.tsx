@@ -60,7 +60,7 @@ export const SettingsNumberInput: React.FC<SettingsNumberInputProps> = ({
     // Calculate remainder when divided by step
     
     const remainder = numericValue % step;
-    if (remainder > 1e-7) { // tolerance for floating-point precision
+    if (remainder < 1e-7) { // tolerance for floating-point precision
       setError(`Value must be in increments of ${step}`);
       setHasChanges(true);
       return;
