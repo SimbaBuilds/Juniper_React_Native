@@ -33,7 +33,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import kotlin.coroutines.coroutineContext
 
-class WakeWordService : Service() {
+class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeListener {
     
     private val TAG = "WakeWordService"
     private var openWakeWordEngine: OpenWakeWordEngine? = null
@@ -119,6 +119,7 @@ class WakeWordService : Service() {
         instance = this
         isServiceRunning = true
         prefs = getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
+        prefs.registerOnSharedPreferenceChangeListener(this)
         
         createNotificationChannel()
         
@@ -969,10 +970,52 @@ class WakeWordService : Service() {
             Log.e(TAG, "Error unregistering pause/resume receiver: ${e.message}", e)
         }
         
+        try {
+            prefs.unregisterOnSharedPreferenceChangeListener(this)
+            Log.d(TAG, "Unregistered preference change listener")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error unregistering preference listener: ${e.message}", e)
+        }
+        
         Log.i(TAG, "Service destroyed")
     }
     
     override fun onBind(intent: Intent?): IBinder? {
         return null
+    }
+    
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+        if (!isServiceRunning || !isRunning) {
+            return
+        }
+        
+        when (key) {
+            "wake_word_sensitivity" -> {
+                val oldThreshold = wakeWordThreshold
+                val newThreshold = getWakeWordThreshold()
+                
+                if (oldThreshold != newThreshold) {
+                    Log.i(TAG, "🎚️ THRESHOLD_CHANGE: ========== WAKE WORD THRESHOLD CHANGED ==========")
+                    Log.i(TAG, "🎚️ THRESHOLD_CHANGE: Service is running: $isServiceRunning")
+                    Log.i(TAG, "🎚️ THRESHOLD_CHANGE: Detection is active: $isRunning")
+                    Log.i(TAG, "🎚️ THRESHOLD_CHANGE: Previous threshold: $oldThreshold (${(oldThreshold * 100).toInt()}%)")
+                    Log.i(TAG, "🎚️ THRESHOLD_CHANGE: New threshold: $newThreshold (${(newThreshold * 100).toInt()}%)")
+                    Log.i(TAG, "🎚️ THRESHOLD_CHANGE: Change amount: ${newThreshold - oldThreshold}")
+                    
+                    wakeWordThreshold = newThreshold
+                    
+                    Log.i(TAG, "🎚️ THRESHOLD_CHANGE: ✅ Threshold updated successfully")
+                    Log.i(TAG, "🎚️ THRESHOLD_CHANGE: ⚠️ Note: Changes applied immediately without service restart")
+                    Log.i(TAG, "🎚️ THRESHOLD_CHANGE: ================================================")
+                }
+            }
+            "selected_wake_word" -> {
+                if (isServiceRunning && isRunning) {
+                    val newWakeWord = sharedPreferences?.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
+                    Log.i(TAG, "🎯 WAKE_WORD_CHANGE: Wake word changed to '$newWakeWord' while service is running")
+                    Log.i(TAG, "🎯 WAKE_WORD_CHANGE: ⚠️ Service restart required for wake word change to take effect")
+                }
+            }
+        }
     }
 }

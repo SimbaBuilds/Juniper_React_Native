@@ -1,140 +1,115 @@
-LOG  📱 Platform: android
- LOG  🔍 API Interceptor: User check result: User ID: 56a2c117-6486-4ca5-a57d-6c2e877e7083
- LOG  🔍 API Interceptor: Session check result: Token exists: true
- LOG  ✅ API Interceptor: Auth token added to request
- LOG  📱 Android: Token length: 970
- LOG  🔍 API Interceptor: Final headers: {"Accept": "application/json, text/plain, */*", "Authorization": "[REDACTED]", "Content-Type": "multipart/form-data"}
- LOG  Cancelling current request...
- LOG  🚫 CANCEL_WRAPPER: Cancelling request and updating UI status...
- LOG  🚫 CANCEL: Cancelling server request and clearing native state...
- LOG  🔴 SERVER_API: Cancelling current request... 1753451916938-mdk37nlhw
- LOG  📊 REQUEST_STATUS: Status changed to: thinking
- LOG  ✅ SERVER_API: Cancellation request inserted into database
- LOG  ✅ SERVER_API: Request cancelled successfully
- LOG  🚫 CANCEL: ✅ Request cancelled successfully
- ERROR  ❌ API Response Error: undefined /api/chat
- ERROR  📱 Android: API request failed with status: undefined
- LOG  🚫 CANCEL_WRAPPER: Request cancelled successfully, clearing status in 2 seconds
- LOG  Cancel result: true
- LOG  ✅ Request cancelled successfully
- ERROR  🔴 SERVER_API: ❌ API request error: [CanceledError: canceled]
- ERROR  🔴 SERVER_API: API request failed in queue
- LOG  🔴 SERVER_API: Request was cancelled
- ERROR  🟠 VOICE_CONTEXT: ❌ Error processing text request: [Error: Request was cancelled]
- LOG  🟠 VOICE_CONTEXT: Request was cancelled - not sending error to native
- LOG  📊 REQUEST_STATUS: Status changed to: thinking
- LOG  📊 REQUEST_STATUS: Status changed to: thinking
- LOG  📊 REQUEST_STATUS: Status changed to: cancelled
- LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
- LOG  📊 REQUEST_STATUS: Status changed to: cancelled
- LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
- LOG  📊 REQUEST_STATUS: Status changed to: cancelled
- LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
- LOG  📊 REQUEST_STATUS: Status changed to: cancelled
- LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
- LOG  🔄 VOICE_SERVICE: ========== NATIVE EVENT RECEIVED ==========
- LOG  🔄 VOICE_SERVICE: Event from native: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_SERVICE: Previous cached state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@e92fe18
- LOG  🔄 VOICE_SERVICE: Cache update needed: true
- LOG  🔄 VOICE_SERVICE: Cached state updated to: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_SERVICE: About to call React callback with event...
- LOG  🔄 VOICE_STATE_HOOK: ========== RN STATE UPDATE RECEIVED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw state from native: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: Normalized new state: RESPONDING
- LOG  🔄 VOICE_STATE_HOOK: Event receive time (performance.now): 1348048794.061734
- LOG  🔄 VOICE_STATE_HOOK: Event receive timestamp: 1753451946598
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@e92fe18
- LOG  🔄 VOICE_STATE_HOOK: Current normalized state: PROCESSING
- LOG  🔄 VOICE_STATE_HOOK: Normalized state change needed: true
- LOG  🔄 VOICE_STATE_HOOK: Raw state change needed: true
- LOG  🔄 VOICE_STATE_HOOK: About to call setVoiceState with: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@e92fe18
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: ✅ RN state updated in: 14.655693054199219 ms
- LOG  🔄 VOICE_STATE_HOOK: ✅ Total event processing time: 28.676000118255615 ms
- LOG  🔄 VOICE_STATE_HOOK: ===================================================
- LOG  🔄 VOICE_SERVICE: React callback completed in: 30.39146089553833 ms
- LOG  🔄 VOICE_SERVICE: ===============================================
- LOG  🔄 VOICE_SERVICE: ========== NATIVE EVENT RECEIVED ==========
- LOG  🔄 VOICE_SERVICE: Event from native: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_SERVICE: Previous cached state: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_SERVICE: Cache update needed: false
- LOG  🔄 VOICE_SERVICE: Cached state updated to: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_SERVICE: About to call React callback with event...
- LOG  🔄 VOICE_STATE_HOOK: ========== RN STATE UPDATE RECEIVED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw state from native: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: Normalized new state: RESPONDING
- LOG  🔄 VOICE_STATE_HOOK: Event receive time (performance.now): 1348048825.986964
- LOG  🔄 VOICE_STATE_HOOK: Event receive timestamp: 1753451946630
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@e92fe18
- LOG  🔄 VOICE_STATE_HOOK: Current normalized state: PROCESSING
- LOG  🔄 VOICE_STATE_HOOK: Normalized state change needed: true
- LOG  🔄 VOICE_STATE_HOOK: Raw state change needed: true
- LOG  🔄 VOICE_STATE_HOOK: About to call setVoiceState with: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@e92fe18
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw voiceState from native: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: Normalized state value: RESPONDING
- LOG  🔄 VOICE_STATE_HOOK: State normalization needed: true
- LOG  🔄 VOICE_STATE_HOOK: Derived states - isListening: false isSpeaking: true isError: false
- LOG  🔄 VOICE_STATE_HOOK: ========================================================
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: ✅ RN state updated in: 67.5377688407898 ms
- LOG  🔄 VOICE_STATE_HOOK: ✅ Total event processing time: 68.98546195030212 ms
- LOG  🔄 VOICE_STATE_HOOK: ===================================================
- LOG  🔄 VOICE_SERVICE: React callback completed in: 69.60992288589478 ms
- LOG  🔄 VOICE_SERVICE: ===============================================
- LOG  🔄 VOICE_SERVICE: ========== NATIVE EVENT RECEIVED ==========
- LOG  🔄 VOICE_SERVICE: Event from native: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_SERVICE: Previous cached state: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_SERVICE: Cache update needed: false
- LOG  🔄 VOICE_SERVICE: Cached state updated to: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_SERVICE: About to call React callback with event...
- LOG  🔄 VOICE_STATE_HOOK: ========== RN STATE UPDATE RECEIVED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw state from native: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: Normalized new state: RESPONDING
- LOG  🔄 VOICE_STATE_HOOK: Event receive time (performance.now): 1348048897.539811
- LOG  🔄 VOICE_STATE_HOOK: Event receive timestamp: 1753451946702
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: Current normalized state: RESPONDING
- LOG  🔄 VOICE_STATE_HOOK: Normalized state change needed: false
- LOG  🔄 VOICE_STATE_HOOK: Raw state change needed: false
- LOG  🔄 VOICE_STATE_HOOK: About to call setVoiceState with: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw voiceState from native: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: Normalized state value: RESPONDING
- LOG  🔄 VOICE_STATE_HOOK: State normalization needed: true
- LOG  🔄 VOICE_STATE_HOOK: Derived states - isListening: false isSpeaking: true isError: false
- LOG  🔄 VOICE_STATE_HOOK: ========================================================
- LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
- LOG  🔄 VOICE_CONTEXT: Context voiceState: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_CONTEXT: Context isListening: false
- LOG  🔄 VOICE_CONTEXT: Context isSpeaking: true
- LOG  🔄 VOICE_CONTEXT: Context isError: false
- LOG  🔄 VOICE_CONTEXT: ====================================================
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: ✅ RN state updated in: 4.414845943450928 ms
- LOG  🔄 VOICE_STATE_HOOK: ✅ Total event processing time: 5.209923028945923 ms
- LOG  🔄 VOICE_STATE_HOOK: ===================================================
- LOG  🔄 VOICE_SERVICE: React callback completed in: 5.7156150341033936 ms
- LOG  🔄 VOICE_SERVICE: ===============================================
- LOG  🔄 VOICE_SERVICE: ========== NATIVE EVENT RECEIVED ==========
- LOG  🔄 VOICE_SERVICE: Event from native: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_SERVICE: Previous cached state: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_SERVICE: Cache update needed: false
- LOG  🔄 VOICE_SERVICE: Cached state updated to: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_SERVICE: About to call React callback with event...
- LOG  🔄 VOICE_STATE_HOOK: ========== RN STATE UPDATE RECEIVED ==========
- LOG  🔄 VOICE_STATE_HOOK: Raw state from native: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: Normalized new state: RESPONDING
- LOG  🔄 VOICE_STATE_HOOK: Event receive time (performance.now): 1348048903.87458
- LOG  🔄 VOICE_STATE_HOOK: Event receive timestamp: 1753451946708
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: RESPONDING(message=I'm sorry, there was a timeout processing your request. Please try again.)
- LOG  🔄 VOICE_STATE_HOOK: Current normalized state: RESPONDING
- LOG  🔄 VOICE_STATE_HOOK: Normalized state change needed: false
- LOG  🔄 VOICE_STATE_HOOK: Raw state change needed: false
- LOG  🔄 VOICE_STATE_HOOK: About to call setVoiceS
+ LOG  🔽 DROPDOWN: Value selected: Aloe
+ LOG  🔽 DROPDOWN: Current value: Jarvis
+ LOG  🔽 DROPDOWN: Calling onValueChange...
+ LOG  🎯 WAKEWORD_SELECTION: Wake word changed in settings screen
+ LOG  🎯 WAKEWORD_SELECTION: Previous wake word: Jarvis
+ LOG  🎯 WAKEWORD_SELECTION: New wake word: Aloe
+ LOG  🎯 WAKEWORD_SELECTION: Available options: ["Hey Juni", "Jarvis", "Hey Jasper", "Aloe", "Hey Michael"]
+ LOG  🎚️ AUTO_SENSITIVITY: Current sensitivity 0.001 is already at or above minimum 0.001
+ LOG  🎯 WAKEWORD_SELECTION: Updates to apply: {"selectedWakeWord": "Aloe"}
+ LOG  🎯 WAKEWORD_SELECTION: Current settings before update: {"selectedWakeWord": "Jarvis", "wakeWordSensitivity": 0.001}
+ LOG  🖥️ SETTINGS_SCREEN: Received settings from VoiceContext: {"assistantName": "Assistant", "baseLanguageModel": "claude-sonnet-4-20250514", "deepgramEnabled": false, "generalInstructions": "", "selectedDeepgramVoice": "aura-2-mars-en", "selectedWakeWord": "Jarvis", "timezone": "America/Chicago", "wakeWord": "Jarvis", "wakeWordDetectionEnabled": false, "wakeWordSensitivity": 0.001, "xaiLiveSearchCountry": "US", "xaiLiveSearchEnabled": true, "xaiLiveSearchSafeSearch": true, "xaiLiveSearchSources": [], "xaiLiveSearchXHandles": []}
+ LOG  🖥️ SETTINGS_SCREEN: Received settings from VoiceContext: {"assistantName": "Assistant", "baseLanguageModel": "claude-sonnet-4-20250514", "deepgramEnabled": false, "generalInstructions": "", "selectedDeepgramVoice": "aura-2-mars-en", "selectedWakeWord": "Aloe", "timezone": "America/Chicago", "wakeWord": "Jarvis", "wakeWordDetectionEnabled": false, "wakeWordSensitivity": 0.001, "xaiLiveSearchCountry": "US", "xaiLiveSearchEnabled": true, "xaiLiveSearchSafeSearch": true, "xaiLiveSearchSources": [], "xaiLiveSearchXHandles": []}
+ LOG  🧹 Cleaning up voice event listeners
+ LOG  🖥️ SETTINGS_SCREEN: Settings updated in component: {"selectedWakeWord": "Aloe", "wakeWordSensitivity": 0.001}
+ LOG  ✅ Integration completion handler registered
+ LOG  🎤 Setting up voice event listeners
+ LOG  ✅ VOICE_CONTEXT: Native voice settings update confirmed: {"deepgramEnabled": false, "message": "Native voice settings updated and configuration reloaded", "selectedVoice": "aura-2-mars-en", "timestamp": 1753693253803}
+ LOG  🎵 RELOAD_CONFIG: ✅ Native configuration reloaded successfully
+ LOG  🎵 VOICE_SETTINGS: ========== VOICE SETTINGS UPDATE COMPLETED ==========
+ LOG  Calling getStatus() on WakeWordModule
+ LOG  getStatus result: {"enabled": false}
+ LOG  ✅ SETTINGS: Voice settings saved to user_profiles table
+ LOG  🖥️ SETTINGS_SCREEN: Received settings from VoiceContext: {"assistantName": "Assistant", "baseLanguageModel": "claude-sonnet-4-20250514", "deepgramEnabled": false, "generalInstructions": "", "selectedDeepgramVoice": "aura-2-mars-en", "selectedWakeWord": "Aloe", "timezone": "America/Chicago", "wakeWord": "Jarvis", "wakeWordDetectionEnabled": false, "wakeWordSensitivity": 0.001, "xaiLiveSearchCountry": "US", "xaiLiveSearchEnabled": true, "xaiLiveSearchSafeSearch": true, "xaiLiveSearchSources": [], "xaiLiveSearchXHandles": []}
+ LOG  🎯 WAKEWORD_SELECTION: ✅ Successfully synced wake word to native module
+ LOG  Calling getStatus() on WakeWordModule
+ LOG  getStatus result: {"enabled": false}
+ LOG  🎯 WAKEWORD_SELECTION: ✅ Wake word setting update completed
+ LOG  🔽 DROPDOWN: Value selected: Jarvis
+ LOG  🔽 DROPDOWN: Current value: Aloe
+ LOG  🔽 DROPDOWN: Calling onValueChange...
+ LOG  🎯 WAKEWORD_SELECTION: Wake word changed in settings screen
+ LOG  🎯 WAKEWORD_SELECTION: Previous wake word: Aloe
+ LOG  🎯 WAKEWORD_SELECTION: New wake word: Jarvis
+ LOG  🎯 WAKEWORD_SELECTION: Available options: ["Hey Juni", "Jarvis", "Hey Jasper", "Aloe", "Hey Michael"]
+ LOG  🎚️ AUTO_SENSITIVITY: Current sensitivity 0.001 is LOWER than minimum 0.7
+ LOG  🎚️ AUTO_SENSITIVITY: Auto-updating sensitivity to minimum required value
+ LOG  🎯 WAKEWORD_SELECTION: Updates to apply: {"selectedWakeWord": "Jarvis", "wakeWordSensitivity": 0.7}
+ LOG  🎯 WAKEWORD_SELECTION: Current settings before update: {"selectedWakeWord": "Aloe", "wakeWordSensitivity": 0.001}
+ LOG  🖥️ SETTINGS_SCREEN: Received settings from VoiceContext: {"assistantName": "Assistant", "baseLanguageModel": "claude-sonnet-4-20250514", "deepgramEnabled": false, "generalInstructions": "", "selectedDeepgramVoice": "aura-2-mars-en", "selectedWakeWord": "Aloe", "timezone": "America/Chicago", "wakeWord": "Jarvis", "wakeWordDetectionEnabled": false, "wakeWordSensitivity": 0.001, "xaiLiveSearchCountry": "US", "xaiLiveSearchEnabled": true, "xaiLiveSearchSafeSearch": true, "xaiLiveSearchSources": [], "xaiLiveSearchXHandles": []}
+ LOG  🖥️ SETTINGS_SCREEN: Received settings from VoiceContext: {"assistantName": "Assistant", "baseLanguageModel": "claude-sonnet-4-20250514", "deepgramEnabled": false, "generalInstructions": "", "selectedDeepgramVoice": "aura-2-mars-en", "selectedWakeWord": "Jarvis", "timezone": "America/Chicago", "wakeWord": "Jarvis", "wakeWordDetectionEnabled": false, "wakeWordSensitivity": 0.7, "xaiLiveSearchCountry": "US", "xaiLiveSearchEnabled": true, "xaiLiveSearchSafeSearch": true, "xaiLiveSearchSources": [], "xaiLiveSearchXHandles": []}
+ LOG  🧹 Cleaning up voice event listeners
+ LOG  🖥️ SETTINGS_SCREEN: Settings updated in component: {"selectedWakeWord": "Jarvis", "wakeWordSensitivity": 0.7}
+ LOG  ✅ Integration completion handler registered
+ LOG  🎤 Setting up voice event listeners
+ LOG  ✅ VOICE_CONTEXT: Native voice settings update confirmed: {"deepgramEnabled": false, "message": "Native voice settings updated and configuration reloaded", "selectedVoice": "aura-2-mars-en", "timestamp": 1753693261556}
+ LOG  🎵 RELOAD_CONFIG: ✅ Native configuration reloaded successfully
+ LOG  🎵 VOICE_SETTINGS: ========== VOICE SETTINGS UPDATE COMPLETED ==========
+ LOG  Calling getStatus() on WakeWordModule
+ LOG  getStatus result: {"enabled": false}
+ LOG  ✅ SETTINGS: Voice settings saved to user_profiles table
+ LOG  🖥️ SETTINGS_SCREEN: Received settings from VoiceContext: {"assistantName": "Assistant", "baseLanguageModel": "claude-sonnet-4-20250514", "deepgramEnabled": false, "generalInstructions": "", "selectedDeepgramVoice": "aura-2-mars-en", "selectedWakeWord": "Jarvis", "timezone": "America/Chicago", "wakeWord": "Jarvis", "wakeWordDetectionEnabled": false, "wakeWordSensitivity": 0.7, "xaiLiveSearchCountry": "US", "xaiLiveSearchEnabled": true, "xaiLiveSearchSafeSearch": true, "xaiLiveSearchSources": [], "xaiLiveSearchXHandles": []}
+ LOG  🎯 WAKEWORD_SELECTION: ✅ Successfully synced wake word to native module
+ LOG  🎚️ AUTO_SENSITIVITY: Syncing auto-updated sensitivity: 0.7
+ LOG  🎚️ AUTO_SENSITIVITY: ✅ Successfully synced auto-updated sensitivity to native module
+ LOG  Calling getStatus() on WakeWordModule
+ LOG  getStatus result: {"enabled": false}
+ LOG  🎯 WAKEWORD_SELECTION: ✅ Wake word setting update completed
+ LOG  🔄 WAKE_WORD_CONTEXT: Setting wake word enabled via context: true
+ LOG  🔄 WAKE_WORD_CONTEXT: ========== DATABASE UPDATE STARTED ==========
+ LOG  🔄 WAKE_WORD_CONTEXT: About to call updateVoiceSettings with: {"wakeWordDetectionEnabled": true}
+ LOG  🔄 WAKE_WORD_CONTEXT: Timestamp: 2025-07-28T09:01:16.247Z
+ LOG  🖥️ SETTINGS_SCREEN: Received settings from VoiceContext: {"assistantName": "Assistant", "baseLanguageModel": "claude-sonnet-4-20250514", "deepgramEnabled": false, "generalInstructions": "", "selectedDeepgramVoice": "aura-2-mars-en", "selectedWakeWord": "Jarvis", "timezone": "America/Chicago", "wakeWord": "Jarvis", "wakeWordDetectionEnabled": true, "wakeWordSensitivity": 0.7, "xaiLiveSearchCountry": "US", "xaiLiveSearchEnabled": true, "xaiLiveSearchSafeSearch": true, "xaiLiveSearchSources": [], "xaiLiveSearchXHandles": []}
+ LOG  🧹 Cleaning up voice event listeners
+ LOG  ✅ Integration completion handler registered
+ LOG  🔄 WAKE_WORD_CONTEXT: Syncing with database-backed voice settings
+ LOG  🔄 WAKE_WORD_CONTEXT: Database wake word enabled: true
+ LOG  🔄 WAKE_WORD_CONTEXT: Current local enabled: false
+ LOG  🔄 WAKE_WORD_CONTEXT: Database state differs from local, syncing...
+ LOG  🔄 WAKE_WORD_CONTEXT: Syncing to database state: true
+ LOG  🚀 WAKE_WORD_CONTEXT: Initializing wake word context...
+ LOG  🚀 WAKE_WORD_CONTEXT: Using database state as initial state: true
+ LOG  🔄 WAKE_WORD_CONTEXT: Syncing to database state: true
+ LOG  🎤 Setting up voice event listeners
+ LOG  ✅ VOICE_CONTEXT: Native voice settings update confirmed: {"deepgramEnabled": false, "message": "Native voice settings updated and configuration reloaded", "selectedVoice": "aura-2-mars-en", "timestamp": 1753693276639}
+ LOG  🎵 RELOAD_CONFIG: ✅ Native configuration reloaded successfully
+ LOG  🎵 VOICE_SETTINGS: ========== VOICE SETTINGS UPDATE COMPLETED ==========
+ LOG  ✅ WAKE_WORD_CONTEXT: Native layer synced with database state
+ LOG  Calling getStatus() on WakeWordModule
+ LOG  getStatus result: {"enabled": true}
+ LOG  ✅ WAKE_WORD_CONTEXT: Native layer synced with database state
+ LOG  Calling getStatus() on WakeWordModule
+ LOG  getStatus result: {"enabled": true}
+ LOG  ✅ WAKE_WORD_CONTEXT: ========== DATABASE UPDATE COMPLETED ==========
+ LOG  ✅ WAKE_WORD_CONTEXT: updateVoiceSettings completed successfully in 2434 ms
+ LOG  ✅ WAKE_WORD_CONTEXT: Database should now have wakeWordDetectionEnabled: true
+ LOG  ✅ WAKE_WORD_CONTEXT: Wake word state update initiated
+ LOG  🔽 DROPDOWN: Value selected: Aloe
+ LOG  🔽 DROPDOWN: Current value: Jarvis
+ LOG  🔽 DROPDOWN: Calling onValueChange...
+ LOG  🎯 WAKEWORD_SELECTION: Wake word changed in settings screen
+ LOG  🎯 WAKEWORD_SELECTION: Previous wake word: Jarvis
+ LOG  🎯 WAKEWORD_SELECTION: New wake word: Aloe
+ LOG  🎯 WAKEWORD_SELECTION: Available options: ["Hey Juni", "Jarvis", "Hey Jasper", "Aloe", "Hey Michael"]
+ LOG  🎚️ AUTO_SENSITIVITY: Current sensitivity 0.7 is already at or above minimum 0.001
+ LOG  🎯 WAKEWORD_SELECTION: Updates to apply: {"selectedWakeWord": "Aloe"}
+ LOG  🎯 WAKEWORD_SELECTION: Current settings before update: {"selectedWakeWord": "Jarvis", "wakeWordSensitivity": 0.7}
+ LOG  🖥️ SETTINGS_SCREEN: Received settings from VoiceContext: {"assistantName": "Assistant", "baseLanguageModel": "claude-sonnet-4-20250514", "deepgramEnabled": false, "generalInstructions": "", "selectedDeepgramVoice": "aura-2-mars-en", "selectedWakeWord": "Jarvis", "timezone": "America/Chicago", "wakeWord": "Jarvis", "wakeWordDetectionEnabled": true, "wakeWordSensitivity": 0.7, "xaiLiveSearchCountry": "US", "xaiLiveSearchEnabled": true, "xaiLiveSearchSafeSearch": true, "xaiLiveSearchSources": [], "xaiLiveSearchXHandles": []}
+ LOG  🖥️ SETTINGS_SCREEN: Received settings from VoiceContext: {"assistantName": "Assistant", "baseLanguageModel": "claude-sonnet-4-20250514", "deepgramEnabled": false, "generalInstructions": "", "selectedDeepgramVoice": "aura-2-mars-en", "selectedWakeWord": "Aloe", "timezone": "America/Chicago", "wakeWord": "Jarvis", "wakeWordDetectionEnabled": true, "wakeWordSensitivity": 0.7, "xaiLiveSearchCountry": "US", "xaiLiveSearchEnabled": true, "xaiLiveSearchSafeSearch": true, "xaiLiveSearchSources": [], "xaiLiveSearchXHandles": []}
+ LOG  🧹 Cleaning up voice event listeners
+ LOG  🖥️ SETTINGS_SCREEN: Settings updated in component: {"selectedWakeWord": "Aloe", "wakeWordSensitivity": 0.7}
+ LOG  ✅ Integration completion handler registered
+ LOG  🎤 Setting up voice event listeners
+ LOG  ✅ VOICE_CONTEXT: Native voice settings update confirmed: {"deepgramEnabled": false, "message": "Native voice settings updated and configuration reloaded", "selectedVoice": "aura-2-mars-en", "timestamp": 1753693285238}
+ LOG  🎵 RELOAD_CONFIG: ✅ Native configuration reloaded successfully
+ LOG  🎵 VOICE_SETTINGS: ========== VOICE SETTINGS UPDATE COMPLETED ==========
+ LOG  Calling getStatus() on WakeWordModule
+ LOG  getStatus result: {"enabled": true}
+ LOG  ✅ SETTINGS: Voice settings saved to user_profiles table
+ LOG  🖥️ SETTINGS_SCREEN: Received settings from VoiceContext: {"assistantName": "Assistant", "baseLanguageModel": "claude-sonnet-4-20250514", "deepgramEnabled": false, "generalInstructions": "", "selectedDeepgramVoice": "aura-2-mars-en", "selectedWakeWord": "Aloe", "timezone": "America/Chicago", "wakeWord": "Jarvis", "wakeWordDetectionEnabled": true, "wakeWordSensitivity": 0.7, "xaiLiveSearchCountry": "US", "xaiLiveSearchEnabled": true, "xaiLiveSearchSafeSearch": true, "xaiLiveSearchSources": [], "xaiLiveSearchXHandles": []}
+ LOG  🎯 WAKEWORD_SELECTION: ✅ Successfully synced wake word to native module
+ LOG  Calling getStatus() on WakeWordModule
+ LOG  getStatus result: {"enabled": true}
+ LOG  🔄 Restarting wake word detection to apply new wake word and sensitivity...
+ LOG  ✅ Wake word detection restarted with new wake word and sensitivity
+ LOG  🎯 WAKEWORD_SELECTION: ✅ Wake word setting update completed

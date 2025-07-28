@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -26,6 +26,13 @@ export const SettingsNumberInput: React.FC<SettingsNumberInputProps> = ({
   const [localValue, setLocalValue] = useState(value.toString());
   const [hasChanges, setHasChanges] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Update local state when the value prop changes externally
+  useEffect(() => {
+    setLocalValue(value.toString());
+    setHasChanges(false);
+    setError(null);
+  }, [value]);
 
   const validateAndUpdateValue = (text: string) => {
     setLocalValue(text);

@@ -196,6 +196,14 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   // Use ref to avoid dependency cycles
   const refreshSettingsRef = useRef(refreshSettings);
   refreshSettingsRef.current = refreshSettings;
+  
+  // Log when settings change
+  useEffect(() => {
+    console.log('🖥️ SETTINGS_SCREEN: Settings updated in component:', {
+      selectedWakeWord: settings.selectedWakeWord,
+      wakeWordSensitivity: settings.wakeWordSensitivity
+    });
+  }, [settings.selectedWakeWord, settings.wakeWordSensitivity]);
 
   const [savingToDatabase, setSavingToDatabase] = useState(false);
   const [loadingFromDatabase, setLoadingFromDatabase] = useState(false);
@@ -382,16 +390,16 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         
         <View style={styles.section}>
               <Text style={styles.explanationText}>
-                Settings below can be manually changed or just tell your assistant "enable Deepgram" or "go to sleep"
+                Change the settings below manually or just tell your assistant e.g. "enable Deepgram" {Platform.OS === 'android' ? 'or "or go to sleep" (disables wake word detection)' : ''}
               </Text>
           </View>
         
         {/* Wake Word Section - Android only */}
         {Platform.OS === 'android' && (
           <View style={styles.section}>
-            <Text style={styles.explanationText}>
+            {/* <Text style={styles.explanationText}>
                 The wakeword can be used even when the app is closed.
-            </Text>
+            </Text> */}
             <View style={{ marginTop: 12 }}>
               <WakeWordToggle />
               <WakeWordStatus />
@@ -471,56 +479,63 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                   console.log('🎯 WAKEWORD_SELECTION: New wake word:', selectedWakeWord);
                   console.log('🎯 WAKEWORD_SELECTION: Available options:', AVAILABLE_WAKE_WORDS.map(w => w.value));
                   
-                  // Check if we need to update sensitivity
-                  const minimumSensitivity = WAKE_WORD_SENSITIVITY_MAP[selectedWakeWord];
-                  const currentSensitivity = settings.wakeWordSensitivity || 0.3;
+                  // Always set sensitivity to the mapped value for the selected wake word
+                  const mappedSensitivity = WAKE_WORD_SENSITIVITY_MAP[selectedWakeWord];
                   let updates: any = { selectedWakeWord };
                   
-                  if (minimumSensitivity && currentSensitivity > minimumSensitivity) {
-                    console.log('🎚️ AUTO_SENSITIVITY: Current sensitivity', currentSensitivity, 'is higher than minimum', minimumSensitivity);
-                    console.log('🎚️ AUTO_SENSITIVITY: Auto-updating sensitivity to minimum required value');
-                    updates.wakeWordSensitivity = minimumSensitivity;
+                  if (mappedSensitivity !== undefined) {
+                    console.log('🎚️ AUTO_SENSITIVITY: Setting sensitivity to', mappedSensitivity, 'for wake word:', selectedWakeWord);
+                    updates.wakeWordSensitivity = mappedSensitivity;
                   }
                   
-                  // Update both the voice settings and the native wake word module
-                  await Promise.all([
-                    handleVoiceSettingsUpdate(updates),
-                    (async () => {
-                      try {
-                        const wakeWordService = WakeWordService.getInstance();
-                        const success = await wakeWordService.setSelectedWakeWord(selectedWakeWord);
-                        if (success) {
-                          console.log('🎯 WAKEWORD_SELECTION: ✅ Successfully synced wake word to native module');
-                          
-                          // If sensitivity was updated, sync that too
-                          if (updates.wakeWordSensitivity) {
-                            const sensitivitySuccess = await wakeWordService.setWakeWordSensitivity(updates.wakeWordSensitivity);
-                            if (sensitivitySuccess) {
-                              console.log('🎚️ AUTO_SENSITIVITY: ✅ Successfully synced auto-updated sensitivity to native module');
-                            }
-                          }
-                          
-                          // Restart wake word detection if currently running to apply changes
-                          const isRunning = await wakeWordService.isWakeWordDetectionRunning();
-                          if (isRunning) {
-                            console.log('🔄 Restarting wake word detection to apply new wake word...');
-                            await wakeWordService.stopWakeWordDetection();
-                            await new Promise(resolve => setTimeout(resolve, 500));
-                            await wakeWordService.startWakeWordDetection();
-                            console.log('✅ Wake word detection restarted with new wake word');
-                          }
+                  console.log('🎯 WAKEWORD_SELECTION: Updates to apply:', updates);
+                  console.log('🎯 WAKEWORD_SELECTION: Current settings before update:', {
+                    selectedWakeWord: settings.selectedWakeWord,
+                    wakeWordSensitivity: settings.wakeWordSensitivity
+                  });
+                  
+                  // First update the voice settings, then sync to native
+                  await handleVoiceSettingsUpdate(updates);
+                  
+                  // Now sync to native module
+                  try {
+                    const wakeWordService = WakeWordService.getInstance();
+                    
+                    // Always sync wake word first
+                    const success = await wakeWordService.setSelectedWakeWord(selectedWakeWord);
+                    if (success) {
+                      console.log('🎯 WAKEWORD_SELECTION: ✅ Successfully synced wake word to native module');
+                      
+                      // If sensitivity was updated, sync that too BEFORE restarting
+                      if (updates.wakeWordSensitivity !== undefined) {
+                        console.log('🎚️ AUTO_SENSITIVITY: Syncing auto-updated sensitivity:', updates.wakeWordSensitivity);
+                        const sensitivitySuccess = await wakeWordService.setWakeWordSensitivity(updates.wakeWordSensitivity);
+                        if (sensitivitySuccess) {
+                          console.log('🎚️ AUTO_SENSITIVITY: ✅ Successfully synced auto-updated sensitivity to native module');
                         } else {
-                          console.error('🎯 WAKEWORD_SELECTION: ❌ Failed to sync wake word to native module');
+                          console.error('🎚️ AUTO_SENSITIVITY: ❌ Failed to sync auto-updated sensitivity to native module');
                         }
-                      } catch (error) {
-                        console.error('🎯 WAKEWORD_SELECTION: ❌ Error syncing wake word to native module:', error);
                       }
-                    })()
-                  ]);
+                      
+                      // Restart wake word detection if currently running to apply changes
+                      const isRunning = await wakeWordService.isWakeWordDetectionRunning();
+                      if (isRunning) {
+                        console.log('🔄 Restarting wake word detection to apply new wake word and sensitivity...');
+                        await wakeWordService.stopWakeWordDetection();
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        await wakeWordService.startWakeWordDetection();
+                        console.log('✅ Wake word detection restarted with new wake word and sensitivity');
+                      }
+                    } else {
+                      console.error('🎯 WAKEWORD_SELECTION: ❌ Failed to sync wake word to native module');
+                    }
+                  } catch (error) {
+                    console.error('🎯 WAKEWORD_SELECTION: ❌ Error syncing wake word to native module:', error);
+                  }
                   
                   console.log('🎯 WAKEWORD_SELECTION: ✅ Wake word setting update completed');
                 }}
-                description="The word you say to activate your assistant. The number in parentheses is its minimum required sensitivity. If wake phrase is failing, try speaking a bit slower."
+                description="The word you say to activate your assistant (minimum required sensitivity). If wake phrase is failing, try speaking a bit slower."
               />
 
               <View style={styles.indentedSetting}>
