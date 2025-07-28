@@ -79,11 +79,13 @@ class VoiceManager: NSObject {
     private var lastSpeechDetectedTime: Date?
     private var hasSpeechStarted = false
     private var lastPartialResult: String?
+    private var partialResult: String?
     private var finalResult: String?
     
     // MARK: - Callbacks
     var onStateChanged: ((VoiceState) -> Void)?
     var onSpeechResult: ((String, Bool) -> Void)?  // (text, isFinal)
+    var onPartialResult: ((String) -> Void)?
     var onError: ((VoiceError, String) -> Void)?
     
     // MARK: - React Native Bridge Callback
@@ -777,7 +779,7 @@ class VoiceManager: NSObject {
     }
     
     func isCurrentlySpeaking() -> Bool {
-        return currentState == .speaking && ttsManager.isSpeaking()
+        return currentState == .speaking && ttsManager.isTTSSpeaking()
     }
     
     // MARK: - STT Provider Management
@@ -843,8 +845,7 @@ class VoiceManager: NSObject {
         print("🧪 VoiceManager: Testing STT provider: \(sttProvider.displayName)")
         
         Task {
-            do {
-                switch sttProvider {
+            switch sttProvider {
                 case .native:
                     // Test iOS native speech recognition availability
                     let isAvailable = SFSpeechRecognizer.authorizationStatus() == .authorized
@@ -853,19 +854,16 @@ class VoiceManager: NSObject {
                     
                 case .deepgram:
                     // Test Deepgram connectivity
-                    let isConnected = try await deepgramAPI.testConnectivity()
+                    let isConnected = await deepgramAPI.testConnectivity()
                     let message = isConnected ? "Deepgram STT is available" : "Deepgram STT connection failed"
                     completion(isConnected, message)
                     
                 case .whisper:
                     // Test Whisper connectivity
-                    let isConnected = try await whisperAPI.testConnectivity()
+                    let isConnected = await whisperAPI.testConnectivity()
                     let message = isConnected ? "Whisper STT is available" : "Whisper STT connection failed"
                     completion(isConnected, message)
                 }
-            } catch {
-                completion(false, "STT provider test failed: \(error.localizedDescription)")
-            }
         }
     }
 }

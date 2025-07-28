@@ -63,7 +63,7 @@ class DeepgramSTTProvider: NSObject, STTProvider {
         
         // Check API key
         let configManager = ConfigManager.shared
-        let apiKey = configManager.getDeepgramAPIKey()
+        let apiKey = configManager.getDeepgramApiKey()
         
         if apiKey == nil || apiKey!.isEmpty {
             issues.append("Deepgram API key not configured")
@@ -139,17 +139,13 @@ class DeepgramSTTProvider: NSObject, STTProvider {
                 if let converter = converter,
                    let outputBuffer = AVAudioPCMBuffer(pcmFormat: self.audioFormat!, frameCapacity: buffer.frameCapacity) {
                     
-                    do {
-                        let inputBlock: AVAudioConverterInputBlock = { inNumPackets, outStatus in
-                            outStatus.pointee = .haveData
-                            return buffer
-                        }
-                        
-                        try converter.convert(to: outputBuffer, error: nil, withInputFrom: inputBlock)
-                        self.processAudioBuffer(outputBuffer)
-                    } catch {
-                        print("🎤 DEEPGRAM_STT: ❌ Audio conversion error: \(error)")
+                    let inputBlock: AVAudioConverterInputBlock = { inNumPackets, outStatus in
+                        outStatus.pointee = .haveData
+                        return buffer
                     }
+                        
+                    converter.convert(to: outputBuffer, error: nil, withInputFrom: inputBlock)
+                    self.processAudioBuffer(outputBuffer)
                 } else {
                     // No conversion needed
                     self.processAudioBuffer(buffer)

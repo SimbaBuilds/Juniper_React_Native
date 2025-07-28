@@ -204,7 +204,7 @@ class TTSManager: NSObject {
     /**
      * Check if TTS is speaking (alias for compatibility)
      */
-    func isSpeaking() -> Bool {
+    func isCurrentlySpeaking() -> Bool {
         return isTTSSpeaking()
     }
     
@@ -213,7 +213,7 @@ class TTSManager: NSObject {
      */
     func isInitialized() -> Bool {
         // Check if we have necessary configuration
-        return configManager.getDeepgramAPIKey() != nil || currentProvider == .native
+        return configManager.getDeepgramApiKey() != nil || currentProvider == .native
     }
     
     // MARK: - Private Implementation

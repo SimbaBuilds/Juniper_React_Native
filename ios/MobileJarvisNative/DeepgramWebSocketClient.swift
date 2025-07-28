@@ -64,7 +64,7 @@ class DeepgramWebSocketClient: NSObject {
     }
     
     private func loadConfiguration() {
-        self.apiKey = configManager.getDeepgramAPIKey()
+        self.apiKey = configManager.getDeepgramApiKey()
         print("🎤 DEEPGRAM_WS: Configuration loaded - API key present: \(apiKey != nil)")
     }
     

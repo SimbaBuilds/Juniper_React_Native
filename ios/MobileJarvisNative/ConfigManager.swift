@@ -49,6 +49,29 @@ class ConfigManager: NSObject {
         return config["openai.api.key"]
     }
     
+    func getApiKeys() -> (picovoice: String?, openai: String?, deepgram: String?, elevenlabs: String?) {
+        return (
+            picovoice: config["picovoice.api.key"],
+            openai: getOpenAIApiKey(),
+            deepgram: getDeepgramApiKey(),
+            elevenlabs: config["elevenlabs.api.key"]
+        )
+    }
+    
+    // MARK: - Server API Configuration
+    func getServerApiConfig() -> (baseUrl: String, apiEndpoint: String) {
+        return (
+            baseUrl: config["server.api.base.url"] ?? "http://192.168.1.145:8000",
+            apiEndpoint: config["server.api.endpoint"] ?? "/api/chat"
+        )
+    }
+    
+    func updateServerApiConfig(baseUrl: String, apiEndpoint: String) -> Bool {
+        config["server.api.base.url"] = baseUrl
+        config["server.api.endpoint"] = apiEndpoint
+        return true
+    }
+    
     // MARK: - Speech Recognition Configuration
     func getSpeechTimeoutSeconds() -> Double {
         return Double(config["speech.timeout.seconds"] ?? "10") ?? 10.0
@@ -102,9 +125,23 @@ class ConfigManager: NSObject {
         return config["audio.session.category"] ?? "playAndRecord"
     }
     
+    // MARK: - Native Speech Configuration
+    func getNativeSpeechRate() -> Float {
+        return Float(config["native.speech.rate"] ?? "0.5") ?? 0.5
+    }
+    
+    func getNativeVoicePitch() -> Float {
+        return Float(config["native.voice.pitch"] ?? "1.0") ?? 1.0
+    }
+    
     // MARK: - Voice Feature Toggles
     func isDeepgramTTSEnabled() -> Bool {
         return config["deepgram.tts.enabled"]?.lowercased() == "true"
+    }
+    
+    func setDeepgramTTSEnabled(_ enabled: Bool) {
+        config["deepgram.tts.enabled"] = enabled ? "true" : "false"
+        print("🎵 ConfigManager: Deepgram TTS enabled set to: \(enabled)")
     }
     
     func isWhisperSTTEnabled() -> Bool {
@@ -135,6 +172,16 @@ class ConfigManager: NSObject {
         print("🎵 ConfigManager: TTS provider set to: \(provider)")
     }
     
+    // MARK: - Deepgram Voice Management
+    func getSelectedDeepgramVoice() -> String {
+        return config["deepgram.selected.voice"] ?? "aura-2-mars-en"
+    }
+    
+    func setSelectedDeepgramVoice(_ voice: String) {
+        config["deepgram.selected.voice"] = voice
+        print("🎵 ConfigManager: Deepgram voice set to: \(voice)")
+    }
+    
     // MARK: - Helper Methods
     func getAllConfig() -> [String: String] {
         return config
@@ -149,11 +196,11 @@ class ConfigManager: NSObject {
         var errors: [String] = []
         
         // Check API keys
-        if getDeepgramApiKey().isEmpty {
+        if getDeepgramApiKey()?.isEmpty ?? true {
             errors.append("Deepgram API key is missing")
         }
         
-        if getOpenAIApiKey().isEmpty {
+        if getOpenAIApiKey()?.isEmpty ?? true {
             errors.append("OpenAI API key is missing")
         }
         

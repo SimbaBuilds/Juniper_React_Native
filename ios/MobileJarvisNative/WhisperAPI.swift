@@ -94,7 +94,7 @@ class WhisperAPI: NSObject {
     }
     
     private func loadConfiguration() {
-        self.apiKey = configManager.getOpenAIAPIKey()
+        self.apiKey = configManager.getOpenAIApiKey()
         print("🎙️ WHISPER_API: Configuration loaded - API key present: \(apiKey != nil)")
     }
     
@@ -276,6 +276,15 @@ class WhisperAPI: NSObject {
         
         print("🎙️ WHISPER_API: Split audio into \(chunks.count) chunks")
         return chunks
+    }
+    
+    // MARK: - Initialization Status 
+    
+    /**  
+     * Check if Whisper API is properly initialized
+     */
+    func isInitialized() -> Bool {
+        return apiKey != nil && !apiKey!.isEmpty
     }
     
     // MARK: - Testing and Diagnostics

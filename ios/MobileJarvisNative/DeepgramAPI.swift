@@ -109,7 +109,7 @@ class DeepgramAPI: NSObject {
     }
     
     private func loadConfiguration() {
-        self.apiKey = configManager.getDeepgramAPIKey()
+        self.apiKey = configManager.getDeepgramApiKey()
         print("🎵 DEEPGRAM_API: Configuration loaded - API key present: \(apiKey != nil)")
     }
     
@@ -181,13 +181,8 @@ class DeepgramAPI: NSObject {
     }
     
     private func checkAudioSystem() -> Bool {
-        do {
-            let audioSession = AVAudioSession.sharedInstance()
-            return audioSession.isOtherAudioPlaying == false || audioSession.category == .playback
-        } catch {
-            print("🎵 DEEPGRAM_API: Error checking audio system: \(error)")
-            return false
-        }
+        let audioSession = AVAudioSession.sharedInstance()
+        return audioSession.isOtherAudioPlaying == false || audioSession.category == .playback
     }
     
     // MARK: - Network Diagnostics
@@ -220,7 +215,7 @@ class DeepgramAPI: NSObject {
             let host = url.host!
             
             // Simple DNS resolution test
-            let addresses = try await withCheckedThrowingContinuation { continuation in
+            let _ = try await withCheckedThrowingContinuation { continuation in
                 var hints = addrinfo()
                 hints.ai_family = AF_UNSPEC
                 hints.ai_socktype = SOCK_STREAM
@@ -321,7 +316,7 @@ class DeepgramAPI: NSObject {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         // Request body
-        let requestBody = [
+        let requestBody: [String: Any] = [
             "text": text,
             "model": selectedVoice,
             "encoding": "mp3",
@@ -362,7 +357,7 @@ class DeepgramAPI: NSObject {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         // Request body
-        let requestBody = [
+        let requestBody: [String: Any] = [
             "text": text,
             "model": selectedVoice,
             "encoding": "mp3",
@@ -462,6 +457,11 @@ class DeepgramAPI: NSObject {
         return DeepgramSTTResponse(transcript: transcript, confidence: confidence, isFinal: true)
     }
     
+    // MARK: - Initialization Status
+    func isInitialized() -> Bool {
+        return apiKey != nil && !apiKey!.isEmpty
+    }
+    
     // MARK: - Connectivity Testing
     func testConnectivity() async -> Bool {
         do {
@@ -489,13 +489,8 @@ class DeepgramAPI: NSObject {
     
     // MARK: - Audio Testing
     func testAudioPlayback() -> Bool {
-        do {
-            let audioSession = AVAudioSession.sharedInstance()
-            return audioSession.isOtherAudioPlaying == false
-        } catch {
-            print("🔊 DEEPGRAM_API: Audio test failed: \(error)")
-            return false
-        }
+        let audioSession = AVAudioSession.sharedInstance()
+        return audioSession.isOtherAudioPlaying == false
     }
     
     // MARK: - Cleanup

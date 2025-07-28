@@ -125,6 +125,11 @@ class WakeWordService {
    * For compatibility with older implementation
    */
   async isWakeWordEnabled(): Promise<boolean> {
+    // iOS doesn't support wake word detection
+    if (Platform.OS === 'ios') {
+      return false;
+    }
+
     try {
       console.log('Calling getStatus() on WakeWordModule');
       const response = await WakeWordModule.getStatus();
@@ -140,6 +145,11 @@ class WakeWordService {
    * For compatibility with older implementation
    */
   async setWakeWordEnabled(enabled: boolean): Promise<boolean> {
+    // iOS doesn't support wake word detection
+    if (Platform.OS === 'ios') {
+      console.log('🎤 WAKE_WORD_SERVICE: Wake word detection not supported on iOS');
+      return false;
+    }
 
     try {
       if (enabled) {

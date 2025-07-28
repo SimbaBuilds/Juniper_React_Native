@@ -3,6 +3,11 @@ import { DeviceEventEmitter } from 'react-native';
 
 const { VoiceModule } = NativeModules;
 
+// Check if VoiceModule is available on startup
+if (!VoiceModule) {
+    console.warn('VoiceModule not available, onVoiceStateChange not supported');
+}
+
 // Voice state enum that matches the native implementation
 export enum VoiceState {
     IDLE = 'IDLE',
@@ -82,6 +87,11 @@ export class VoiceService {
     }
 
     public async startListening(): Promise<boolean> {
+        if (!VoiceModule) {
+            console.warn('🎤 VoiceModule not available, cannot start listening');
+            return false;
+        }
+
         try {
             console.log('🎤 Starting voice recognition with Android-specific validation...');
             
@@ -130,6 +140,11 @@ export class VoiceService {
      * This simulates the Android wake word flow for iOS
      */
     public async startContinuousConversation(): Promise<boolean> {
+        if (!VoiceModule) {
+            console.warn('🎤 VoiceModule not available, cannot start continuous conversation');
+            return false;
+        }
+
         try {
             if (Platform.OS !== 'ios') {
                 console.warn('⚠️ startContinuousConversation is iOS-specific, using startListening instead');
@@ -185,6 +200,11 @@ export class VoiceService {
     }
 
     public async getVoiceState(): Promise<VoiceState> {
+        if (!VoiceModule) {
+            console.warn('VoiceModule not available, returning cached state');
+            return this.cachedVoiceState;
+        }
+
         try {
             const nativeState = await VoiceModule.getVoiceState();
             // Update cached state with fresh native state
@@ -486,8 +506,8 @@ export class VoiceService {
         
         try {
             if (Platform.OS !== 'android') {
-                console.warn('🎵 VOICE_SETTINGS: ⚠️ Voice settings update only supported on Android, current platform:', Platform.OS);
-                return false;
+                console.log('🎵 VOICE_SETTINGS: Voice settings update only supported on Android, current platform:', Platform.OS);
+                return true; // Return true to indicate graceful handling on iOS
             }
             
 
