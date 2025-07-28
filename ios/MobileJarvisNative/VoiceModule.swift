@@ -12,11 +12,18 @@ class VoiceModule: RCTEventEmitter {
     private var timeoutTimers: [String: Timer] = [:]
     
     override init() {
+        print("🔧 VoiceModule: ===============================================")
+        print("🔧 VoiceModule: 🚀 STARTING VoiceModule initialization...")
+        print("🔧 VoiceModule: Thread: \(Thread.current)")
         super.init()
-        print("🔧 VoiceModule: Initializing VoiceModule...")
+        print("🔧 VoiceModule: ✅ Super init completed")
         setupVoiceManagerCallbacks()
+        print("🔧 VoiceModule: ✅ Voice manager callbacks set up")
         setupApiCallback()
+        print("🔧 VoiceModule: ✅ API callbacks set up")
         print("🔧 VoiceModule: ✅ VoiceModule initialization completed successfully")
+        print("🔧 VoiceModule: Module should now be available in NativeModules")
+        print("🔧 VoiceModule: ===============================================")
     }
     
     // MARK: - React Native Event Emitter
@@ -466,12 +473,20 @@ class VoiceModule: RCTEventEmitter {
     
     // MARK: - Required for RCTEventEmitter
     @objc override static func requiresMainQueueSetup() -> Bool {
+        print("🔧 VoiceModule: ===============================================")
         print("🔧 VoiceModule: requiresMainQueueSetup() called - returning true")
+        print("🔧 VoiceModule: This method is called during module registration")
+        print("🔧 VoiceModule: Thread: \(Thread.current)")
+        print("🔧 VoiceModule: ===============================================")
         return true
     }
     
     @objc override static func moduleName() -> String! {
+        print("🔧 VoiceModule: ===============================================")
         print("🔧 VoiceModule: moduleName() called - returning 'VoiceModule'")
+        print("🔧 VoiceModule: This method provides the module name to React Native")
+        print("🔧 VoiceModule: Thread: \(Thread.current)")
+        print("🔧 VoiceModule: ===============================================")
         return "VoiceModule"
     }
 } 
