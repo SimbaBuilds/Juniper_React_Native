@@ -5,7 +5,7 @@ const { VoiceModule } = NativeModules;
 
 // Check if VoiceModule is available on startup
 if (!VoiceModule) {
-    console.warn('VoiceModule not available, onVoiceStateChanged not supported');
+    console.error('VoiceModule not found in NativeModules. Ensure native module is properly linked.');
 }
 
 // Voice state enum that matches the native implementation
@@ -88,7 +88,7 @@ export class VoiceService {
 
     public async startListening(): Promise<boolean> {
         if (!VoiceModule) {
-            console.warn('🎤 VoiceModule not available, cannot start listening');
+            console.error('🎤 VoiceModule not found in NativeModules. Cannot start listening.');
             return false;
         }
 
@@ -141,7 +141,7 @@ export class VoiceService {
      */
     public async startContinuousConversation(): Promise<boolean> {
         if (!VoiceModule) {
-            console.warn('🎤 VoiceModule not available, cannot start continuous conversation');
+            console.error('🎤 VoiceModule not found in NativeModules. Cannot start continuous conversation.');
             return false;
         }
 
@@ -201,7 +201,7 @@ export class VoiceService {
 
     public async getVoiceState(): Promise<VoiceState> {
         if (!VoiceModule) {
-            console.warn('VoiceModule not available, returning cached state');
+            console.warn('VoiceModule not found, returning cached state');
             return this.cachedVoiceState;
         }
 
@@ -274,7 +274,7 @@ export class VoiceService {
 
     public onVoiceStateChange(callback: (event: VoiceStateChangeEvent) => void): () => void {
         if (!this.eventEmitter) {
-            console.warn('VoiceModule not available, onVoiceStateChanged not supported');
+            console.error('VoiceModule eventEmitter not available, voice state changes not supported');
             return () => {};
         }
         const subscription = this.eventEmitter.addListener(EVENT_VOICE_STATE_CHANGE, (event: VoiceStateChangeEvent) => {

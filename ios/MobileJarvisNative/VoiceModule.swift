@@ -13,18 +13,21 @@ class VoiceModule: RCTEventEmitter {
     
     override init() {
         super.init()
+        print("🔧 VoiceModule: Initializing VoiceModule...")
         setupVoiceManagerCallbacks()
         setupApiCallback()
+        print("🔧 VoiceModule: ✅ VoiceModule initialization completed successfully")
     }
     
     // MARK: - React Native Event Emitter
     override func supportedEvents() -> [String]! {
         return [
             "onVoiceStateChanged",
-            "onSpeechResult",
+            "speechResult",
             "onVoiceError",
             "processTextFromNative",
-            "VoiceResponseUpdate"
+            "VoiceResponseUpdate",
+            "VoiceTranscriptUpdate"
         ]
     }
     
@@ -45,8 +48,15 @@ class VoiceModule: RCTEventEmitter {
         }
         
         voiceManager.onSpeechResult = { [weak self] text, isFinal in
-            self?.sendEvent(withName: "onSpeechResult", body: [
+            // Emit speechResult event for VoiceService.ts
+            self?.sendEvent(withName: "speechResult", body: [
                 "text": text,
+                "isFinal": isFinal
+            ])
+            
+            // Also emit VoiceTranscriptUpdate for VoiceContext.tsx
+            self?.sendEvent(withName: "VoiceTranscriptUpdate", body: [
+                "transcript": text,
                 "isFinal": isFinal
             ])
         }
@@ -456,10 +466,12 @@ class VoiceModule: RCTEventEmitter {
     
     // MARK: - Required for RCTEventEmitter
     @objc override static func requiresMainQueueSetup() -> Bool {
+        print("🔧 VoiceModule: requiresMainQueueSetup() called - returning true")
         return true
     }
     
     @objc override static func moduleName() -> String! {
+        print("🔧 VoiceModule: moduleName() called - returning 'VoiceModule'")
         return "VoiceModule"
     }
 } 
