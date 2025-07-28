@@ -46,6 +46,7 @@
     "@expo/config-plugins": "^10.0.2",
     "@react-native-community/cli": "^12.3.5",
     "@types/react": "~18.2.45",
+    "patch-package": "^8.0.0",
     "typescript": "^5.3.0"
   },
   "private": true

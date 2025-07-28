@@ -1,35 +1,34 @@
-07-28 02:24:05.526 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: Previous wake word: 'Hey Jasper'
-07-28 02:24:05.526 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: New wake word: 'Aloe'
-07-28 02:24:05.529 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: SharedPreferences save took 3ms
-07-28 02:24:05.529 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: Save result: true
-07-28 02:24:05.529 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ========== VERIFICATION ==========
-07-28 02:24:05.529 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: Verified saved wake word: 'Aloe'
-07-28 02:24:05.529 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ========== SUCCESS ==========
-07-28 02:24:05.529 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ✅ Wake word changed from 'Hey Jasper' to 'Aloe'
-07-28 02:24:05.529 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ✅ Wake word preference saved and verified successfully
-07-28 02:24:05.529 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ⚠️ Note: Service restart required for change to take effect
-07-28 02:24:05.529 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: =============================================
-07-28 02:24:05.650 22458 22604 D WakeWordModule: Current wake word state: enabled=false, serviceRunning=false
-07-28 02:24:05.958 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ========== SET SELECTED WAKE WORD ==========
-07-28 02:24:05.958 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: setSelectedWakeWord called from React Native
-07-28 02:24:05.958 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: Timestamp: 1753687445958
-07-28 02:24:05.958 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: Thread: mqt_native_modules
-07-28 02:24:05.958 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: Parameter received: 'Aloe' (type: String)
-07-28 02:24:05.958 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ========== VALIDATING WAKE WORD ==========
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: Available wake words: [Hey Jarvis, Hey Juni, Hey Juniper, Jarvis, Hey Jasmine, Hey Jade, Hey Jay, Hey Jasper, Hey Jerry, Jasmine, Hey, Alex, Aloe, Hey Mycroft, Hey Michael, Hey Mulberry, Hey Myrillis, Hey Marigold]
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: Checking if 'Aloe' is valid...
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ✅ Wake word 'Aloe' is valid
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ========== SAVING TO SHARED PREFERENCES ==========
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: Previous wake word: 'Aloe'
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: New wake word: 'Aloe'
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ℹ️ Wake word unchanged, but saving anyway
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: SharedPreferences save took 0ms
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: Save result: true
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ========== VERIFICATION ==========
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: Verified saved wake word: 'Aloe'
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ========== SUCCESS ==========
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ✅ Wake word changed from 'Aloe' to 'Aloe'
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ✅ Wake word preference saved and verified successfully
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: ⚠️ Note: Service restart required for change to take effect
-07-28 02:24:05.959 22458 22604 I WakeWordModule: 🎯 WAKEWORD_SELECTION: =============================================
-07-28 02:24:05.961 22458 22604 D WakeWordModule: Current wake word state: enabled=false, serviceRunning=false
+[libapp_launch_measurement.dylib] Failed to send CA Event for app launch measurements for ca_event_type: 0 event_name: com.apple.app_launch_measurement.FirstFramePresentationMetric
+[libapp_launch_measurement.dylib] Failed to send CA Event for app launch measurements for ca_event_type: 1 event_name: com.apple.app_launch_measurement.ExtendedLaunchMetrics
+ LOG  ServerApiService initialized with config: {"apiEndpoint": "/api/chat", "baseUrl": "http://192.168.1.145:8000"}
+ ERROR  Error getting server API config: [TypeError: Cannot read property 'getServerApiConfig' of null]
+ LOG  Available native modules: []
+ LOG  WakeWordModule available: No
+ LOG  ServerApiService config updated: {"apiEndpoint": "/api/chat", "baseUrl": "http://192.168.1.145:8000"}
+ LOG  Loaded server config from native settings: {"apiEndpoint": "/api/chat", "baseUrl": "http://192.168.1.145:8000"}
+ LOG  Calling getStatus() on WakeWordModule
+ LOG  Setting up deep link handlers...
+ LOG  Adding deep link event listener...
+ LOG  Checking for initial URL (cold start)...
+ LOG  getStatus result: {"enabled": false}
+ LOG  Wake word detection available: false
+ LOG  No initial URL found
+ ERROR  Invariant Violation: `new NativeEventEmitter()` requires a non-null argument.
+
+This error is located at:
+    in VoiceProvider (at App.tsx:455)
+    in AuthProvider (at App.tsx:454)
+    in EnsureSingleNavigator (at BaseNavigationContainer.tsx:433)
+    in BaseNavigationContainer (at NavigationContainer.tsx:132)
+    in ThemeProvider (at NavigationContainer.tsx:131)
+    in NavigationContainerInner (at App.tsx:453)
+    in App (at withDevTools.ios.js:29)
+    in withDevTools(App) (at renderApplication.js:57)
+    in RCTView (at View.js:116)
+    in View (at AppContainer.js:127)
+    in RCTView (at View.js:116)
+    in View (at AppContainer.js:155)
+    in AppContainer (at renderApplication.js:50)
+    in main(RootComponent) (at renderApplication.js:67), js engine: hermes
+ ERROR  Error initializing app: [Invariant Violation: `new NativeEventEmitter()` requires a non-null argument.]
+ LOG  Removing deep link event listener...
