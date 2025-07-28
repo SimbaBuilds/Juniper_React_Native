@@ -33,13 +33,13 @@ const EVENT_VOICE_STATE_CHANGE = 'onVoiceStateChange';
 
 export class VoiceService {
     private static instance: VoiceService;
-    private eventEmitter: NativeEventEmitter;
+    private eventEmitter: NativeEventEmitter | null;
     private listeners: EmitterSubscription[] = [];
     private isInitialized: boolean = false;
     private cachedVoiceState: VoiceState = VoiceState.IDLE;
 
     private constructor() {
-        this.eventEmitter = new NativeEventEmitter(VoiceModule);
+        this.eventEmitter = VoiceModule ? new NativeEventEmitter(VoiceModule) : null;
         this.listeners = [];
     }
 
@@ -253,6 +253,10 @@ export class VoiceService {
     }
 
     public onVoiceStateChange(callback: (event: VoiceStateChangeEvent) => void): () => void {
+        if (!this.eventEmitter) {
+            console.warn('VoiceModule not available, onVoiceStateChange not supported');
+            return () => {};
+        }
         const subscription = this.eventEmitter.addListener(EVENT_VOICE_STATE_CHANGE, (event: VoiceStateChangeEvent) => {
             
             // Update cached state immediately when we receive state changes
@@ -271,6 +275,10 @@ export class VoiceService {
     }
 
     public onSpeechResult(callback: (event: SpeechResultEvent) => void): () => void {
+        if (!this.eventEmitter) {
+            console.warn('VoiceModule not available, onSpeechResult not supported');
+            return () => {};
+        }
         const subscription = this.eventEmitter.addListener(EVENT_SPEECH_RESULT, callback);
         this.listeners.push(subscription);
         
@@ -281,6 +289,10 @@ export class VoiceService {
     }
 
     public onAssistantResponse(callback: (event: AssistantResponseEvent) => void): () => void {
+        if (!this.eventEmitter) {
+            console.warn('VoiceModule not available, onAssistantResponse not supported');
+            return () => {};
+        }
         const subscription = this.eventEmitter.addListener(EVENT_ASSISTANT_RESPONSE, callback);
         this.listeners.push(subscription);
         

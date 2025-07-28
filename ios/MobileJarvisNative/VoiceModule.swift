@@ -557,4 +557,8 @@ class VoiceModule: RCTEventEmitter {
     @objc override static func requiresMainQueueSetup() -> Bool {
         return true
     }
+    
+    @objc override static func moduleName() -> String! {
+        return "VoiceModule"
+    }
 } 

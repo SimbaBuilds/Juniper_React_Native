@@ -496,12 +496,13 @@ export default function App() {
               </Stack.Navigator>
             </WakeWordProvider>
           ) : (
-            <Stack.Navigator
-              screenOptions={{
-                headerShown: false,
-              }}
-              initialRouteName={session ? "MainTabs" : "Login"}
-            >
+            <WakeWordProvider>
+              <Stack.Navigator
+                screenOptions={{
+                  headerShown: false,
+                }}
+                initialRouteName={session ? "MainTabs" : "Login"}
+              >
               {session ? (
                 <>
                   <Stack.Screen 
@@ -535,6 +536,7 @@ export default function App() {
                 </>
               )}
             </Stack.Navigator>
+            </WakeWordProvider>
           )}
         </VoiceProvider>
       </AuthProvider>
