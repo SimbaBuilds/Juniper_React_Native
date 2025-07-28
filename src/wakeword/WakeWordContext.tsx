@@ -5,6 +5,7 @@ import { checkWakeWordPermissions, requestWakeWordPermissions } from '../setting
 import { VoiceState } from '../voice/VoiceService';
 import { useVoiceState } from '../voice/hooks/useVoiceState';
 import { useVoice } from '../voice/VoiceContext';
+import { DEFAULT_WAKE_PHRASE } from './constants';
 
 interface WakeWordContextType {
     isEnabled: boolean;
@@ -211,7 +212,7 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             
             const eventTime = event.timestamp ? new Date(event.timestamp) : new Date();
             const timeString = eventTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-            const wakeWord = event.wakeWord || 'Hey Jarvis';
+            const wakeWord = event.wakeWord || DEFAULT_WAKE_PHRASE;
             const confidence = event.confidence || 0;
             const eventLatency = eventReceiveTimestamp - (event.timestamp || eventReceiveTimestamp);
             

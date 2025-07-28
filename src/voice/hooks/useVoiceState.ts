@@ -60,11 +60,6 @@ export function useVoiceState() {
   // Log whenever the hook's voiceState actually changes
   useEffect(() => {
     console.log('🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========');
-    console.log('🔄 VOICE_STATE_HOOK: Raw voiceState from native:', voiceState);
-    console.log('🔄 VOICE_STATE_HOOK: Normalized state value:', normalizedState);
-    console.log('🔄 VOICE_STATE_HOOK: State normalization needed:', voiceState !== normalizedState);
-    console.log('🔄 VOICE_STATE_HOOK: Derived states - isListening:', isListening, 'isSpeaking:', isSpeaking, 'isError:', isError);
-    console.log('🔄 VOICE_STATE_HOOK: ========================================================');
   }, [voiceState, normalizedState, isListening, isSpeaking, isError]);
 
   // Set up listener for voice state changes from native module
@@ -96,17 +91,7 @@ export function useVoiceState() {
       const currentState = voiceStateRef.current; // Use ref to get current state
       const currentNormalizedState = extractStateValue(currentState);
       const newNormalizedState = extractStateValue(event.state);
-      
-      console.log('🔄 VOICE_STATE_HOOK: ========== RN STATE UPDATE RECEIVED ==========');
-      console.log('🔄 VOICE_STATE_HOOK: Raw state from native:', event.state);
-      console.log('🔄 VOICE_STATE_HOOK: Normalized new state:', newNormalizedState);
-      console.log('🔄 VOICE_STATE_HOOK: Event receive time (performance.now):', eventReceiveTime);
-      console.log('🔄 VOICE_STATE_HOOK: Event receive timestamp:', eventReceiveTimestamp);
-      console.log('🔄 VOICE_STATE_HOOK: Current hook state from ref:', currentState);
-      console.log('🔄 VOICE_STATE_HOOK: Current normalized state:', currentNormalizedState);
-      console.log('🔄 VOICE_STATE_HOOK: Normalized state change needed:', newNormalizedState !== currentNormalizedState);
-      console.log('🔄 VOICE_STATE_HOOK: Raw state change needed:', event.state !== currentState);
-      
+          
       // Add native timing info if available
       if ((event as any).timestamp) {
         const nativeToRnLatency = eventReceiveTimestamp - (event as any).timestamp;
@@ -130,10 +115,6 @@ export function useVoiceState() {
       
       const stateUpdateEndTime = performance.now();
       console.log('🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now');
-      
-      console.log('🔄 VOICE_STATE_HOOK: ✅ RN state updated in:', stateUpdateEndTime - stateUpdateStartTime, 'ms');
-      console.log('🔄 VOICE_STATE_HOOK: ✅ Total event processing time:', stateUpdateEndTime - eventReceiveTime, 'ms');
-      console.log('🔄 VOICE_STATE_HOOK: ===================================================');
     });
 
     // Clean up listener

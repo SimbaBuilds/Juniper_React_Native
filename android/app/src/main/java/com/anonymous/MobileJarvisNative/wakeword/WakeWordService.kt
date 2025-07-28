@@ -86,7 +86,7 @@ class WakeWordService : Service() {
         // Available wake words from OpenWakeWord
         val AVAILABLE_WAKE_WORDS: Set<String>
             get() = setOf(
-                "Hey Jarvis", "Hey Juni", "Hey Jasmine", "Hey Jade", "Hey Jay", "Hey Jasper", "Hey Jerry",
+                "Hey Jarvis", "Hey Juni", "Hey Juniper", "Jarvis", "Hey Jasmine", "Hey Jade", "Hey Jay", "Hey Jasper", "Hey Jerry", "Jasmine", "Hey",
                 "Alex", "Aloe",
                 "Hey Mycroft", "Hey Michael", "Hey Mulberry", "Hey Myrillis", "Hey Marigold"
             )
@@ -558,18 +558,18 @@ class WakeWordService : Service() {
                     val confidence = openWakeWordEngine?.processAudioChunk(buffer) ?: 0f
                     
                     // 🚨 EMERGENCY ZERO CONFIDENCE DETECTION 🚨
-                    if (confidence == 0.0f) {
-                        consecutiveLowConfidenceCount++
-                        if (consecutiveLowConfidenceCount > 50) { // Stop after 50 consecutive zeros
-                            Log.e(TAG, "🚨 EMERGENCY: Detected ${consecutiveLowConfidenceCount} consecutive zero confidence values - MODEL FAILURE")
-                            Log.e(TAG, "🚨 EMERGENCY: Stopping wake word processing to prevent infinite loop")
-                            isRunning = false
-                            break
-                        }
-                        continue
-                    } else {
-                        consecutiveLowConfidenceCount = 0
-                    }
+                    // if (confidence == 0.0f) {
+                     //    consecutiveLowConfidenceCount++
+                     //    if (consecutiveLowConfidenceCount > 50) { // Stop after 50 consecutive zeros
+                     //        Log.e(TAG, "🚨 EMERGENCY: Detected ${consecutiveLowConfidenceCount} consecutive zero confidence values - MODEL FAILURE")
+                     //        Log.e(TAG, "🚨 EMERGENCY: Stopping wake word processing to prevent infinite loop")
+                     //        isRunning = false
+                     //        break
+                     //    }
+                     //    continue
+                    // } else {
+                    //     consecutiveLowConfidenceCount = 0
+                    // }
                     
                     // 🚨 EMERGENCY MULTI-LAYER FILTERING 🚨
                     // Layer 1: Hard threshold check (should catch ~0.5001 values)
@@ -591,10 +591,10 @@ class WakeWordService : Service() {
                     val isResumeCooldownExpired = (currentTime - lastResumeTime) > RESUME_COOLDOWN_MS
                     
                     // Layer 4: Emergency sanity check
-                    if (confidence > 0.99f) {
-                        Log.w(TAG, "🚨 EMERGENCY: Suspiciously high confidence ${confidence} - possible model error")
-                        continue
-                    }
+                    //if (confidence > 0.99f) {
+                    //    Log.w(TAG, "🚨 EMERGENCY: Suspiciously high confidence ${confidence} - possible model error")
+                    //    continue
+                    //}
                     
                     if (isHighConfidence && isCooldownExpired && isResumeCooldownExpired) {
                         Log.i(TAG, "🎯 WAKEWORD_TRIGGER: ⚡ WAKE WORD DETECTED! Confidence: ${String.format("%.4f", confidence)} (threshold: $wakeWordThreshold)")

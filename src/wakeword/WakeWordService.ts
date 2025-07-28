@@ -1,5 +1,7 @@
 import { NativeModules, NativeEventEmitter, DeviceEventEmitter, EmitterSubscription, Platform } from 'react-native';
 import { VoiceService } from '../voice/VoiceService';
+import { AVAILABLE_WAKE_PHRASES, DEFAULT_WAKE_PHRASE } from './constants';
+
 
 // Define the interface for responses from the native module
 interface WakeWordAvailabilityResponse {
@@ -72,9 +74,9 @@ const WakeWordModule: WakeWordModuleInterface = nativeWakeWordModule
       stopDetection: async () => ({ success: false, error: 'Platform not supported or module not found' }),
       getStatus: async () => ({ enabled: false }),
       setAccessKey: async () => ({ success: false, error: 'Platform not supported or module not found' }),
-      getAvailableWakeWords: async () => ({ wakeWords: ['BUMBLEBEE', 'GRASSHOPPER', 'JARVIS', 'JUNIPER', 'PICOVOICE', 'PORCUPINE', 'TERMINATOR'], success: true }),
+      getAvailableWakeWords: async () => ({ wakeWords: AVAILABLE_WAKE_PHRASES, success: true }),
       setSelectedWakeWord: async () => ({ success: true }),
-      getSelectedWakeWord: async () => ({ wakeWord: 'JARVIS', success: true }),
+      getSelectedWakeWord: async () => ({ wakeWord: DEFAULT_WAKE_PHRASE, success: true }),
       setWakeWordSensitivity: async () => ({ success: true }),
       getWakeWordSensitivity: async () => ({ sensitivity: 0.3, success: true }),
     };
@@ -415,14 +417,14 @@ class WakeWordService {
   async getAvailableWakeWords(): Promise<string[]> {
     try {
       if (Platform.OS !== 'android') {
-        return ['Hey Jarvis', 'Hey Juni', 'Hey Jasmine', 'Hey Jade', 'Hey Jay', 'Hey Jasper', 'Hey Jerry', 'Alex', 'Aloe', 'Hey Michael', 'Hey Mulberry', 'Hey Myrillis', 'Hey Marigold']; // Default for non-Android platforms
+        return AVAILABLE_WAKE_PHRASES; // Default for non-Android platforms
       }
       
       const result = await WakeWordModule.getAvailableWakeWords();
-      return result.wakeWords || ['Hey Jarvis', 'Hey Juni', 'Hey Jasmine', 'Hey Jade', 'Hey Jay', 'Hey Jasper', 'Hey Jerry', 'Alex', 'Aloe', 'Hey Michael', 'Hey Mulberry', 'Hey Myrillis', 'Hey Marigold'];
+      return result.wakeWords || AVAILABLE_WAKE_PHRASES;
     } catch (error) {
       console.error('Error getting available wake words:', error);
-      return ['Hey Jarvis', 'Hey Juni', 'Hey Jasmine', 'Hey Jade', 'Hey Jay', 'Hey Jasper', 'Hey Jerry', 'Alex', 'Aloe', 'Hey Michael', 'Hey Mulberry', 'Hey Myrillis', 'Hey Marigold'];
+      return AVAILABLE_WAKE_PHRASES;
     }
   }
 
@@ -465,20 +467,20 @@ class WakeWordService {
     try {
       if (Platform.OS !== 'android') {
         console.warn('🎯 WAKEWORD_SELECTION: Wake word selection only supported on Android, returning default');
-        return 'Hey Jarvis'; // Default for non-Android platforms
+        return DEFAULT_WAKE_PHRASE; // Default for non-Android platforms
       }
       
      
       const result = await WakeWordModule.getSelectedWakeWord();
      
       
-      const wakeWord = result.wakeWord || 'Hey Jarvis';
+      const wakeWord = result.wakeWord || DEFAULT_WAKE_PHRASE;
      
       
       return wakeWord;
     } catch (error) {
      
-      return 'Hey Jarvis';
+      return DEFAULT_WAKE_PHRASE;
     }
   }
 

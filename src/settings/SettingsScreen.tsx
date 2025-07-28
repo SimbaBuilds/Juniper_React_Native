@@ -19,6 +19,7 @@ import { SettingsNumberInput } from './components/SettingsNumberInput';
 import { VoiceSelectionDropdown } from './components/VoiceSelectionDropdown';
 import { PermissionsCard } from './components/PermissionsCard';
 import WakeWordService from '../wakeword/WakeWordService';
+import { DEFAULT_WAKE_PHRASE } from '../wakeword/constants';
 
 // Voice Settings interface
 export interface VoiceSettings {
@@ -36,23 +37,29 @@ export interface VoiceSettings {
   timezone: string;
 }
 
+// Wake word sensitivity mapping
+const WAKE_WORD_SENSITIVITY_MAP: Record<string, number> = {
+  'Hey Juni': 0.02,
+  'Hey Juniper': 0.001,
+  'Hey': 0.01,
+  'Jarvis': 0.7,
+  'Hey Jarvis': 0.9,
+  'Jasmine': 0.001,
+  'Hey Jade': 0.001,
+  'Hey Jay': 0.001,
+  'Hey Jasper': 0.02,
+  'Alex': 0.001,
+  'Aloe': 0.001,
+  'Hey Michael': 0.7,
+};
+
 // Available wake words from OpenWakeWord (native Android)
 const AVAILABLE_WAKE_WORDS = [
-  { label: 'Hey Jarvis', value: 'Hey Jarvis' },
-  { label: 'Hey Juni', value: 'Hey Juni' },
-  { label: 'Hey Jasmine', value: 'Hey Jasmine' },
-  { label: 'Hey Jade', value: 'Hey Jade' },
-  { label: 'Hey Jay', value: 'Hey Jay' },
-  { label: 'Hey Jasper', value: 'Hey Jasper' },
-  { label: 'Hey Jerry', value: 'Hey Jerry' },
-  { label: 'Alexa', value: 'Alexa' },
-  { label: 'Alex', value: 'Alex' },
-  { label: 'Aloe', value: 'Aloe' },
-  { label: 'Hey Mycroft', value: 'Hey Mycroft' },
-  { label: 'Hey Michael', value: 'Hey Michael' },
-  { label: 'Hey Mulberry', value: 'Hey Mulberry' },
-  { label: 'Hey Myrillis', value: 'Hey Myrillis' },
-  { label: 'Hey Marigold', value: 'Hey Marigold' },
+  { label: `Hey Juni (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Hey Juni'] * 100)}%)`, value: 'Hey Juni' },
+  { label: `Jarvis (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Jarvis'] * 100)}%)`, value: 'Jarvis' },
+  { label: `Hey Jasper (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Hey Jasper'] * 100)}%)`, value: 'Hey Jasper' },
+  { label: `Aloe (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Aloe'] * 100)}%)`, value: 'Aloe' },
+  { label: `Hey Michael (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Hey Michael'] * 100)}%)`, value: 'Hey Michael' },
 ];
 
 // Available timezones (common ones)
@@ -456,23 +463,42 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.wakeWordSettingsCard}>
               <SettingsDropdown
                 label="Wake Word"
-                value={settings.selectedWakeWord || 'Hey Jarvis'}
+                value={settings.selectedWakeWord || DEFAULT_WAKE_PHRASE}
                 options={AVAILABLE_WAKE_WORDS}
                 onValueChange={async (selectedWakeWord) => {
                   console.log('🎯 WAKEWORD_SELECTION: Wake word changed in settings screen');
-                  console.log('🎯 WAKEWORD_SELECTION: Previous wake word:', settings.selectedWakeWord || 'Hey Jarvis');
+                  console.log('🎯 WAKEWORD_SELECTION: Previous wake word:', settings.selectedWakeWord || DEFAULT_WAKE_PHRASE);
                   console.log('🎯 WAKEWORD_SELECTION: New wake word:', selectedWakeWord);
                   console.log('🎯 WAKEWORD_SELECTION: Available options:', AVAILABLE_WAKE_WORDS.map(w => w.value));
                   
+                  // Check if we need to update sensitivity
+                  const minimumSensitivity = WAKE_WORD_SENSITIVITY_MAP[selectedWakeWord];
+                  const currentSensitivity = settings.wakeWordSensitivity || 0.3;
+                  let updates: any = { selectedWakeWord };
+                  
+                  if (minimumSensitivity && currentSensitivity > minimumSensitivity) {
+                    console.log('🎚️ AUTO_SENSITIVITY: Current sensitivity', currentSensitivity, 'is higher than minimum', minimumSensitivity);
+                    console.log('🎚️ AUTO_SENSITIVITY: Auto-updating sensitivity to minimum required value');
+                    updates.wakeWordSensitivity = minimumSensitivity;
+                  }
+                  
                   // Update both the voice settings and the native wake word module
                   await Promise.all([
-                    handleVoiceSettingsUpdate({ selectedWakeWord }),
+                    handleVoiceSettingsUpdate(updates),
                     (async () => {
                       try {
                         const wakeWordService = WakeWordService.getInstance();
                         const success = await wakeWordService.setSelectedWakeWord(selectedWakeWord);
                         if (success) {
                           console.log('🎯 WAKEWORD_SELECTION: ✅ Successfully synced wake word to native module');
+                          
+                          // If sensitivity was updated, sync that too
+                          if (updates.wakeWordSensitivity) {
+                            const sensitivitySuccess = await wakeWordService.setWakeWordSensitivity(updates.wakeWordSensitivity);
+                            if (sensitivitySuccess) {
+                              console.log('🎚️ AUTO_SENSITIVITY: ✅ Successfully synced auto-updated sensitivity to native module');
+                            }
+                          }
                           
                           // Restart wake word detection if currently running to apply changes
                           const isRunning = await wakeWordService.isWakeWordDetectionRunning();
@@ -494,7 +520,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                   
                   console.log('🎯 WAKEWORD_SELECTION: ✅ Wake word setting update completed');
                 }}
-                description="The word you say to activate your assistant."
+                description="The word you say to activate your assistant. The number in parentheses is its minimum required sensitivity. If wake phrase is failing, try speaking a bit slower."
               />
 
               <View style={styles.indentedSetting}>
@@ -539,7 +565,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                   }}
                   minimumValue={0}
                   maximumValue={1}
-                  step={0.01}
+                  step={1e-5}
                   description="The sensitivity level for wake word detection (0 = less sensitive, 1 = more sensitive)."
                   formatValue={(value) => `${Math.round(value * 100)}%`}
                 />

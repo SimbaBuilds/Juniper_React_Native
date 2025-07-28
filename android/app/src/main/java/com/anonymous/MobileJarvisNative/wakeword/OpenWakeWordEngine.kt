@@ -33,11 +33,15 @@ class OpenWakeWordEngine(private val context: Context) {
     private val WAKE_PHRASE_MAPPINGS = mapOf(
         "Hey Jarvis" to "hey_jarvis",
         "Hey Juni" to "hey_jarvis",
+        "Hey Juniper" to "hey_jarvis",
         "Hey Jasmine" to "hey_jarvis",
         "Hey Jade" to "hey_jarvis",
         "Hey Jay" to "hey_jarvis",
         "Hey Jasper" to "hey_jarvis",
-        "Hey Jerry" to "hey_jarvis",
+        "Jarvis" to "hey_jarvis",
+        "Hey" to "hey_jarvis",
+
+
         
         "Alexa" to "alexa",
         "Alex" to "alexa",
@@ -45,9 +49,6 @@ class OpenWakeWordEngine(private val context: Context) {
         
         "Hey Mycroft" to "hey_mycroft",
         "Hey Michael" to "hey_mycroft",
-        "Hey Mulberry" to "hey_mycroft",
-        "Hey Myrillis" to "hey_mycroft",
-        "Hey Marigold" to "hey_mycroft"
     )
     
     // Thread-safe audio processing buffer using CopyOnWriteArrayList for concurrent access

@@ -254,23 +254,13 @@ export class VoiceService {
 
     public onVoiceStateChange(callback: (event: VoiceStateChangeEvent) => void): () => void {
         const subscription = this.eventEmitter.addListener(EVENT_VOICE_STATE_CHANGE, (event: VoiceStateChangeEvent) => {
-            console.log('🔄 VOICE_SERVICE: ========== NATIVE EVENT RECEIVED ==========');
-            console.log('🔄 VOICE_SERVICE: Event from native:', event.state);
-            console.log('🔄 VOICE_SERVICE: Previous cached state:', this.cachedVoiceState);
-            console.log('🔄 VOICE_SERVICE: Cache update needed:', event.state !== this.cachedVoiceState);
             
             // Update cached state immediately when we receive state changes
             this.cachedVoiceState = event.state;
-            console.log('🔄 VOICE_SERVICE: Cached state updated to:', event.state);
-            console.log('🔄 VOICE_SERVICE: About to call React callback with event...');
             
             // Call the original callback
-            const callbackStartTime = performance.now();
             callback(event);
-            const callbackEndTime = performance.now();
             
-            console.log('🔄 VOICE_SERVICE: React callback completed in:', callbackEndTime - callbackStartTime, 'ms');
-            console.log('🔄 VOICE_SERVICE: ===============================================');
         });
         this.listeners.push(subscription);
         
@@ -525,10 +515,7 @@ export class VoiceService {
      * Reload native voice configuration after settings changes
      */
     public async reloadNativeConfiguration(): Promise<boolean> {
-        console.log('🎵 RELOAD_CONFIG: ========== RELOAD NATIVE CONFIGURATION ==========');
-        console.log('🎵 RELOAD_CONFIG: Reloading native voice configuration...');
-        console.log('🎵 RELOAD_CONFIG: Current platform:', Platform.OS);
-        console.log('🎵 RELOAD_CONFIG: Timestamp:', new Date().toISOString());
+
         
         try {
             if (Platform.OS !== 'android') {
@@ -537,14 +524,12 @@ export class VoiceService {
             }
             
             // Reset Deepgram client to pick up new settings
-            console.log('🎵 RELOAD_CONFIG: About to reset Deepgram client...');
+
             const resetStartTime = Date.now();
             const resetResult = await VoiceModule.resetDeepgramClient();
             const resetEndTime = Date.now();
             
-            console.log('🎵 RELOAD_CONFIG: Reset call duration:', (resetEndTime - resetStartTime), 'ms');
-            console.log('🎵 RELOAD_CONFIG: Deepgram reset result:', resetResult, '(type:', typeof resetResult, ')');
-            
+
             const success = resetResult?.success ?? false;
             
             if (success) {

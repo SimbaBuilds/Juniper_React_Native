@@ -2,11 +2,12 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useWakeWord } from '../WakeWordContext';
 import { useVoice } from '../../voice/VoiceContext';
+import { DEFAULT_WAKE_PHRASE } from '../constants';
 
 export const WakeWordStatus: React.FC = () => {
     const { isEnabled, isRunning } = useWakeWord();
     const { voiceSettings } = useVoice();
-    const selectedWakeWord = voiceSettings?.selectedWakeWord || 'Hey Jarvis';
+    const selectedWakeWord = voiceSettings?.selectedWakeWord || DEFAULT_WAKE_PHRASE;
 
     const getStatusColor = () => {
         if (!isEnabled) return '#666666';

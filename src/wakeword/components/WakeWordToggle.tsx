@@ -3,13 +3,14 @@ import { View, Switch, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { useWakeWord } from '../WakeWordContext';
 import { useVoice } from '../../voice/VoiceContext';
 import WakeWordService, { WakeWordEvents } from '../WakeWordService';
+import { DEFAULT_WAKE_PHRASE } from '../constants';
 
 export const WakeWordToggle: React.FC = () => {
     const { isEnabled, setEnabled } = useWakeWord();
     const { voiceSettings } = useVoice();
     const [detectionAnimation] = useState(new Animated.Value(0));
     const [isDetected, setIsDetected] = useState(false);
-    const selectedWakeWord = voiceSettings?.selectedWakeWord || 'Hey Jarvis';
+    const selectedWakeWord = voiceSettings?.selectedWakeWord || DEFAULT_WAKE_PHRASE;
 
     // Listen for wake word detection events
     useEffect(() => {
@@ -61,9 +62,6 @@ export const WakeWordToggle: React.FC = () => {
             },
         ],
     };
-
-    // Use the wake word from voice settings if available
-    const currentWakeWord = voiceSettings?.selectedWakeWord || 'Hey Jarvis';
 
     return (
         <View style={styles.container}>

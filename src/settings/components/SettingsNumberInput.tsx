@@ -19,7 +19,7 @@ export const SettingsNumberInput: React.FC<SettingsNumberInputProps> = ({
   onSave,
   minimumValue = 0,
   maximumValue = 1,
-  step = 0.01,
+  step = 1e-5,
   description,
   formatValue,
 }) => {
@@ -57,10 +57,11 @@ export const SettingsNumberInput: React.FC<SettingsNumberInputProps> = ({
     }
 
     // Check if the value respects the step increment
-    // Calculate remainder when divided by step
+    // Use a small tolerance for floating-point precision errors
+    const remainder = Math.abs(numericValue % step);
+    const tolerance = step * 1e-10; // Very small tolerance relative to step size
     
-    const remainder = numericValue % step;
-    if (remainder < 1e-7) { // tolerance for floating-point precision
+    if (remainder > tolerance && Math.abs(remainder - step) > tolerance) {
       setError(`Value must be in increments of ${step}`);
       setHasChanges(true);
       return;

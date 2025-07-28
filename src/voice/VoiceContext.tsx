@@ -10,6 +10,7 @@ import { DeviceEventEmitter, EmitterSubscription, Platform, NativeModules } from
 import { conversationService } from '../services/conversationService';
 import { isCancellationError } from '../utils/cancellationUtils';
 import { useRequestStatusPolling } from '../hooks/useRequestStatusPolling';
+import { DEFAULT_WAKE_PHRASE } from '../wakeword/constants';
 
 const { VoiceModule } = NativeModules;
 
@@ -286,8 +287,8 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           deepgramEnabled: voiceSettings.deepgram_enabled,
           baseLanguageModel: voiceSettings.base_language_model,
           generalInstructions: generalInstructions,
-          wakeWord: voiceSettings.selectedWakeWord || 'Hey Jarvis',
-          selectedWakeWord: voiceSettings.selectedWakeWord || 'Hey Jarvis',
+          wakeWord: voiceSettings.selectedWakeWord || DEFAULT_WAKE_PHRASE,
+          selectedWakeWord: voiceSettings.selectedWakeWord || DEFAULT_WAKE_PHRASE,
           wakeWordSensitivity: voiceSettings.wake_word_sensitivity ?? 0.3,
           wakeWordDetectionEnabled: voiceSettings.wake_word_detection_enabled ?? true,
           selectedDeepgramVoice: voiceSettings.selected_deepgram_voice || 'aura-2-mars-en',

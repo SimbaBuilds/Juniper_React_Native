@@ -5,6 +5,7 @@ import VoiceService from '../VoiceService';
 import WakeWordService from '../../wakeword/WakeWordService';
 import { DatabaseService } from '../../supabase/supabase';
 import { useAuth } from '../../auth/AuthContext';
+import { DEFAULT_WAKE_PHRASE } from '../../wakeword/constants';
 
 const VOICE_SETTINGS_KEY = 'voice_settings';
 
@@ -12,7 +13,7 @@ const defaultVoiceSettings: VoiceSettings = {
   deepgramEnabled: false,
   baseLanguageModel: 'claude-sonnet-4-20250514',
   generalInstructions: '',
-  selectedWakeWord: 'Hey Jarvis',
+  selectedWakeWord: DEFAULT_WAKE_PHRASE,
   wakeWordSensitivity: 0.3,
   wakeWordDetectionEnabled: false,
   selectedDeepgramVoice: 'aura-2-thalia-en',
