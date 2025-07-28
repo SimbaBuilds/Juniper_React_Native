@@ -5,7 +5,7 @@ const { VoiceModule } = NativeModules;
 
 // Check if VoiceModule is available on startup
 if (!VoiceModule) {
-    console.warn('VoiceModule not available, onVoiceStateChange not supported');
+    console.warn('VoiceModule not available, onVoiceStateChanged not supported');
 }
 
 // Voice state enum that matches the native implementation
@@ -34,7 +34,7 @@ export interface AssistantResponseEvent {
 // Event names for consistency
 const EVENT_SPEECH_RESULT = 'speechResult';
 const EVENT_ASSISTANT_RESPONSE = 'assistantResponse';
-const EVENT_VOICE_STATE_CHANGE = 'onVoiceStateChange';
+const EVENT_VOICE_STATE_CHANGE = 'onVoiceStateChanged';
 
 export class VoiceService {
     private static instance: VoiceService;
@@ -274,7 +274,7 @@ export class VoiceService {
 
     public onVoiceStateChange(callback: (event: VoiceStateChangeEvent) => void): () => void {
         if (!this.eventEmitter) {
-            console.warn('VoiceModule not available, onVoiceStateChange not supported');
+            console.warn('VoiceModule not available, onVoiceStateChanged not supported');
             return () => {};
         }
         const subscription = this.eventEmitter.addListener(EVENT_VOICE_STATE_CHANGE, (event: VoiceStateChangeEvent) => {
