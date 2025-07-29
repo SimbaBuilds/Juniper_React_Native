@@ -1,49 +1,33 @@
-default	18:36:23.974606-0500	MobileJarvisNative	TX focusApplication (peekAppEvent) stealKB:Y scene:com.anonymous.MobileJarvisNative-default
-default	18:36:23.974936-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
-default	18:36:23.974749-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 1; ignoreInteractionEvents: 0, systemGestureStateChange: 0
-default	18:36:23.974872-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to windows: 1
-default	18:36:23.974994-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
-default	18:36:23.982460-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 0
-default	18:36:23.982506-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 0
-default	18:36:24.044115-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 1
-default	18:36:24.044177-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 1
-default	18:36:24.059660-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 1; ignoreInteractionEvents: 0, systemGestureStateChange: 0
-default	18:36:24.060127-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to windows: 1
-default	18:36:24.059813-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 1; ignoreInteractionEvents: 0, systemGestureStateChange: 0
-default	18:36:24.060209-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to windows: 1
-default	18:36:24.060769-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
-default	18:36:24.060667-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
-default	18:36:24.065561-0500	MobileJarvisNative	    AVAudioSession_iOS.mm:1928  Deactivated session 0x6817a
-default	18:36:24.065498-0500	MobileJarvisNative	    AVAudioSession_iOS.mm:1928  Deactivated session 0x6817a
-default	18:36:27.516186-0500	wifid	__WiFiLQAMgrLogStats(TowerStation:Stationary): InfraUptime:17773.1secs Channel: 157 Bandwidth: 80Mhz Rssi: -40 {-41 -46} Cca: 21 (S:0 O:4 I:15) Snr: 16 BcnPer: 2.0% (49, 51.7%) TxFrameCnt: 66 TxPer: 0.0% TxReTrans: 6 TxRetryRatio: 9.1% RxFrameCnt: 64 RxRetryFrames: 0 RxRetryRatio: 0.0% TxRate: 286760 RxRate: 1200950 FBRate: 172050 TxFwFrms: 28 TxFwFail: 0 Noise: -88 {-88 -90 -2} time: 560.6secs fgApp: com.anonymous.MobileJarvisNative V: T
-default	18:36:32.530810-0500	wifid	__WiFiLQAMgrLogStats(TowerStation:Stationary): InfraUptime:17778.1secs Channel: 157 Bandwidth: 80Mhz Rssi: -41 {-43 -43} Cca: 21 (S:0 O:4 I:15) Snr: 17 BcnPer: 2.0% (49, 51.7%) TxFrameCnt: 48 TxPer: 0.0% TxReTrans: 0 TxRetryRatio: 0.0% RxFrameCnt: 49 RxRetryFrames: 0 RxRetryRatio: 0.0% TxRate: 286760 RxRate: 1200950 FBRate: 172050 TxFwFrms: 25 TxFwFail: 0 Noise: -88 {-88 -90 -2} time: 565.6secs fgApp: com.anonymous.MobileJarvisNative V: T
-default	18:36:37.549777-0500	wifid	__WiFiLQAMgrLogStats(TowerStation:Stationary): InfraUptime:17783.1secs Channel: 157 Bandwidth: 80Mhz Rssi: -40 {-40 -42} Cca: 21 (S:0 O:4 I:15) Snr: 15 BcnPer: 2.0% (49, 51.7%) TxFrameCnt: 17 TxPer: 0.0% TxReTrans: 0 TxRetryRatio: 0.0% RxFrameCnt: 23 RxRetryFrames: 0 RxRetryRatio: 0.0% TxRate: 1200950 RxRate: 1200950 FBRate: 720580 TxFwFrms: 17 TxFwFail: 0 Noise: -88 {-88 -90 -2} time: 570.6secs fgApp: com.anonymous.MobileJarvisNative V: T
-default	18:36:40.419814-0500	SpringBoard	RX com.anonymous.MobileJarvisNative(3589) focusApplicationWithPID:3589 stealKeyboard:Y
-    context:<contextID:213329895 sceneID:com.anonymous.MobileJarvisNative-default>
-default	18:36:40.419780-0500	SpringBoard	RX com.anonymous.MobileJarvisNative(3589) focusApplicationWithPID:3589 stealKeyboard:Y
-    context:<contextID:213329895 sceneID:com.anonymous.MobileJarvisNative-default>
-default	18:36:40.420609-0500	MobileJarvisNative	TX focusApplication (peekAppEvent) stealKB:Y scene:com.anonymous.MobileJarvisNative-default
-default	18:36:40.420568-0500	MobileJarvisNative	TX focusApplication (peekAppEvent) stealKB:Y scene:com.anonymous.MobileJarvisNative-default
-default	18:36:40.420691-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 1; ignoreInteractionEvents: 0, systemGestureStateChange: 0
-default	18:36:40.420816-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to windows: 1
-default	18:36:40.420957-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
-default	18:36:40.420753-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 1; ignoreInteractionEvents: 0, systemGestureStateChange: 0
-default	18:36:40.420897-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to windows: 1
-default	18:36:40.421000-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
-default	18:36:40.425817-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 0
-default	18:36:40.425666-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 0
-default	18:36:40.483016-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 1; ignoreInteractionEvents: 0, systemGestureStateChange: 0
-default	18:36:40.483228-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to windows: 1
-default	18:36:40.483422-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
-default	18:36:40.483078-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 1; ignoreInteractionEvents: 0, systemGestureStateChange: 0
-default	18:36:40.483274-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to windows: 1
-default	18:36:40.483464-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
-default	18:36:40.487421-0500	MobileJarvisNative	    AVAudioSession_iOS.mm:1928  Deactivated session 0x6817a
-default	18:36:40.487462-0500	MobileJarvisNative	    AVAudioSession_iOS.mm:1928  Deactivated session 0x6817a
-default	18:36:40.489068-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 1
-default	18:36:40.489154-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 0
-default	18:36:40.489111-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 1
-default	18:36:40.489202-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 0
-default	18:36:42.570960-0500	wifid	__WiFiLQAMgrLogStats(TowerStation:Stationary): InfraUptime:17788.2secs Channel: 157 Bandwidth: 80Mhz Rssi: -40 {-41 -43} Cca: 21 (S:0 O:4 I:15) Snr: 15 BcnPer: 0.0% (49, 51.7%) TxFrameCnt: 22 TxPer: 0.0% TxReTrans: 0 TxRetryRatio: 0.0% RxFrameCnt: 27 RxRetryFrames: 0 RxRetryRatio: 0.0% TxRate: 1200950 RxRate: 1200950 FBRate: 720580 TxFwFrms: 14 TxFwFail: 0 Noise: -88 {-88 -90 -2} time: 575.6secs fgApp: com.anonymous.MobileJarvisNative V: T
-default	18:36:42.571058-0500	wifid	__WiFiLQAMgrLogStats(TowerStation:Stationary): InfraUptime:17788.2secs Channel: 157 Bandwidth: 80Mhz Rssi: -40 {-41 -43} Cca: 21 (S:0 O:4 I:15) Snr: 15 BcnPer: 0.0% (49, 51.7%) TxFrameCnt: 22 TxPer: 0.0% TxReTrans: 0 TxRetryRatio: 0.0% RxFrameCnt: 27 RxRetryFrames: 0 RxRetryRatio: 0.0% TxRate: 1200950 RxRate: 1200950 FBRate: 720580 TxFwFrms: 14 TxFwFail: 0 Noise: -88 {-88 -90 -2} time: 575.6secs fgApp: com.anonymous.MobileJarvisNative V: T
-default	18:36:47.585143-0500	wifid	__WiFiLQAMgrLogStats(TowerStation:Stationary): InfraUptime:17793.2secs Channel: 157 Bandwidth: 80Mhz Rssi: -43 {-45 -47} Cca: 21 (S:0 O:4 I:15) Snr: 21 BcnPer: 0.0% (49, 51.7%) TxFrameCnt: 18 TxPer: 0.0% TxReTrans: 0 TxRetryRatio: 0.0% RxFrameCnt: 26 RxRetryFrames: 4 RxRetryRatio: 15.4% TxRate: 1200950 RxRate: 1200950 FBRate: 720580 TxFwFrms: 18 TxFwFail: 0 Noise: -88 {-88 -90 -2} time: 580.6secs fgApp: com.anonymous.MobileJarvisNative V: T
+default	03:54:40.463620-0500	MobileJarvisNative	🔐 VoiceModule: requestPermissions called from React Native
+default	03:54:40.471177-0500	MobileJarvisNative	🔐 VoiceModule: Permissions result: GRANTED
+default	03:54:40.471836-0500	MobileJarvisNative	🎙️ VoiceModule: startContinuousConversation called - iOS direct listening mode
+default	03:54:40.471870-0500	MobileJarvisNative	🎙️ VoiceManager: Starting speech recognition
+default	03:54:40.472265-0500	MobileJarvisNative	🔐 VoiceManager: Speech recognition auth status: 3
+default	03:54:45.071033-0500	MobileJarvisNative	⏰ VoiceManager: Starting silence timer with timeout: 5.000000 seconds
+default	03:54:45.071178-0500	MobileJarvisNative	🎙️ VoiceModule: Speech result received - text: How, isFinal: NO
+default	03:54:45.258836-0500	MobileJarvisNative	⏰ VoiceManager: Starting silence timer with timeout: 5.000000 seconds
+default	03:54:45.258898-0500	MobileJarvisNative	🎙️ VoiceModule: Speech result received - text: How are, isFinal: NO
+default	03:54:45.334440-0500	MobileJarvisNative	⏰ VoiceManager: Starting silence timer with timeout: 5.000000 seconds
+default	03:54:45.334496-0500	MobileJarvisNative	🎙️ VoiceModule: Speech result received - text: How are you, isFinal: NO
+default	03:54:48.623815-0500	MobileJarvisNative	🔵 VoiceManager: About to call reactNativeApiCallback
+default	03:54:48.623840-0500	MobileJarvisNative	🔵 VoiceManager: Callback is nil: NO
+default	03:54:48.623887-0500	MobileJarvisNative	🔵 VoiceManager: Calling React Native API callback with text: How are you and requestId: 758389C2-D679-494D-892A-E0C8236613CD
+default	03:54:48.623965-0500	MobileJarvisNative	🔵 VoiceModule: About to emit processTextFromNative event
+default	03:54:48.624520-0500	MobileJarvisNative	🔵 VoiceModule: hasListeners: YES
+default	03:54:48.624761-0500	MobileJarvisNative	🔵 VoiceModule: processTextFromNative event emitted successfully
+default	03:54:48.624819-0500	MobileJarvisNative	🔵 VoiceManager: React Native API callback called successfully
+default	03:54:48.625161-0500	MobileJarvisNative	⏰ VoiceManager: Starting silence timer with timeout: 5.000000 seconds
+default	03:54:48.625474-0500	MobileJarvisNative	🎙️ VoiceModule: Speech result received - text: How are you, isFinal: NO
+error	03:54:55.741816-0500	MobileJarvisNative	Exception 'handleApiResponse:response:resolve:rejecter: is not a recognized Objective-C method.' was thrown while invoking handleApiResponse on target VoiceModule with params (
+    "758389C2-D679-494D-892A-E0C8236613CD",
+    "I'm doing well, thank you for asking! I'm here and ready to help you with whatever you need. How are you doing today?",
+    3102,
+    3103
+)
+callstack: (
+	0   CoreFoundation                      0x000000019412b228 7821F73C-378B-3A10-BE90-EF526B7DBA93 + 1155624
+	1   libobjc.A.dylib                     0x00000001915c5abc objc_exception_throw + 88
+	2   Foundation                          0x0000000193429810 34DE055D-8683-380A-9198-C3347211D13D + 7989264
+	3   MobileJarvisNative.debug.dylib      0x0000000106ec0348 -[RCTModuleMethod processMethodSignature] + 840
+	4   MobileJarvisNative.debug.dylib      0x0000000106ec75f0 -[RCTModuleMethod invokeWithBridge:module:arguments:] + 140
+	5   MobileJarvisNative.debug.dylib      0x0000000106ecc05c _ZN8facebook5reactL11invokeInnerEP9RCTBridgeP13<…>

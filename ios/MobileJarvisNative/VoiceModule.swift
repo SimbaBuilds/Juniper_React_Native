@@ -170,7 +170,7 @@ class VoiceModule: RCTEventEmitter {
     /**
      * Handle API response from React Native (matching Android handleApiResponse)
      */
-    @objc func handleApiResponse(_ requestId: String, _ response: String, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    @objc func handleApiResponse(_ requestId: String, response: String, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
         print("🟢 VoiceModule: handleApiResponse called from React Native")
         print("🟢 VoiceModule: RequestId: \(requestId)")
         print("🟢 VoiceModule: Response length: \(response.count)")
