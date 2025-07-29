@@ -111,7 +111,12 @@ class VoiceModule: RCTEventEmitter {
     
     // MARK: - React Native Methods
     @objc func requestPermissions(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+        NSLog("🔐 VoiceModule: requestPermissions called from React Native")
+        print("🔐 VoiceModule: requestPermissions called from React Native")
+        
         voiceManager.requestPermissions { granted in
+            NSLog("🔐 VoiceModule: Permissions result: %@", granted ? "GRANTED" : "DENIED")
+            print("🔐 VoiceModule: Permissions result:", granted)
             resolve(granted)
         }
     }
@@ -127,6 +132,7 @@ class VoiceModule: RCTEventEmitter {
      * Goes directly to listening without wake word simulation
      */
     @objc func startContinuousConversation(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+        NSLog("🎙️ VoiceModule: startContinuousConversation called - iOS direct listening mode")
         print("🎙️ VoiceModule: startContinuousConversation called - iOS direct listening mode")
         print("🎙️ VoiceModule: iOS flow - going directly to listening state")
         

@@ -6,6 +6,8 @@ const { VoiceModule } = NativeModules;
 // Check if VoiceModule is available on startup
 if (!VoiceModule) {
     console.error('VoiceModule not found in NativeModules. Ensure native module is properly linked.');
+    console.log('Available NativeModules:', Object.keys(NativeModules).filter(key => key.toLowerCase().includes('voice')));
+    console.log('All NativeModules:', Object.keys(NativeModules));
 }
 
 // Voice state enum that matches the native implementation
@@ -53,6 +55,10 @@ export class VoiceService {
             VoiceService.instance = new VoiceService();
         }
         return VoiceService.instance;
+    }
+
+    public isModuleAvailable(): boolean {
+        return VoiceModule !== undefined && VoiceModule !== null;
     }
 
     /**
@@ -153,7 +159,19 @@ export class VoiceService {
             
             console.log('🎤 iOS: Starting continuous conversation mode...');
             
-            // iOS doesn't need permissions check like Android
+            // Request permissions for iOS (speech recognition and microphone)
+            console.log('🔐 iOS: Requesting permissions...');
+            try {
+                const permissionsGranted = await VoiceModule.requestPermissions();
+                console.log('🔐 iOS: Permissions result:', permissionsGranted);
+                if (!permissionsGranted) {
+                    throw new Error('iOS permissions not granted for speech recognition/microphone');
+                }
+            } catch (permError) {
+                console.error('❌ iOS: Permission request failed:', permError);
+                throw new Error('Failed to request iOS permissions: ' + permError.message);
+            }
+            
             console.log('📱 iOS: Calling native startContinuousConversation...');
             const result = await VoiceModule.startContinuousConversation();
             console.log('📱 iOS: Continuous conversation started:', result);

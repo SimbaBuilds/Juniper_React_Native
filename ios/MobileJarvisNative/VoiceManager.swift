@@ -193,6 +193,7 @@ class VoiceManager: NSObject {
     
     // MARK: - Speech Recognition
     func startListening() {
+        NSLog("🎙️ VoiceManager: Starting speech recognition")
         print("🎙️ VoiceManager: Starting speech recognition")
         print("🎙️ VoiceManager: Current state: \(currentState.description)")
         print("🎙️ VoiceManager: Is already listening: \(isListening)")
@@ -217,8 +218,10 @@ class VoiceManager: NSObject {
         
         // Check permissions
         let authStatus = SFSpeechRecognizer.authorizationStatus()
+        NSLog("🔐 VoiceManager: Speech recognition auth status: %d", authStatus.rawValue)
         print("🔐 VoiceManager: Speech recognition auth status: \(authStatus.rawValue)")
         guard authStatus == .authorized else {
+            NSLog("❌ VoiceManager: Speech recognition not authorized. Status: %d", authStatus.rawValue)
             handleError(.audioPermissionDenied, "Speech recognition permission not granted. Status: \(authStatus.rawValue)")
             return
         }
