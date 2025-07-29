@@ -299,28 +299,61 @@ class AudioManager: NSObject {
         NSLog("🔊 AUDIO_MANAGER: Releasing audio focus from: %@", String(describing: currentFocus))
         print("🔊 AUDIO_MANAGER: Releasing audio focus...")
         
-        do {
-            try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
-            
-            // Reset to a neutral category to avoid conflicts
-            NSLog("🔊 AUDIO_MANAGER: Resetting audio session to ambient category")
-            try audioSession.setCategory(.ambient, mode: .default, options: [])
-            
-            currentFocus = .none
-            NSLog("🔊 AUDIO_MANAGER: ✅ Audio focus released and session reset")
-            print("🔊 AUDIO_MANAGER: ✅ Audio focus released")
-            
-            // Process any pending requests after releasing focus
-            requestQueueLock.lock()
-            if !requestQueue.isEmpty && !isProcessingRequest {
-                requestQueueLock.unlock()
-                processNextRequest()
-            } else {
-                requestQueueLock.unlock()
+        // If releasing from playback focus, add a small delay to ensure TTS has fully released
+        let shouldDelay = (currentFocus == .playback)
+        
+        let performRelease = {
+            do {
+                NSLog("🔊 AUDIO_MANAGER: Attempting to deactivate audio session...")
+                try self.audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+                NSLog("🔊 AUDIO_MANAGER: Audio session deactivated successfully")
+                
+                // Reset to a neutral category to avoid conflicts
+                NSLog("🔊 AUDIO_MANAGER: Resetting audio session to ambient category")
+                try self.audioSession.setCategory(.ambient, mode: .default, options: [])
+                
+                self.currentFocus = .none
+                NSLog("🔊 AUDIO_MANAGER: ✅ Audio focus released and session reset")
+                print("🔊 AUDIO_MANAGER: ✅ Audio focus released")
+                
+                // Process any pending requests after releasing focus
+                self.requestQueueLock.lock()
+                if !self.requestQueue.isEmpty && !self.isProcessingRequest {
+                    self.requestQueueLock.unlock()
+                    self.processNextRequest()
+                } else {
+                    self.requestQueueLock.unlock()
+                }
+            } catch {
+                NSLog("🔊 AUDIO_MANAGER: ❌ Failed to release audio focus: %@", error.localizedDescription)
+                NSLog("🔊 AUDIO_MANAGER: ❌ Error code: %ld", (error as NSError).code)
+                print("🔊 AUDIO_MANAGER: ❌ Failed to release audio focus: \(error)")
+                
+                // If deactivation fails but we're transitioning from playback to recording,
+                // still update our focus state and reset category to allow the next operation
+                if self.currentFocus == .playback {
+                    NSLog("🔊 AUDIO_MANAGER: Forcing focus release despite deactivation failure")
+                    do {
+                        // Try to at least reset the category
+                        try self.audioSession.setCategory(.ambient, mode: .default, options: [])
+                        self.currentFocus = .none
+                        NSLog("🔊 AUDIO_MANAGER: ⚠️ Forced focus release completed (deactivation failed but category reset)")
+                    } catch {
+                        NSLog("🔊 AUDIO_MANAGER: ❌ Even category reset failed: %@", error.localizedDescription)
+                        // Still update focus state to prevent getting stuck
+                        self.currentFocus = .none
+                    }
+                }
             }
-        } catch {
-            NSLog("🔊 AUDIO_MANAGER: ❌ Failed to release audio focus: %@", error.localizedDescription)
-            print("🔊 AUDIO_MANAGER: ❌ Failed to release audio focus: \(error)")
+        }
+        
+        if shouldDelay {
+            NSLog("🔊 AUDIO_MANAGER: Adding 100ms delay for TTS audio session cleanup...")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                performRelease()
+            }
+        } else {
+            performRelease()
         }
     }
     

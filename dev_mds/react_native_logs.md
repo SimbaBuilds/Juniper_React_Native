@@ -1,13 +1,15 @@
 
- LOG  🔴 SERVER_API: History[0]: {"content": "How are you", "contentLength": 11, "role": "user", "timestamp": 1753787646978}
+ LOG  🔄 VOICE_CONTEXT: Context isError: false
+ LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  🔴 SERVER_API: History[0]: {"content": "Hello", "contentLength": 5, "role": "user", "timestamp": 1753790026708}
  LOG  🔴 SERVER_API: Full request payload: {
-  "message": "How are you",
-  "timestamp": 1753787647392,
+  "message": "Hello",
+  "timestamp": 1753790027033,
   "history": [
     {
       "role": "user",
-      "content": "How are you",
-      "timestamp": 1753787646978,
+      "content": "Hello",
+      "timestamp": 1753790026708,
       "type": "text"
     }
   ],
@@ -15,7 +17,7 @@
     "voice": "male",
     "response_type": "concise"
   },
-  "request_id": "1753787647222-6y2t0xs22"
+  "request_id": "1753790026863-46aczl72b"
 }
  LOG  🔍 API Interceptor: Starting auth check for request to: /api/chat
  LOG  📱 Platform: ios
@@ -29,25 +31,25 @@
  LOG  ✅ API Response Success: 200 /api/chat
  LOG  🔴 SERVER_API: ✅ Server response received
  LOG  API Response:
- {"integration_in_progress": false, "request_id": "1753787647222-6y2t0xs22", "response": "I'm doing well, thank you for asking! I'm here and ready to help you with whatever you need. How are you doing today?", "settings_updated": false, "timestamp": 1753787653}
+ {"integration_in_progress": false, "request_id": "1753790026863-46aczl72b", "response": "Hello! I'm here to help you with various tasks like searching the web, managing your files and resources, sending emails, or configuring your settings. What can I assist you with today?", "settings_updated": false, "timestamp": 1753790033}
  LOG  🔍 RN_BRIDGE_DEBUG: ========== API CALL COMPLETED ==========
- LOG  🔍 RN_BRIDGE_DEBUG: API call duration: 6355.986040994525 ms
- LOG  🔍 RN_BRIDGE_DEBUG: Response received at: 1753787653548
+ LOG  🔍 RN_BRIDGE_DEBUG: API call duration: 6491.404166996479 ms
+ LOG  🔍 RN_BRIDGE_DEBUG: Response received at: 1753790033322
  LOG  🔍 RN_BRIDGE_DEBUG: Response data: {
-  "response": "I'm doing well, thank you for asking! I'm here and ready to help you with whatever you need. How are you doing today?",
-  "timestamp": 1753787653,
+  "response": "Hello! I'm here to help you with various tasks like searching the web, managing your files and resources, sending emails, or configuring your settings. What can I assist you with today?",
+  "timestamp": 1753790033,
   "settings_updated": false,
   "integration_in_progress": false,
-  "request_id": "1753787647222-6y2t0xs22"
+  "request_id": "1753790026863-46aczl72b"
 }
  LOG  🟠 VOICE_CONTEXT: Received API response
  LOG  🔄 VOICE_CONTEXT: Response settings_updated flag: false
  LOG  ⚙️ VOICE_CONTEXT: No settings update flag - skipping settings refresh
- LOG  📱 Sending API response back to native: {"requestId": "55FCF113-5B45-454B-A0E7-73A9EBF52C00", "responseLength": 117}
+ LOG  📱 Sending API response back to native: {"requestId": "36229FD4-5C3A-47D6-A378-73B97AC6D2E4", "responseLength": 185}
  LOG  📱 Platform: ios
  LOG  📱 VoiceModule available: true
  LOG  📱 handleApiResponse method available: true
- LOG  💬 Response update: I'm doing well, thank you for asking! I'm here and ready to help you with whatever you need. How are you doing today?
+ LOG  💬 Response update: Hello! I'm here to help you with various tasks like searching the web, managing your files and resources, sending emails, or configuring your settings. What can I assist you with today?
  LOG  🕐 Setting auto-refresh timer for 10 minutes
  LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: error
  LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: idle
@@ -63,4 +65,38 @@
  LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
  LOG  🔄 VOICE_CONTEXT: Context isError: false
  LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: idle
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: speaking
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: idle
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: speaking
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
  LOG  📱 Native handleApiResponse result: true
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
+ LOG  🔄 VOICE_CONTEXT: Context voiceState: speaking
+ LOG  🔄 VOICE_CONTEXT: Context isListening: false
+ LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
+ LOG  🔄 VOICE_CONTEXT: Context isError: false
+ LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
