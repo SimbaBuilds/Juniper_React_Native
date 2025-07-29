@@ -12,22 +12,20 @@ export const VoiceStatusIndicator: React.FC = () => {
   // Handle case-insensitive state mapping locally in the component
   const normalizedState = String(voiceState).toUpperCase();
   
-  // Derive boolean flags locally with case-insensitive logic
+  // Derive boolean flags locally with case-insensitive logic (removed error)
   const isListening = normalizedState === VoiceState.LISTENING.toUpperCase() || 
                      normalizedState === VoiceState.WAKE_WORD_DETECTED.toUpperCase();
   const isSpeaking = normalizedState === VoiceState.SPEAKING.toUpperCase() || 
                     normalizedState.includes('RESPONDING');
-  const isError = normalizedState === VoiceState.ERROR.toUpperCase();
   
-  // Determine indicator color based on locally derived state
+  // Determine indicator color based on locally derived state (removed error)
   const getStatusColor = () => {
-    if (isError) return 'red';
     if (isSpeaking) return 'blue';
     if (isListening) return 'green';
     return 'gray';
   };
   
-  // Get status text to display with case-insensitive matching
+  // Get status text to display with case-insensitive matching (removed error)
   const getStatusText = () => {
     switch (normalizedState) {
       case VoiceState.IDLE.toUpperCase():
@@ -41,7 +39,7 @@ export const VoiceStatusIndicator: React.FC = () => {
       case VoiceState.SPEAKING.toUpperCase():
         return 'Speaking...';
       case VoiceState.ERROR.toUpperCase():
-        return 'Error';
+        return 'Idle'; // Show "Ready" instead of "Error"
       default:
         return 'Idle';
     }
@@ -50,7 +48,7 @@ export const VoiceStatusIndicator: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={[styles.indicator, { backgroundColor: getStatusColor() }]}>
-        {(isListening || voiceState === VoiceState.PROCESSING) && (
+        {(isListening || normalizedState === VoiceState.PROCESSING.toUpperCase()) && (
           <ActivityIndicator color="white" size="small" />
         )}
       </View>
@@ -76,5 +74,6 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 16,
     fontWeight: '500',
+    color: '#FFFFFF', // Explicit white color for good contrast
   },
 });
