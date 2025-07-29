@@ -171,6 +171,10 @@ class VoiceModule: RCTEventEmitter {
      * Handle API response from React Native (matching Android handleApiResponse)
      */
     @objc func handleApiResponse(_ requestId: String, response: String, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+        NSLog("🟢 VoiceModule: handleApiResponse called from React Native")
+        NSLog("🟢 VoiceModule: RequestId: %@", requestId)
+        NSLog("🟢 VoiceModule: Response length: %d", response.count)
+        NSLog("🟢 VoiceModule: Response preview: %@...", String(response.prefix(100)))
         print("🟢 VoiceModule: handleApiResponse called from React Native")
         print("🟢 VoiceModule: RequestId: \(requestId)")
         print("🟢 VoiceModule: Response length: \(response.count)")
@@ -193,7 +197,9 @@ class VoiceModule: RCTEventEmitter {
         pendingApiCallbacks.removeValue(forKey: requestId)
         
         // Forward to VoiceManager to handle TTS and state management
+        NSLog("🟢 VoiceModule: About to call voiceManager.handleApiResponse")
         voiceManager.handleApiResponse(requestId, response)
+        NSLog("🟢 VoiceModule: Finished calling voiceManager.handleApiResponse")
         
         resolve(true)
     }

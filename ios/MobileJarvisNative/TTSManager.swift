@@ -73,29 +73,39 @@ class TTSManager: NSObject {
      * Speak text using the configured TTS provider
      */
     func speak(_ text: String, completion: @escaping () -> Void) {
+        NSLog("🎵 TTS_MANAGER: speak() called with text length: %d", text.count)
+        // Store the completion handler to be called when TTS actually finishes
         speakText(text) { success in
+            NSLog("🎵 TTS_MANAGER: speakText completion callback invoked, success: %@", success ? "YES" : "NO")
             completion()
         }
+        // Don't call completion here - it will be called when TTS finishes via handleSpeechCompletion
     }
     
     /**
      * Speak text using the configured TTS provider with success callback
      */
     func speakText(_ text: String, completion: @escaping (Bool) -> Void) {
+        NSLog("🎵 TTS_MANAGER: ========== SPEAKING TEXT ==========")
+        NSLog("🎵 TTS_MANAGER: Text: '%@%@'", String(text.prefix(100)), text.count > 100 ? "..." : "")
+        NSLog("🎵 TTS_MANAGER: Current provider: %@", String(describing: currentProvider))
         print("🎵 TTS_MANAGER: ========== SPEAKING TEXT ==========")
         print("🎵 TTS_MANAGER: Text: '\(text.prefix(100))\(text.count > 100 ? "..." : "")'")
-        print("🎵 TTS_MANAGER: Current provider: \(currentProvider)")
+        print("🎵 TTS_MANAGER: Current provider: \(currentProvider))")
         
         // Store completion handler
         self.completionHandler = completion
+        NSLog("🎵 TTS_MANAGER: Stored completion handler")
         
         // Stop any current speech
         stopSpeaking()
+        NSLog("🎵 TTS_MANAGER: Stopped any current speech")
         
         // Audio focus is now managed by VoiceManager before calling TTS
         // The VoiceManager will request playback focus before calling speak
         
         isSpeaking = true
+        NSLog("🎵 TTS_MANAGER: Set isSpeaking to true")
         
         // Use appropriate provider
         Task {

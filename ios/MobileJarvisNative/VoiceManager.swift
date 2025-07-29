@@ -56,8 +56,8 @@ class VoiceManager: NSObject {
     // MARK: - Timing Parameters (copied from Android)
     private var speechTimeoutSeconds: Double = 10.0
     private var partialResultsTimeout: Double = 3.0
-    private var speechInputMinimumTime: Double = 1.0
-    private var speechInputMaximumTime: Double = 30.0
+    private var speechInputMinimumTime: Double = 0.5
+    private var speechInputMaximumTime: Double = 120.0
     private var endOfSpeechTimeout: Double = 2.0
     private var silenceTimeout: Double = 5.0
     private var startOfSpeechTimeout: Double = 10.0
@@ -608,8 +608,13 @@ class VoiceManager: NSObject {
         
         // Store callback for when response comes back
         pendingApiCallbacks[requestId] = { [weak self] response in
+            NSLog("🔵 VoiceManager: Callback executing for API response")
             print("🔵 VoiceManager: Processing API response: \(response)")
-            self?.handleApiResponseInternal(response)
+            guard let self = self else {
+                NSLog("❌ VoiceManager: Self is nil in callback, cannot process response")
+                return
+            }
+            self.handleApiResponseInternal(response)
         }
         
         // Emit event to React Native (similar to Android pattern)
@@ -631,6 +636,10 @@ class VoiceManager: NSObject {
      * Handle API response from React Native (matching Android handleApiResponse)
      */
     @objc func handleApiResponse(_ requestId: String, _ response: String) {
+        NSLog("🟢 VoiceManager: handleApiResponse called")
+        NSLog("🟢 VoiceManager: RequestId: %@", requestId)
+        NSLog("🟢 VoiceManager: Response length: %d", response.count)
+        NSLog("🟢 VoiceManager: Response preview: %@...", String(response.prefix(100)))
         print("🟢 VoiceManager: handleApiResponse called")
         print("🟢 VoiceManager: RequestId: \(requestId)")
         print("🟢 VoiceManager: Response length: \(response.count)")
@@ -641,9 +650,11 @@ class VoiceManager: NSObject {
         
         // Execute pending callback
         if let callback = pendingApiCallbacks.removeValue(forKey: requestId) {
+            NSLog("🟢 VoiceManager: Found pending callback for requestId: %@", requestId)
             print("🟢 VoiceManager: Found pending callback for requestId: \(requestId)")
             callback(response)
         } else {
+            NSLog("⚠️ VoiceManager: No pending callback found for requestId: %@", requestId)
             print("⚠️ VoiceManager: No pending callback found for requestId: \(requestId)")
             // Still speak the response
             handleApiResponseInternal(response)
@@ -654,23 +665,79 @@ class VoiceManager: NSObject {
      * Internal handling of API response - starts TTS and manages state
      */
     private func handleApiResponseInternal(_ response: String) {
+        NSLog("🟢 VoiceManager: handleApiResponseInternal called")
+        NSLog("🟢 VoiceManager: Response length: %d", response.count)
         print("🟢 VoiceManager: handleApiResponseInternal called")
         
-        // Stop any current listening first
-        stopListening()
+        // Stop any current listening first with error handling
+        NSLog("🟢 VoiceManager: About to stop listening")
+        NSLog("🟢 VoiceManager: Current state before stopping: %@", currentState.description)
+        NSLog("🟢 VoiceManager: Is listening: %@", isListening ? "YES" : "NO")
+        
+        do {
+            stopListening()
+            NSLog("🟢 VoiceManager: Successfully stopped listening")
+        } catch {
+            NSLog("❌ VoiceManager: Error stopping listening: %@", error.localizedDescription)
+        }
+        
+        NSLog("🟢 VoiceManager: Current state after stopping: %@", currentState.description)
+        
+        // Verify audio manager is available
+        NSLog("🟢 VoiceManager: Checking audio manager availability")
+        NSLog("🟢 VoiceManager: AudioManager instance: %@", String(describing: audioManager))
+        
+        // Force AudioManager singleton access to trigger initialization
+        NSLog("🟢 VoiceManager: Forcing AudioManager.shared access...")
+        let testManager = AudioManager.shared
+        NSLog("🟢 VoiceManager: AudioManager.shared instance: %@", String(describing: testManager))
+        NSLog("🟢 VoiceManager: Are instances the same? %@", audioManager === testManager ? "YES" : "NO")
+        
+        // Test direct access to AudioManager properties
+        NSLog("🟢 VoiceManager: AudioManager.isAudioAvailable: %@", audioManager.isAudioAvailable() ? "YES" : "NO")
+        NSLog("🟢 VoiceManager: AudioManager.isAudioInterrupted: %@", audioManager.getAudioInterruptionStatus() ? "YES" : "NO")
+        NSLog("🟢 VoiceManager: AudioManager.currentFocus: %@", String(describing: audioManager.getCurrentFocus()))
+        
+        // Ensure we're in a valid state before requesting audio focus
+        NSLog("🟢 VoiceManager: Current audio session info before requesting focus:")
+        let audioSession = AVAudioSession.sharedInstance()
+        NSLog("🟢 VoiceManager: Audio session category: %@", audioSession.category.rawValue)
+        NSLog("🟢 VoiceManager: Audio session mode: %@", audioSession.mode.rawValue)
+        NSLog("🟢 VoiceManager: Audio session is active: %@", audioSession.isOtherAudioPlaying ? "NO" : "YES")
+        
+        // Test AudioManager logging first
+        NSLog("🟢 VoiceManager: Testing AudioManager logging...")
+        audioManager.testLogging()
+        NSLog("🟢 VoiceManager: AudioManager test logging completed")
         
         // Request audio focus for TTS playback (higher priority than STT)
+        NSLog("🟢 VoiceManager: Requesting audio focus for TTS playback")
+        NSLog("🟢 VoiceManager: About to call audioManager.requestAudioFocus(.playback)")
+        
         audioManager.requestAudioFocus(.playback) { [weak self] success in
-            guard let self = self, success else {
+            NSLog("🟢 VoiceManager: requestAudioFocus completion callback called with success: %@", success ? "YES" : "NO")
+            NSLog("🟢 VoiceManager: Audio focus callback received, success: %@", success ? "YES" : "NO")
+            guard let self = self else {
+                NSLog("❌ VoiceManager: Self is nil in audio focus callback")
+                return
+            }
+            guard success else {
+                NSLog("❌ VoiceManager: Failed to acquire audio focus for TTS")
                 print("❌ VoiceManager: Failed to acquire audio focus for TTS")
-                self?.setState(.idle)
+                self.setState(.idle)
                 return
             }
             
+            NSLog("🟢 VoiceManager: Audio focus acquired successfully")
             // Start TTS playback
             self.setState(.speaking)
             
+            NSLog("🎵 VoiceManager: About to start TTS with response: %@", String(response.prefix(50)))
+            NSLog("🎵 VoiceManager: TTSManager instance: %@", String(describing: self.ttsManager))
+            
             self.ttsManager.speak(response) {
+                NSLog("🎵 VoiceManager: TTS completion callback received")
+                NSLog("🎵 VoiceManager: TTS completed, transitioning to LISTENING for continuous conversation")
                 print("🎵 VoiceManager: TTS completed, transitioning to LISTENING for continuous conversation")
                 
                 // Release audio focus to allow STT to take over
@@ -679,6 +746,7 @@ class VoiceManager: NSObject {
                 // Match Android behavior: transition to LISTENING instead of IDLE
                 // This enables continuous conversation without requiring wake word
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    NSLog("🎵 VoiceManager: Restarting listening for continuous conversation")
                     self.setState(.listening)
                     self.startListening()
                 }

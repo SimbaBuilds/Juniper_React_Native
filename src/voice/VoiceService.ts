@@ -281,11 +281,17 @@ export class VoiceService {
 
     public async handleApiResponse(requestId: string, response: string): Promise<boolean> {
         try {
-            console.log('📱 Sending API response back to Android:', { requestId, responseLength: response.length });
+            console.log('📱 Sending API response back to native:', { requestId, responseLength: response.length });
+            console.log('📱 Platform:', Platform.OS);
+            console.log('📱 VoiceModule available:', VoiceModule !== null && VoiceModule !== undefined);
+            console.log('📱 handleApiResponse method available:', typeof VoiceModule.handleApiResponse === 'function');
+            
             const result = await VoiceModule.handleApiResponse(requestId, response);
+            console.log('📱 Native handleApiResponse result:', result);
             return result;
         } catch (error) {
-            console.error('Error sending API response to Android:', error);
+            console.error('❌ Error sending API response to native:', error);
+            console.error('❌ Error details:', JSON.stringify(error, null, 2));
             throw error;
         }
     }

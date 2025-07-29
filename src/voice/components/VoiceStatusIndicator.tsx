@@ -29,15 +29,15 @@ export const VoiceStatusIndicator: React.FC = () => {
   const getStatusText = () => {
     switch (normalizedState) {
       case VoiceState.IDLE.toUpperCase():
-        return 'Ready';
+        return 'Idle';
       case VoiceState.WAKE_WORD_DETECTED.toUpperCase():
         return 'Wake word detected';
       case VoiceState.LISTENING.toUpperCase():
-        return 'Listening...';
+        return 'Listening';
       case VoiceState.PROCESSING.toUpperCase():
-        return 'Processing...';
+        return 'Processing';
       case VoiceState.SPEAKING.toUpperCase():
-        return 'Speaking...';
+        return 'Speaking';
       case VoiceState.ERROR.toUpperCase():
         return 'Idle'; // Show "Ready" instead of "Error"
       default:
@@ -48,7 +48,7 @@ export const VoiceStatusIndicator: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={[styles.indicator, { backgroundColor: getStatusColor() }]}>
-        {(isListening || normalizedState === VoiceState.PROCESSING.toUpperCase()) && (
+        {normalizedState === VoiceState.PROCESSING.toUpperCase() && (
           <ActivityIndicator color="white" size="small" />
         )}
       </View>
