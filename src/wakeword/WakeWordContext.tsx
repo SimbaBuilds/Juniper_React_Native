@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import WakeWordService from './WakeWordService';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { checkWakeWordPermissions, requestWakeWordPermissions } from '../settings/permissions';
 import { VoiceState } from '../voice/VoiceService';
 import { useVoiceState } from '../voice/hooks/useVoiceState';
@@ -84,12 +84,16 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                     setIsRunning(false);
                 }
             } else {
-                console.error('❌ WAKE_WORD_CONTEXT: Failed to sync native layer with database state');
+                if (Platform.OS === 'android') {
+                    console.error('❌ WAKE_WORD_CONTEXT: Failed to sync native layer with database state');
+                }
                 // Re-sync state on failure
                 await syncState();
             }
         } catch (error) {
-            console.error('❌ WAKE_WORD_CONTEXT: Error syncing with database state:', error);
+            if (Platform.OS === 'android') {
+                console.error('❌ WAKE_WORD_CONTEXT: Error syncing with database state:', error);
+            }
             await syncState();
         }
     }, []);
@@ -347,7 +351,9 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (subscription) {
             console.log('🎧 WAKE_WORD_CONTEXT: ✅ Wake word listener registered successfully');
         } else {
-            console.error('🎧 WAKE_WORD_CONTEXT: ❌ Failed to register wake word listener');
+            if (Platform.OS === 'android') {
+                console.error('🎧 WAKE_WORD_CONTEXT: ❌ Failed to register wake word listener');
+            }
         }
 
         return () => {

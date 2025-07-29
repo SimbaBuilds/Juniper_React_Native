@@ -1,167 +1,49 @@
- LOG  No initial URL found
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- WARN  VoiceModule not found, returning cached state 
-    at WakeWordProvider (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:171900:24)
-    at VoiceProvider (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:149575:25)
-    at AuthProvider (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:170364:24)
-    at EnsureSingleNavigator (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:138467:24)
-    at BaseNavigationContainer (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:136962:28)
-    at ThemeProvider (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:142979:21)
-    at NavigationContainerInner (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:142854:26)
-    at App (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:135700:41)
-    at withDevTools(App) (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:135252:27)
-    at RCTView
-    at View (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:70132:43)
-    at RCTView
-    at View (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:70132:43)
-    at AppContainer (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:69944:36)
-    at main(RootComponent) (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:117384:28)
- ERROR  VoiceModule eventEmitter not available, voice state changes not supported 
-    at WakeWordProvider (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:171900:24)
-    at VoiceProvider (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:149575:25)
-    at AuthProvider (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:170364:24)
-    at EnsureSingleNavigator (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:138467:24)
-    at BaseNavigationContainer (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:136962:28)
-    at ThemeProvider (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:142979:21)
-    at NavigationContainerInner (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:142854:26)
-    at App (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:135700:41)
-    at withDevTools(App) (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:135252:27)
-    at RCTView
-    at View (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:70132:43)
-    at RCTView
-    at View (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:70132:43)
-    at AppContainer (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:69944:36)
-    at main(RootComponent) (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:117384:28)
- LOG  🚀 WAKE_WORD_CONTEXT: Initializing wake word context...
- LOG  🚀 WAKE_WORD_CONTEXT: Waiting for voice settings to load...
- LOG  🎧 WAKE_WORD_CONTEXT: Setting up wake word event listener...
- LOG  🎧 WAKE_WORD_CONTEXT: Current voice state: IDLE
- LOG  🔊 WAKE_WORD_SERVICE: Adding DeviceEventEmitter listener for event: wakeWordDetected
- LOG  🔊 WAKE_WORD_SERVICE: DeviceEventEmitter available: true
- LOG  🔊 WAKE_WORD_SERVICE: DeviceEventEmitter listener added successfully, subscription: true
- LOG  🎧 WAKE_WORD_CONTEXT: ✅ Wake word listener registered successfully
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- WARN  VoiceModule not found, returning cached state 
-    at VoiceProvider (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:149575:25)
-    at AuthProvider (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:170364:24)
-    at EnsureSingleNavigator (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:138467:24)
-    at BaseNavigationContainer (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:136962:28)
-    at ThemeProvider (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:142979:21)
-    at NavigationContainerInner (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:142854:26)
-    at App (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:135700:41)
-    at withDevTools(App) (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:135252:27)
-    at RCTView
-    at View (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:70132:43)
-    at RCTView
-    at View (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:70132:43)
-    at AppContainer (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:69944:36)
-    at main(RootComponent) (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:117384:28)
- ERROR  VoiceModule eventEmitter not available, voice state changes not supported 
-    at VoiceProvider (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:149575:25)
-    at AuthProvider (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:170364:24)
-    at EnsureSingleNavigator (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:138467:24)
-    at BaseNavigationContainer (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:136962:28)
-    at ThemeProvider (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:142979:21)
-    at NavigationContainerInner (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:142854:26)
-    at App (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:135700:41)
-    at withDevTools(App) (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:135252:27)
-    at RCTView
-    at View (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:70132:43)
-    at RCTView
-    at View (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:70132:43)
-    at AppContainer (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:69944:36)
-    at main(RootComponent) (http://192.168.1.145:8081/index.ts.bundle//&platform=ios&dev=true&hot=false&transform.engine=hermes&transform.bytecode=true&transform.routerRoot=app:117384:28)
- LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
- LOG  🔄 VOICE_CONTEXT: Context voiceState: IDLE
- LOG  🔄 VOICE_CONTEXT: Context isListening: false
- LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
- LOG  🔄 VOICE_CONTEXT: Context isError: false
- LOG  🔄 VOICE_CONTEXT: ====================================================
- LOG  🎤 Setting up voice event listeners
- LOG  🔄 VOICE_STATE_HOOK: ========== INITIAL STATE SETUP ==========
- LOG  🔄 VOICE_STATE_HOOK: Initial state from native: IDLE
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: IDLE
- LOG  🔄 VOICE_STATE_HOOK: Initial setState - Previous state: IDLE
- LOG  🔄 VOICE_STATE_HOOK: Initial setState - New state: IDLE
- LOG  🔄 VOICE_STATE_HOOK: Initial setVoiceState called with: IDLE
- LOG  🔄 VOICE_STATE_HOOK: ========== INITIAL STATE SETUP ==========
- LOG  🔄 VOICE_STATE_HOOK: Initial state from native: IDLE
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: IDLE
- LOG  🔄 VOICE_STATE_HOOK: Initial setState - Previous state: IDLE
- LOG  🔄 VOICE_STATE_HOOK: Initial setState - New state: IDLE
- LOG  🔄 VOICE_STATE_HOOK: Initial setVoiceState called with: IDLE
- LOG  🎵 VOICE_SETTINGS: Voice settings update only supported on Android, current platform: ios
- LOG  🧹 Cleaning up voice event listeners
- LOG  🎤 Setting up voice event listeners
- LOG  🔄 WAKE_WORD_CONTEXT: Syncing with database-backed voice settings
- LOG  🔄 WAKE_WORD_CONTEXT: Database wake word enabled: false
- LOG  🔄 WAKE_WORD_CONTEXT: Current local enabled: false
- LOG  🚀 WAKE_WORD_CONTEXT: Initializing wake word context...
- LOG  🚀 WAKE_WORD_CONTEXT: Using database state as initial state: false
- LOG  🔄 WAKE_WORD_CONTEXT: Syncing to database state: false
- LOG  🎤 WAKE_WORD_SERVICE: Wake word detection not supported on iOS
- ERROR  ❌ WAKE_WORD_CONTEXT: Failed to sync native layer with database state
- LOG  🔄 WAKE_WORD_CONTEXT: Native wake word state: false
- LOG  ✅ Integration completion handler registered
- LOG  🔄 VOICE_CONTEXT: User logged in, refreshing settings...
- LOG  🔄 VOICE_CONTEXT: ========== SETTINGS REFRESH STARTED ==========
- LOG  🔄 VOICE_CONTEXT: User ID: 5feaa57b-85b1-4002-8950-dfd9cbd8c77f
- LOG  🔄 VOICE_CONTEXT: Refreshing settings from database...
- LOG  🚀 WAKE_WORD_CONTEXT: Initializing wake word context...
- LOG  🚀 WAKE_WORD_CONTEXT: Waiting for voice settings to load...
- LOG  Auth state changed: INITIAL_SESSION
- LOG  🎵 VOICE_SETTINGS: Voice settings update only supported on Android, current platform: ios
- LOG  🧹 Cleaning up voice event listeners
- LOG  ✅ Integration completion handler registered
- LOG  🎤 Setting up voice event listeners
- LOG  🔄 VOICE_CONTEXT: Local settings loaded
- LOG  🔄 WAKE_WORD_CONTEXT: Syncing with database-backed voice settings
- LOG  🔄 WAKE_WORD_CONTEXT: Database wake word enabled: false
- LOG  🔄 WAKE_WORD_CONTEXT: Current local enabled: false
- LOG  🚀 WAKE_WORD_CONTEXT: Initializing wake word context...
- LOG  🚀 WAKE_WORD_CONTEXT: Using database state as initial state: false
- LOG  🔄 WAKE_WORD_CONTEXT: Syncing to database state: false
- LOG  🎤 WAKE_WORD_SERVICE: Wake word detection not supported on iOS
- ERROR  ❌ WAKE_WORD_CONTEXT: Failed to sync native layer with database state
- LOG  🔄 WAKE_WORD_CONTEXT: Native wake word state: false
- LOG  🔄 VOICE_CONTEXT: ========== MERGED SETTINGS FOR NATIVE ==========
- LOG  🔄 VOICE_CONTEXT: deepgramEnabled: false
- LOG  🔄 VOICE_CONTEXT: baseLanguageModel: claude-sonnet-4-20250514
- LOG  🔄 VOICE_CONTEXT: generalInstructions length: 45
- LOG  🔄 VOICE_CONTEXT: wakeWord: JUNIPER
- LOG  🔄 VOICE_CONTEXT: selectedWakeWord: JUNIPER
- LOG  🔄 VOICE_CONTEXT: wakeWordSensitivity: 0.4
- LOG  🔄 VOICE_CONTEXT: wakeWordDetectionEnabled: false
- LOG  🔄 VOICE_CONTEXT: selectedDeepgramVoice: aura-2-hermes-en
- LOG  🔄 VOICE_CONTEXT: xaiLiveSearchEnabled: true
- LOG  🔄 VOICE_CONTEXT: xaiLiveSearchSafeSearch: false
- LOG  🔄 VOICE_CONTEXT: Current settings before update: {
-  "deepgram_enabled": false,
-  "base_language_model": "claude-sonnet-4-20250514",
-  "general_instructions": "Please keep your responses to a few sentences",
-  "selectedWakeWord": "JUNIPER",
-  "wake_word_sensitivity": 0.4,
-  "wake_word_detection_enabled": false,
-  "selected_deepgram_voice": "aura-2-hermes-en",
-  "xai_live_search_enabled": true,
-  "xai_live_search_safe_search": false,
-  "timezone": "America/Chicago"
-}
- LOG  🎤 VOICE_CONTEXT: ========== WAKE WORD DETECTION REFRESH ==========
- LOG  🎤 VOICE_CONTEXT: Refreshing wake word detection enabled state from database: false
- LOG  🎤 VOICE_CONTEXT: Wake word sensitivity: 0.4
- LOG  🎤 VOICE_CONTEXT: Selected wake word: JUNIPER
- LOG  🔄 VOICE_CONTEXT: ========== SYNCING TO NATIVE LAYER ==========
- LOG  🔄 VOICE_CONTEXT: About to call updateSettingsRef.current with updates...
- LOG  🧹 Cleaning up voice event listeners
- LOG  ✅ Integration completion handler registered
- LOG  🎤 Setting up voice event listeners
- LOG  🎵 VOICE_SETTINGS: Voice settings update only supported on Android, current platform: ios
- LOG  🎤 WAKE_WORD_SERVICE: Wake word detection not supported on iOS
- ERROR  📱 VOICE_SETTINGS: ❌ Failed to fully disable wake word detection (stop: false , disable: false )
- LOG  🔄 VOICE_CONTEXT: ========== NATIVE SYNC COMPLETED ==========
- LOG  🔄 VOICE_CONTEXT: Sync duration: 343 ms
- LOG  ✅ VOICE_CONTEXT: Settings updated and synced to native successfully
- LOG  🔄 VOICE_CONTEXT: ========== SETTINGS REFRESH COMPLETED ==========
- LOG  🎤 Starting listening via context
- ERROR  🎤 VoiceModule not found in NativeModules. Cannot start listening.
+default	18:36:23.974606-0500	MobileJarvisNative	TX focusApplication (peekAppEvent) stealKB:Y scene:com.anonymous.MobileJarvisNative-default
+default	18:36:23.974936-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
+default	18:36:23.974749-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 1; ignoreInteractionEvents: 0, systemGestureStateChange: 0
+default	18:36:23.974872-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to windows: 1
+default	18:36:23.974994-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
+default	18:36:23.982460-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 0
+default	18:36:23.982506-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 0
+default	18:36:24.044115-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 1
+default	18:36:24.044177-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 1
+default	18:36:24.059660-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 1; ignoreInteractionEvents: 0, systemGestureStateChange: 0
+default	18:36:24.060127-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to windows: 1
+default	18:36:24.059813-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 1; ignoreInteractionEvents: 0, systemGestureStateChange: 0
+default	18:36:24.060209-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to windows: 1
+default	18:36:24.060769-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
+default	18:36:24.060667-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
+default	18:36:24.065561-0500	MobileJarvisNative	    AVAudioSession_iOS.mm:1928  Deactivated session 0x6817a
+default	18:36:24.065498-0500	MobileJarvisNative	    AVAudioSession_iOS.mm:1928  Deactivated session 0x6817a
+default	18:36:27.516186-0500	wifid	__WiFiLQAMgrLogStats(TowerStation:Stationary): InfraUptime:17773.1secs Channel: 157 Bandwidth: 80Mhz Rssi: -40 {-41 -46} Cca: 21 (S:0 O:4 I:15) Snr: 16 BcnPer: 2.0% (49, 51.7%) TxFrameCnt: 66 TxPer: 0.0% TxReTrans: 6 TxRetryRatio: 9.1% RxFrameCnt: 64 RxRetryFrames: 0 RxRetryRatio: 0.0% TxRate: 286760 RxRate: 1200950 FBRate: 172050 TxFwFrms: 28 TxFwFail: 0 Noise: -88 {-88 -90 -2} time: 560.6secs fgApp: com.anonymous.MobileJarvisNative V: T
+default	18:36:32.530810-0500	wifid	__WiFiLQAMgrLogStats(TowerStation:Stationary): InfraUptime:17778.1secs Channel: 157 Bandwidth: 80Mhz Rssi: -41 {-43 -43} Cca: 21 (S:0 O:4 I:15) Snr: 17 BcnPer: 2.0% (49, 51.7%) TxFrameCnt: 48 TxPer: 0.0% TxReTrans: 0 TxRetryRatio: 0.0% RxFrameCnt: 49 RxRetryFrames: 0 RxRetryRatio: 0.0% TxRate: 286760 RxRate: 1200950 FBRate: 172050 TxFwFrms: 25 TxFwFail: 0 Noise: -88 {-88 -90 -2} time: 565.6secs fgApp: com.anonymous.MobileJarvisNative V: T
+default	18:36:37.549777-0500	wifid	__WiFiLQAMgrLogStats(TowerStation:Stationary): InfraUptime:17783.1secs Channel: 157 Bandwidth: 80Mhz Rssi: -40 {-40 -42} Cca: 21 (S:0 O:4 I:15) Snr: 15 BcnPer: 2.0% (49, 51.7%) TxFrameCnt: 17 TxPer: 0.0% TxReTrans: 0 TxRetryRatio: 0.0% RxFrameCnt: 23 RxRetryFrames: 0 RxRetryRatio: 0.0% TxRate: 1200950 RxRate: 1200950 FBRate: 720580 TxFwFrms: 17 TxFwFail: 0 Noise: -88 {-88 -90 -2} time: 570.6secs fgApp: com.anonymous.MobileJarvisNative V: T
+default	18:36:40.419814-0500	SpringBoard	RX com.anonymous.MobileJarvisNative(3589) focusApplicationWithPID:3589 stealKeyboard:Y
+    context:<contextID:213329895 sceneID:com.anonymous.MobileJarvisNative-default>
+default	18:36:40.419780-0500	SpringBoard	RX com.anonymous.MobileJarvisNative(3589) focusApplicationWithPID:3589 stealKeyboard:Y
+    context:<contextID:213329895 sceneID:com.anonymous.MobileJarvisNative-default>
+default	18:36:40.420609-0500	MobileJarvisNative	TX focusApplication (peekAppEvent) stealKB:Y scene:com.anonymous.MobileJarvisNative-default
+default	18:36:40.420568-0500	MobileJarvisNative	TX focusApplication (peekAppEvent) stealKB:Y scene:com.anonymous.MobileJarvisNative-default
+default	18:36:40.420691-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 1; ignoreInteractionEvents: 0, systemGestureStateChange: 0
+default	18:36:40.420816-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to windows: 1
+default	18:36:40.420957-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
+default	18:36:40.420753-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 1; ignoreInteractionEvents: 0, systemGestureStateChange: 0
+default	18:36:40.420897-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to windows: 1
+default	18:36:40.421000-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
+default	18:36:40.425817-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 0
+default	18:36:40.425666-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 0
+default	18:36:40.483016-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 1; ignoreInteractionEvents: 0, systemGestureStateChange: 0
+default	18:36:40.483228-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to windows: 1
+default	18:36:40.483422-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
+default	18:36:40.483078-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 1; ignoreInteractionEvents: 0, systemGestureStateChange: 0
+default	18:36:40.483274-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to windows: 1
+default	18:36:40.483464-0500	MobileJarvisNative	Sending UIEvent type: 0; subtype: 0; to window: <UIWindow: 0x100f57bd0>; contextId: 0xCB727E7
+default	18:36:40.487421-0500	MobileJarvisNative	    AVAudioSession_iOS.mm:1928  Deactivated session 0x6817a
+default	18:36:40.487462-0500	MobileJarvisNative	    AVAudioSession_iOS.mm:1928  Deactivated session 0x6817a
+default	18:36:40.489068-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 1
+default	18:36:40.489154-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 0
+default	18:36:40.489111-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 1
+default	18:36:40.489202-0500	MobileJarvisNative	Evaluating dispatch of UIEvent: 0x13ae0b3a0; type: 0; subtype: 0; backing type: 11; shouldSend: 0; ignoreInteractionEvents: 0, systemGestureStateChange: 0
+default	18:36:42.570960-0500	wifid	__WiFiLQAMgrLogStats(TowerStation:Stationary): InfraUptime:17788.2secs Channel: 157 Bandwidth: 80Mhz Rssi: -40 {-41 -43} Cca: 21 (S:0 O:4 I:15) Snr: 15 BcnPer: 0.0% (49, 51.7%) TxFrameCnt: 22 TxPer: 0.0% TxReTrans: 0 TxRetryRatio: 0.0% RxFrameCnt: 27 RxRetryFrames: 0 RxRetryRatio: 0.0% TxRate: 1200950 RxRate: 1200950 FBRate: 720580 TxFwFrms: 14 TxFwFail: 0 Noise: -88 {-88 -90 -2} time: 575.6secs fgApp: com.anonymous.MobileJarvisNative V: T
+default	18:36:42.571058-0500	wifid	__WiFiLQAMgrLogStats(TowerStation:Stationary): InfraUptime:17788.2secs Channel: 157 Bandwidth: 80Mhz Rssi: -40 {-41 -43} Cca: 21 (S:0 O:4 I:15) Snr: 15 BcnPer: 0.0% (49, 51.7%) TxFrameCnt: 22 TxPer: 0.0% TxReTrans: 0 TxRetryRatio: 0.0% RxFrameCnt: 27 RxRetryFrames: 0 RxRetryRatio: 0.0% TxRate: 1200950 RxRate: 1200950 FBRate: 720580 TxFwFrms: 14 TxFwFail: 0 Noise: -88 {-88 -90 -2} time: 575.6secs fgApp: com.anonymous.MobileJarvisNative V: T
+default	18:36:47.585143-0500	wifid	__WiFiLQAMgrLogStats(TowerStation:Stationary): InfraUptime:17793.2secs Channel: 157 Bandwidth: 80Mhz Rssi: -43 {-45 -47} Cca: 21 (S:0 O:4 I:15) Snr: 21 BcnPer: 0.0% (49, 51.7%) TxFrameCnt: 18 TxPer: 0.0% TxReTrans: 0 TxRetryRatio: 0.0% RxFrameCnt: 26 RxRetryFrames: 4 RxRetryRatio: 15.4% TxRate: 1200950 RxRate: 1200950 FBRate: 720580 TxFwFrms: 18 TxFwFail: 0 Noise: -88 {-88 -90 -2} time: 580.6secs fgApp: com.anonymous.MobileJarvisNative V: T

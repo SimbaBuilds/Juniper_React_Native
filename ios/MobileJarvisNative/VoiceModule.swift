@@ -2,10 +2,12 @@ import Foundation
 import React
 
 @objc(VoiceModule)
+@objcMembers
 class VoiceModule: RCTEventEmitter {
     
     private let voiceManager = VoiceManager.shared
     private var hasListeners = false
+    
     
     // MARK: - API Callback Tracking (matching Android pattern)
     private var pendingApiCallbacks: [String: (String) -> Void] = [:]
@@ -472,16 +474,17 @@ class VoiceModule: RCTEventEmitter {
     }
     
     // MARK: - Required for RCTEventEmitter
-    @objc override static func requiresMainQueueSetup() -> Bool {
+    @objc static override func requiresMainQueueSetup() -> Bool {
         print("🔧 VoiceModule: ===============================================")
         print("🔧 VoiceModule: requiresMainQueueSetup() called - returning true")
         print("🔧 VoiceModule: This method is called during module registration")
         print("🔧 VoiceModule: Thread: \(Thread.current)")
+        print("🔧 VoiceModule: Class: \(VoiceModule.self)")
         print("🔧 VoiceModule: ===============================================")
         return true
     }
     
-    @objc override static func moduleName() -> String! {
+    @objc static override func moduleName() -> String! {
         print("🔧 VoiceModule: ===============================================")
         print("🔧 VoiceModule: moduleName() called - returning 'VoiceModule'")
         print("🔧 VoiceModule: This method provides the module name to React Native")
