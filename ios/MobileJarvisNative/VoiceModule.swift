@@ -57,6 +57,8 @@ class VoiceModule: RCTEventEmitter {
         }
         
         voiceManager.onSpeechResult = { [weak self] text, isFinal in
+            NSLog("🎙️ VoiceModule: Speech result received - text: %@, isFinal: %@", text, isFinal ? "YES" : "NO")
+            
             // Emit speechResult event for VoiceService.ts
             self?.sendEvent(withName: "speechResult", body: [
                 "text": text,
@@ -91,10 +93,15 @@ class VoiceModule: RCTEventEmitter {
             }
             
             // Emit the event to React Native
+            NSLog("🔵 VoiceModule: About to emit processTextFromNative event")
+            NSLog("🔵 VoiceModule: hasListeners: %@", self?.hasListeners ?? false ? "YES" : "NO")
+            
             self?.sendEvent(withName: "processTextFromNative", body: [
                 "text": text,
                 "requestId": requestId
             ])
+            
+            NSLog("🔵 VoiceModule: processTextFromNative event emitted successfully")
             
             // Set timeout for the request
             let timeoutTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: false) { _ in

@@ -445,7 +445,9 @@ class VoiceManager: NSObject {
     
     private func startSilenceTimer() {
         silenceTimer?.invalidate()
+        NSLog("⏰ VoiceManager: Starting silence timer with timeout: %f seconds", silenceTimeout)
         silenceTimer = Timer.scheduledTimer(withTimeInterval: silenceTimeout, repeats: false) { _ in
+            NSLog("⏰ VoiceManager: Silence timeout reached, calling finishListening")
             print("⏰ VoiceManager: Silence timeout reached")
             self.finishListening()
         }
@@ -563,17 +565,21 @@ class VoiceManager: NSObject {
         
         stopListening()
         
+        // If we don't have a final result but we have a partial result, use that
+        let resultToProcess = finalResult ?? lastPartialResult
+        
         // Process final result
-        if let finalResult = finalResult, !finalResult.isEmpty {
+        if let resultToProcess = resultToProcess, !resultToProcess.isEmpty {
             setState(.processing)
-            print("✅ VoiceManager: Processing final result: '\(finalResult)'")
+            print("✅ VoiceManager: Processing result: '\(resultToProcess)'")
+            print("✅ VoiceManager: (was final: \(finalResult != nil), using partial: \(finalResult == nil))")
             
             // **NEW: CONVERSATION FLOW - Emit processTextFromNative event**
-            processTextRequest(finalResult)
+            processTextRequest(resultToProcess)
         } else {
-            print("⚠️ VoiceManager: No final result to process")
-            // Don't automatically return to idle - let the conversation flow determine state
-            // This matches Android behavior where state management is more deliberate
+            print("⚠️ VoiceManager: No result to process (final: \(finalResult ?? "nil"), partial: \(lastPartialResult ?? "nil"))")
+            // Transition to error state if no speech was captured
+            handleError(.speechRecognitionFailed, "No speech detected")
         }
     }
     
@@ -607,7 +613,18 @@ class VoiceManager: NSObject {
         }
         
         // Emit event to React Native (similar to Android pattern)
-        reactNativeApiCallback?(text, requestId)
+        NSLog("🔵 VoiceManager: About to call reactNativeApiCallback")
+        NSLog("🔵 VoiceManager: Callback is nil: %@", reactNativeApiCallback == nil ? "YES" : "NO")
+        
+        if let callback = reactNativeApiCallback {
+            NSLog("🔵 VoiceManager: Calling React Native API callback with text: %@ and requestId: %@", text, requestId)
+            callback(text, requestId)
+            NSLog("🔵 VoiceManager: React Native API callback called successfully")
+        } else {
+            NSLog("❌ VoiceManager: reactNativeApiCallback is nil! Cannot emit processTextFromNative event")
+            print("❌ VoiceManager: reactNativeApiCallback is nil! Cannot emit processTextFromNative event")
+            handleError(.speechRecognitionFailed, "API callback not set up")
+        }
     }
     
     /**
