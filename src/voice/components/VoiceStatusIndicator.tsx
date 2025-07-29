@@ -33,7 +33,7 @@ export const VoiceStatusIndicator: React.FC = () => {
       case VoiceState.ERROR:
         return 'Error';
       default:
-        return 'Unknown state';
+        return 'Idle';
     }
   };
   

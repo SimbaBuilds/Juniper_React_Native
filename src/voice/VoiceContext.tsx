@@ -297,18 +297,18 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           xaiLiveSearchSafeSearch: voiceSettings.xai_live_search_safe_search ?? true,
         };
         
-        console.log('🔄 VOICE_CONTEXT: ========== MERGED SETTINGS FOR NATIVE ==========');
-        console.log('🔄 VOICE_CONTEXT: deepgramEnabled:', updates.deepgramEnabled);
-        console.log('🔄 VOICE_CONTEXT: baseLanguageModel:', updates.baseLanguageModel);
-        console.log('🔄 VOICE_CONTEXT: generalInstructions length:', updates.generalInstructions.length);
-        console.log('🔄 VOICE_CONTEXT: wakeWord:', updates.wakeWord);
-        console.log('🔄 VOICE_CONTEXT: selectedWakeWord:', updates.selectedWakeWord);
-        console.log('🔄 VOICE_CONTEXT: wakeWordSensitivity:', updates.wakeWordSensitivity);
-        console.log('🔄 VOICE_CONTEXT: wakeWordDetectionEnabled:', updates.wakeWordDetectionEnabled);
-        console.log('🔄 VOICE_CONTEXT: selectedDeepgramVoice:', updates.selectedDeepgramVoice);
-        console.log('🔄 VOICE_CONTEXT: xaiLiveSearchEnabled:', updates.xaiLiveSearchEnabled);
-        console.log('🔄 VOICE_CONTEXT: xaiLiveSearchSafeSearch:', updates.xaiLiveSearchSafeSearch);
-        console.log('🔄 VOICE_CONTEXT: Current settings before update:', JSON.stringify(voiceSettings, null, 2));
+        // console.log('🔄 VOICE_CONTEXT: ========== MERGED SETTINGS FOR NATIVE ==========');
+        // console.log('🔄 VOICE_CONTEXT: deepgramEnabled:', updates.deepgramEnabled);
+        // console.log('🔄 VOICE_CONTEXT: baseLanguageModel:', updates.baseLanguageModel);
+        // console.log('🔄 VOICE_CONTEXT: generalInstructions length:', updates.generalInstructions.length);
+        // console.log('🔄 VOICE_CONTEXT: wakeWord:', updates.wakeWord);
+        // console.log('🔄 VOICE_CONTEXT: selectedWakeWord:', updates.selectedWakeWord);
+        // console.log('🔄 VOICE_CONTEXT: wakeWordSensitivity:', updates.wakeWordSensitivity);
+        // console.log('🔄 VOICE_CONTEXT: wakeWordDetectionEnabled:', updates.wakeWordDetectionEnabled);
+        // console.log('🔄 VOICE_CONTEXT: selectedDeepgramVoice:', updates.selectedDeepgramVoice);
+        // console.log('🔄 VOICE_CONTEXT: xaiLiveSearchEnabled:', updates.xaiLiveSearchEnabled);
+        // console.log('🔄 VOICE_CONTEXT: xaiLiveSearchSafeSearch:', updates.xaiLiveSearchSafeSearch);
+        // console.log('🔄 VOICE_CONTEXT: Current settings before update:', JSON.stringify(voiceSettings, null, 2));
         
         // Specifically log wake word detection refresh
         if (updates.wakeWordDetectionEnabled !== undefined) {

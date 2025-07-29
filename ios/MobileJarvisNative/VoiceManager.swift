@@ -184,13 +184,18 @@ class VoiceManager: NSObject {
     // MARK: - Audio Session Management
     private func configureAudioSession() throws {
         let audioSession = AVAudioSession.sharedInstance()
+        print("🎤 VoiceManager: Configuring audio session...")
+        print("🎤 VoiceManager: Current record permission: \(audioSession.recordPermission.rawValue)")
         try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        print("✅ VoiceManager: Audio session configured successfully")
     }
     
     // MARK: - Speech Recognition
     func startListening() {
         print("🎙️ VoiceManager: Starting speech recognition")
+        print("🎙️ VoiceManager: Current state: \(currentState.description)")
+        print("🎙️ VoiceManager: Is already listening: \(isListening)")
         
         // Reset state
         resetSpeechTracking()
@@ -211,8 +216,10 @@ class VoiceManager: NSObject {
         print("🔄 VoiceManager: Attempt \(currentRetryCount) of \(maxRetries)")
         
         // Check permissions
-        guard SFSpeechRecognizer.authorizationStatus() == .authorized else {
-            handleError(.audioPermissionDenied, "Speech recognition permission not granted")
+        let authStatus = SFSpeechRecognizer.authorizationStatus()
+        print("🔐 VoiceManager: Speech recognition auth status: \(authStatus.rawValue)")
+        guard authStatus == .authorized else {
+            handleError(.audioPermissionDenied, "Speech recognition permission not granted. Status: \(authStatus.rawValue)")
             return
         }
         
@@ -231,9 +238,11 @@ class VoiceManager: NSObject {
     
     private func setupRecognition() {
         print("🎙️ VoiceManager: Setting up recognition with provider: \(currentSTTProvider.displayName)")
+        print("🎙️ VoiceManager: Current STT provider: \(currentSTTProvider)")
         
         // Request audio focus for recording with priority-based management
         audioManager.requestAudioFocus(.recording) { [weak self] success in
+            print("🎙️ VoiceManager: Audio focus request result: \(success)")
             guard success else {
                 print("❌ VoiceManager: Failed to acquire audio focus for recording")
                 self?.scheduleRetry()
@@ -266,11 +275,14 @@ class VoiceManager: NSObject {
         }
         
         // Create recognition request
+        print("🎙️ VoiceManager: Creating recognition request...")
+        print("🎙️ VoiceManager: Speech recognizer available: \(speechRecognizer?.isAvailable ?? false)")
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         guard let recognitionRequest = recognitionRequest else {
             handleError(.speechRecognitionFailed, "Failed to create recognition request")
             return
         }
+        print("✅ VoiceManager: Recognition request created successfully")
         
         recognitionRequest.shouldReportPartialResults = true
         
@@ -293,13 +305,18 @@ class VoiceManager: NSObject {
         
         // Start audio engine
         do {
+            print("🎙️ VoiceManager: About to start audio engine...")
+            print("🎙️ VoiceManager: Audio engine running status before start: \(audioEngine.isRunning)")
             try audioEngine.start()
+            print("✅ VoiceManager: Audio engine started successfully")
+            print("🎙️ VoiceManager: Audio engine running status after start: \(audioEngine.isRunning)")
             setState(.listening)
             isListening = true
             startTimers()
             print("✅ VoiceManager: iOS Native STT started, listening for speech")
         } catch {
             print("❌ VoiceManager: Failed to start audio engine: \(error)")
+            print("❌ VoiceManager: Error details: \(error.localizedDescription)")
             scheduleRetry()
         }
     }
@@ -673,21 +690,16 @@ class VoiceManager: NSObject {
     }
     
     /**
-     * Simulate wake word detection for iOS (matches Android wake word flow)
-     * This enables continuous conversation mode on iOS
+     * Simulate wake word detection for iOS - DEPRECATED
+     * iOS now uses direct listening flow without wake word simulation
      */
+    @available(*, deprecated, message: "iOS uses direct listening flow. Use startListening() directly.")
     @objc func simulateWakeWordDetection() {
-        print("🎯 VoiceManager: Simulating wake word detection for iOS continuous conversation")
+        print("⚠️ VoiceManager: simulateWakeWordDetection is deprecated on iOS")
+        print("⚠️ VoiceManager: iOS should use startListening() directly for conversation flow")
         
-        // Set state to WAKE_WORD_DETECTED to match Android flow
-        setState(.wakeWordDetected)
-        
-        // Play a sound or provide feedback that conversation mode is active
-        // This could be a simple beep or "Yes?" response
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            // Transition to listening state
-            self.setState(.listening)
-        }
+        // For backward compatibility, just start listening
+        startListening()
     }
     
     func stopListening() {
@@ -740,6 +752,7 @@ class VoiceManager: NSObject {
     // MARK: - Error Handling
     private func handleError(_ error: VoiceError, _ message: String) {
         print("❌ VoiceManager: Error - \(error.description): \(message)")
+        print("❌ VoiceManager: Previous state was: \(currentState.description)")
         
         stopListening()
         setState(.error)

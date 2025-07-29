@@ -6,6 +6,7 @@ import WakeWordService from '../../wakeword/WakeWordService';
 import { DatabaseService } from '../../supabase/supabase';
 import { useAuth } from '../../auth/AuthContext';
 import { DEFAULT_WAKE_PHRASE } from '../../wakeword/constants';
+import { Platform } from 'react-native';
 
 const VOICE_SETTINGS_KEY = 'voice_settings';
 
@@ -194,7 +195,9 @@ export const useVoiceSettings = () => {
               
               if (stopSuccess && disableSuccess) {
               } else {
-                console.error('📱 VOICE_SETTINGS: ❌ Failed to fully disable wake word detection (stop:', stopSuccess, ', disable:', disableSuccess, ')');
+                if (Platform.OS === 'android') {
+                  console.error('📱 VOICE_SETTINGS: ❌ Failed to fully disable wake word detection (stop:', stopSuccess, ', disable:', disableSuccess, ')');
+                }
               }
             }
           }

@@ -23,7 +23,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
   errorColor = '#e74c3c',
   onPress,
 }) => {
-  const { voiceState, isListening, isSpeaking, isError, startListening, stopListening, interruptSpeech } = useVoiceState();
+  const { voiceState, isListening, isSpeaking, isError, startListening, startContinuousConversation, stopListening, interruptSpeech } = useVoiceState();
   
   // Get wake word context to check and toggle wake word state
   const { isEnabled: isWakeWordEnabled, setEnabled: setWakeWordEnabled } = useWakeWord();
@@ -54,10 +54,16 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
         }
       }
       
-      // Start listening
-      await startListening();
+      // Start listening - use platform-specific method
+      if (Platform.OS === 'ios') {
+        console.log('🎤 VOICE_BUTTON: iOS - Starting continuous conversation');
+        await startContinuousConversation();
+      } else {
+        console.log('🎤 VOICE_BUTTON: Android - Starting listening');
+        await startListening();
+      }
     }
-  }, [isListening, isSpeaking, startListening, stopListening, interruptSpeech, onPress, isWakeWordEnabled, setWakeWordEnabled]);
+  }, [isListening, isSpeaking, startListening, startContinuousConversation, stopListening, interruptSpeech, onPress, isWakeWordEnabled, setWakeWordEnabled]);
   
   // Determine the icon based on state
   const getIcon = () => {

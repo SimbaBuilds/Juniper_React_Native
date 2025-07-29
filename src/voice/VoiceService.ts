@@ -93,7 +93,7 @@ export class VoiceService {
         }
 
         try {
-            console.log('🎤 Starting voice recognition with Android-specific validation...');
+            console.log('🎤 Starting voice recognition...');
             
             // Check Android permissions first
             const permissionsOk = await this.checkAndroidPermissions();
@@ -124,13 +124,13 @@ export class VoiceService {
                 }
             }
             
-            console.log('📱 Android: Starting native voice module...');
+            console.log(`📱 ${Platform.OS}: Starting native voice module...`);
             const result = await VoiceModule.startListening();
-            console.log('📱 Android: Voice module started:', result);
+            console.log(`📱 ${Platform.OS}: Voice module started:`, result);
             
             return result;
         } catch (error) {
-            console.error('❌ Android: Error starting voice recognition:', error);
+            console.error(`❌ ${Platform.OS}: Error starting voice recognition:`, error);
             throw error;
         }
     }
@@ -167,7 +167,7 @@ export class VoiceService {
 
     public async stopListening(): Promise<boolean> {
         try {
-            console.log('📱 Android: Stopping voice recognition...');
+            console.log(`📱 ${Platform.OS}: Stopping voice recognition...`);
             const result = await VoiceModule.stopListening();
             
             // Add delay for Android to ensure proper cleanup

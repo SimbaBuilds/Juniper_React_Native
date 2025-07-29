@@ -123,16 +123,14 @@ class VoiceModule: RCTEventEmitter {
     }
     
     /**
-     * Start continuous conversation mode (iOS equivalent of Android wake word trigger)
-     * This simulates the wake word detection flow for iOS
+     * Start continuous conversation mode (iOS-specific flow)
+     * Goes directly to listening without wake word simulation
      */
     @objc func startContinuousConversation(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
-        print("🎙️ VoiceModule: startContinuousConversation called - iOS continuous mode")
+        print("🎙️ VoiceModule: startContinuousConversation called - iOS direct listening mode")
+        print("🎙️ VoiceModule: iOS flow - going directly to listening state")
         
-        // Simulate wake word detection state for iOS
-        voiceManager.simulateWakeWordDetection()
-        
-        // Start listening for speech
+        // For iOS, go directly to listening without wake word simulation
         voiceManager.startListening()
         
         resolve(true)

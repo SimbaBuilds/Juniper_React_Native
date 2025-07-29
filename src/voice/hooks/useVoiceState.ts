@@ -95,15 +95,15 @@ export function useVoiceState() {
       // Add native timing info if available
       if ((event as any).timestamp) {
         const nativeToRnLatency = eventReceiveTimestamp - (event as any).timestamp;
-        console.log('🔄 VOICE_STATE_HOOK: Native to RN latency:', nativeToRnLatency, 'ms');
+        // console.log('🔄 VOICE_STATE_HOOK: Native to RN latency:', nativeToRnLatency, 'ms');
       }
       
       if ((event as any).nativeUpdateTime) {
         const nativeProcessingTime = (performance.now() * 1_000_000) - (event as any).nativeUpdateTime;
-        console.log('🔄 VOICE_STATE_HOOK: Native processing time:', nativeProcessingTime / 1_000_000, 'ms');
+        // console.log('🔄 VOICE_STATE_HOOK: Native processing time:', nativeProcessingTime / 1_000_000, 'ms');
       }
       
-      console.log('🔄 VOICE_STATE_HOOK: About to call setVoiceState with:', event.state);
+      // console.log('🔄 VOICE_STATE_HOOK: About to call setVoiceState with:', event.state);
       const stateUpdateStartTime = performance.now();
       
       // Use functional setState to ensure we get the latest state
