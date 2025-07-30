@@ -6,6 +6,8 @@
     "start": "expo start",
     "android": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home expo run:android",
     "ios": "expo run:ios",
+    "ios:build": "npx expo run:ios --device --no-install --no-bundler",
+    "ios:build-check": "cd ios && xcodebuild -workspace MobileJarvisNative.xcworkspace -scheme MobileJarvisNative -configuration Debug -destination 'generic/platform=iOS' build CODE_SIGNING_ALLOWED=NO",
     "web": "expo start --web",
     "android:build": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home cd android && ./gradlew assembleRelease",
     "test:ios": "./scripts/run-ios-tests.sh",

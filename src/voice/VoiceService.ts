@@ -169,7 +169,7 @@ export class VoiceService {
                 }
             } catch (permError) {
                 console.error('❌ iOS: Permission request failed:', permError);
-                throw new Error('Failed to request iOS permissions: ' + permError.message);
+                throw new Error('Failed to request iOS permissions');
             }
             
             console.log('📱 iOS: Calling native startContinuousConversation...');
@@ -529,11 +529,7 @@ export class VoiceService {
 
         
         try {
-            if (Platform.OS !== 'android') {
-                console.log('🎵 VOICE_SETTINGS: Voice settings update only supported on Android, current platform:', Platform.OS);
-                return true; // Return true to indicate graceful handling on iOS
-            }
-            
+            console.log(`🎵 VOICE_SETTINGS: Updating voice settings on ${Platform.OS} - deepgramEnabled: ${deepgramEnabled}, voice: ${selectedDeepgramVoice}`);
 
             const nativeCallStartTime = Date.now();
             const result = await VoiceModule.updateVoiceSettings(deepgramEnabled, selectedDeepgramVoice);

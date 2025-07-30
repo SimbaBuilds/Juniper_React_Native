@@ -36,7 +36,8 @@ class VoiceModule: RCTEventEmitter {
             "onVoiceError",
             "processTextFromNative",
             "VoiceResponseUpdate",
-            "VoiceTranscriptUpdate"
+            "VoiceTranscriptUpdate",
+            "onVoiceSettingsChanged"
         ]
     }
     
@@ -489,6 +490,209 @@ class VoiceModule: RCTEventEmitter {
         ] as [String : Any]
         
         resolve(result)
+    }
+    
+    // MARK: - Voice Settings Management (matching Android)
+    
+    @objc
+    func updateVoiceSettings(_ deepgramEnabled: Bool, 
+                           selectedDeepgramVoice: String,
+                           resolve: @escaping RCTPromiseResolveBlock,
+                           rejecter reject: @escaping RCTPromiseRejectBlock) {
+        print("🎵 VoiceModule: updateVoiceSettings called - deepgramEnabled: \(deepgramEnabled), voice: \(selectedDeepgramVoice)")
+        
+        let ttsManager = TTSManager.shared
+        let configManager = ConfigManager.shared
+        let deepgramAPI = DeepgramAPI.shared
+        
+        // Save settings to UserDefaults
+        let defaults = UserDefaults.standard
+        defaults.set(deepgramEnabled, forKey: "deepgram_enabled")
+        defaults.set(selectedDeepgramVoice, forKey: "selected_deepgram_voice")
+        defaults.synchronize()
+        
+        // Update TTS provider
+        let provider: TTSProvider = deepgramEnabled ? .deepgram : .native
+        ttsManager.setTTSProvider(provider)
+        
+        // Update selected voice if using Deepgram
+        if deepgramEnabled && !selectedDeepgramVoice.isEmpty {
+            ttsManager.setSelectedDeepgramVoice(selectedDeepgramVoice)
+        }
+        
+        // Force reload configuration to ensure TTSManager picks up new settings
+        ttsManager.reloadConfiguration()
+        
+        // Validate Deepgram configuration if enabling
+        if deepgramEnabled {
+            print("🎵 VoiceModule: ========== DEEPGRAM API KEY VALIDATION ==========")
+            print("🎵 VoiceModule: About to call configManager.getDeepgramApiKey()")
+            NSLog("🎵 VoiceModule: ========== DEEPGRAM API KEY VALIDATION ==========")
+            NSLog("🎵 VoiceModule: About to call configManager.getDeepgramApiKey()")
+            
+            // Force ConfigManager to print all config for debugging
+            configManager.printAllConfig()
+            
+            let apiKey = configManager.getDeepgramApiKey()
+            print("🎵 VoiceModule: Debug - API key from ConfigManager: '\(apiKey ?? "nil")'")
+            print("🎵 VoiceModule: Debug - API key isEmpty: \(apiKey?.isEmpty ?? true)")
+            NSLog("🎵 VoiceModule: Debug - API key from ConfigManager: '%@'", apiKey ?? "nil")
+            NSLog("🎵 VoiceModule: Debug - API key isEmpty: %@", (apiKey?.isEmpty ?? true) ? "YES" : "NO")
+            
+            if apiKey?.isEmpty ?? true {
+                print("🎵 VoiceModule: ❌ Deepgram API key validation failed")
+                print("🎵 VoiceModule: ❌ This means ConfigManager.getDeepgramApiKey() returned nil or empty")
+                NSLog("🎵 VoiceModule: ❌ Deepgram API key validation failed")
+                NSLog("🎵 VoiceModule: ❌ This means ConfigManager.getDeepgramApiKey() returned nil or empty")
+                reject("DEEPGRAM_CONFIG_ERROR", "Deepgram API key not configured", nil)
+                return
+            }
+            
+            print("🎵 VoiceModule: ✅ Deepgram API key validation passed")
+            NSLog("🎵 VoiceModule: ✅ Deepgram API key validation passed")
+            
+            // Force reload of Deepgram client
+            deepgramAPI.resetClient()
+        }
+        
+        // Send event to React Native
+        sendEvent(withName: "onVoiceSettingsChanged", body: [
+            "deepgramEnabled": deepgramEnabled,
+            "selectedVoice": selectedDeepgramVoice,
+            "provider": provider == .deepgram ? "deepgram" : "native"
+        ])
+        
+        resolve(true)
+    }
+    
+    @objc
+    func setDeepgramEnabled(_ enabled: Bool,
+                          resolve: @escaping RCTPromiseResolveBlock,
+                          rejecter reject: @escaping RCTPromiseRejectBlock) {
+        print("🎵 VoiceModule: setDeepgramEnabled called - enabled: \(enabled)")
+        
+        let ttsManager = TTSManager.shared
+        let defaults = UserDefaults.standard
+        defaults.set(enabled, forKey: "deepgram_enabled")
+        defaults.synchronize()
+        
+        // Update TTS provider
+        let provider: TTSProvider = enabled ? .deepgram : .native
+        ttsManager.setTTSProvider(provider)
+        
+        resolve(true)
+    }
+    
+    @objc
+    func getDeepgramEnabled(_ resolve: @escaping RCTPromiseResolveBlock,
+                          rejecter reject: @escaping RCTPromiseRejectBlock) {
+        let defaults = UserDefaults.standard
+        let enabled = defaults.bool(forKey: "deepgram_enabled")
+        resolve(enabled)
+    }
+    
+    @objc
+    func validateDeepgramSettings(_ resolve: @escaping RCTPromiseResolveBlock,
+                                rejecter reject: @escaping RCTPromiseRejectBlock) {
+        let configManager = ConfigManager.shared
+        let deepgramAPI = DeepgramAPI.shared
+        let ttsManager = TTSManager.shared
+        
+        var result: [String: Any] = [:]
+        
+        // Check API key
+        let apiKey = configManager.getDeepgramApiKey()
+        result["hasApiKey"] = !(apiKey?.isEmpty ?? true)
+        
+        // Check if Deepgram is enabled
+        let defaults = UserDefaults.standard
+        let enabled = defaults.bool(forKey: "deepgram_enabled")
+        result["isEnabled"] = enabled
+        
+        // Check selected voice
+        let selectedVoice = defaults.string(forKey: "selected_deepgram_voice") ?? "aura-asteria-en"
+        result["selectedVoice"] = selectedVoice
+        
+        // Check if Deepgram client is initialized
+        result["clientInitialized"] = deepgramAPI.isInitialized()
+        
+        // Check current TTS provider
+        result["currentProvider"] = ttsManager.getTTSProvider() == .deepgram ? "deepgram" : "native"
+        
+        resolve(result)
+    }
+    
+    @objc
+    func testDeepgramTTS(_ text: String,
+                       voice: String,
+                       resolve: @escaping RCTPromiseResolveBlock,
+                       rejecter reject: @escaping RCTPromiseRejectBlock) {
+        print("🎵 VoiceModule: testDeepgramTTS called - text: '\(text)', voice: '\(voice)'")
+        
+        let ttsManager = TTSManager.shared
+        
+        // Temporarily set to Deepgram for testing
+        let originalProvider = ttsManager.getTTSProvider()
+        let originalVoice = ttsManager.getSelectedDeepgramVoice()
+        
+        ttsManager.setTTSProvider(.deepgram)
+        ttsManager.setSelectedDeepgramVoice(voice)
+        
+        ttsManager.speak(text) {
+            // Restore original settings
+            ttsManager.setTTSProvider(originalProvider)
+            ttsManager.setSelectedDeepgramVoice(originalVoice)
+            
+            resolve(["success": true, "message": "Deepgram TTS test successful"])
+        }
+    }
+    
+    @objc
+    func runDeepgramDiagnostics(_ resolve: @escaping RCTPromiseResolveBlock,
+                               rejecter reject: @escaping RCTPromiseRejectBlock) {
+        let configManager = ConfigManager.shared
+        let deepgramAPI = DeepgramAPI.shared
+        let ttsManager = TTSManager.shared
+        
+        var diagnostics: [String: Any] = [:]
+        
+        // Configuration checks
+        let apiKey = configManager.getDeepgramApiKey()
+        diagnostics["hasApiKey"] = !(apiKey?.isEmpty ?? true)
+        diagnostics["apiKeyLength"] = apiKey?.count ?? 0
+        
+        // Settings checks
+        let defaults = UserDefaults.standard
+        diagnostics["deepgramEnabled"] = defaults.bool(forKey: "deepgram_enabled")
+        diagnostics["selectedVoice"] = defaults.string(forKey: "selected_deepgram_voice") ?? "aura-asteria-en"
+        
+        // Client status
+        diagnostics["clientInitialized"] = deepgramAPI.isInitialized()
+        diagnostics["currentTTSProvider"] = ttsManager.getTTSProvider() == .deepgram ? "deepgram" : "native"
+        
+        // Available voices
+        diagnostics["availableVoices"] = ttsManager.getAvailableDeepgramVoices()
+        
+        // Timestamp
+        diagnostics["timestamp"] = Date().timeIntervalSince1970 * 1000
+        
+        resolve(diagnostics)
+    }
+    
+    @objc
+    func resetDeepgramClient(_ resolve: @escaping RCTPromiseResolveBlock,
+                           rejecter reject: @escaping RCTPromiseRejectBlock) {
+        print("🎵 VoiceModule: resetDeepgramClient called")
+        
+        let deepgramAPI = DeepgramAPI.shared
+        let ttsManager = TTSManager.shared
+        
+        deepgramAPI.resetClient()
+        
+        // Reload configuration
+        ttsManager.reloadConfiguration()
+        
+        resolve(true)
     }
     
     // MARK: - Helper Methods

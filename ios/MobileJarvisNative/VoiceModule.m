@@ -96,4 +96,31 @@ RCT_EXTERN_METHOD(validateConfiguration:(RCTPromiseResolveBlock)resolve
 RCT_EXTERN_METHOD(getVoiceSystemStatus:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+// Voice Settings Management (matching Android)
+RCT_EXTERN_METHOD(updateVoiceSettings:(BOOL)deepgramEnabled
+                  selectedDeepgramVoice:(NSString *)selectedDeepgramVoice
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(setDeepgramEnabled:(BOOL)enabled
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(getDeepgramEnabled:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(validateDeepgramSettings:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(testDeepgramTTS:(NSString *)text
+                  voice:(NSString *)voice
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(runDeepgramDiagnostics:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(resetDeepgramClient:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 @end 

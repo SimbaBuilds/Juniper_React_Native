@@ -104,13 +104,20 @@ class DeepgramAPI: NSObject {
     // MARK: - Initialization
     func initialize() {
         print("🎵 DEEPGRAM_API: Initializing Deepgram API client...")
+        NSLog("🎵 DEEPGRAM_API: Initializing Deepgram API client...")
         loadConfiguration()
         print("🎵 DEEPGRAM_API: ✅ Deepgram API client initialized")
+        NSLog("🎵 DEEPGRAM_API: ✅ Deepgram API client initialized")
     }
     
     private func loadConfiguration() {
+        print("🎵 DEEPGRAM_API: Loading configuration...")
+        NSLog("🎵 DEEPGRAM_API: Loading configuration...")
         self.apiKey = configManager.getDeepgramApiKey()
-        print("🎵 DEEPGRAM_API: Configuration loaded - API key present: \(apiKey != nil)")
+        let keyPresent = apiKey != nil && !apiKey!.isEmpty
+        let keyPreview = apiKey?.prefix(10) ?? "nil"
+        print("🎵 DEEPGRAM_API: Configuration loaded - API key present: \(keyPresent), preview: '\(keyPreview)...'")
+        NSLog("🎵 DEEPGRAM_API: Configuration loaded - API key present: %@, preview: '%@...'", keyPresent ? "YES" : "NO", String(keyPreview))
     }
     
     private func setupNetworkMonitoring() {
@@ -301,8 +308,16 @@ class DeepgramAPI: NSObject {
     
     // MARK: - TTS Implementation
     func convertTextToSpeech(_ text: String, voice: String? = nil) async throws {
+        let keyPresent = apiKey != nil && !apiKey!.isEmpty
+        let keyPreview = apiKey?.prefix(10) ?? "nil"
+        print("🎵 DEEPGRAM_TTS: convertTextToSpeech called - API key present: \(keyPresent), preview: '\(keyPreview)...'")
+        NSLog("🎵 DEEPGRAM_TTS: convertTextToSpeech called - API key present: %@, preview: '%@...'", keyPresent ? "YES" : "NO", String(keyPreview))
+        
         guard let apiKey = apiKey, !apiKey.isEmpty else {
-            throw NSError(domain: "DeepgramAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: "API key not configured"])
+            let error = "Deepgram API key not configured"
+            print("🎵 DEEPGRAM_TTS: ❌ \(error)")
+            NSLog("🎵 DEEPGRAM_TTS: ❌ %@", error)
+            throw NSError(domain: "DeepgramAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: error])
         }
         
         let selectedVoice = voice ?? configManager.getSelectedDeepgramVoice()
@@ -343,8 +358,16 @@ class DeepgramAPI: NSObject {
     }
     
     func convertTextToSpeechData(_ text: String, voice: String? = nil) async throws -> Data {
+        let keyPresent = apiKey != nil && !apiKey!.isEmpty
+        let keyPreview = apiKey?.prefix(10) ?? "nil"
+        print("🎵 DEEPGRAM_TTS_DATA: convertTextToSpeechData called - API key present: \(keyPresent), preview: '\(keyPreview)...'")
+        NSLog("🎵 DEEPGRAM_TTS_DATA: convertTextToSpeechData called - API key present: %@, preview: '%@...'", keyPresent ? "YES" : "NO", String(keyPreview))
+        
         guard let apiKey = apiKey, !apiKey.isEmpty else {
-            throw NSError(domain: "DeepgramAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: "API key not configured"])
+            let error = "Deepgram API key not configured"
+            print("🎵 DEEPGRAM_TTS_DATA: ❌ \(error)")
+            NSLog("🎵 DEEPGRAM_TTS_DATA: ❌ %@", error)
+            throw NSError(domain: "DeepgramAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: error])
         }
         
         let selectedVoice = voice ?? configManager.getSelectedDeepgramVoice()
@@ -460,6 +483,30 @@ class DeepgramAPI: NSObject {
     // MARK: - Initialization Status
     func isInitialized() -> Bool {
         return apiKey != nil && !apiKey!.isEmpty
+    }
+    
+    // MARK: - Client Management
+    func resetClient() {
+        print("🎵 DEEPGRAM_API: Resetting Deepgram client...")
+        NSLog("🎵 DEEPGRAM_API: Resetting Deepgram client...")
+        
+        // Stop any ongoing audio playback
+        stopPlayback()
+        
+        // Reload API key from config
+        let oldKeyPresent = apiKey != nil && !apiKey!.isEmpty
+        print("🎵 DEEPGRAM_API: Old API key present: \(oldKeyPresent)")
+        NSLog("🎵 DEEPGRAM_API: Old API key present: %@", oldKeyPresent ? "YES" : "NO")
+        
+        self.apiKey = configManager.getDeepgramApiKey()
+        
+        let newKeyPresent = apiKey != nil && !apiKey!.isEmpty
+        let keyPreview = apiKey?.prefix(10) ?? "nil"
+        
+        // Clear any cached data or session state if needed
+        // For now, just log the reset
+        print("🎵 DEEPGRAM_API: Client reset complete. API key present: \(newKeyPresent), preview: '\(keyPreview)...'")
+        NSLog("🎵 DEEPGRAM_API: Client reset complete. API key present: %@, preview: '%@...'", newKeyPresent ? "YES" : "NO", String(keyPreview))
     }
     
     // MARK: - Connectivity Testing

@@ -32,6 +32,7 @@ class TTSManager: NSObject {
     private var currentProvider: TTSProvider = .native
     private var isSpeaking = false
     private var currentSpeechUtterance: AVSpeechUtterance?
+    private var selectedDeepgramVoice: String = DeepgramAPI.DEFAULT_VOICE
     
     // Completion handlers
     private var completionHandler: ((Bool) -> Void)?
@@ -64,7 +65,20 @@ class TTSManager: NSObject {
         let deepgramEnabled = configManager.isDeepgramTTSEnabled()
         currentProvider = deepgramEnabled ? .deepgram : .native
         
-        print("🎵 TTS_MANAGER: Configuration loaded - provider: \(currentProvider)")
+        // Load selected voice if using Deepgram
+        if currentProvider == .deepgram {
+            selectedDeepgramVoice = configManager.getSelectedDeepgramVoice()
+        }
+        
+        print("🎵 TTS_MANAGER: Configuration loaded - provider: \(currentProvider), voice: \(selectedDeepgramVoice)")
+    }
+    
+    /**
+     * Reload configuration from UserDefaults/ConfigManager
+     */
+    func reloadConfiguration() {
+        print("🎵 TTS_MANAGER: Reloading configuration...")
+        loadConfiguration()
     }
     
     // MARK: - Public Interface
@@ -75,8 +89,8 @@ class TTSManager: NSObject {
     func speak(_ text: String, completion: @escaping () -> Void) {
         NSLog("🎵 TTS_MANAGER: speak() called with text length: %d", text.count)
         // Store the completion handler to be called when TTS actually finishes
-        speakText(text) { success in
-            NSLog("🎵 TTS_MANAGER: speakText completion callback invoked, success: %@", success ? "YES" : "NO")
+        speakText(text) { _ in
+            NSLog("🎵 TTS_MANAGER: speakText completion callback invoked")
             completion()
         }
         // Don't call completion here - it will be called when TTS finishes via handleSpeechCompletion

@@ -29,6 +29,7 @@
 		DC396D5D571554EDE389A53F /* VoiceModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 422C0D0F6C1ECF06551206A4 /* VoiceModule.m */; };
 		DF809AC9525CF392E64780F2 /* DeepgramWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62711FA7517604D98094C9B6 /* DeepgramWebSocketClient.swift */; };
 		E754EDB309E94822A370492E /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7456B750B749258C0C427A /* noop-file.swift */; };
+		CF1234567890ABCDEF123456 /* config.properties in Resources */ = {isa = PBXBuildFile; fileRef = CF1234567890ABCDEF123457 /* config.properties */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -53,6 +54,7 @@
 		8BB77D5B0FDB46E1E6AFE775 /* AudioManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AudioManager.swift; path = MobileJarvisNative/AudioManager.swift; sourceTree = "<group>"; };
 		942DB604591B123018626165 /* WhisperAPI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WhisperAPI.swift; path = MobileJarvisNative/WhisperAPI.swift; sourceTree = "<group>"; };
 		98B68069DC08BFAC8E8ADADA /* DeepgramSTTProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DeepgramSTTProvider.swift; path = MobileJarvisNative/DeepgramSTTProvider.swift; sourceTree = "<group>"; };
+		CF1234567890ABCDEF123457 /* config.properties */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = config.properties; path = MobileJarvisNative/config.properties; sourceTree = "<group>"; };
 		9A868E1E82A36219D3233BB4 /* Pods-MobileJarvisNative.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MobileJarvisNative.debug.xcconfig"; path = "Target Support Files/Pods-MobileJarvisNative/Pods-MobileJarvisNative.debug.xcconfig"; sourceTree = "<group>"; };
 		9FDB97EEEC2D4062B18EBD67 /* MobileJarvisNative-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "MobileJarvisNative-Bridging-Header.h"; path = "MobileJarvisNative/MobileJarvisNative-Bridging-Header.h"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = MobileJarvisNative/SplashScreen.storyboard; sourceTree = "<group>"; };
@@ -89,6 +91,7 @@
 				9FDB97EEEC2D4062B18EBD67 /* MobileJarvisNative-Bridging-Header.h */,
 				8BB77D5B0FDB46E1E6AFE775 /* AudioManager.swift */,
 				F4CC0EECBA2E21DC4A1D9803 /* ConfigManager.swift */,
+				CF1234567890ABCDEF123457 /* config.properties */,
 				0F2F0DE634C53D0485F6EDCB /* DeepgramAPI.swift */,
 				98B68069DC08BFAC8E8ADADA /* DeepgramSTTProvider.swift */,
 				62711FA7517604D98094C9B6 /* DeepgramWebSocketClient.swift */,
@@ -242,6 +245,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
+				CF1234567890ABCDEF123456 /* config.properties in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
