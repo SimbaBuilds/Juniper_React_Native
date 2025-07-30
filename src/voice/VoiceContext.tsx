@@ -666,7 +666,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   }, [voiceStateFromHook]);
   
   // Send text message using existing API infrastructure
-  const sendTextMessage = useCallback(async (text: string) => {
+  const sendTextMessage = useCallback(async (text: string, integrationInProgress?: boolean) => {
     if (!text.trim()) {
       console.log('📝 TEXT_INPUT: Empty message, ignoring');
       return;
@@ -707,7 +707,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             const response = await sendMessage(text.trim(), updatedHistory, (requestId) => {
               console.log('📊 REQUEST_STATUS: Setting request ID for polling:', requestId);
               setCurrentRequestId(requestId);
-            });
+            }, integrationInProgress);
             const apiEndTime = Date.now();
             
             console.log('📝 TEXT_INPUT: ========== API RESPONSE RECEIVED ==========');

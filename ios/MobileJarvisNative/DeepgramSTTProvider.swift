@@ -36,7 +36,7 @@ class DeepgramSTTProvider: NSObject, STTProvider {
     
     func startListening() {
         print("🎤 DEEPGRAM_STT: Starting listening...")
-        
+        NSLog("🎤 DEEPGRAM_STT: Starting listening...")
         // Connect WebSocket first
         webSocketClient.connect()
         
@@ -45,7 +45,7 @@ class DeepgramSTTProvider: NSObject, STTProvider {
     
     func stopListening() {
         print("🎤 DEEPGRAM_STT: Stopping listening...")
-        
+        NSLog("🎤 DEEPGRAM_STT: Stopping listening...")
         stopRecording()
         webSocketClient.disconnect()
     }
@@ -83,8 +83,10 @@ class DeepgramSTTProvider: NSObject, STTProvider {
         let isValid = issues.isEmpty
         
         print("🎤 DEEPGRAM_STT: Validation result - valid: \(isValid)")
+        NSLog("🎤 DEEPGRAM_STT: Validation result - valid: \(isValid)")
         if !isValid {
             print("🎤 DEEPGRAM_STT: Issues: \(issues.joined(separator: ", "))")
+            NSLog("🎤 DEEPGRAM_STT: Issues: \(issues.joined(separator: ", "))")
         }
         
         return (isValid: isValid, issues: issues)
@@ -157,9 +159,10 @@ class DeepgramSTTProvider: NSObject, STTProvider {
             isRecording = true
             
             print("🎤 DEEPGRAM_STT: ✅ Recording started")
-            
+            NSLog("🎤 DEEPGRAM_STT: ✅ Recording started")
         } catch {
             print("🎤 DEEPGRAM_STT: ❌ Failed to start recording: \(error)")
+            NSLog("🎤 DEEPGRAM_STT: ❌ Failed to start recording: \(error)")
             delegate?.sttProvider(self, didEncounterError: error)
         }
     }
@@ -203,7 +206,7 @@ extension DeepgramSTTProvider: DeepgramWebSocketClientDelegate {
     
     func deepgramWebSocketClientDidConnect(_ client: DeepgramWebSocketClient) {
         print("🎤 DEEPGRAM_STT: WebSocket connected")
-        
+        NSLog("🎤 DEEPGRAM_STT: WebSocket connected")
         // Start recording when WebSocket is connected
         DispatchQueue.main.async { [weak self] in
             self?.startRecording()
@@ -212,7 +215,7 @@ extension DeepgramSTTProvider: DeepgramWebSocketClientDelegate {
     
     func deepgramWebSocketClientDidDisconnect(_ client: DeepgramWebSocketClient) {
         print("🎤 DEEPGRAM_STT: WebSocket disconnected")
-        
+        NSLog("🎤 DEEPGRAM_STT: WebSocket disconnected")
         // Stop recording if WebSocket disconnects
         DispatchQueue.main.async { [weak self] in
             self?.stopRecording()
@@ -221,7 +224,7 @@ extension DeepgramSTTProvider: DeepgramWebSocketClientDelegate {
     
     func deepgramWebSocketClient(_ client: DeepgramWebSocketClient, didReceiveTranscript transcript: String, isFinal: Bool) {
         print("🎤 DEEPGRAM_STT: Received transcript: '\(transcript)' (final: \(isFinal))")
-        
+        NSLog("🎤 DEEPGRAM_STT: Received transcript: '\(transcript)' (final: \(isFinal))")
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             
@@ -235,7 +238,7 @@ extension DeepgramSTTProvider: DeepgramWebSocketClientDelegate {
     
     func deepgramWebSocketClient(_ client: DeepgramWebSocketClient, didReceiveError error: Error) {
         print("🎤 DEEPGRAM_STT: WebSocket error: \(error)")
-        
+        NSLog("🎤 DEEPGRAM_STT: WebSocket error: \(error)")
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             self.delegate?.sttProvider(self, didEncounterError: error)

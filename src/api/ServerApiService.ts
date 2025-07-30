@@ -51,6 +51,7 @@ export interface ChatRequest {
     [key: string]: any;
   };
   request_id?: string; // Optional request ID for tracking
+  integration_in_progress?: boolean; // Flag to indicate integration completion message
   // feature_settings removed - backend will fetch from database
 }
 
@@ -193,6 +194,7 @@ class ServerApiService {
     history: ChatMessage[],
     preferences?: ChatRequest['preferences'],
     onRequestStart?: (requestId: string) => void,
+    integrationInProgress?: boolean,
   ): Promise<ChatResponse> {
     // Queue requests to prevent concurrent auth issues
     // Use .catch() to prevent cancelled requests from breaking the queue
@@ -240,7 +242,8 @@ class ServerApiService {
             ...defaultPreferences,
             ...preferences // Allow override of defaults with passed preferences
           },
-          request_id: this.currentRequestId // Include request_id in the payload
+          request_id: this.currentRequestId, // Include request_id in the payload
+          ...(integrationInProgress && { integration_in_progress: integrationInProgress })
         };
 
         history.forEach((message, index) => {

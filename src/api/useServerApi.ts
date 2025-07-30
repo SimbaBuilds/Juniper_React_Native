@@ -12,7 +12,7 @@ interface UseServerApiResult {
   isLoading: boolean;
   error: Error | null;
   response: ChatResponse | null;
-  sendMessage: (message: string, history: ChatMessage[], onRequestStart?: (requestId: string) => void) => Promise<ChatResponse>;
+  sendMessage: (message: string, history: ChatMessage[], onRequestStart?: (requestId: string) => void, integrationInProgress?: boolean) => Promise<ChatResponse>;
   updateConfig: (config: Partial<ServerApiConfig>) => void;
   cancelRequest: () => Promise<boolean>;
   isRequestInProgress: boolean;
@@ -56,6 +56,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
     message: string, 
     history: ChatMessage[],
     onRequestStart?: (requestId: string) => void,
+    integrationInProgress?: boolean,
   ): Promise<ChatResponse> => {
     // Clear any previous cancellation errors before starting new request
     setError(null);
@@ -68,6 +69,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
         history, 
         options.preferences,
         onRequestStart,
+        integrationInProgress,
       );
       
       setResponse(result);
