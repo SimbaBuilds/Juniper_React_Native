@@ -28,59 +28,24 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
   // Get wake word context to check and toggle wake word state
   const { isEnabled: isWakeWordEnabled, setEnabled: setWakeWordEnabled } = useWakeWord();
   
-  // Animation for press feedback
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+  // Animation value for pulse effect
   const pulseAnim = useRef(new Animated.Value(1)).current;
   
-  // Press animation
-  const animatePress = useCallback(() => {
-    // Scale down and back up for tactile feedback
+  // Handle button press based on current state
+  const handlePress = useCallback(async () => {
+    // Trigger pulse animation
     Animated.sequence([
-      Animated.timing(scaleAnim, {
+      Animated.timing(pulseAnim, {
         toValue: 0.95,
         duration: 100,
         useNativeDriver: true,
       }),
-      Animated.timing(scaleAnim, {
+      Animated.timing(pulseAnim, {
         toValue: 1,
         duration: 100,
         useNativeDriver: true,
       }),
     ]).start();
-  }, [scaleAnim]);
-
-  // Pulse animation for listening state
-  React.useEffect(() => {
-    if (isListening) {
-      const pulseAnimation = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      pulseAnimation.start();
-      
-      return () => {
-        pulseAnimation.stop();
-        pulseAnim.setValue(1);
-      };
-    } else {
-      pulseAnim.setValue(1);
-    }
-  }, [isListening, pulseAnim]);
-
-  // Handle button press based on current state
-  const handlePress = useCallback(async () => {
-    // Trigger press animation
-    animatePress();
     
     if (onPress) {
       onPress();
@@ -115,7 +80,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
         await startListening();
       }
     }
-  }, [isListening, isSpeaking, startListening, startContinuousConversation, stopListening, interruptSpeech, onPress, isWakeWordEnabled, setWakeWordEnabled, animatePress]);
+  }, [isListening, isSpeaking, startListening, startContinuousConversation, stopListening, interruptSpeech, onPress, isWakeWordEnabled, setWakeWordEnabled, pulseAnim]);
   
   // Determine the icon based on state
   const getIcon = () => {
@@ -153,10 +118,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
   return (
     <Animated.View
       style={{
-        transform: [
-          { scale: scaleAnim },
-          { scale: pulseAnim },
-        ],
+        transform: [{ scale: pulseAnim }],
       }}
     >
       <TouchableOpacity
@@ -173,7 +135,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
             borderColor: 'rgba(0, 0, 0, 0.1)',
           },
         ]}
-        activeOpacity={0.9} // Reduced from 0.8 since we have custom animation
+        activeOpacity={0.8}
       >
         {(voiceState === VoiceState.PROCESSING) ? (
           <ActivityIndicator color={getIconColor()} size="small" />

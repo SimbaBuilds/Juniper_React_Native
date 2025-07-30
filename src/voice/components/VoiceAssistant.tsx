@@ -106,6 +106,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         return 'Searching...';
       case 'processing':
         return 'Processing...';
+      case 'configuring':
+        return 'Configuring...';
       case 'integrating':
         return 'Integrating... This can take up to 2 minutes.';
       case 'pinging':
