@@ -66,6 +66,7 @@ class DeepgramWebSocketClient: NSObject {
     private func loadConfiguration() {
         self.apiKey = configManager.getDeepgramApiKey()
         print("🎤 DEEPGRAM_WS: Configuration loaded - API key present: \(apiKey != nil)")
+        NSLog("🎤 DEEPGRAM_WS: Configuration loaded - API key present: \(apiKey != nil)")
     }
     
     // MARK: - Connection Management
@@ -86,7 +87,7 @@ class DeepgramWebSocketClient: NSObject {
         shouldReconnect = true
         
         print("🎤 DEEPGRAM_WS: Connecting to Deepgram WebSocket...")
-        
+        NSLog("🎤 DEEPGRAM_WS: Connecting to Deepgram WebSocket...")
         // Build WebSocket URL with parameters
         var urlComponents = URLComponents(string: "wss://api.deepgram.com/v1/listen")!
         urlComponents.queryItems = [
@@ -118,7 +119,7 @@ class DeepgramWebSocketClient: NSObject {
     
     func disconnect() {
         print("🎤 DEEPGRAM_WS: Disconnecting...")
-        
+        NSLog("🎤 DEEPGRAM_WS: Disconnecting...")
         shouldReconnect = false
         isConnecting = false
         
@@ -141,7 +142,7 @@ class DeepgramWebSocketClient: NSObject {
         
         reconnectAttempts += 1
         print("🎤 DEEPGRAM_WS: Reconnecting... (attempt \(reconnectAttempts)/\(maxReconnectAttempts))")
-        
+        NSLog("🎤 DEEPGRAM_WS: Reconnecting... (attempt \(reconnectAttempts)/\(maxReconnectAttempts))")
         DispatchQueue.main.asyncAfter(deadline: .now() + reconnectDelay) { [weak self] in
             self?.connect()
         }
@@ -154,7 +155,7 @@ class DeepgramWebSocketClient: NSObject {
             print("🎤 DEEPGRAM_WS: ⚠️ Not connected, cannot send audio data")
             return
         }
-        
+        NSLog("🎤 DEEPGRAM_WS: Sending audio data (\(audioData.count) bytes)")
         let message = URLSessionWebSocketTask.Message.data(audioData)
         webSocketTask?.send(message) { [weak self] error in
             if let error = error {
@@ -193,12 +194,12 @@ class DeepgramWebSocketClient: NSObject {
     
     private func handleTextMessage(_ text: String) {
         print("🎤 DEEPGRAM_WS: Received text message")
-        
+        NSLog("🎤 DEEPGRAM_WS: Received text message")
         guard let data = text.data(using: .utf8) else {
             print("🎤 DEEPGRAM_WS: ❌ Failed to convert text to data")
             return
         }
-        
+
         do {
             let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
             
@@ -215,7 +216,7 @@ class DeepgramWebSocketClient: NSObject {
                         let speechFinal = json?["speech_final"] as? Bool ?? false
                         
                         print("🎤 DEEPGRAM_WS: Transcript: '\(transcript)' (final: \(isFinal), speech_final: \(speechFinal), confidence: \(confidence))")
-                        
+                        NSLog("🎤 DEEPGRAM_WS: Transcript: '\(transcript)' (final: \(isFinal), speech_final: \(speechFinal), confidence: \(confidence))")                            
                         // Only send non-empty transcripts
                         if !transcript.isEmpty {
                             DispatchQueue.main.async {
@@ -225,6 +226,7 @@ class DeepgramWebSocketClient: NSObject {
                     }
                 } else if type == "metadata" {
                     print("🎤 DEEPGRAM_WS: Received metadata")
+                    NSLog("🎤 DEEPGRAM_WS: Received metadata")
                     // Handle connection established
                     if !isConnected {
                         isConnected = true
@@ -241,17 +243,19 @@ class DeepgramWebSocketClient: NSObject {
             
         } catch {
             print("🎤 DEEPGRAM_WS: ❌ Failed to parse message: \(error)")
+            NSLog("🎤 DEEPGRAM_WS: ❌ Failed to parse message: \(error)")
         }
     }
     
     private func handleBinaryMessage(_ data: Data) {
         print("🎤 DEEPGRAM_WS: Received binary message (\(data.count) bytes)")
+        NSLog("🎤 DEEPGRAM_WS: Received binary message (\(data.count) bytes)")
         // Binary messages from Deepgram are typically not used for transcripts
     }
     
     private func handleError(_ error: Error) {
         print("🎤 DEEPGRAM_WS: ❌ WebSocket error: \(error)")
-        
+        NSLog("🎤 DEEPGRAM_WS: ❌ WebSocket error: \(error)")
         let wasConnected = isConnected
         isConnected = false
         isConnecting = false
@@ -275,6 +279,8 @@ class DeepgramWebSocketClient: NSObject {
     // MARK: - Ping/Keepalive
     
     private func startPingTimer() {
+        print("🎤 DEEPGRAM_WS: Starting ping timer")
+        NSLog("🎤 DEEPGRAM_WS: Starting ping timer")
         stopPingTimer()
         
         pingTimer = Timer.scheduledTimer(withTimeInterval: pingInterval, repeats: true) { [weak self] _ in
@@ -283,11 +289,15 @@ class DeepgramWebSocketClient: NSObject {
     }
     
     private func stopPingTimer() {
+        print("🎤 DEEPGRAM_WS: Stopping ping timer")
+        NSLog("🎤 DEEPGRAM_WS: Stopping ping timer")
         pingTimer?.invalidate()
         pingTimer = nil
     }
     
     private func sendPing() {
+        print("🎤 DEEPGRAM_WS: Sending ping")
+        NSLog("🎤 DEEPGRAM_WS: Sending ping")
         guard isConnected else { return }
         
         webSocketTask?.sendPing { [weak self] error in
@@ -322,12 +332,13 @@ extension DeepgramWebSocketClient: URLSessionWebSocketDelegate {
     
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
         print("🎤 DEEPGRAM_WS: ✅ WebSocket connection opened")
+        NSLog("🎤 DEEPGRAM_WS: ✅ WebSocket connection opened")
     }
     
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
         let reasonString = reason != nil ? String(data: reason!, encoding: .utf8) ?? "Unknown" : "No reason"
         print("🎤 DEEPGRAM_WS: WebSocket closed - code: \(closeCode.rawValue), reason: \(reasonString)")
-        
+        NSLog("🎤 DEEPGRAM_WS: WebSocket closed - code: \(closeCode.rawValue), reason: \(reasonString)")
         let wasConnected = isConnected
         isConnected = false
         isConnecting = false
@@ -353,6 +364,7 @@ extension DeepgramWebSocketClient: URLSessionDelegate {
     func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
         if let error = error {
             print("🎤 DEEPGRAM_WS: ❌ URLSession became invalid: \(error)")
+            NSLog("🎤 DEEPGRAM_WS: ❌ URLSession became invalid: \(error)")
             handleError(error)
         }
     }

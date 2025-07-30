@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import { TouchableOpacity, StyleSheet, View, ActivityIndicator, Platform } from 'react-native';
+import React, { useCallback, useRef } from 'react';
+import { TouchableOpacity, StyleSheet, View, ActivityIndicator, Platform, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useVoiceState } from '../VoiceContext';
 import { VoiceState } from '../VoiceService';
@@ -18,7 +18,7 @@ interface VoiceButtonProps {
  */
 export const VoiceButton: React.FC<VoiceButtonProps> = ({
   size = 60,
-  color = '#3498db',
+  color = 'white', // Changed default to white
   activeColor = '#2ecc71',
   errorColor = '#e74c3c',
   onPress,
@@ -28,8 +28,60 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
   // Get wake word context to check and toggle wake word state
   const { isEnabled: isWakeWordEnabled, setEnabled: setWakeWordEnabled } = useWakeWord();
   
+  // Animation for press feedback
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  
+  // Press animation
+  const animatePress = useCallback(() => {
+    // Scale down and back up for tactile feedback
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [scaleAnim]);
+
+  // Pulse animation for listening state
+  React.useEffect(() => {
+    if (isListening) {
+      const pulseAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      pulseAnimation.start();
+      
+      return () => {
+        pulseAnimation.stop();
+        pulseAnim.setValue(1);
+      };
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isListening, pulseAnim]);
+
   // Handle button press based on current state
   const handlePress = useCallback(async () => {
+    // Trigger press animation
+    animatePress();
+    
     if (onPress) {
       onPress();
     }
@@ -63,7 +115,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
         await startListening();
       }
     }
-  }, [isListening, isSpeaking, startListening, startContinuousConversation, stopListening, interruptSpeech, onPress, isWakeWordEnabled, setWakeWordEnabled]);
+  }, [isListening, isSpeaking, startListening, startContinuousConversation, stopListening, interruptSpeech, onPress, isWakeWordEnabled, setWakeWordEnabled, animatePress]);
   
   // Determine the icon based on state
   const getIcon = () => {
@@ -83,27 +135,53 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
     if (isListening || isSpeaking) return activeColor;
     return color;
   };
+
+  // Determine icon color based on state
+  const getIconColor = () => {
+    if (isError) return 'white';
+    if (isListening || isSpeaking) return 'white';
+    return 'black'; // Black icon for white idle state
+  };
+
+  // Determine size based on state (enlarge during listening)
+  const getButtonSize = () => {
+    return isListening ? size * 1.2 : size;
+  };
+  
+  const buttonSize = getButtonSize();
   
   return (
-    <TouchableOpacity
-      onPress={handlePress}
-      style={[
-        styles.button,
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: getColor(),
-        },
-      ]}
-      activeOpacity={0.8}
+    <Animated.View
+      style={{
+        transform: [
+          { scale: scaleAnim },
+          { scale: pulseAnim },
+        ],
+      }}
     >
-      {(voiceState === VoiceState.PROCESSING) ? (
-        <ActivityIndicator color="white" size="small" />
-      ) : (
-        <Ionicons name={getIcon()} size={size / 2} color="white" />
-      )}
-    </TouchableOpacity>
+      <TouchableOpacity
+        onPress={handlePress}
+        style={[
+          styles.button,
+          {
+            width: buttonSize,
+            height: buttonSize,
+            borderRadius: buttonSize / 2,
+            backgroundColor: getColor(),
+            // Add border for white idle state visibility
+            borderWidth: color === 'white' && !isListening && !isSpeaking && !isError ? 1 : 0,
+            borderColor: 'rgba(0, 0, 0, 0.1)',
+          },
+        ]}
+        activeOpacity={0.9} // Reduced from 0.8 since we have custom animation
+      >
+        {(voiceState === VoiceState.PROCESSING) ? (
+          <ActivityIndicator color={getIconColor()} size="small" />
+        ) : (
+          <Ionicons name={getIcon()} size={buttonSize / 2} color={getIconColor()} />
+        )}
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 

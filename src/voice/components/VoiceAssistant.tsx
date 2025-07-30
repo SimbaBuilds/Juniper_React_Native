@@ -305,12 +305,14 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
                 }}
               />
             ) : (
-              <View style={styles.emptyChatContainer}>
-                <Text style={styles.emptyChatText}>
-                  Start or continue a conversation by tapping the voice button or typing a message.
-                  {Platform.OS === 'android' && ' Or, use the wake word.'}
-                </Text>
-              </View>
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={styles.emptyChatContainer}>
+                  <Text style={styles.emptyChatText}>
+                    Start or continue a conversation by tapping the voice button or typing a message.
+                    {Platform.OS === 'android' && ' Or, use the wake word.'}
+                  </Text>
+                </View>
+              </TouchableWithoutFeedback>
             )}
           </View>
           
@@ -408,23 +410,23 @@ const styles = StyleSheet.create({
   modeIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
     backgroundColor: 'rgba(136, 136, 136, 0.1)',
     marginRight: 8,
   },
   modeText: {
     color: '#888888',
-    fontSize: 12,
+    fontSize: 14,
     marginLeft: 4,
   },
   historyButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 8,
-    borderRadius: 16,
+    padding: 10,
+    borderRadius: 18,
     backgroundColor: 'rgba(136, 136, 136, 0.1)',
   },
   historyButtonText: {
@@ -507,6 +509,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderRadius: 8,
     alignItems: 'center',
+    zIndex: 1000,
+    elevation: 1000,
+    position: 'relative',
   },
   statusIndicator: {
     color: '#3B82F6',
@@ -570,12 +575,12 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   bottomSection: {
-    paddingBottom: 8,
+    paddingBottom: 4,
   },
   voiceButtonContainer: {
     alignItems: 'center',
-    marginBottom: 16,
-    paddingVertical: 8,
+    marginBottom: 8,
+    paddingVertical: 4,
   },
   errorContainer: {
     flex: 1,

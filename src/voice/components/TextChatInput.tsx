@@ -80,7 +80,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
     backgroundColor: 'transparent',
   },
   textInput: {

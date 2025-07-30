@@ -545,7 +545,6 @@ export class VoiceService {
                 
                 if (reloadResult) {
                 } else {
-                    console.warn('🎵 VOICE_SETTINGS: ⚠️ Native configuration reload failed, but settings were updated');
                 }
                 
                 console.log('🎵 VOICE_SETTINGS: ========== VOICE SETTINGS UPDATE COMPLETED ==========');
@@ -571,7 +570,6 @@ export class VoiceService {
         
         try {
             if (Platform.OS !== 'android') {
-                console.warn('🎵 RELOAD_CONFIG: ⚠️ Configuration reload only supported on Android, current platform:', Platform.OS);
                 return false;
             }
             

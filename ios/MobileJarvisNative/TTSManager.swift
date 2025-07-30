@@ -37,6 +37,10 @@ class TTSManager: NSObject {
     // Completion handlers
     private var completionHandler: ((Bool) -> Void)?
     
+    // Rate limiting
+    private var lastSpeechTime: Date?
+    private let minimumSpeechInterval: TimeInterval = 0.5 // Minimum 500ms between TTS calls
+    
     // MARK: - Configuration
     private let config = ConfigManager.shared
     
@@ -105,7 +109,19 @@ class TTSManager: NSObject {
         NSLog("🎵 TTS_MANAGER: Current provider: %@", String(describing: currentProvider))
         print("🎵 TTS_MANAGER: ========== SPEAKING TEXT ==========")
         print("🎵 TTS_MANAGER: Text: '\(text.prefix(100))\(text.count > 100 ? "..." : "")'")
-        print("🎵 TTS_MANAGER: Current provider: \(currentProvider))")
+        print("🎵 TTS_MANAGER: Current provider: \(currentProvider)")
+        
+        // Rate limiting check
+        if let lastTime = lastSpeechTime {
+            let timeSinceLastSpeech = Date().timeIntervalSince(lastTime)
+            if timeSinceLastSpeech < minimumSpeechInterval {
+                print("🎵 TTS_MANAGER: ⏱️ Rate limited - too soon since last speech (\(timeSinceLastSpeech)s)")
+                NSLog("🎵 TTS_MANAGER: ⏱️ Rate limited - too soon since last speech (%.2fs)", timeSinceLastSpeech)
+                completion(false)
+                return
+            }
+        }
+        lastSpeechTime = Date()
         
         // Store completion handler
         self.completionHandler = completion
@@ -132,14 +148,21 @@ class TTSManager: NSObject {
                 }
             } catch {
                 print("🎵 TTS_MANAGER: ❌ TTS failed: \(error)")
+                NSLog("🎵 TTS_MANAGER: ❌ TTS failed: %@", error.localizedDescription)
                 
                 // If Deepgram fails, fallback to native
                 if currentProvider == .deepgram {
-                    print("🎵 TTS_MANAGER: Falling back to native TTS...")
+                    print("🎵 TTS_MANAGER: ========== FALLBACK TO NATIVE TTS ==========")
+                    NSLog("🎵 TTS_MANAGER: ========== FALLBACK TO NATIVE TTS ==========")
+                    print("🎵 TTS_MANAGER: Deepgram TTS failed, falling back to native TTS...")
+                    NSLog("🎵 TTS_MANAGER: Deepgram TTS failed, falling back to native TTS...")
                     do {
                         try await speakWithNative(text)
+                        print("🎵 TTS_MANAGER: ✅ Fallback to native TTS succeeded")
+                        NSLog("🎵 TTS_MANAGER: ✅ Fallback to native TTS succeeded")
                     } catch {
                         print("🎵 TTS_MANAGER: ❌ Fallback to native TTS also failed: \(error)")
+                        NSLog("🎵 TTS_MANAGER: ❌ Fallback to native TTS also failed: %@", error.localizedDescription)
                         self.handleSpeechCompletion(false)
                     }
                 } else {
@@ -246,26 +269,67 @@ class TTSManager: NSObject {
      * Speak using Deepgram TTS
      */
     private func speakWithDeepgram(_ text: String) async throws {
-        print("🎵 TTS_MANAGER: Speaking with Deepgram...")
+        print("🎵 TTS_MANAGER: ========== DEEPGRAM TTS FLOW START ==========")
+        NSLog("🎵 TTS_MANAGER: ========== DEEPGRAM TTS FLOW START ==========")
+        print("🎵 TTS_MANAGER: Text length: \(text.count)")
+        NSLog("🎵 TTS_MANAGER: Text length: %d", text.count)
         
-        // Validate Deepgram configuration
+        // Step 1: Validate Deepgram configuration
+        print("🎵 TTS_MANAGER: Step 1 - Validating Deepgram configuration...")
+        NSLog("🎵 TTS_MANAGER: Step 1 - Validating Deepgram configuration...")
         let validation = deepgramAPI.validateConfiguration()
-        guard validation.isValid else {
+        
+        print("🎵 TTS_MANAGER: Validation result: valid=\(validation.isValid)")
+        NSLog("🎵 TTS_MANAGER: Validation result: valid=%@", validation.isValid ? "YES" : "NO")
+        
+        if !validation.isValid {
+            print("🎵 TTS_MANAGER: ❌ Validation failed with issues:")
+            NSLog("🎵 TTS_MANAGER: ❌ Validation failed with issues:")
+            for (index, issue) in validation.issues.enumerated() {
+                print("🎵 TTS_MANAGER:   \(index + 1). \(issue)")
+                NSLog("🎵 TTS_MANAGER:   %d. %@", index + 1, issue)
+            }
             let errorMessage = "Deepgram configuration invalid: \(validation.issues.joined(separator: ", "))"
             throw NSError(domain: "TTSManager", code: 400, userInfo: [NSLocalizedDescriptionKey: errorMessage])
         }
         
-        // Test connectivity
+        print("🎵 TTS_MANAGER: ✅ Configuration validation passed")
+        NSLog("🎵 TTS_MANAGER: ✅ Configuration validation passed")
+        
+        // Step 2: Test connectivity
+        print("🎵 TTS_MANAGER: Step 2 - Testing Deepgram connectivity...")
+        NSLog("🎵 TTS_MANAGER: Step 2 - Testing Deepgram connectivity...")
         let connectivityOk = await deepgramAPI.testConnectivity()
+        
+        print("🎵 TTS_MANAGER: Connectivity test result: \(connectivityOk)")
+        NSLog("🎵 TTS_MANAGER: Connectivity test result: %@", connectivityOk ? "OK" : "FAILED")
+        
         guard connectivityOk else {
+            print("🎵 TTS_MANAGER: ❌ Connectivity test failed")
+            NSLog("🎵 TTS_MANAGER: ❌ Connectivity test failed")
             throw NSError(domain: "TTSManager", code: 503, userInfo: [NSLocalizedDescriptionKey: "Deepgram API not accessible"])
         }
         
-        // Convert and play
-        try await deepgramAPI.convertTextToSpeech(text)
+        print("🎵 TTS_MANAGER: ✅ Connectivity test passed")
+        NSLog("🎵 TTS_MANAGER: ✅ Connectivity test passed")
         
-        print("🎵 TTS_MANAGER: ✅ Deepgram TTS completed successfully")
-        handleSpeechCompletion(true)
+        // Step 3: Convert and play
+        print("🎵 TTS_MANAGER: Step 3 - Converting text to speech via Deepgram...")
+        NSLog("🎵 TTS_MANAGER: Step 3 - Converting text to speech via Deepgram...")
+        
+        do {
+            try await deepgramAPI.convertTextToSpeech(text)
+            print("🎵 TTS_MANAGER: ✅ Deepgram TTS completed successfully")
+            NSLog("🎵 TTS_MANAGER: ✅ Deepgram TTS completed successfully")
+            handleSpeechCompletion(true)
+        } catch {
+            print("🎵 TTS_MANAGER: ❌ Deepgram TTS failed with error: \(error)")
+            NSLog("🎵 TTS_MANAGER: ❌ Deepgram TTS failed with error: %@", error.localizedDescription)
+            throw error
+        }
+        
+        print("🎵 TTS_MANAGER: ========== DEEPGRAM TTS FLOW END ==========")
+        NSLog("🎵 TTS_MANAGER: ========== DEEPGRAM TTS FLOW END ==========")
     }
     
     /**
