@@ -56,6 +56,8 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
         editable={!disabled && !isSending}
         onSubmitEditing={handleSend}
         blurOnSubmit={false}
+        returnKeyType="send"
+        enablesReturnKeyAutomatically={true}
       />
       <TouchableOpacity
         style={[styles.sendButton, isDisabled && styles.sendButtonDisabled]}

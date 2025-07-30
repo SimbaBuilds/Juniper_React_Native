@@ -54,8 +54,16 @@ export function useVoiceState() {
 
   // Derived states computed from normalized native state (no duplication)
   const isListening = normalizedState === VoiceState.LISTENING || normalizedState === VoiceState.WAKE_WORD_DETECTED;
-  const isSpeaking = normalizedState === VoiceState.SPEAKING || normalizedState.includes('RESPONDING');
+  const isSpeaking = normalizedState.toUpperCase() === VoiceState.SPEAKING || normalizedState.includes('RESPONDING');
   const isError = normalizedState === VoiceState.ERROR;
+
+  // Debug logging for Speaking state detection
+  if (normalizedState.toUpperCase() === VoiceState.SPEAKING || normalizedState === 'SPEAKING') {
+    console.log('🔴 useVoiceState: SPEAKING state detected!');
+    console.log('🔴 useVoiceState: normalizedState:', normalizedState);
+    console.log('🔴 useVoiceState: VoiceState.SPEAKING:', VoiceState.SPEAKING);
+    console.log('🔴 useVoiceState: isSpeaking:', isSpeaking);
+  }
 
   // Log whenever the hook's voiceState actually changes
   useEffect(() => {
