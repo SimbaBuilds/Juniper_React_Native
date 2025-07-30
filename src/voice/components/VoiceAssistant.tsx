@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert, Platform, KeyboardAvoidingView } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { VoiceButton } from './VoiceButton';
 import { VoiceResponseDisplay } from './VoiceResponseDisplay';
 import { useVoice } from '../VoiceContext';
@@ -217,156 +217,167 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       keyboardVerticalOffset={Platform.OS === 'ios' ? 140 : 0}
     >
       <View style={styles.container}>
-        <View style={styles.header}>
-          <VoiceStatusIndicator />
-          
-          <View style={styles.headerActions}>
-            {/* Input mode indicator */}
-            <View style={styles.modeIndicator}>
-              <Ionicons 
-                name={inputMode === 'voice' ? 'mic' : 'chatbubble'} 
-                size={16} 
-                color="#888888" 
-              />
-              <Text style={styles.modeText}>{inputMode === 'voice' ? 'Voice' : 'Text'}</Text>
+          <View style={styles.header}>
+            <VoiceStatusIndicator />
+            
+            <View style={styles.headerActions}>
+              {/* Input mode indicator */}
+              <View style={styles.modeIndicator}>
+                <Ionicons 
+                  name={inputMode === 'voice' ? 'mic' : 'chatbubble'} 
+                  size={16} 
+                  color="#888888" 
+                />
+                <Text style={styles.modeText}>{inputMode === 'voice' ? 'Voice' : 'Text'}</Text>
+              </View>
+
+              {/* Conversation history button */}
+              <TouchableOpacity 
+                style={styles.historyButton}
+                onPress={handleOpenConversationHistory}
+                activeOpacity={0.7}
+                accessibilityLabel="View conversation history"
+                accessibilityHint="Opens a list of your recent conversations"
+              >
+                <Ionicons name="time-outline" size={20} color="#888888" />
+              </TouchableOpacity>
+
+              {/* Copy chat button - only shown when there are messages */}
+              {chatHistory.length > 0 && (
+                <TouchableOpacity 
+                  style={styles.copyButton}
+                  onPress={handleCopyChat}
+                  activeOpacity={0.7}
+                  accessibilityLabel="Copy chat"
+                  accessibilityHint="Copy the current conversation"
+                >
+                  <Ionicons name="copy-outline" size={20} color="#888888" />
+                </TouchableOpacity>
+              )}
+
+              {/* Clear chat button - only shown when there are messages */}
+              {chatHistory.length > 0 && (
+                <TouchableOpacity 
+                  style={styles.clearButton}
+                  onPress={clearChatHistory}
+                  activeOpacity={0.7}
+                  accessibilityLabel="New chat"
+                  accessibilityHint="Start a new chat"
+                >
+                  <Text style={styles.clearButtonText}>New</Text>
+                </TouchableOpacity>
+              )}
             </View>
-
-            {/* Conversation history button */}
-            <TouchableOpacity 
-              style={styles.historyButton}
-              onPress={handleOpenConversationHistory}
-              activeOpacity={0.7}
-              accessibilityLabel="View conversation history"
-              accessibilityHint="Opens a list of your recent conversations"
-            >
-              <Ionicons name="time-outline" size={20} color="#888888" />
-            </TouchableOpacity>
-
-            {/* Copy chat button - only shown when there are messages */}
-            {chatHistory.length > 0 && (
-              <TouchableOpacity 
-                style={styles.copyButton}
-                onPress={handleCopyChat}
-                activeOpacity={0.7}
-                accessibilityLabel="Copy chat"
-                accessibilityHint="Copy the current conversation"
-              >
-                <Ionicons name="copy-outline" size={20} color="#888888" />
-              </TouchableOpacity>
-            )}
-
-            {/* Clear chat button - only shown when there are messages */}
-            {chatHistory.length > 0 && (
-              <TouchableOpacity 
-                style={styles.clearButton}
-                onPress={clearChatHistory}
-                activeOpacity={0.7}
-                accessibilityLabel="New chat"
-                accessibilityHint="Start a new chat"
-              >
-                <Text style={styles.clearButtonText}>New</Text>
-              </TouchableOpacity>
+          </View>
+          
+          <View style={styles.chatContainer}>
+            {chatHistory.length > 0 ? (
+              <FlatList
+                data={chatHistory}
+                keyExtractor={(item, index) => `chat-${index}-${item.timestamp}`}
+                style={styles.chatList}
+                contentContainerStyle={styles.chatListContent}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="interactive"
+                showsVerticalScrollIndicator={true}
+                onScrollBeginDrag={Keyboard.dismiss}
+                removeClippedSubviews={false}
+                initialNumToRender={10}
+                maxToRenderPerBatch={10}
+                windowSize={10}
+                getItemLayout={(data, index) => ({
+                  length: 80, // Approximate height of each message
+                  offset: 80 * index,
+                  index,
+                })}
+                renderItem={({ item }) => {
+                  return (
+                    <View style={[
+                      styles.chatBubble, 
+                      item.role === 'user' ? styles.userBubble : styles.assistantBubble
+                    ]}>
+                      <MarkdownMessage content={item.content} />
+                      <View style={styles.messageFooter}>
+                        <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
+                      </View>
+                    </View>
+                  );
+                }}
+              />
+            ) : (
+              <View style={styles.emptyChatContainer}>
+                <Text style={styles.emptyChatText}>
+                  Start or continue a conversation by tapping the voice button or typing a message.
+                  {Platform.OS === 'android' && ' Or, use the wake word.'}
+                </Text>
+              </View>
             )}
           </View>
-        </View>
-        
-        <View style={styles.chatContainer}>
-          {chatHistory.length > 0 ? (
-            <FlatList
-              data={chatHistory}
-              keyExtractor={(item, index) => `chat-${index}-${item.timestamp}`}
-              style={styles.chatList}
-              contentContainerStyle={styles.chatListContent}
-              keyboardShouldPersistTaps="handled"
-              keyboardDismissMode="on-drag"
-              renderItem={({ item }) => {
-                return (
-                  <View style={[
-                    styles.chatBubble, 
-                    item.role === 'user' ? styles.userBubble : styles.assistantBubble
-                  ]}>
-                    <MarkdownMessage content={item.content} />
-                    <View style={styles.messageFooter}>
-                      <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
-                    </View>
-                  </View>
-                );
-              }}
-            />
-          ) : (
-            <View style={styles.emptyChatContainer}>
-              <Text style={styles.emptyChatText}>
-                Start or continue a conversation by tapping the voice button or typing a message.
-                {Platform.OS === 'android' && ' Or, use the wake word.'}
+          
+          {/* Cancel button - only shown when a request is in progress */}
+          {isRequestInProgress && (
+            <TouchableOpacity 
+              style={styles.cancelButton}
+              onPress={handleCancel}
+              activeOpacity={0.7}
+              accessibilityLabel="Cancel request"
+              accessibilityHint="Cancels the current request to the server"
+            >
+              <Ionicons name="close-circle" size={24} color="white" />
+              <Text style={styles.cancelButtonText}>Cancel Request</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Interrupt button - only shown when the assistant is speaking */}
+          {isSpeaking && (
+            <TouchableOpacity 
+              style={styles.interruptButton}
+              onPress={handleInterrupt}
+              activeOpacity={0.7}
+              accessibilityLabel="Stop speaking"
+              accessibilityHint="Stops the current speech and allows you to speak again"
+            >
+              <Ionicons name="stop-circle" size={24} color="white" />
+              <Text style={styles.interruptButtonText}>Tap to Interrupt</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Request status indicator */}
+          {requestStatus && requestStatus !== 'completed' && (
+            <View style={styles.statusContainer}>
+              <Text style={styles.statusIndicator}>
+                {getRequestStatusText(requestStatus, 'indicator')}
               </Text>
             </View>
           )}
-        </View>
-        
-        {/* Cancel button - only shown when a request is in progress */}
-        {isRequestInProgress && (
-          <TouchableOpacity 
-            style={styles.cancelButton}
-            onPress={handleCancel}
-            activeOpacity={0.7}
-            accessibilityLabel="Cancel request"
-            accessibilityHint="Cancels the current request to the server"
-          >
-            <Ionicons name="close-circle" size={24} color="white" />
-            <Text style={styles.cancelButtonText}>Cancel Request</Text>
-          </TouchableOpacity>
-        )}
 
-        {/* Interrupt button - only shown when the assistant is speaking */}
-        {isSpeaking && (
-          <TouchableOpacity 
-            style={styles.interruptButton}
-            onPress={handleInterrupt}
-            activeOpacity={0.7}
-            accessibilityLabel="Stop speaking"
-            accessibilityHint="Stops the current speech and allows you to speak again"
-          >
-            <Ionicons name="stop-circle" size={24} color="white" />
-            <Text style={styles.interruptButtonText}>Tap to Interrupt</Text>
-          </TouchableOpacity>
-        )}
+          <View style={styles.bottomSection}>
+            {/* Voice button - positioned above text input */}
+            <View style={styles.voiceButtonContainer}>
+              <VoiceButton 
+                size={60}
+              />
+            </View>
 
-        {/* Request status indicator */}
-        {requestStatus && requestStatus !== 'completed' && (
-          <View style={styles.statusContainer}>
-            <Text style={styles.statusIndicator}>
-              {getRequestStatusText(requestStatus, 'indicator')}
-            </Text>
-          </View>
-        )}
-
-        <View style={styles.bottomSection}>
-          {/* Voice button - positioned above text input */}
-          <View style={styles.voiceButtonContainer}>
-            <VoiceButton 
-              size={60}
+            {/* Text input at the bottom */}
+            <TextChatInput 
+              onSendMessage={sendTextMessage}
+              disabled={isListening || isSpeaking}
+              placeholder="Type a message..."
             />
           </View>
 
-          {/* Text input at the bottom */}
-          <TextChatInput 
-            onSendMessage={sendTextMessage}
-            disabled={isListening || isSpeaking}
-            placeholder="Type a message..."
+          {/* Conversation History Modal */}
+          <ConversationHistory
+            visible={showConversationHistory}
+            onClose={() => setShowConversationHistory(false)}
+            onOpen={handleConversationHistoryOpened}
+            onContinueChat={(messages) => {
+              continuePreviousChat(messages);
+              setShowConversationHistory(false);
+            }}
           />
         </View>
-
-        {/* Conversation History Modal */}
-        <ConversationHistory
-          visible={showConversationHistory}
-          onClose={() => setShowConversationHistory(false)}
-          onOpen={handleConversationHistoryOpened}
-          onContinueChat={(messages) => {
-            continuePreviousChat(messages);
-            setShowConversationHistory(false);
-          }}
-        />
-      </View>
     </KeyboardAvoidingView>
   );
 };
@@ -380,6 +391,7 @@ const styles = StyleSheet.create({
   },
   chatContainer: {
     flex: 1,
+    minHeight: 0, // Important for FlatList scrolling
   },
   header: {
     flexDirection: 'row',
@@ -444,6 +456,7 @@ const styles = StyleSheet.create({
   chatList: {
     flex: 1,
     paddingHorizontal: 16,
+    minHeight: 0, // Important for FlatList scrolling
   },
   chatListContent: {
     paddingBottom: 16,

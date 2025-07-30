@@ -595,16 +595,7 @@ class VoiceManager: NSObject {
         let requestId = UUID().uuidString
         print("🔵 VoiceManager: Generated requestId: \(requestId)")
         
-        // Set up timeout timer
-        let timeoutTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: false) { _ in
-            self.timeoutTimers.removeValue(forKey: requestId)
-            if let callback = self.pendingApiCallbacks.removeValue(forKey: requestId) {
-                print("⏰ VoiceManager: Request timeout for requestId: \(requestId)")
-                callback("I'm sorry, there was a timeout processing your request. Please try again.")
-            }
-        }
-        
-        timeoutTimers[requestId] = timeoutTimer
+        // Note: Timeout handling is managed by VoiceModule, not here
         
         // Store callback for when response comes back
         pendingApiCallbacks[requestId] = { [weak self] response in
@@ -645,8 +636,7 @@ class VoiceManager: NSObject {
         print("🟢 VoiceManager: Response length: \(response.count)")
         print("🟢 VoiceManager: Response preview: \(String(response.prefix(100)))...")
         
-        // Cancel timeout timer
-        timeoutTimers.removeValue(forKey: requestId)?.invalidate()
+        // Note: Timeout timers are managed by VoiceModule, not here
         
         // Execute pending callback
         if let callback = pendingApiCallbacks.removeValue(forKey: requestId) {

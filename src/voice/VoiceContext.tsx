@@ -11,6 +11,7 @@ import { conversationService } from '../services/conversationService';
 import { isCancellationError } from '../utils/cancellationUtils';
 import { useRequestStatusPolling } from '../hooks/useRequestStatusPolling';
 import { DEFAULT_WAKE_PHRASE } from '../wakeword/constants';
+import requestMapping from '../utils/requestMapping';
 
 const { VoiceModule } = NativeModules;
 
@@ -444,10 +445,13 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               console.log('🔍 RN_BRIDGE_DEBUG: History entries count:', updatedHistory.length);
               
               const apiStartTime = performance.now();
-              const response = await sendMessage(text, updatedHistory, (requestId) => {
-                console.log('📊 REQUEST_STATUS: Setting request ID for polling:', requestId);
-                console.log('🔍 RN_BRIDGE_DEBUG: Request ID assigned:', requestId);
-                setCurrentRequestId(requestId);
+              const response = await sendMessage(text, updatedHistory, (reactNativeRequestId) => {
+                console.log('📊 REQUEST_STATUS: Setting request ID for polling:', reactNativeRequestId);
+                console.log('🔍 RN_BRIDGE_DEBUG: Request ID assigned:', reactNativeRequestId);
+                setCurrentRequestId(reactNativeRequestId);
+                
+                // Store mapping between React Native request ID and native request ID
+                requestMapping.mapRequestIds(reactNativeRequestId, requestId);
               });
               const apiEndTime = performance.now();
               
@@ -477,11 +481,21 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               // Send response back to native for TTS (only in voice mode)
               await voiceService.handleApiResponse(requestId, response.response);
               
+              // Clean up request mapping since request completed successfully
+              if (currentRequestId) {
+                requestMapping.removeMapping(currentRequestId);
+              }
+              
               // Don't clear request status immediately - let polling handle it
               // The polling will stop and clear when status reaches 'completed'
               
             } catch (error) {
               console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
+              
+              // Clean up request mapping on error
+              if (currentRequestId) {
+                requestMapping.removeMapping(currentRequestId);
+              }
               
               if (!isCancellationError(error)) {
                 const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';

@@ -43,7 +43,8 @@ RCT_EXTERN_METHOD(testTTS:(NSString *)text
 RCT_EXTERN_METHOD(getVoiceState:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(clearNativeState:(RCTPromiseResolveBlock)resolve
+RCT_EXTERN_METHOD(clearNativeState:(NSString *)requestId
+                  resolve:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
 // STT Provider Management (matching Android)

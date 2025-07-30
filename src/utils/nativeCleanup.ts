@@ -8,14 +8,15 @@ const { VoiceModule } = NativeModules;
  */
 export const clearNativeState = async (requestId?: string): Promise<boolean> => {
   try {
-    if (Platform.OS === 'android' && VoiceModule?.clearNativeState) {
-      console.log(`🧹 NATIVE_CLEANUP: Clearing Android native state${requestId ? ` for request: ${requestId}` : ' (all requests)'}...`);
+    if (VoiceModule?.clearNativeState) {
+      const platformName = Platform.OS === 'android' ? 'Android' : 'iOS';
+      console.log(`🧹 NATIVE_CLEANUP: Clearing ${platformName} native state${requestId ? ` for request: ${requestId}` : ' (all requests)'}...`);
       await VoiceModule.clearNativeState(requestId || null);
-      console.log('🧹 NATIVE_CLEANUP: ✅ Android native state cleared successfully');
+      console.log(`🧹 NATIVE_CLEANUP: ✅ ${platformName} native state cleared successfully`);
       return true;
     } else {
-      console.log('🧹 NATIVE_CLEANUP: Skipping native cleanup (not Android or method unavailable)');
-      return true; // Return true for non-Android platforms as no cleanup needed
+      console.log('🧹 NATIVE_CLEANUP: Skipping native cleanup (VoiceModule.clearNativeState not available)');
+      return true; // Return true as no cleanup method available
     }
   } catch (error) {
     console.warn('🧹 NATIVE_CLEANUP: ⚠️ Failed to clear native state:', error);

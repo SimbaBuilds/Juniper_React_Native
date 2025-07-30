@@ -112,14 +112,16 @@ class ServerApiService {
 
   /**
    * Cancel the current request if one is in progress
+   * Returns the cancelled request ID or null if no request was cancelled
    */
-  public async cancelCurrentRequest(): Promise<boolean> {
+  public async cancelCurrentRequest(): Promise<{ success: boolean; requestId: string | null }> {
     if (this.currentRequestController && this.currentRequestId) {
-      console.log('🔴 SERVER_API: Cancelling current request...', this.currentRequestId);
+      const requestIdToCancel = this.currentRequestId;
+      console.log('🔴 SERVER_API: Cancelling current request...', requestIdToCancel);
       
       try {
         // Insert cancellation request into database
-        await this.insertCancellationRequest(this.currentRequestId);
+        await this.insertCancellationRequest(requestIdToCancel);
         
         // Also abort the HTTP request on client side
         this.currentRequestController.abort();
@@ -127,14 +129,14 @@ class ServerApiService {
         this.currentRequestId = null;
         
         console.log('✅ SERVER_API: Request cancelled successfully');
-        return true;
+        return { success: true, requestId: requestIdToCancel };
       } catch (error) {
         console.error('❌ SERVER_API: Error cancelling request:', error);
-        return false;
+        return { success: false, requestId: requestIdToCancel };
       }
     }
     console.log('🔴 SERVER_API: No active request to cancel');
-    return false;
+    return { success: false, requestId: null };
   }
 
   /**

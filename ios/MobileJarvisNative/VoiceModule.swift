@@ -258,26 +258,34 @@ class VoiceModule: RCTEventEmitter {
     }
     
     /**
-     * Clear all pending native state (for cleanup between chat sessions)
+     * Clear native state and cancel pending timeouts (for request cancellation)
+     * Optional requestId parameter allows clearing specific request state
      */
-    @objc func clearNativeState(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
-        print("🧹 VoiceModule: Clearing all native state...")
+    @objc func clearNativeState(_ requestId: NSString?, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+        let requestIdStr = requestId as String?
+        print("🧹 VoiceModule: Clearing native state\(requestIdStr != nil ? " for request: \(requestIdStr!)" : " (all requests)")...")
         
-        // Clear pending callbacks
-        let pendingCount = pendingApiCallbacks.count
-        pendingApiCallbacks.removeAll()
-        print("🧹 VoiceModule: Cleared \(pendingCount) pending API callbacks")
-        
-        // Cancel and clear timeout timers
-        timeoutTimers.values.forEach { timer in
-            timer.invalidate()
+        if let specificRequestId = requestIdStr {
+            // Clear specific request state
+            pendingApiCallbacks.removeValue(forKey: specificRequestId)
+            if let timer = timeoutTimers.removeValue(forKey: specificRequestId) {
+                timer.invalidate()
+                print("🧹 VoiceModule: ✅ Cancelled timeout timer for request: \(specificRequestId)")
+            }
+        } else {
+            // Clear all pending callbacks and timeouts
+            let callbackCount = pendingApiCallbacks.count
+            let timeoutCount = timeoutTimers.count
+            
+            timeoutTimers.values.forEach { $0.invalidate() }
+            timeoutTimers.removeAll()
+            pendingApiCallbacks.removeAll()
+            
+            print("🧹 VoiceModule: ✅ Cleared all timeouts (\(timeoutCount)) and callbacks (\(callbackCount))")
+            
+            // Stop any current TTS
+            TTSManager.shared.stopSpeaking()
         }
-        let timeoutCount = timeoutTimers.count
-        timeoutTimers.removeAll()
-        print("🧹 VoiceModule: Cancelled \(timeoutCount) timeout timers")
-        
-        // Stop any current TTS
-        TTSManager.shared.stopSpeaking()
         
         print("🧹 VoiceModule: ✅ Native state cleared successfully")
         resolve(true)
