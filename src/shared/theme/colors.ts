@@ -19,6 +19,8 @@ export const colors = {
     primary: '#3498db',
     secondary: '#2ecc71',
     disabled: '#ecf0f1',
+    interrupt: '#8B6969', // Muted rose brown
+    cancel: '#8B7355', // Muted tan brown
   },
   
   // Border colors

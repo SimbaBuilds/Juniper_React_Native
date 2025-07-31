@@ -76,6 +76,6 @@ object Constants {
         // Voice events
         const val SPEECH_RESULT = "speechResult"
         const val ASSISTANT_RESPONSE = "assistantResponse"
-        const val VOICE_STATE_CHANGE = "onVoiceStateChange"
+        const val VOICE_STATE_CHANGE = "onVoiceStateChanged"
     }
 } 
