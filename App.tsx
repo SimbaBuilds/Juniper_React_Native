@@ -255,6 +255,7 @@ export default function App() {
     console.log('📝 Detected service:', serviceName);
     
     const queryString = url.split('?')[1];
+    console.log('📝 Query string:', queryString);
     if (!queryString) {
       console.error('❌ No query parameters in HTTPS callback URL');
       return;
@@ -265,14 +266,30 @@ export default function App() {
     const state = urlParams.get('state');
     const error = urlParams.get('error');
     
+    console.log('📝 Extracted parameters:');
+    console.log('  - code:', code ? `${code.substring(0, 10)}...` : 'null');
+    console.log('  - state:', state);
+    console.log('  - error:', error);
+    
     if (error) {
       console.error(`❌ ${serviceName} OAuth error:`, error);
       return;
     }
     
-    if (!code || !state) {
-      console.error(`❌ Missing code or state in ${serviceName} callback`);
-      return;
+    // For Google OAuth, state parameter is optional since we don't send one
+    if (serviceName === 'google') {
+      if (!code) {
+        console.error(`❌ Missing code in ${serviceName} callback`);
+        console.error(`❌ Code present: ${!!code}`);
+        return;
+      }
+    } else {
+      // For other services, require both code and state
+      if (!code || !state) {
+        console.error(`❌ Missing code or state in ${serviceName} callback`);
+        console.error(`❌ Code present: ${!!code}, State present: ${!!state}`);
+        return;
+      }
     }
     
     console.log(`✅ Processing ${serviceName} HTTPS callback with code and state`);

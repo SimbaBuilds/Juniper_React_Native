@@ -217,7 +217,9 @@ class WakeWordService {
         if (result.success) {
          
         } else {
-          console.error('🎤 WAKE_WORD_SERVICE: ❌ Failed to enable wake word detection');
+          if (Platform.OS === 'android') {
+            console.error('🎤 WAKE_WORD_SERVICE: ❌ Failed to enable wake word detection');
+          }
         }
         
         return result.success;
@@ -236,7 +238,9 @@ class WakeWordService {
         if (result.success) {
          
         } else {
-          console.error('🎤 WAKE_WORD_SERVICE: ❌ Failed to disable wake word detection');
+          if (Platform.OS === 'android') {
+            console.error('🎤 WAKE_WORD_SERVICE: ❌ Failed to disable wake word detection');
+          }
         }
         
         return result.success;

@@ -179,7 +179,9 @@ export const useVoiceSettings = () => {
                   console.error('📱 VOICE_SETTINGS: ❌ Wake word detection enabled but failed to start');
                 }
               } else {
-                console.error('📱 VOICE_SETTINGS: ❌ Failed to enable wake word detection');
+                if (Platform.OS === 'android') {
+                  console.error('📱 VOICE_SETTINGS: ❌ Failed to enable wake word detection');
+                }
               }
             } else {
               // Disable and stop wake word detection

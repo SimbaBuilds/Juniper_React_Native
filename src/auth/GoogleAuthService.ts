@@ -21,6 +21,9 @@ const GOOGLE_CONFIG = {
     }
     return `${siteUrl}/oauth/google/callback`;
   },
+  get CLIENT_SECRET() {
+    return Constants.expoConfig?.extra?.GOOGLE_CLIENT_SECRET;
+  },
 };
 
 interface GoogleAuth {
@@ -286,6 +289,9 @@ export class GoogleAuthService {
   private async exchangeCodeForToken(code: string): Promise<any> {
     const requestBody = new URLSearchParams();
     requestBody.append('client_id', GOOGLE_CONFIG.CLIENT_ID!);
+    if (GOOGLE_CONFIG.CLIENT_SECRET) {
+      requestBody.append('client_secret', GOOGLE_CONFIG.CLIENT_SECRET);
+    }
     requestBody.append('code', code);
     requestBody.append('grant_type', 'authorization_code');
     requestBody.append('redirect_uri', GOOGLE_CONFIG.REDIRECT_URI);
@@ -301,6 +307,9 @@ export class GoogleAuthService {
     try {
       const requestBody = new URLSearchParams();
       requestBody.append('client_id', GOOGLE_CONFIG.CLIENT_ID!);
+      if (GOOGLE_CONFIG.CLIENT_SECRET) {
+        requestBody.append('client_secret', GOOGLE_CONFIG.CLIENT_SECRET);
+      }
       requestBody.append('refresh_token', this.authData.refreshToken);
       requestBody.append('grant_type', 'refresh_token');
       
