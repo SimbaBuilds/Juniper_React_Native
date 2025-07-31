@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Alert, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { isCancellationError } from '../../utils/cancellationUtils';
+import { colors } from '../../shared/theme/colors';
 
 interface TextChatInputProps {
   onSendMessage: (text: string) => Promise<void>;
@@ -69,7 +70,7 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
         <Ionicons 
           name="send" 
           size={20} 
-          color={isDisabled ? "#666666" : "#FFFFFF"} 
+          color={isDisabled ? "#666666" : colors.text.primary} 
         />
       </TouchableOpacity>
     </View>
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginRight: 8,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     backgroundColor: '#404040',
     fontSize: 16,
     maxHeight: 100,

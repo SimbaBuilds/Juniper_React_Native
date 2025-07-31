@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useWakeWord } from '../WakeWordContext';
 import { useVoice } from '../../voice/VoiceContext';
 import { DEFAULT_WAKE_PHRASE } from '../constants';
+import { colors } from '../../shared/theme/colors';
 
 export const WakeWordStatus: React.FC = () => {
     const { isEnabled, isRunning } = useWakeWord();
@@ -42,7 +43,7 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     text: {
-        color: '#FFFFFF',
+        color: colors.text.primary,
         fontSize: 14,
     },
 }); 

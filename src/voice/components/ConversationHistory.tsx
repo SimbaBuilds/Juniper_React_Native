@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { conversationService, ConversationSummary } from '../../services/conversationService';
 import { ChatMessage } from '../VoiceContext';
 import { MarkdownMessage } from './MarkdownMessage';
+import { colors } from '../../shared/theme/colors';
 
 interface ConversationHistoryProps {
   visible: boolean;
@@ -355,7 +356,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   headerActions: {
     flexDirection: 'row',
@@ -389,7 +390,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   retryButtonText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -427,7 +428,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   conversationTitle: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
@@ -494,14 +495,15 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 4,
   },
   messageText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 14,
   },
   messageTime: {
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: colors.text.primary,
     fontSize: 10,
     marginTop: 4,
     textAlign: 'right',
+    opacity: 0.6,
   },
   noMessagesText: {
     color: '#888888',

@@ -20,6 +20,7 @@ import { VoiceSelectionDropdown } from './components/VoiceSelectionDropdown';
 import { PermissionsCard } from './components/PermissionsCard';
 import WakeWordService from '../wakeword/WakeWordService';
 import { DEFAULT_WAKE_PHRASE } from '../wakeword/constants';
+import { colors } from '../shared/theme/colors';
 
 // Voice Settings interface
 export interface VoiceSettings {
@@ -367,7 +368,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color="#FFFFFF" />
+        <ActivityIndicator size="large" color={colors.text.primary} />
         <Text style={styles.loadingText}>{getLoadingMessage()}</Text>
       </View>
     );
@@ -454,9 +455,9 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                   disabled={savingToDatabase}
                 >
                   {savingToDatabase ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <ActivityIndicator size="small" color={colors.text.primary} />
                   ) : (
-                    <Ionicons name="save-outline" size={16} color="#FFFFFF" />
+                    <Ionicons name="save-outline" size={16} color={colors.text.primary} />
                   )}
                   <Text style={styles.saveButtonText}>
                     {savingToDatabase ? 'Saving...' : 'Save'}
@@ -675,7 +676,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.logoutButton}
             onPress={handleLogout}
           >
-            <Ionicons name="log-out-outline" size={20} color="#FFFFFF" />
+            <Ionicons name="log-out-outline" size={20} color={colors.text.primary} />
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
         </View>
@@ -697,7 +698,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginTop: 16,
   },
   header: {
@@ -706,7 +707,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   section: {
     marginBottom: 24,
@@ -714,7 +715,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   wakeWordExplanation: {
     backgroundColor: '#1E1E1E',
@@ -736,7 +737,7 @@ const styles = StyleSheet.create({
   accountTitle: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 16,
   },
   logoutButton: {
@@ -748,7 +749,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoutButtonText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
     fontWeight: '500',
     marginLeft: 8,
@@ -767,7 +768,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   savingIndicator: {
     flexDirection: 'row',
@@ -801,7 +802,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#333333',
   },
   saveButtonText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 14,
     fontWeight: '500',
     marginLeft: 8,
@@ -812,7 +813,7 @@ const styles = StyleSheet.create({
   sourcesLabel: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   sourcesDescription: {

@@ -4,6 +4,7 @@ import { WakeWordStatus } from './wakeword/components/WakeWordStatus';
 import { WakeWordToggle } from './wakeword/components/WakeWordToggle';
 import { VoiceAssistant } from './voice/components/VoiceAssistant';
 import { useVoice } from './voice/VoiceContext';
+import { colors } from './shared/theme/colors';
 
 export const HomeScreen: React.FC = () => {
   
@@ -52,7 +53,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   subtitle: {

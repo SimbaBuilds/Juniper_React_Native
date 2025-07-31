@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import Markdown from 'react-native-markdown-display';
+import { colors } from '../../shared/theme/colors';
 
 interface MarkdownMessageProps {
   content: string;
@@ -23,24 +24,24 @@ export const MarkdownMessage: React.FC<MarkdownMessageProps> = ({
 
 const markdownStyles = StyleSheet.create({
   body: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
   },
   text: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
   },
   strong: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontWeight: 'bold',
   },
   em: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontStyle: 'italic',
   },
   code_inline: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    color: '#FFFFFF',
+    backgroundColor: 'rgba(245, 245, 220, 0.1)',
+    color: colors.text.primary,
     paddingHorizontal: 4,
     paddingVertical: 2,
     borderRadius: 4,
@@ -48,14 +49,14 @@ const markdownStyles = StyleSheet.create({
     fontSize: 14,
   },
   fence: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(245, 245, 220, 0.1)',
     borderRadius: 8,
     padding: 12,
     marginVertical: 8,
   },
   code_block: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    color: '#FFFFFF',
+    backgroundColor: 'rgba(245, 245, 220, 0.1)',
+    color: colors.text.primary,
     fontFamily: 'monospace',
     fontSize: 14,
   },
@@ -63,7 +64,7 @@ const markdownStyles = StyleSheet.create({
     color: '#3B82F6',
   },
   list_item: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
   },
   bullet_list: {
@@ -73,25 +74,25 @@ const markdownStyles = StyleSheet.create({
     marginVertical: 4,
   },
   heading1: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 20,
     fontWeight: 'bold',
     marginVertical: 8,
   },
   heading2: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 18,
     fontWeight: 'bold',
     marginVertical: 6,
   },
   heading3: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
     fontWeight: 'bold',
     marginVertical: 4,
   },
   paragraph: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
     marginVertical: 2,
   },

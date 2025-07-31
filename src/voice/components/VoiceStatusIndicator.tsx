@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useVoiceState } from '../VoiceContext';
 import { VoiceState } from '../types/voice';
+import { colors } from '../../shared/theme/colors';
 
 /**
  * Component that displays the current voice assistant state
@@ -49,7 +50,7 @@ export const VoiceStatusIndicator: React.FC = () => {
     <View style={styles.container}>
       <View style={[styles.indicator, { backgroundColor: getStatusColor() }]}>
         {normalizedState === VoiceState.PROCESSING.toUpperCase() && (
-          <ActivityIndicator color="white" size="small" />
+          <ActivityIndicator color={colors.text.primary} size="small" />
         )}
       </View>
       <Text style={styles.statusText}>{getStatusText()}</Text>
@@ -74,6 +75,6 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF', // Explicit white color for good contrast
+    color: colors.text.primary, // Light beige color for good contrast
   },
 });

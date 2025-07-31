@@ -658,7 +658,7 @@ export const IntegrationsScreen: React.FC = () => {
         <View style={styles.header}>
           {/* <Text style={styles.title}>Integrations</Text> */}
           <Text style={styles.subtitle}>
-            Give Juniper access to your frequently used services
+            Integrations below can take up to 3 minutes each to complete.
           </Text>
         </View>
 

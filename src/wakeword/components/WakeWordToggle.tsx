@@ -4,6 +4,7 @@ import { useWakeWord } from '../WakeWordContext';
 import { useVoice } from '../../voice/VoiceContext';
 import WakeWordService, { WakeWordEvents } from '../WakeWordService';
 import { DEFAULT_WAKE_PHRASE } from '../constants';
+import { colors } from '../../shared/theme/colors';
 
 export const WakeWordToggle: React.FC = () => {
     const { isEnabled, setEnabled } = useWakeWord();
@@ -94,7 +95,7 @@ export const WakeWordToggle: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         padding: 16,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#F5F5DC',
         borderRadius: 8,
         marginBottom: 16,
     },
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     detectionText: {
-        color: '#fff',
+        color: colors.text.primary,
         fontWeight: 'bold',
     },
 }); 

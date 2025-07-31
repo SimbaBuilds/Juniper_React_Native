@@ -11,6 +11,7 @@ import { ConversationHistory } from './ConversationHistory';
 import { TextChatInput } from './TextChatInput';
 import { MarkdownMessage } from './MarkdownMessage';
 import Clipboard from '@react-native-clipboard/clipboard';
+import { colors } from '../../shared/theme/colors';
 
 const { VoiceModule } = NativeModules;
 
@@ -327,7 +328,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
               accessibilityLabel="Cancel request"
               accessibilityHint="Cancels the current request to the server"
             >
-              <Ionicons name="close-circle" size={24} color="white" />
+              <Ionicons name="close-circle" size={24} color={colors.text.primary} />
               <Text style={styles.cancelButtonText}>Cancel Request</Text>
             </TouchableOpacity>
           )}
@@ -341,7 +342,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
               accessibilityLabel="Stop speaking"
               accessibilityHint="Stops the current speech and allows you to speak again"
             >
-              <Ionicons name="stop-circle" size={24} color="white" />
+              <Ionicons name="stop-circle" size={24} color={colors.text.primary} />
               <Text style={styles.interruptButtonText}>Tap to Interrupt</Text>
             </TouchableOpacity>
           )}
@@ -419,7 +420,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   modeText: {
-    color: '#888888',
+    color: colors.text.secondary,
     fontSize: 14,
     marginLeft: 4,
   },
@@ -453,7 +454,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   clearButtonText: {
-    color: '#888888',
+    color: colors.text.secondary,
     fontSize: 12,
     marginLeft: 4,
   },
@@ -485,7 +486,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 4,
   },
   chatText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
   },
   messageFooter: {
@@ -495,11 +496,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   timeText: {
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: colors.text.primary,
     fontSize: 11,
   },
   statusText: {
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: colors.text.primary,
     fontSize: 11,
     fontStyle: 'italic',
   },
@@ -516,7 +517,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   statusIndicator: {
-    color: '#3B82F6',
+    color: colors.text.secondary,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -526,7 +527,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyChatText: {
-    color: '#888888',
+    color: colors.text.secondary,
     fontSize: 16,
     textAlign: 'center',
   },
@@ -548,7 +549,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   interruptButtonText: {
-    color: 'white',
+    color: colors.text.primary,
     fontWeight: '600',
     fontSize: 16,
     marginLeft: 8,
@@ -571,7 +572,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   cancelButtonText: {
-    color: 'white',
+    color: colors.text.primary,
     fontWeight: '600',
     fontSize: 16,
     marginLeft: 8,
@@ -598,14 +599,14 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   errorTitle: {
-    color: 'white',
+    color: colors.text.primary,
     fontSize: 20,
     fontWeight: 'bold',
     marginTop: 10,
     marginBottom: 5,
   },
   errorMessage: {
-    color: 'white',
+    color: colors.text.primary,
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 20,

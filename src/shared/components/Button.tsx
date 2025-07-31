@@ -6,6 +6,7 @@ import {
   TouchableOpacityProps,
   ActivityIndicator,
 } from 'react-native';
+import { colors } from '../theme/colors';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
@@ -46,7 +47,7 @@ const Button: React.FC<ButtonProps> = ({
     >
       {loading ? (
         <ActivityIndicator 
-          color={variant === 'outlined' ? '#3498db' : '#fff'} 
+          color={variant === 'outlined' ? colors.button.primary : colors.text.primary} 
           size="small" 
         />
       ) : (
@@ -85,16 +86,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   primaryText: {
-    color: '#fff',
+    color: colors.text.primary,
   },
   secondaryText: {
-    color: '#fff',
+    color: colors.text.primary,
   },
   outlinedText: {
-    color: '#3498db',
+    color: colors.button.primary,
   },
   disabledText: {
-    color: '#95a5a6',
+    color: colors.text.disabled,
   },
 });
 
