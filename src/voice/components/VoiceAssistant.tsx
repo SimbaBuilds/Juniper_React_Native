@@ -299,7 +299,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
                       styles.chatBubble, 
                       item.role === 'user' ? styles.userBubble : styles.assistantBubble
                     ]}>
-                      <MarkdownMessage content={item.content} />
+                      <MarkdownMessage content={item.content} role={item.role} />
                       <View style={styles.messageFooter}>
                         <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
                       </View>
@@ -474,13 +474,13 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
   userBubble: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: colors.background.userMessage,
     alignSelf: 'flex-end',
     marginLeft: 40,
     borderBottomRightRadius: 4,
   },
   assistantBubble: {
-    backgroundColor: '#262626',
+    backgroundColor: colors.background.assistantMessage,
     alignSelf: 'flex-start',
     marginRight: 40,
     borderBottomLeftRadius: 4,

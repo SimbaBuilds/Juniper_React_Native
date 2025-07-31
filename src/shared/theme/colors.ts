@@ -1,7 +1,7 @@
 export const colors = {
   // Primary text colors
   text: {
-    primary: '#F5F5DC', // Light beige color
+    primary: '#D4D4C0', // Light beige color
     secondary: '#888888',
     disabled: '#95a5a6',
   },
@@ -10,6 +10,8 @@ export const colors = {
   background: {
     primary: '#fff',
     secondary: '#f8f9fa',
+    userMessage: '#404040', // Dark grey for user messages
+    assistantMessage: '#D4D4C0', // Light beige for assistant messages
   },
   
   // Button colors

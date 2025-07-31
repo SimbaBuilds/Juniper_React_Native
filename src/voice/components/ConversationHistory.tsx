@@ -249,7 +249,7 @@ export const ConversationHistory: React.FC<ConversationHistoryProps> = ({
                     message.role === 'user' ? styles.userMessage : styles.assistantMessage
                   ]}
                 >
-                  <MarkdownMessage content={message.content} />
+                  <MarkdownMessage content={message.content} role={message.role} />
                   <Text style={styles.messageTime}>{formatMessageTime(message.timestamp)}</Text>
                 </View>
               ))}
@@ -485,12 +485,12 @@ const styles = StyleSheet.create({
     maxWidth: '85%',
   },
   userMessage: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: colors.background.userMessage,
     alignSelf: 'flex-end',
     borderBottomRightRadius: 4,
   },
   assistantMessage: {
-    backgroundColor: '#333333',
+    backgroundColor: colors.background.assistantMessage,
     alignSelf: 'flex-start',
     borderBottomLeftRadius: 4,
   },
