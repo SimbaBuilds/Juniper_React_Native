@@ -21,19 +21,37 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private var wakeWordReceiver: BroadcastReceiver? = null
     
     init {
+        Log.i(TAG, "🔧 WAKEWORD_MODULE: ========== INITIALIZING WAKE WORD MODULE ==========")
+        Log.i(TAG, "🔧 WAKEWORD_MODULE: Module creation timestamp: ${System.currentTimeMillis()}")
+        Log.i(TAG, "🔧 WAKEWORD_MODULE: ReactApplicationContext available: ${reactApplicationContext != null}")
+        Log.i(TAG, "🔧 WAKEWORD_MODULE: Thread: ${Thread.currentThread().name}")
+        
         // Register broadcast receiver for wake word detection
         registerWakeWordReceiver()
         
         // Log initial state
         val prefs = reactApplicationContext.getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
         val initialState = prefs.getBoolean("wake_word_enabled", false)
-        Log.i(TAG, "WakeWordModule initialized with state: enabled=$initialState")
+        Log.i(TAG, "🔧 WAKEWORD_MODULE: Initial wake word state: enabled=$initialState")
+        Log.i(TAG, "🔧 WAKEWORD_MODULE: ====================================================")
     }
     
     private fun registerWakeWordReceiver() {
+        Log.i(TAG, "📻 RECEIVER_REG: ========== REGISTERING BROADCAST RECEIVER ==========")
+        Log.i(TAG, "📻 RECEIVER_REG: Registration timestamp: ${System.currentTimeMillis()}")
+        Log.i(TAG, "📻 RECEIVER_REG: Thread: ${Thread.currentThread().name}")
+        Log.i(TAG, "📻 RECEIVER_REG: Expected action: ${Constants.Actions.WAKE_WORD_DETECTED_RN}")
+        
         if (wakeWordReceiver == null) {
+            Log.i(TAG, "📻 RECEIVER_REG: Creating new BroadcastReceiver instance...")
             wakeWordReceiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
+                    Log.i(TAG, "📻 RECEIVER_TRIGGER: ========== BROADCAST RECEIVED ==========")
+                    Log.i(TAG, "📻 RECEIVER_TRIGGER: Receive timestamp: ${System.currentTimeMillis()}")
+                    Log.i(TAG, "📻 RECEIVER_TRIGGER: Intent action: ${intent.action}")
+                    Log.i(TAG, "📻 RECEIVER_TRIGGER: Expected action: ${Constants.Actions.WAKE_WORD_DETECTED_RN}")
+                    Log.i(TAG, "📻 RECEIVER_TRIGGER: Action matches: ${intent.action == Constants.Actions.WAKE_WORD_DETECTED_RN}")
+                    
                     if (intent.action == Constants.Actions.WAKE_WORD_DETECTED_RN) {
                         val timestamp = intent.getLongExtra("timestamp", System.currentTimeMillis())
                         val confidence = intent.getFloatExtra("confidence", 0f)
@@ -55,22 +73,35 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
                         sendEvent("wakeWordDetected", params)
                         
                         Log.i(TAG, "📡 RN_BRIDGE: ✅ Wake word event sent to React Native successfully")
-                        Log.i(TAG, "📡 RN_BRIDGE: =====================================================")
+                        Log.i(TAG, "📡 RN_BRIDGE: =======================================================")
+                    } else {
+                        Log.w(TAG, "📻 RECEIVER_TRIGGER: ❌ Received broadcast with unexpected action: ${intent.action}")
                     }
                 }
             }
             
             val intentFilter = IntentFilter(Constants.Actions.WAKE_WORD_DETECTED_RN)
+            Log.i(TAG, "📻 RECEIVER_REG: Created IntentFilter for action: ${Constants.Actions.WAKE_WORD_DETECTED_RN}")
             
-            // Use the appropriate registration method based on Android version
-            // For Android 13+ (API 33+), specify RECEIVER_NOT_EXPORTED to follow best practices
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                reactApplicationContext.registerReceiver(wakeWordReceiver, intentFilter, Context.RECEIVER_NOT_EXPORTED)
-            } else {
-                reactApplicationContext.registerReceiver(wakeWordReceiver, intentFilter)
+            try {
+                // Use the appropriate registration method based on Android version
+                // For Android 13+ (API 33+), specify RECEIVER_NOT_EXPORTED to follow best practices
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    Log.i(TAG, "📻 RECEIVER_REG: Using RECEIVER_NOT_EXPORTED for Android 13+")
+                    reactApplicationContext.registerReceiver(wakeWordReceiver, intentFilter, Context.RECEIVER_NOT_EXPORTED)
+                } else {
+                    Log.i(TAG, "📻 RECEIVER_REG: Using standard registration for Android < 13")
+                    reactApplicationContext.registerReceiver(wakeWordReceiver, intentFilter)
+                }
+                
+                Log.i(TAG, "📻 RECEIVER_REG: ✅ Broadcast receiver registered successfully")
+                Log.i(TAG, "📻 RECEIVER_REG: Registration complete at: ${System.currentTimeMillis()}")
+                Log.i(TAG, "📻 RECEIVER_REG: ====================================================")
+            } catch (e: Exception) {
+                Log.e(TAG, "📻 RECEIVER_REG: ❌ Error registering broadcast receiver: ${e.message}", e)
             }
-            
-            Log.d(TAG, "Registered wake word broadcast receiver")
+        } else {
+            Log.w(TAG, "📻 RECEIVER_REG: ⚠️ Broadcast receiver already exists, skipping registration")
         }
     }
     
@@ -575,7 +606,7 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     fun getWakeWordThreshold(promise: Promise) {
         try {
             val prefs = reactApplicationContext.getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
-            val threshold = prefs.getFloat("wake_word_threshold", 0.5f)
+            val threshold = prefs.getFloat("wake_word_threshold", 0.3f)  // Match WakeWordService default
             
             val result = Arguments.createMap()
             result.putDouble("threshold", threshold.toDouble())
@@ -591,8 +622,18 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
      * Helper method to send events to JavaScript
      */
     private fun sendEvent(eventName: String, params: WritableMap?) {
-        reactApplicationContext
-            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-            .emit(eventName, params)
+        Log.d(TAG, "📡 SEND_EVENT: About to emit event '$eventName' to React Native")
+        Log.d(TAG, "📡 SEND_EVENT: Params: $params")
+        Log.d(TAG, "📡 SEND_EVENT: ReactApplicationContext available: ${reactApplicationContext != null}")
+        
+        try {
+            reactApplicationContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                ?.emit(eventName, params)
+            
+            Log.d(TAG, "📡 SEND_EVENT: ✅ Event '$eventName' emitted successfully to React Native")
+        } catch (e: Exception) {
+            Log.e(TAG, "📡 SEND_EVENT: ❌ Error emitting event '$eventName': ${e.message}", e)
+        }
     }
 } 

@@ -23,19 +23,39 @@ import com.anonymous.MobileJarvisNative.wakeword.WakeWordPackage
 import com.anonymous.MobileJarvisNative.voice.VoicePackage
 import com.anonymous.MobileJarvisNative.permissions.PermissionsPackage
 import com.anonymous.MobileJarvisNative.app_config.AppConfigPackage
+import android.util.Log
 
 class MainApplication : Application(), ReactApplication {
+    companion object {
+        private const val TAG = "MainApplication"
+    }
 
   override val reactNativeHost: ReactNativeHost = ReactNativeHostWrapper(
         this,
         object : DefaultReactNativeHost(this) {
           override fun getPackages(): List<ReactPackage> {
+            Log.i(TAG, "📱 MAIN_APP: ========== GET PACKAGES CALLED ==========")
+            Log.i(TAG, "📱 MAIN_APP: Thread: ${Thread.currentThread().name}")
+            
             val packages = PackageList(this).packages
+            Log.i(TAG, "📱 MAIN_APP: Auto-linked packages count: ${packages.size}")
+            
             // Packages that cannot be autolinked yet can be added manually here
+            Log.i(TAG, "📱 MAIN_APP: Adding custom native modules...")
             packages.add(WakeWordPackage())
+            Log.i(TAG, "📱 MAIN_APP: ✅ Added WakeWordPackage")
+            
             packages.add(VoicePackage())
+            Log.i(TAG, "📱 MAIN_APP: ✅ Added VoicePackage")
+            
             packages.add(PermissionsPackage())
+            Log.i(TAG, "📱 MAIN_APP: ✅ Added PermissionsPackage")
+            
             packages.add(AppConfigPackage())
+            Log.i(TAG, "📱 MAIN_APP: ✅ Added AppConfigPackage")
+            
+            Log.i(TAG, "📱 MAIN_APP: Total packages: ${packages.size}")
+            Log.i(TAG, "📱 MAIN_APP: ====================================================")
             return packages
           }
 

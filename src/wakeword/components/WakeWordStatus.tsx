@@ -2,11 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useWakeWord } from '../WakeWordContext';
 import { useVoice } from '../../voice/VoiceContext';
+import { DEFAULT_WAKE_PHRASE } from '../constants';
+import { colors } from '../../shared/theme/colors';
 
 export const WakeWordStatus: React.FC = () => {
     const { isEnabled, isRunning } = useWakeWord();
     const { voiceSettings } = useVoice();
-    const selectedWakeWord = voiceSettings?.selectedWakeWord || 'Jarvis';
+    const selectedWakeWord = voiceSettings?.selectedWakeWord || DEFAULT_WAKE_PHRASE;
 
     const getStatusColor = () => {
         if (!isEnabled) return '#666666';
@@ -15,7 +17,7 @@ export const WakeWordStatus: React.FC = () => {
 
     const getStatusText = () => {
         if (!isEnabled) return 'Wake Word Disabled';
-        return isRunning ? `Listening for "${selectedWakeWord}"` : 'Wake Word Paused';
+        return isRunning ? `Listening for "${selectedWakeWord}"` : '';
     };
 
     return (
@@ -41,7 +43,7 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     text: {
-        color: '#FFFFFF',
+        color: colors.text.primary,
         fontSize: 14,
     },
 }); 

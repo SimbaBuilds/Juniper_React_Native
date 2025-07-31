@@ -3,6 +3,7 @@ import { View, StyleSheet, Text, TouchableOpacity, SafeAreaView, KeyboardAvoidin
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import SignUpForm from './SignUpForm';
 import { useAuth } from './useAuth';
+import GoogleLogo from '../shared/components/GoogleLogo';
 
 type RootStackParamList = {
   Home: undefined;
@@ -111,6 +112,7 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
             onPress={handleGoogleSignUp}
             disabled={isLoading}
           >
+            <GoogleLogo size={20} />
             <Text style={styles.googleButtonText}>Sign up with Google</Text>
           </TouchableOpacity>
 
@@ -207,13 +209,16 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     marginBottom: 16,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#fff',
   },
   googleButtonText: {
     color: '#333',
     fontSize: 16,
     fontWeight: '600',
+    marginLeft: 12,
   },
   footer: {
     flexDirection: 'row',

@@ -1,5 +1,6 @@
 import { supabase } from '../supabase/supabase';
 import { UserProfile } from '../supabase/tables';
+import { DEFAULT_WAKE_PHRASE } from '../wakeword/constants';
 
 export class UserProfileService {
   /**
@@ -13,7 +14,7 @@ export class UserProfileService {
         deepgram_enabled: false,
         base_language_model: 'claude-sonnet-4-20250514',
         general_instructions: '',
-        wake_word: 'Juniper',
+        wake_word: DEFAULT_WAKE_PHRASE,
         wake_word_sensitivity: 0.3,
         wake_word_detection_enabled: true,
         selected_deepgram_voice: 'aura-2-mars-en',
@@ -35,6 +36,10 @@ export class UserProfileService {
         requests_today: 0,
         requests_week: 0,
         requests_month: 0,
+        enabled_system_integrations: {
+          twitter_x: true,
+          perplexity: true
+        }
       };
 
       const { data, error } = await supabase

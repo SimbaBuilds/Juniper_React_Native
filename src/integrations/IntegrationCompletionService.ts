@@ -1,7 +1,7 @@
 import { DeviceEventEmitter } from 'react-native';
 
 export interface IntegrationCompletionHandler {
-  sendTextMessage: (message: string) => Promise<void>;
+  sendTextMessage: (message: string, integrationInProgress?: boolean) => Promise<void>;
   navigateToHome: () => void;
 }
 
@@ -39,9 +39,9 @@ class IntegrationCompletionService {
     }
 
     try {
-      // Send text message to voice assistant
+      // Send text message to voice assistant with integration_in_progress flag
       const message = `Let's complete the integration for ${serviceName}`;
-      await this.handler.sendTextMessage(message);
+      await this.handler.sendTextMessage(message, true);
       
       // Navigate to home screen
       this.handler.navigateToHome();

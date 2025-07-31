@@ -64,16 +64,16 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                 
                 Log.d(TAG, "🔵 VOICE_MODULE: ✅ Successfully sent processTextFromNative event")
                 
-                // Set timeout for the request and track the handler
-                val timeoutHandler = Handler(Looper.getMainLooper())
-                timeoutHandlers[requestId] = timeoutHandler
-                timeoutHandler.postDelayed({
-                    timeoutHandlers.remove(requestId)
+                // Set timeout for the request
+                val timeoutHandler = Runnable {
                     pendingApiCallbacks.remove(requestId)?.let { callback ->
                         Log.w(TAG, "🔵 VOICE_MODULE: Timeout for request: $requestId")
                         callback("I'm sorry, there was a timeout processing your request. Please try again.")
                     }
-                }, 240000)
+                    pendingTimeoutHandlers.remove(requestId)
+                }
+                pendingTimeoutHandlers[requestId] = timeoutHandler
+                Handler(Looper.getMainLooper()).postDelayed(timeoutHandler, 30000)
                 
             } catch (e: Exception) {
                 Log.e(TAG, "🔵 VOICE_MODULE: ❌ Error emitting processTextFromNative event", e)
@@ -94,10 +94,11 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
     fun startListening(promise: Promise) {
         Log.d(TAG, "startListening called from JS")
         try {
-            Log.i(TAG, "Calling voiceManager.onWakeWordDetected() to simulate wake word flow")
-            val result = voiceManager.onWakeWordDetected()
-            Log.i(TAG, "onWakeWordDetected returned: $result")
-            promise.resolve(result)
+            // Ensure speech recognition is initialized
+            ensureSpeechRecognitionInitialized()
+            
+            voiceManager.startListening()
+            promise.resolve(true)
         } catch (e: Exception) {
             Log.e(TAG, "Error starting listening", e)
             promise.reject("ERR_VOICE_START", e.message, e)
@@ -646,10 +647,13 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
             
             Log.d(TAG, "🟢 NATIVE: ✅ VoiceResponseUpdate event emitted successfully")
             
-            // First, handle the pending callback if it exists
+            // First, cancel the timeout and handle the pending callback if it exists
+            pendingTimeoutHandlers.remove(requestId)?.let { timeoutHandler ->
+                Handler(Looper.getMainLooper()).removeCallbacks(timeoutHandler)
+                Log.d(TAG, "🟢 NATIVE: ✅ Cancelled timeout for requestId: $requestId")
+            }
+            
             pendingApiCallbacks.remove(requestId)?.let { callback ->
-                // Cancel the timeout handler since we got a response
-                timeoutHandlers.remove(requestId)?.removeCallbacksAndMessages(null)
                 Log.i(TAG, "🟢 NATIVE: Found pending callback for requestId: $requestId")
                 
                 // IMPORTANT: Ensure proper audio focus coordination before TTS
@@ -792,59 +796,9 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         return true
     }
 
-    // Store pending callbacks
+    // Store pending callbacks and timeout handlers
     private val pendingApiCallbacks = mutableMapOf<String, (String) -> Unit>()
-    
-    // Track timeout handlers to cancel them when needed
-    private val timeoutHandlers = mutableMapOf<String, Handler>()
-
-    /**
-     * Clear all pending native state (for cleanup between chat sessions)
-     */
-    @ReactMethod
-    fun clearNativeState(promise: Promise) {
-        try {
-            Log.i(TAG, "🧹 NATIVE_CLEANUP: Clearing all native state...")
-            
-            // Clear pending callbacks
-            val pendingCount = pendingApiCallbacks.size
-            pendingApiCallbacks.clear()
-            Log.d(TAG, "🧹 NATIVE_CLEANUP: Cleared $pendingCount pending API callbacks")
-            
-            // Cancel and clear timeout handlers
-            timeoutHandlers.values.forEach { handler ->
-                handler.removeCallbacksAndMessages(null)
-            }
-            val timeoutCount = timeoutHandlers.size
-            timeoutHandlers.clear()
-            Log.d(TAG, "🧹 NATIVE_CLEANUP: Cancelled $timeoutCount timeout handlers")
-            
-            // Reset voice manager state
-            voiceManager.updateState(VoiceManager.VoiceState.IDLE)
-            Log.d(TAG, "🧹 NATIVE_CLEANUP: Reset voice state to IDLE")
-            
-            // Stop any ongoing speech or listening
-            voiceManager.stopListening()
-            voiceManager.interruptSpeech()
-            Log.d(TAG, "🧹 NATIVE_CLEANUP: Stopped listening and interrupted speech")
-            
-            // Release audio focus through centralized manager
-            try {
-                val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
-                audioManager.clearAllRequests()
-                Log.d(TAG, "🧹 NATIVE_CLEANUP: Cleared all audio focus requests")
-            } catch (e: Exception) {
-                Log.w(TAG, "🧹 NATIVE_CLEANUP: Error clearing audio focus: ${e.message}")
-            }
-            
-            Log.i(TAG, "🧹 NATIVE_CLEANUP: ✅ Native state cleanup completed successfully")
-            promise.resolve(true)
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "🧹 NATIVE_CLEANUP: ❌ Error clearing native state: ${e.message}", e)
-            promise.reject("CLEAR_STATE_ERROR", "Failed to clear native state: ${e.message}", e)
-        }
-    }
+    private val pendingTimeoutHandlers = mutableMapOf<String, Runnable>()
 
     /**
      * Process text using React Native API with authentication (called from React Native)
@@ -1432,6 +1386,51 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         } catch (e: Exception) {
             Log.e(TAG, "🎵 DEEPGRAM_ENABLED: ❌ Error getting Deepgram enabled state: ${e.message}", e)
             promise.reject("GET_DEEPGRAM_ENABLED_ERROR", "Failed to get Deepgram enabled state: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Clear native state and cancel pending timeouts (for request cancellation)
+     */
+    @ReactMethod
+    fun clearNativeState(requestId: String?, promise: Promise) {
+        Log.d(TAG, "🚫 CLEAR_NATIVE: clearNativeState called with requestId: $requestId")
+        try {
+            if (requestId != null) {
+                // Cancel specific request timeout
+                pendingTimeoutHandlers.remove(requestId)?.let { timeoutHandler ->
+                    Handler(Looper.getMainLooper()).removeCallbacks(timeoutHandler)
+                    Log.d(TAG, "🚫 CLEAR_NATIVE: ✅ Cancelled timeout for requestId: $requestId")
+                }
+                
+                // Remove pending callback
+                pendingApiCallbacks.remove(requestId)?.let {
+                    Log.d(TAG, "🚫 CLEAR_NATIVE: ✅ Removed pending callback for requestId: $requestId")
+                }
+            } else {
+                // Clear all pending timeouts and callbacks
+                val timeoutCount = pendingTimeoutHandlers.size
+                val callbackCount = pendingApiCallbacks.size
+                
+                pendingTimeoutHandlers.values.forEach { timeoutHandler ->
+                    Handler(Looper.getMainLooper()).removeCallbacks(timeoutHandler)
+                }
+                pendingTimeoutHandlers.clear()
+                pendingApiCallbacks.clear()
+                
+                Log.d(TAG, "🚫 CLEAR_NATIVE: ✅ Cleared all timeouts ($timeoutCount) and callbacks ($callbackCount)")
+            }
+            
+            // Reset VoiceManager to IDLE state to trigger wake word resume
+            // This ensures cancelled requests follow the same wake word resume flow as completed requests
+            Log.d(TAG, "🚫 CLEAR_NATIVE: Resetting VoiceManager state to IDLE to resume wake word...")
+            voiceManager.updateState(VoiceManager.VoiceState.IDLE)
+            Log.d(TAG, "🚫 CLEAR_NATIVE: ✅ VoiceManager state reset to IDLE")
+            
+            promise.resolve(true)
+        } catch (e: Exception) {
+            Log.e(TAG, "🚫 CLEAR_NATIVE: ❌ Error clearing native state: ${e.message}", e)
+            promise.reject("CLEAR_STATE_ERROR", "Failed to clear native state: ${e.message}", e)
         }
     }
 

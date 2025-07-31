@@ -634,7 +634,7 @@ class DeepgramClient private constructor(private val context: Context) {
                 testMediaPlayer.setAudioAttributes(
                     AudioAttributes.Builder()
                         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                        .setUsage(AudioAttributes.USAGE_ASSISTANT)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
                         .build()
                 )
                 Log.d(TAG, "🎵 DEEPGRAM_AUDIO_TEST: ✅ Audio attributes set successfully")
@@ -773,7 +773,7 @@ class DeepgramClient private constructor(private val context: Context) {
             try {
                 val audioAttrs = AudioAttributes.Builder()
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                    .setUsage(AudioAttributes.USAGE_ASSISTANT)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
                     .build()
                 
                 results["audio_attributes_supported"] = true
@@ -826,23 +826,22 @@ class DeepgramClient private constructor(private val context: Context) {
     }
     
     /**
-     * Request audio focus through centralized manager
+     * Request audio focus through centralized manager (simplified)
      */
     private fun requestAudioFocus(): Boolean {
         return try {
+            // TROUBLESHOOTING STEP 2: Check for internal conflicts with speech recognition
+            val currentRequest = centralAudioManager?.getCurrentRequestInfo()
+            if (currentRequest?.requestType == com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION) {
+                Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: ⚠️ Deepgram TTS requesting audio focus while SPEECH_RECOGNITION is active!")
+                Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: Current speech recognition request ID: ${currentRequest.requestId}")
+                Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: Deepgram TTS will be queued behind higher priority SPEECH_RECOGNITION")
+            }
+            
             val requestId = "deepgram_${UUID.randomUUID()}"
             currentRequestId = requestId
             
-            // Force release any existing audio focus first (aggressive approach)
-            try {
-                Log.d(TAG, "🎵 DEEPGRAM_AUDIO_FOCUS: Forcing release of existing audio focus before TTS")
-                centralAudioManager?.clearAllRequests()
-                
-                // Wait a moment for the release to take effect
-                Thread.sleep(100)
-            } catch (e: Exception) {
-                Log.w(TAG, "🎵 DEEPGRAM_AUDIO_FOCUS: Error during force release", e)
-            }
+            Log.d(TAG, "🎵 Deepgram: Requesting audio focus (ID: $requestId)")
             
             val success = centralAudioManager?.requestAudioFocus(
                 requestType = AudioManager.AudioRequestType.TTS,
@@ -851,30 +850,8 @@ class DeepgramClient private constructor(private val context: Context) {
                     Log.d(TAG, "🎵 Deepgram audio focus gained")
                 },
                 onFocusLost = {
-                    Log.w(TAG, "🎵 Deepgram audio focus lost - attempting to reclaim focus")
-                    // Don't immediately stop playback, try to reclaim focus first
-                    CoroutineScope(Dispatchers.IO).launch {
-                        delay(100) // Brief delay before attempting to reclaim
-                        val reclaimSuccess = centralAudioManager?.requestAudioFocus(
-                            requestType = AudioManager.AudioRequestType.TTS,
-                            requestId = currentRequestId ?: "deepgram_reclaim_${UUID.randomUUID()}",
-                            onFocusGained = {
-                                Log.d(TAG, "🎵 Deepgram audio focus reclaimed successfully")
-                            },
-                            onFocusLost = {
-                                Log.w(TAG, "🎵 Deepgram audio focus lost again - stopping playback")
-                                stopPlayback()
-                            },
-                            onFocusDucked = {
-                                Log.d(TAG, "🎵 Deepgram audio focus ducked after reclaim")
-                            }
-                        ) ?: false
-                        
-                        if (!reclaimSuccess) {
-                            Log.w(TAG, "🎵 Failed to reclaim audio focus - stopping playback")
-                            stopPlayback()
-                        }
-                    }
+                    Log.w(TAG, "🎵 Deepgram audio focus lost - stopping playback")
+                    stopPlayback()
                 },
                 onFocusDucked = {
                     Log.d(TAG, "🎵 Deepgram audio focus ducked - continuing at lower volume")
@@ -1415,7 +1392,7 @@ class DeepgramClient private constructor(private val context: Context) {
             mediaPlayer?.setAudioAttributes(
                 AudioAttributes.Builder()
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                    .setUsage(AudioAttributes.USAGE_ASSISTANT)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
                     .setLegacyStreamType(android.media.AudioManager.STREAM_MUSIC)
                     .build()
             )

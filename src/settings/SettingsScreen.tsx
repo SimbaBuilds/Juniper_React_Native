@@ -15,9 +15,12 @@ import { ExpandableSettingsToggle } from './components/ExpandableSettingsToggle'
 import { SettingsDropdown } from './components/SettingsDropdown';
 import { SettingsTextInput } from './components/SettingsTextInput';
 import { SettingsArrayInput } from './components/SettingsArrayInput';
-import { SettingsSlider } from './components/SettingsSlider';
+import { SettingsNumberInput } from './components/SettingsNumberInput';
 import { VoiceSelectionDropdown } from './components/VoiceSelectionDropdown';
+import { PermissionsCard } from './components/PermissionsCard';
 import WakeWordService from '../wakeword/WakeWordService';
+import { DEFAULT_WAKE_PHRASE } from '../wakeword/constants';
+import { colors } from '../shared/theme/colors';
 
 // Voice Settings interface
 export interface VoiceSettings {
@@ -31,17 +34,75 @@ export interface VoiceSettings {
   // XAI LiveSearch settings
   xaiLiveSearchEnabled: boolean;
   xaiLiveSearchSafeSearch: boolean;
+  // Timezone setting
+  timezone: string;
 }
 
-// Available wake words from Picovoice (built-in + custom)
+// Wake word sensitivity mapping
+const WAKE_WORD_SENSITIVITY_MAP: Record<string, number> = {
+  'Hey Juni': 0.02,
+  'Hey Juniper': 0.001,
+  'Hey': 0.01,
+  'Jarvis': 0.7,
+  'Hey Jarvis': 0.9,
+  'Jasmine': 0.001,
+  'Hey Jade': 0.001,
+  'Hey Jay': 0.001,
+  'Hey Jasper': 0.02,
+  'Alex': 0.001,
+  'Aloe': 0.001,
+  'Hey Michael': 0.7,
+};
+
+// Available wake words from OpenWakeWord (native Android)
 const AVAILABLE_WAKE_WORDS = [
-  { label: 'Bumblebee', value: 'BUMBLEBEE' },
-  { label: 'Grasshopper', value: 'GRASSHOPPER' },
-  { label: 'Jarvis', value: 'JARVIS' },
-  { label: 'Juniper', value: 'JUNIPER' },
-  { label: 'Picovoice', value: 'PICOVOICE' },
-  { label: 'Porcupine', value: 'PORCUPINE' },
-  { label: 'Terminator', value: 'TERMINATOR' },
+  { label: `Hey Juni (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Hey Juni'] * 100)}%)`, value: 'Hey Juni' },
+  { label: `Jarvis (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Jarvis'] * 100)}%)`, value: 'Jarvis' },
+  { label: `Hey Jasper (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Hey Jasper'] * 100)}%)`, value: 'Hey Jasper' },
+  { label: `Aloe (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Aloe'] * 100)}%)`, value: 'Aloe' },
+  { label: `Hey Michael (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Hey Michael'] * 100)}%)`, value: 'Hey Michael' },
+];
+
+// Available timezones (common ones)
+const AVAILABLE_TIMEZONES = [
+  // US Timezones
+  { label: 'Pacific Time (PT)', value: 'America/Los_Angeles' },
+  { label: 'Mountain Time (MT)', value: 'America/Denver' },
+  { label: 'Central Time (CT)', value: 'America/Chicago' },
+  { label: 'Eastern Time (ET)', value: 'America/New_York' },
+  { label: 'Alaska Time (AKT)', value: 'America/Anchorage' },
+  { label: 'Hawaii Time (HST)', value: 'Pacific/Honolulu' },
+  
+  // Major International Timezones
+  { label: 'UTC', value: 'UTC' },
+  { label: 'London (GMT/BST)', value: 'Europe/London' },
+  { label: 'Paris (CET/CEST)', value: 'Europe/Paris' },
+  { label: 'Berlin (CET/CEST)', value: 'Europe/Berlin' },
+  { label: 'Moscow (MSK)', value: 'Europe/Moscow' },
+  { label: 'Dubai (GST)', value: 'Asia/Dubai' },
+  { label: 'Mumbai (IST)', value: 'Asia/Kolkata' },
+  { label: 'Bangkok (ICT)', value: 'Asia/Bangkok' },
+  { label: 'Singapore (SGT)', value: 'Asia/Singapore' },
+  { label: 'Tokyo (JST)', value: 'Asia/Tokyo' },
+  { label: 'Seoul (KST)', value: 'Asia/Seoul' },
+  { label: 'Sydney (AEDT/AEST)', value: 'Australia/Sydney' },
+  { label: 'Auckland (NZDT/NZST)', value: 'Pacific/Auckland' },
+  
+  // Additional US Cities
+  { label: 'Phoenix (MST)', value: 'America/Phoenix' },
+  { label: 'Detroit (EST/EDT)', value: 'America/Detroit' },
+  
+  // Canada
+  { label: 'Toronto (EST/EDT)', value: 'America/Toronto' },
+  { label: 'Vancouver (PST/PDT)', value: 'America/Vancouver' },
+  
+  // South America
+  { label: 'São Paulo (BRT)', value: 'America/Sao_Paulo' },
+  { label: 'Buenos Aires (ART)', value: 'America/Argentina/Buenos_Aires' },
+  
+  // Africa
+  { label: 'Cairo (EET)', value: 'Africa/Cairo' },
+  { label: 'Johannesburg (SAST)', value: 'Africa/Johannesburg' },
 ];
 
 // Available Deepgram Aura voices
@@ -136,6 +197,14 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   // Use ref to avoid dependency cycles
   const refreshSettingsRef = useRef(refreshSettings);
   refreshSettingsRef.current = refreshSettings;
+  
+  // Log when settings change
+  useEffect(() => {
+    console.log('🖥️ SETTINGS_SCREEN: Settings updated in component:', {
+      selectedWakeWord: settings.selectedWakeWord,
+      wakeWordSensitivity: settings.wakeWordSensitivity
+    });
+  }, [settings.selectedWakeWord, settings.wakeWordSensitivity]);
 
   const [savingToDatabase, setSavingToDatabase] = useState(false);
   const [loadingFromDatabase, setLoadingFromDatabase] = useState(false);
@@ -147,8 +216,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const [localGeneralInstructions, setLocalGeneralInstructions] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // State for permissions tooltip
-  const [showPermissionsTooltip, setShowPermissionsTooltip] = useState(false);
+
 
   // Initialize and sync local state when settings load or change
   useEffect(() => {
@@ -300,7 +368,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color="#FFFFFF" />
+        <ActivityIndicator size="large" color={colors.text.primary} />
         <Text style={styles.loadingText}>{getLoadingMessage()}</Text>
       </View>
     );
@@ -323,16 +391,16 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         
         <View style={styles.section}>
               <Text style={styles.explanationText}>
-                Settings below can be manually changed or just tell your assistant "enable Deepgram" or "go to sleep"
+                Change the settings below manually or just tell your assistant e.g. "enable Deepgram" {Platform.OS === 'android' ? 'or "or go to sleep" (disables wake word detection)' : ''}
               </Text>
           </View>
         
         {/* Wake Word Section - Android only */}
         {Platform.OS === 'android' && (
           <View style={styles.section}>
-            <Text style={styles.explanationText}>
+            {/* <Text style={styles.explanationText}>
                 The wakeword can be used even when the app is closed.
-            </Text>
+            </Text> */}
             <View style={{ marginTop: 12 }}>
               <WakeWordToggle />
               <WakeWordStatus />
@@ -340,57 +408,28 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         )}
         
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderWithInfo}>
-            <Text style={styles.sectionTitle}>Permissions</Text>
-            <TouchableOpacity
-              style={styles.infoIcon}
-              onPress={() => setShowPermissionsTooltip(!showPermissionsTooltip)}
-            >
-              <Ionicons name="information-circle-outline" size={20} color="#B0B0B0" />
-            </TouchableOpacity>
-          </View>
-          
-          {showPermissionsTooltip && (
-            <View style={styles.permissionsTooltip}>
-              <Text style={styles.explanationText}>
-                Your assistant cannot change permissions for you
-              </Text>
-            </View>
-          )}
-          
-          <View style={styles.permissionItem}>
-            <Text style={styles.permissionTitle}>Microphone Access</Text>
-            <Text style={styles.permissionStatus}>
-              Status: {hasMicrophonePermission ? '✅ Granted' : '❌ Denied'}
-            </Text>
-            {!hasMicrophonePermission && (
-              <Text 
-                style={styles.permissionButton}
-                onPress={requestMicrophone}
-              >
-                Request Permission
-              </Text>
-            )}
-          </View>
+        {/* Permissions Section */}
+        <PermissionsCard
+          hasMicrophonePermission={hasMicrophonePermission}
+          hasBatteryOptimizationExemption={hasBatteryOptimizationExemption}
+          requestMicrophone={requestMicrophone}
+          requestBatteryExemption={requestBatteryExemption}
+        />
 
-          {Platform.OS === 'android' && (
-            <View style={styles.permissionItem}>
-              <Text style={styles.permissionTitle}>Battery Optimization</Text>
-              <Text style={styles.permissionStatus}>
-                Status: {hasBatteryOptimizationExemption ? '✅ Optimized' : '❌ Not Optimized'}
-              </Text>
-              {!hasBatteryOptimizationExemption && (
-                <Text 
-                  style={styles.permissionButton}
-                  onPress={requestBatteryExemption}
-                >
-                  Optimize Battery Usage
-                </Text>
-              )}
-            </View>
-          )}
-        </View>
+        {/* Timezone Section */}
+        <SettingsDropdown
+          label="Timezone"
+          value={settings.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'}
+          options={AVAILABLE_TIMEZONES}
+          onValueChange={async (timezone) => {
+            console.log('🌍 TIMEZONE: Timezone changed in settings screen');
+            console.log('🌍 TIMEZONE: Previous timezone:', settings.timezone || 'auto-detected');
+            console.log('🌍 TIMEZONE: New timezone:', timezone);
+            await handleVoiceSettingsUpdate({ timezone });
+            console.log('🌍 TIMEZONE: ✅ Timezone setting update completed');
+          }}
+          description="Your local timezone. This helps your assistant provide accurate time-based responses and scheduling."
+        />
 
         {/* Voice Settings Section */}
         <View style={styles.section}>
@@ -416,9 +455,9 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                   disabled={savingToDatabase}
                 >
                   {savingToDatabase ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <ActivityIndicator size="small" color={colors.text.primary} />
                   ) : (
-                    <Ionicons name="save-outline" size={16} color="#FFFFFF" />
+                    <Ionicons name="save-outline" size={16} color={colors.text.primary} />
                   )}
                   <Text style={styles.saveButtonText}>
                     {savingToDatabase ? 'Saving...' : 'Save'}
@@ -433,92 +472,118 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.wakeWordSettingsCard}>
               <SettingsDropdown
                 label="Wake Word"
-                value={settings.selectedWakeWord || 'JARVIS'}
+                value={settings.selectedWakeWord || DEFAULT_WAKE_PHRASE}
                 options={AVAILABLE_WAKE_WORDS}
                 onValueChange={async (selectedWakeWord) => {
                   console.log('🎯 WAKEWORD_SELECTION: Wake word changed in settings screen');
-                  console.log('🎯 WAKEWORD_SELECTION: Previous wake word:', settings.selectedWakeWord || 'JARVIS');
+                  console.log('🎯 WAKEWORD_SELECTION: Previous wake word:', settings.selectedWakeWord || DEFAULT_WAKE_PHRASE);
                   console.log('🎯 WAKEWORD_SELECTION: New wake word:', selectedWakeWord);
                   console.log('🎯 WAKEWORD_SELECTION: Available options:', AVAILABLE_WAKE_WORDS.map(w => w.value));
                   
-                  // Update both the voice settings and the native wake word module
-                  await Promise.all([
-                    handleVoiceSettingsUpdate({ selectedWakeWord }),
-                    (async () => {
-                      try {
-                        const wakeWordService = WakeWordService.getInstance();
-                        const success = await wakeWordService.setSelectedWakeWord(selectedWakeWord);
-                        if (success) {
-                          console.log('🎯 WAKEWORD_SELECTION: ✅ Successfully synced wake word to native module');
-                          
-                          // Restart wake word detection if currently running to apply changes
-                          const isRunning = await wakeWordService.isWakeWordDetectionRunning();
-                          if (isRunning) {
-                            console.log('🔄 Restarting wake word detection to apply new wake word...');
-                            await wakeWordService.stopWakeWordDetection();
-                            await new Promise(resolve => setTimeout(resolve, 500));
-                            await wakeWordService.startWakeWordDetection();
-                            console.log('✅ Wake word detection restarted with new wake word');
-                          }
+                  // Always set sensitivity to the mapped value for the selected wake word
+                  const mappedSensitivity = WAKE_WORD_SENSITIVITY_MAP[selectedWakeWord];
+                  let updates: any = { selectedWakeWord };
+                  
+                  if (mappedSensitivity !== undefined) {
+                    console.log('🎚️ AUTO_SENSITIVITY: Setting sensitivity to', mappedSensitivity, 'for wake word:', selectedWakeWord);
+                    updates.wakeWordSensitivity = mappedSensitivity;
+                  }
+                  
+                  console.log('🎯 WAKEWORD_SELECTION: Updates to apply:', updates);
+                  console.log('🎯 WAKEWORD_SELECTION: Current settings before update:', {
+                    selectedWakeWord: settings.selectedWakeWord,
+                    wakeWordSensitivity: settings.wakeWordSensitivity
+                  });
+                  
+                  // First update the voice settings, then sync to native
+                  await handleVoiceSettingsUpdate(updates);
+                  
+                  // Now sync to native module
+                  try {
+                    const wakeWordService = WakeWordService.getInstance();
+                    
+                    // Always sync wake word first
+                    const success = await wakeWordService.setSelectedWakeWord(selectedWakeWord);
+                    if (success) {
+                      console.log('🎯 WAKEWORD_SELECTION: ✅ Successfully synced wake word to native module');
+                      
+                      // If sensitivity was updated, sync that too BEFORE restarting
+                      if (updates.wakeWordSensitivity !== undefined) {
+                        console.log('🎚️ AUTO_SENSITIVITY: Syncing auto-updated sensitivity:', updates.wakeWordSensitivity);
+                        const sensitivitySuccess = await wakeWordService.setWakeWordSensitivity(updates.wakeWordSensitivity);
+                        if (sensitivitySuccess) {
+                          console.log('🎚️ AUTO_SENSITIVITY: ✅ Successfully synced auto-updated sensitivity to native module');
                         } else {
-                          console.error('🎯 WAKEWORD_SELECTION: ❌ Failed to sync wake word to native module');
+                          console.error('🎚️ AUTO_SENSITIVITY: ❌ Failed to sync auto-updated sensitivity to native module');
                         }
-                      } catch (error) {
-                        console.error('🎯 WAKEWORD_SELECTION: ❌ Error syncing wake word to native module:', error);
                       }
-                    })()
-                  ]);
+                      
+                      // Restart wake word detection if currently running to apply changes
+                      const isRunning = await wakeWordService.isWakeWordDetectionRunning();
+                      if (isRunning) {
+                        console.log('🔄 Restarting wake word detection to apply new wake word and sensitivity...');
+                        await wakeWordService.stopWakeWordDetection();
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        await wakeWordService.startWakeWordDetection();
+                        console.log('✅ Wake word detection restarted with new wake word and sensitivity');
+                      }
+                    } else {
+                      console.error('🎯 WAKEWORD_SELECTION: ❌ Failed to sync wake word to native module');
+                    }
+                  } catch (error) {
+                    console.error('🎯 WAKEWORD_SELECTION: ❌ Error syncing wake word to native module:', error);
+                  }
                   
                   console.log('🎯 WAKEWORD_SELECTION: ✅ Wake word setting update completed');
                 }}
-                description="The word you say to activate your assistant."
+                description="The word you say to activate your assistant (minimum required sensitivity). If wake phrase is failing, try speaking a bit slower."
               />
 
               <View style={styles.indentedSetting}>
-                <SettingsSlider
+                <SettingsNumberInput
                   label="Wake Word Sensitivity"
                   value={settings.wakeWordSensitivity || 0.3}
-                onValueChange={async (wakeWordSensitivity) => {
-                  console.log('🎚️ WAKEWORD_SENSITIVITY: Sensitivity changed in settings screen');
-                  console.log('🎚️ WAKEWORD_SENSITIVITY: Previous sensitivity:', settings.wakeWordSensitivity || 0.3);
-                  console.log('🎚️ WAKEWORD_SENSITIVITY: New sensitivity:', wakeWordSensitivity);
-                  console.log('🎚️ WAKEWORD_SENSITIVITY: Percentage:', `${Math.round(wakeWordSensitivity * 100)}%`);
-                  
-                  // Update both the voice settings and the native wake word module
-                  await Promise.all([
-                    handleVoiceSettingsUpdate({ wakeWordSensitivity }),
-                    (async () => {
-                      try {
-                        const wakeWordService = WakeWordService.getInstance();
-                        const success = await wakeWordService.setWakeWordSensitivity(wakeWordSensitivity);
-                        if (success) {
-                          console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Successfully synced sensitivity to native module');
-                          
-                          // Restart wake word detection if currently running to apply changes
-                          const isRunning = await wakeWordService.isWakeWordDetectionRunning();
-                          if (isRunning) {
-                            console.log('🔄 Restarting wake word detection to apply new sensitivity...');
-                            await wakeWordService.stopWakeWordDetection();
-                            await new Promise(resolve => setTimeout(resolve, 500));
-                            await wakeWordService.startWakeWordDetection();
-                            console.log('✅ Wake word detection restarted with new sensitivity');
+                  onSave={async (wakeWordSensitivity) => {
+                    console.log('🎚️ WAKEWORD_SENSITIVITY: Sensitivity changed in settings screen');
+                    console.log('🎚️ WAKEWORD_SENSITIVITY: Previous sensitivity:', settings.wakeWordSensitivity || 0.3);
+                    console.log('🎚️ WAKEWORD_SENSITIVITY: New sensitivity:', wakeWordSensitivity);
+                    console.log('🎚️ WAKEWORD_SENSITIVITY: Percentage:', `${Math.round(wakeWordSensitivity * 100)}%`);
+                    
+                    // Update both the voice settings and the native wake word module
+                    await Promise.all([
+                      handleVoiceSettingsUpdate({ wakeWordSensitivity }),
+                      (async () => {
+                        try {
+                          const wakeWordService = WakeWordService.getInstance();
+                          const success = await wakeWordService.setWakeWordSensitivity(wakeWordSensitivity);
+                          if (success) {
+                            console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Successfully synced sensitivity to native module');
+                            
+                            // Restart wake word detection if currently running to apply changes
+                            const isRunning = await wakeWordService.isWakeWordDetectionRunning();
+                            if (isRunning) {
+                              console.log('🔄 Restarting wake word detection to apply new sensitivity...');
+                              await wakeWordService.stopWakeWordDetection();
+                              await new Promise(resolve => setTimeout(resolve, 500));
+                              await wakeWordService.startWakeWordDetection();
+                              console.log('✅ Wake word detection restarted with new sensitivity');
+                            }
+                          } else {
+                            console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Failed to sync sensitivity to native module');
                           }
-                        } else {
-                          console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Failed to sync sensitivity to native module');
+                        } catch (error) {
+                          console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Error syncing sensitivity to native module:', error);
                         }
-                      } catch (error) {
-                        console.error('🎚️ WAKEWORD_SENSITIVITY: ❌ Error syncing sensitivity to native module:', error);
-                      }
-                    })()
-                  ]);
-                  
-                  console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Sensitivity setting update completed');
-                }}
-                minimumValue={0}
-                maximumValue={1}
-                step={0.1}
-                description="The sensitivity level for wake word detection (0 = less sensitive, 1 = more sensitive)."
-                formatValue={(value) => `${Math.round(value * 100)}%`}
+                      })()
+                    ]);
+                    
+                    console.log('🎚️ WAKEWORD_SENSITIVITY: ✅ Sensitivity setting update completed');
+                  }}
+                  minimumValue={0}
+                  maximumValue={1}
+                  step={1e-5}
+                  description="The sensitivity level for wake word detection (0 = less sensitive, 1 = more sensitive)."
+                  formatValue={(value) => `${Math.round(value * 100)}%`}
                 />
               </View>
             </View>
@@ -611,7 +676,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.logoutButton}
             onPress={handleLogout}
           >
-            <Ionicons name="log-out-outline" size={20} color="#FFFFFF" />
+            <Ionicons name="log-out-outline" size={20} color={colors.text.primary} />
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
         </View>
@@ -633,7 +698,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginTop: 16,
   },
   header: {
@@ -642,7 +707,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   section: {
     marginBottom: 24,
@@ -650,21 +715,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#FFFFFF',
-  },
-  sectionHeaderWithInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  infoIcon: {
-    marginLeft: 8,
-  },
-  permissionsTooltip: {
-    backgroundColor: '#1E1E1E',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 16,
+    color: colors.text.primary,
   },
   wakeWordExplanation: {
     backgroundColor: '#1E1E1E',
@@ -677,25 +728,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  permissionItem: {
-    marginBottom: 16,
-  },
-  permissionTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
-  },
-  permissionStatus: {
-    fontSize: 14,
-    color: '#B0B0B0',
-    marginTop: 4,
-  },
-  permissionButton: {
-    color: '#4A90E2',
-    marginTop: 8,
-    fontSize: 14,
-    fontWeight: '500',
-  },
   accountSection: {
     backgroundColor: '#1E1E1E',
     padding: 16,
@@ -705,7 +737,7 @@ const styles = StyleSheet.create({
   accountTitle: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 16,
   },
   logoutButton: {
@@ -717,7 +749,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoutButtonText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
     fontWeight: '500',
     marginLeft: 8,
@@ -736,7 +768,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   savingIndicator: {
     flexDirection: 'row',
@@ -770,7 +802,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#333333',
   },
   saveButtonText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 14,
     fontWeight: '500',
     marginLeft: 8,
@@ -781,7 +813,7 @@ const styles = StyleSheet.create({
   sourcesLabel: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   sourcesDescription: {

@@ -20,7 +20,7 @@ function toSnakeCase(str: string): string {
 
 // Default server configuration
 const DEFAULT_SERVER_CONFIG = {
-  baseUrl: 'http://192.168.1.131:8000',
+  baseUrl: 'http://192.168.1.145:8000',
   apiEndpoint: '/api/chat'
 };
 
@@ -51,6 +51,7 @@ export interface ChatRequest {
     [key: string]: any;
   };
   request_id?: string; // Optional request ID for tracking
+  integration_in_progress?: boolean; // Flag to indicate integration completion message
   // feature_settings removed - backend will fetch from database
 }
 
@@ -112,14 +113,16 @@ class ServerApiService {
 
   /**
    * Cancel the current request if one is in progress
+   * Returns the cancelled request ID or null if no request was cancelled
    */
-  public async cancelCurrentRequest(): Promise<boolean> {
+  public async cancelCurrentRequest(): Promise<{ success: boolean; requestId: string | null }> {
     if (this.currentRequestController && this.currentRequestId) {
-      console.log('🔴 SERVER_API: Cancelling current request...', this.currentRequestId);
+      const requestIdToCancel = this.currentRequestId;
+      console.log('🔴 SERVER_API: Cancelling current request...', requestIdToCancel);
       
       try {
         // Insert cancellation request into database
-        await this.insertCancellationRequest(this.currentRequestId);
+        await this.insertCancellationRequest(requestIdToCancel);
         
         // Also abort the HTTP request on client side
         this.currentRequestController.abort();
@@ -127,14 +130,14 @@ class ServerApiService {
         this.currentRequestId = null;
         
         console.log('✅ SERVER_API: Request cancelled successfully');
-        return true;
+        return { success: true, requestId: requestIdToCancel };
       } catch (error) {
         console.error('❌ SERVER_API: Error cancelling request:', error);
-        return false;
+        return { success: false, requestId: requestIdToCancel };
       }
     }
     console.log('🔴 SERVER_API: No active request to cancel');
-    return false;
+    return { success: false, requestId: null };
   }
 
   /**
@@ -191,6 +194,7 @@ class ServerApiService {
     history: ChatMessage[],
     preferences?: ChatRequest['preferences'],
     onRequestStart?: (requestId: string) => void,
+    integrationInProgress?: boolean,
   ): Promise<ChatResponse> {
     // Queue requests to prevent concurrent auth issues
     // Use .catch() to prevent cancelled requests from breaking the queue
@@ -238,7 +242,8 @@ class ServerApiService {
             ...defaultPreferences,
             ...preferences // Allow override of defaults with passed preferences
           },
-          request_id: this.currentRequestId // Include request_id in the payload
+          request_id: this.currentRequestId, // Include request_id in the payload
+          ...(integrationInProgress && { integration_in_progress: integrationInProgress })
         };
 
         history.forEach((message, index) => {
@@ -262,7 +267,7 @@ class ServerApiService {
             headers: { 
               'Content-Type': 'multipart/form-data'
             },
-            timeout: 240000, // 240 second timeout for Android
+            timeout: 300000, // 240 second timeout for Android
             signal: this.currentRequestController.signal // Add AbortController signal
           }).catch((error: unknown) => {
             console.error('🔴 SERVER_API: ❌ API request error:', error);

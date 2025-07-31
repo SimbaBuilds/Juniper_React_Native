@@ -3,6 +3,13 @@ import { DeviceEventEmitter } from 'react-native';
 
 const { VoiceModule } = NativeModules;
 
+// Check if VoiceModule is available on startup
+if (!VoiceModule) {
+    console.error('VoiceModule not found in NativeModules. Ensure native module is properly linked.');
+    console.log('Available NativeModules:', Object.keys(NativeModules).filter(key => key.toLowerCase().includes('voice')));
+    console.log('All NativeModules:', Object.keys(NativeModules));
+}
+
 // Voice state enum that matches the native implementation
 export enum VoiceState {
     IDLE = 'IDLE',
@@ -29,16 +36,17 @@ export interface AssistantResponseEvent {
 // Event names for consistency
 const EVENT_SPEECH_RESULT = 'speechResult';
 const EVENT_ASSISTANT_RESPONSE = 'assistantResponse';
-const EVENT_VOICE_STATE_CHANGE = 'onVoiceStateChange';
+const EVENT_VOICE_STATE_CHANGE = 'onVoiceStateChanged';
 
 export class VoiceService {
     private static instance: VoiceService;
-    private eventEmitter: NativeEventEmitter;
+    private eventEmitter: NativeEventEmitter | null;
     private listeners: EmitterSubscription[] = [];
     private isInitialized: boolean = false;
+    private cachedVoiceState: VoiceState = VoiceState.IDLE;
 
     private constructor() {
-        this.eventEmitter = new NativeEventEmitter(VoiceModule);
+        this.eventEmitter = VoiceModule ? new NativeEventEmitter(VoiceModule) : null;
         this.listeners = [];
     }
 
@@ -47,6 +55,10 @@ export class VoiceService {
             VoiceService.instance = new VoiceService();
         }
         return VoiceService.instance;
+    }
+
+    public isModuleAvailable(): boolean {
+        return VoiceModule !== undefined && VoiceModule !== null;
     }
 
     /**
@@ -81,8 +93,13 @@ export class VoiceService {
     }
 
     public async startListening(): Promise<boolean> {
+        if (!VoiceModule) {
+            console.error('🎤 VoiceModule not found in NativeModules. Cannot start listening.');
+            return false;
+        }
+
         try {
-            console.log('🎤 Starting voice recognition with Android-specific validation...');
+            console.log('🎤 Starting voice recognition...');
             
             // Check Android permissions first
             const permissionsOk = await this.checkAndroidPermissions();
@@ -113,13 +130,13 @@ export class VoiceService {
                 }
             }
             
-            console.log('📱 Android: Starting native voice module...');
+            console.log(`📱 ${Platform.OS}: Starting native voice module...`);
             const result = await VoiceModule.startListening();
-            console.log('📱 Android: Voice module started:', result);
+            console.log(`📱 ${Platform.OS}: Voice module started:`, result);
             
             return result;
         } catch (error) {
-            console.error('❌ Android: Error starting voice recognition:', error);
+            console.error(`❌ ${Platform.OS}: Error starting voice recognition:`, error);
             throw error;
         }
     }
@@ -129,6 +146,11 @@ export class VoiceService {
      * This simulates the Android wake word flow for iOS
      */
     public async startContinuousConversation(): Promise<boolean> {
+        if (!VoiceModule) {
+            console.error('🎤 VoiceModule not found in NativeModules. Cannot start continuous conversation.');
+            return false;
+        }
+
         try {
             if (Platform.OS !== 'ios') {
                 console.warn('⚠️ startContinuousConversation is iOS-specific, using startListening instead');
@@ -137,7 +159,19 @@ export class VoiceService {
             
             console.log('🎤 iOS: Starting continuous conversation mode...');
             
-            // iOS doesn't need permissions check like Android
+            // Request permissions for iOS (speech recognition and microphone)
+            console.log('🔐 iOS: Requesting permissions...');
+            try {
+                const permissionsGranted = await VoiceModule.requestPermissions();
+                console.log('🔐 iOS: Permissions result:', permissionsGranted);
+                if (!permissionsGranted) {
+                    throw new Error('iOS permissions not granted for speech recognition/microphone');
+                }
+            } catch (permError) {
+                console.error('❌ iOS: Permission request failed:', permError);
+                throw new Error('Failed to request iOS permissions');
+            }
+            
             console.log('📱 iOS: Calling native startContinuousConversation...');
             const result = await VoiceModule.startContinuousConversation();
             console.log('📱 iOS: Continuous conversation started:', result);
@@ -151,7 +185,7 @@ export class VoiceService {
 
     public async stopListening(): Promise<boolean> {
         try {
-            console.log('📱 Android: Stopping voice recognition...');
+            console.log(`📱 ${Platform.OS}: Stopping voice recognition...`);
             const result = await VoiceModule.stopListening();
             
             // Add delay for Android to ensure proper cleanup
@@ -184,11 +218,47 @@ export class VoiceService {
     }
 
     public async getVoiceState(): Promise<VoiceState> {
+        if (!VoiceModule) {
+            console.warn('VoiceModule not found, returning cached state');
+            return this.cachedVoiceState;
+        }
+
         try {
-            return await VoiceModule.getVoiceState();
+            const nativeState = await VoiceModule.getVoiceState();
+            // Update cached state with fresh native state
+            this.cachedVoiceState = nativeState as VoiceState;
+            return nativeState;
         } catch (error) {
             console.error('Error getting voice state:', error);
             throw error;
+        }
+    }
+
+    /**
+     * Get cached voice state immediately (synchronous)
+     * Use this for atomic state checks to avoid race conditions
+     */
+    public getCurrentVoiceStateSync(): VoiceState {
+        return this.cachedVoiceState;
+    }
+
+    /**
+     * Get current voice state with cache update (async but faster than full native call)
+     */
+    public async getCurrentVoiceStateAsync(): Promise<VoiceState> {
+        try {
+            // First return cached state immediately
+            const cachedState = this.cachedVoiceState;
+            
+            // Then update cache with fresh native state in background
+            this.getVoiceState().catch(err => {
+                console.warn('Background voice state update failed:', err);
+            });
+            
+            return cachedState;
+        } catch (error) {
+            console.error('Error getting current voice state:', error);
+            return this.cachedVoiceState;
         }
     }
 
@@ -211,17 +281,35 @@ export class VoiceService {
 
     public async handleApiResponse(requestId: string, response: string): Promise<boolean> {
         try {
-            console.log('📱 Sending API response back to Android:', { requestId, responseLength: response.length });
+            console.log('📱 Sending API response back to native:', { requestId, responseLength: response.length });
+            console.log('📱 Platform:', Platform.OS);
+            console.log('📱 VoiceModule available:', VoiceModule !== null && VoiceModule !== undefined);
+            console.log('📱 handleApiResponse method available:', typeof VoiceModule.handleApiResponse === 'function');
+            
             const result = await VoiceModule.handleApiResponse(requestId, response);
+            console.log('📱 Native handleApiResponse result:', result);
             return result;
         } catch (error) {
-            console.error('Error sending API response to Android:', error);
+            console.error('❌ Error sending API response to native:', error);
+            console.error('❌ Error details:', JSON.stringify(error, null, 2));
             throw error;
         }
     }
 
     public onVoiceStateChange(callback: (event: VoiceStateChangeEvent) => void): () => void {
-        const subscription = this.eventEmitter.addListener(EVENT_VOICE_STATE_CHANGE, callback);
+        if (!this.eventEmitter) {
+            console.error('VoiceModule eventEmitter not available, voice state changes not supported');
+            return () => {};
+        }
+        const subscription = this.eventEmitter.addListener(EVENT_VOICE_STATE_CHANGE, (event: VoiceStateChangeEvent) => {
+            
+            // Update cached state immediately when we receive state changes
+            this.cachedVoiceState = event.state;
+            
+            // Call the original callback
+            callback(event);
+            
+        });
         this.listeners.push(subscription);
         
         return () => {
@@ -231,6 +319,10 @@ export class VoiceService {
     }
 
     public onSpeechResult(callback: (event: SpeechResultEvent) => void): () => void {
+        if (!this.eventEmitter) {
+            console.warn('VoiceModule not available, onSpeechResult not supported');
+            return () => {};
+        }
         const subscription = this.eventEmitter.addListener(EVENT_SPEECH_RESULT, callback);
         this.listeners.push(subscription);
         
@@ -241,6 +333,10 @@ export class VoiceService {
     }
 
     public onAssistantResponse(callback: (event: AssistantResponseEvent) => void): () => void {
+        if (!this.eventEmitter) {
+            console.warn('VoiceModule not available, onAssistantResponse not supported');
+            return () => {};
+        }
         const subscription = this.eventEmitter.addListener(EVENT_ASSISTANT_RESPONSE, callback);
         this.listeners.push(subscription);
         
@@ -279,11 +375,7 @@ export class VoiceService {
     private setupEventListeners(): void {
         console.log('🎤 Setting up voice event listeners');
         
-        // Listen for wake word detection
-        DeviceEventEmitter.addListener('wakeWordDetected', (data) => {
-            console.log('Wake word detected:', data);
-            // Handle wake word detection if needed
-        });
+        // Wake word detection is handled by WakeWordContext, not here
 
         // Listen for speech results
         DeviceEventEmitter.addListener('speechResult', (data) => {
@@ -437,11 +529,7 @@ export class VoiceService {
 
         
         try {
-            if (Platform.OS !== 'android') {
-                console.warn('🎵 VOICE_SETTINGS: ⚠️ Voice settings update only supported on Android, current platform:', Platform.OS);
-                return false;
-            }
-            
+            console.log(`🎵 VOICE_SETTINGS: Updating voice settings on ${Platform.OS} - deepgramEnabled: ${deepgramEnabled}, voice: ${selectedDeepgramVoice}`);
 
             const nativeCallStartTime = Date.now();
             const result = await VoiceModule.updateVoiceSettings(deepgramEnabled, selectedDeepgramVoice);
@@ -457,7 +545,6 @@ export class VoiceService {
                 
                 if (reloadResult) {
                 } else {
-                    console.warn('🎵 VOICE_SETTINGS: ⚠️ Native configuration reload failed, but settings were updated');
                 }
                 
                 console.log('🎵 VOICE_SETTINGS: ========== VOICE SETTINGS UPDATE COMPLETED ==========');
@@ -479,26 +566,20 @@ export class VoiceService {
      * Reload native voice configuration after settings changes
      */
     public async reloadNativeConfiguration(): Promise<boolean> {
-        console.log('🎵 RELOAD_CONFIG: ========== RELOAD NATIVE CONFIGURATION ==========');
-        console.log('🎵 RELOAD_CONFIG: Reloading native voice configuration...');
-        console.log('🎵 RELOAD_CONFIG: Current platform:', Platform.OS);
-        console.log('🎵 RELOAD_CONFIG: Timestamp:', new Date().toISOString());
+
         
         try {
             if (Platform.OS !== 'android') {
-                console.warn('🎵 RELOAD_CONFIG: ⚠️ Configuration reload only supported on Android, current platform:', Platform.OS);
                 return false;
             }
             
             // Reset Deepgram client to pick up new settings
-            console.log('🎵 RELOAD_CONFIG: About to reset Deepgram client...');
+
             const resetStartTime = Date.now();
             const resetResult = await VoiceModule.resetDeepgramClient();
             const resetEndTime = Date.now();
             
-            console.log('🎵 RELOAD_CONFIG: Reset call duration:', (resetEndTime - resetStartTime), 'ms');
-            console.log('🎵 RELOAD_CONFIG: Deepgram reset result:', resetResult, '(type:', typeof resetResult, ')');
-            
+
             const success = resetResult?.success ?? false;
             
             if (success) {

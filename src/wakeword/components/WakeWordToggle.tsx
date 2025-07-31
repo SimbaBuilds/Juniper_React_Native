@@ -3,13 +3,15 @@ import { View, Switch, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { useWakeWord } from '../WakeWordContext';
 import { useVoice } from '../../voice/VoiceContext';
 import WakeWordService, { WakeWordEvents } from '../WakeWordService';
+import { DEFAULT_WAKE_PHRASE } from '../constants';
+import { colors } from '../../shared/theme/colors';
 
 export const WakeWordToggle: React.FC = () => {
     const { isEnabled, setEnabled } = useWakeWord();
     const { voiceSettings } = useVoice();
     const [detectionAnimation] = useState(new Animated.Value(0));
     const [isDetected, setIsDetected] = useState(false);
-    const selectedWakeWord = voiceSettings?.selectedWakeWord || 'Jarvis';
+    const selectedWakeWord = voiceSettings?.selectedWakeWord || DEFAULT_WAKE_PHRASE;
 
     // Listen for wake word detection events
     useEffect(() => {
@@ -62,9 +64,6 @@ export const WakeWordToggle: React.FC = () => {
         ],
     };
 
-    // Use the wake word from voice settings if available
-    const currentWakeWord = voiceSettings?.selectedWakeWord || 'JARVIS';
-
     return (
         <View style={styles.container}>
             <View style={styles.row}>
@@ -96,7 +95,7 @@ export const WakeWordToggle: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         padding: 16,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#F5F5DC',
         borderRadius: 8,
         marginBottom: 16,
     },
@@ -125,7 +124,7 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     detectionText: {
-        color: '#fff',
+        color: colors.text.primary,
         fontWeight: 'bold',
     },
 }); 

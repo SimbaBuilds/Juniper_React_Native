@@ -181,7 +181,7 @@ class ServerApiService {
   public async sendChatRequest(
     message: string,
     history: ChatMessage[],
-    preferences?: ChatRequest['preferences'],
+    preferences?: ChatRequest['preferences'], //preferences is deprecated TODO:remove 
     featureSettings?: FeatureSettings
   ): Promise<ChatResponse> {
     // Queue requests to prevent concurrent auth issues
@@ -199,7 +199,7 @@ class ServerApiService {
           preferences: preferences || {
             voice: 'male',
             response_type: 'concise'
-          },
+          }, //preferences is deprecated TODO:remove 
           featureSettings
         };
 
@@ -387,7 +387,7 @@ class ServerApiService {
   public async sendChatRequest(
     message: string,
     history: ChatMessage[],
-    preferences?: ChatRequest['preferences'],
+    preferences?: ChatRequest['preferences'], //preferences is deprecated TODO:remove 
     featureSettings?: FeatureSettings
   ): Promise<ChatResponse> {
     // Queue requests to prevent concurrent auth issues
@@ -405,7 +405,7 @@ class ServerApiService {
           preferences: preferences || {
             voice: 'male',
             response_type: 'concise'
-          },
+          }, //preferences is deprecated TODO:remove 
           featureSettings
         };
 

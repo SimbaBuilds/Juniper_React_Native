@@ -1,5 +1,37 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import VoiceService, { VoiceState, VoiceStateChangeEvent } from '../VoiceService';
+
+// Helper function to extract state from Java object string or direct value
+const extractStateValue = (state: any): string => {
+    if (typeof state === 'string') {
+        // Handle Java object string format: "com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@xxxxx"
+        if (state.includes('$')) {
+            const parts = state.split('$');
+            if (parts.length >= 3) {
+                // Extract the actual state name (3rd part after splitting on $)
+                const statePart = parts[2];
+                // Extract state name before the @ symbol
+                const stateValue = statePart.split('@')[0];
+                return stateValue;
+            }
+        }
+        
+        // Handle RESPONDING(message=...) format
+        if (state.startsWith('RESPONDING(')) {
+            return 'RESPONDING';
+        }
+        
+        // Handle other state formats with parentheses (extract base state name)
+        const parenMatch = state.match(/^([A-Z_]+)\(/);
+        if (parenMatch) {
+            return parenMatch[1];
+        }
+        
+        // Direct string state value
+        return state;
+    }
+    return String(state);
+};
 
 /**
  * Hook for accessing and managing voice state
@@ -10,26 +42,87 @@ import VoiceService, { VoiceState, VoiceStateChangeEvent } from '../VoiceService
 export function useVoiceState() {
   // Single source of truth: native voice state
   const [voiceState, setVoiceState] = useState<VoiceState>(VoiceState.IDLE);
+  
+  // Ref to track current state for event handler closure
+  const voiceStateRef = useRef<VoiceState>(VoiceState.IDLE);
+  
+  // Update ref whenever state changes
+  voiceStateRef.current = voiceState;
 
-  // Derived states computed from native state (no duplication)
-  const isListening = voiceState === VoiceState.LISTENING || voiceState === VoiceState.WAKE_WORD_DETECTED;
-  const isSpeaking = voiceState === VoiceState.SPEAKING || String(voiceState).includes('RESPONDING');
-  const isError = voiceState === VoiceState.ERROR;
+  // Extract normalized state value for comparisons
+  const normalizedState = extractStateValue(voiceState);
+
+  // Derived states computed from normalized native state (no duplication)
+  const isListening = normalizedState === VoiceState.LISTENING || normalizedState === VoiceState.WAKE_WORD_DETECTED;
+  const isSpeaking = normalizedState.toUpperCase() === VoiceState.SPEAKING || normalizedState.includes('RESPONDING');
+  const isError = normalizedState === VoiceState.ERROR;
+
+  // Debug logging for Speaking state detection
+  if (normalizedState.toUpperCase() === VoiceState.SPEAKING || normalizedState === 'SPEAKING') {
+    console.log('🔴 useVoiceState: SPEAKING state detected!');
+    console.log('🔴 useVoiceState: normalizedState:', normalizedState);
+    console.log('🔴 useVoiceState: VoiceState.SPEAKING:', VoiceState.SPEAKING);
+    console.log('🔴 useVoiceState: isSpeaking:', isSpeaking);
+  }
+
+  // Log whenever the hook's voiceState actually changes
+  useEffect(() => {
+    console.log('🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========');
+  }, [voiceState, normalizedState, isListening, isSpeaking, isError]);
 
   // Set up listener for voice state changes from native module
   useEffect(() => {
     // Get initial state from native
     VoiceService.getInstance().getVoiceState()
       .then((state) => {
-        setVoiceState(state as VoiceState);
+        console.log('🔄 VOICE_STATE_HOOK: ========== INITIAL STATE SETUP ==========');
+        console.log('🔄 VOICE_STATE_HOOK: Initial state from native:', state);
+        console.log('🔄 VOICE_STATE_HOOK: Current hook state from ref:', voiceStateRef.current);
+        
+        // Use functional setState for consistency
+        setVoiceState(prevState => {
+          console.log('🔄 VOICE_STATE_HOOK: Initial setState - Previous state:', prevState);
+          console.log('🔄 VOICE_STATE_HOOK: Initial setState - New state:', state);
+          return state as VoiceState;
+        });
+        
+        console.log('🔄 VOICE_STATE_HOOK: Initial setVoiceState called with:', state);
       })
       .catch((err: Error) => {
         console.error('Error getting initial voice state:', err);
       });
 
-    // Listen for state changes from native
+    // Listen for state changes from native with enhanced timing logging
     const unsubscribe = VoiceService.getInstance().onVoiceStateChange((event: VoiceStateChangeEvent) => {
-      setVoiceState(event.state);
+      const eventReceiveTime = performance.now();
+      const eventReceiveTimestamp = Date.now();
+      const currentState = voiceStateRef.current; // Use ref to get current state
+      const currentNormalizedState = extractStateValue(currentState);
+      const newNormalizedState = extractStateValue(event.state);
+          
+      // Add native timing info if available
+      if ((event as any).timestamp) {
+        const nativeToRnLatency = eventReceiveTimestamp - (event as any).timestamp;
+        // console.log('🔄 VOICE_STATE_HOOK: Native to RN latency:', nativeToRnLatency, 'ms');
+      }
+      
+      if ((event as any).nativeUpdateTime) {
+        const nativeProcessingTime = (performance.now() * 1_000_000) - (event as any).nativeUpdateTime;
+        // console.log('🔄 VOICE_STATE_HOOK: Native processing time:', nativeProcessingTime / 1_000_000, 'ms');
+      }
+      
+      // console.log('🔄 VOICE_STATE_HOOK: About to call setVoiceState with:', event.state);
+      const stateUpdateStartTime = performance.now();
+      
+      // Use functional setState to ensure we get the latest state
+      setVoiceState(prevState => {
+        console.log('🔄 VOICE_STATE_HOOK: Functional setState - Previous state:', prevState);
+        console.log('🔄 VOICE_STATE_HOOK: Functional setState - New state:', event.state);
+        return event.state;
+      });
+      
+      const stateUpdateEndTime = performance.now();
+      console.log('🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now');
     });
 
     // Clean up listener

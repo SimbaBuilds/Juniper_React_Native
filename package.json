@@ -6,6 +6,8 @@
     "start": "expo start",
     "android": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home expo run:android",
     "ios": "expo run:ios",
+    "ios:build": "npx expo run:ios --device --no-install --no-bundler",
+    "ios:build-check": "cd ios && xcodebuild -workspace MobileJarvisNative.xcworkspace -scheme MobileJarvisNative -configuration Debug -destination 'generic/platform=iOS' build CODE_SIGNING_ALLOWED=NO",
     "web": "expo start --web",
     "android:build": "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home cd android && ./gradlew assembleRelease",
     "test:ios": "./scripts/run-ios-tests.sh",
@@ -39,13 +41,15 @@
     "react-native-markdown-display": "^7.0.2",
     "react-native-safe-area-context": "4.8.2",
     "react-native-screens": "~3.29.0",
-    "react-native-url-polyfill": "^2.0.0"
+    "react-native-url-polyfill": "^2.0.0",
+    "react-native-svg": "14.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@expo/config-plugins": "^10.0.2",
     "@react-native-community/cli": "^12.3.5",
     "@types/react": "~18.2.45",
+    "patch-package": "^8.0.0",
     "typescript": "^5.3.0"
   },
   "private": true

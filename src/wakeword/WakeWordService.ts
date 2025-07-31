@@ -1,4 +1,7 @@
-import { NativeModules, NativeEventEmitter, EmitterSubscription, Platform } from 'react-native';
+import { NativeModules, NativeEventEmitter, DeviceEventEmitter, EmitterSubscription, Platform } from 'react-native';
+import { VoiceService } from '../voice/VoiceService';
+import { AVAILABLE_WAKE_PHRASES, DEFAULT_WAKE_PHRASE } from './constants';
+
 
 // Define the interface for responses from the native module
 interface WakeWordAvailabilityResponse {
@@ -71,17 +74,15 @@ const WakeWordModule: WakeWordModuleInterface = nativeWakeWordModule
       stopDetection: async () => ({ success: false, error: 'Platform not supported or module not found' }),
       getStatus: async () => ({ enabled: false }),
       setAccessKey: async () => ({ success: false, error: 'Platform not supported or module not found' }),
-      getAvailableWakeWords: async () => ({ wakeWords: ['BUMBLEBEE', 'GRASSHOPPER', 'JARVIS', 'JUNIPER', 'PICOVOICE', 'PORCUPINE', 'TERMINATOR'], success: true }),
+      getAvailableWakeWords: async () => ({ wakeWords: AVAILABLE_WAKE_PHRASES, success: true }),
       setSelectedWakeWord: async () => ({ success: true }),
-      getSelectedWakeWord: async () => ({ wakeWord: 'JARVIS', success: true }),
+      getSelectedWakeWord: async () => ({ wakeWord: DEFAULT_WAKE_PHRASE, success: true }),
       setWakeWordSensitivity: async () => ({ success: true }),
       getWakeWordSensitivity: async () => ({ sensitivity: 0.3, success: true }),
     };
 
-// Create an event emitter for the module
-const eventEmitter = nativeWakeWordModule 
-  ? new NativeEventEmitter(nativeWakeWordModule)
-  : null;
+// Use DeviceEventEmitter to match native emission method
+const eventEmitter = DeviceEventEmitter;
 
 /**
  * Provides access to wake word detection functionality
@@ -94,29 +95,11 @@ class WakeWordService {
   private static ANDROID_SERVICE_CLASS = 'com.anonymous.MobileJarvisNative.wakeword.WakeWordService';
 
   constructor() {
-    // Initialize event listener if emitter is available
-    if (eventEmitter && !WakeWordService.eventSubscription) {
-      WakeWordService.eventSubscription = eventEmitter.addListener(
-        'wakeWordDetected',
-        (event) => {
-          console.log('Wake word detected:', event);
-          // Handle wake word detection event
-          this.handleWakeWordDetected(event);
-        }
-      );
-    }
+    // Event listeners are handled by individual consumers via addListener()
+    // No global listener needed in constructor
   }
 
-  private handleWakeWordDetected(event: any) {
-    const timestamp = event.timestamp || Date.now();
-    const timeString = new Date(timestamp).toLocaleTimeString();
-    
-    // Log the detection with emoji for visibility
-    // Additional debug information if available
-    if (event.debug) {
-      console.log('🔍 Debug info:', event.debug);
-    }
-  }
+  // handleWakeWordDetected method removed - handled by individual listeners
 
   /**
    * Clean up event subscription
@@ -142,6 +125,11 @@ class WakeWordService {
    * For compatibility with older implementation
    */
   async isWakeWordEnabled(): Promise<boolean> {
+    // iOS doesn't support wake word detection
+    if (Platform.OS === 'ios') {
+      return false;
+    }
+
     try {
       console.log('Calling getStatus() on WakeWordModule');
       const response = await WakeWordModule.getStatus();
@@ -157,6 +145,11 @@ class WakeWordService {
    * For compatibility with older implementation
    */
   async setWakeWordEnabled(enabled: boolean): Promise<boolean> {
+    // iOS doesn't support wake word detection
+    if (Platform.OS === 'ios') {
+      console.log('🎤 WAKE_WORD_SERVICE: Wake word detection not supported on iOS');
+      return false;
+    }
 
     try {
       if (enabled) {
@@ -224,7 +217,9 @@ class WakeWordService {
         if (result.success) {
          
         } else {
-          console.error('🎤 WAKE_WORD_SERVICE: ❌ Failed to enable wake word detection');
+          if (Platform.OS === 'android') {
+            console.error('🎤 WAKE_WORD_SERVICE: ❌ Failed to enable wake word detection');
+          }
         }
         
         return result.success;
@@ -243,7 +238,9 @@ class WakeWordService {
         if (result.success) {
          
         } else {
-          console.error('🎤 WAKE_WORD_SERVICE: ❌ Failed to disable wake word detection');
+          if (Platform.OS === 'android') {
+            console.error('🎤 WAKE_WORD_SERVICE: ❌ Failed to disable wake word detection');
+          }
         }
         
         return result.success;
@@ -416,11 +413,16 @@ class WakeWordService {
     eventType: string,
     listener: (event: any) => void
   ): EmitterSubscription | null {
-    if (!eventEmitter) {
-      console.warn('WakeWordEmitter is not available, cannot add listener');
-      return null;
-    }
-    return eventEmitter.addListener(eventType, listener);
+    console.log('🔊 WAKE_WORD_SERVICE: Adding DeviceEventEmitter listener for event:', eventType);
+    console.log('🔊 WAKE_WORD_SERVICE: DeviceEventEmitter available:', !!eventEmitter);
+    
+    const subscription = eventEmitter.addListener(eventType, (event) => {
+      console.log('🔊 WAKE_WORD_SERVICE: Event received from native via DeviceEventEmitter:', eventType, event);
+      listener(event);
+    });
+    
+    console.log('🔊 WAKE_WORD_SERVICE: DeviceEventEmitter listener added successfully, subscription:', !!subscription);
+    return subscription;
   }
 
   /**
@@ -429,14 +431,14 @@ class WakeWordService {
   async getAvailableWakeWords(): Promise<string[]> {
     try {
       if (Platform.OS !== 'android') {
-        return ['BUMBLEBEE', 'GRASSHOPPER', 'JARVIS', 'JUNIPER', 'PICOVOICE', 'PORCUPINE', 'TERMINATOR']; // Default for non-Android platforms
+        return AVAILABLE_WAKE_PHRASES; // Default for non-Android platforms
       }
       
       const result = await WakeWordModule.getAvailableWakeWords();
-      return result.wakeWords || ['BUMBLEBEE', 'GRASSHOPPER', 'JARVIS', 'JUNIPER', 'PICOVOICE', 'PORCUPINE', 'TERMINATOR'];
+      return result.wakeWords || AVAILABLE_WAKE_PHRASES;
     } catch (error) {
       console.error('Error getting available wake words:', error);
-      return ['BUMBLEBEE', 'GRASSHOPPER', 'JARVIS', 'JUNIPER', 'PICOVOICE', 'PORCUPINE', 'TERMINATOR'];
+      return AVAILABLE_WAKE_PHRASES;
     }
   }
 
@@ -479,20 +481,20 @@ class WakeWordService {
     try {
       if (Platform.OS !== 'android') {
         console.warn('🎯 WAKEWORD_SELECTION: Wake word selection only supported on Android, returning default');
-        return 'JARVIS'; // Default for non-Android platforms
+        return DEFAULT_WAKE_PHRASE; // Default for non-Android platforms
       }
       
      
       const result = await WakeWordModule.getSelectedWakeWord();
      
       
-      const wakeWord = result.wakeWord || 'JARVIS';
+      const wakeWord = result.wakeWord || DEFAULT_WAKE_PHRASE;
      
       
       return wakeWord;
     } catch (error) {
      
-      return 'JARVIS';
+      return DEFAULT_WAKE_PHRASE;
     }
   }
 
@@ -555,6 +557,34 @@ class WakeWordService {
     } catch (error) {
      
       return 0.3;
+    }
+  }
+
+  /**
+   * Get current voice state from VoiceService for debugging state synchronization
+   */
+  async getCurrentVoiceState(): Promise<string> {
+    try {
+      const voiceService = VoiceService.getInstance();
+      const state = await voiceService.getCurrentVoiceStateAsync();
+      return state;
+    } catch (error) {
+      console.error('Error getting current voice state:', error);
+      return 'UNKNOWN';
+    }
+  }
+
+  /**
+   * Get current voice state synchronously from cached value
+   */
+  getCurrentVoiceStateSync(): string {
+    try {
+      const voiceService = VoiceService.getInstance();
+      const state = voiceService.getCurrentVoiceStateSync();
+      return state;
+    } catch (error) {
+      console.error('Error getting sync voice state:', error);
+      return 'UNKNOWN';
     }
   }
 }

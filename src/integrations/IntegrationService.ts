@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthContext';
 import { getAuthService } from './auth';
 import TwilioAuthService from './auth/services/TwilioAuthService';
 import TextbeltAuthService from './auth/services/TextbeltAuthService';
-// TwitterAuthService removed - Twitter/X is now managed via enabled_integrations field
+// TwitterAuthService removed - Twitter/X is now managed via enabled_system_integrations field
 import { Alert } from 'react-native';
 import { supabase } from '../supabase/supabase';
 import { Integration } from '../supabase/tables';
@@ -605,7 +605,7 @@ export class IntegrationService {
     }
   }
 
-  // System service methods removed - Twitter/X and Perplexity are now managed via enabled_integrations field in user_profiles
+  // System service methods removed - Twitter/X and Perplexity are now managed via enabled_system_integrations field in user_profiles
 }
 
 export default IntegrationService; 

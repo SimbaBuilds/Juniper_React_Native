@@ -34,6 +34,12 @@ class AudioManager: NSObject {
     // MARK: - Properties
     static let shared = AudioManager()
     
+    // Test method to verify AudioManager logging works
+    func testLogging() {
+        NSLog("🔊 AUDIO_MANAGER: TEST LOG - This should appear in logs!")
+        print("🔊 AUDIO_MANAGER: TEST PRINT - This should also appear!")
+    }
+    
     private var audioSession: AVAudioSession
     private var currentFocus: AudioFocus = .none
     private var previousCategory: AVAudioSession.Category?
@@ -60,8 +66,15 @@ class AudioManager: NSObject {
         self.audioSession = AVAudioSession.sharedInstance()
         super.init()
         
+        NSLog("🔊 AUDIO_MANAGER: ========== INITIALIZING ==========")
+        NSLog("🔊 AUDIO_MANAGER: AudioManager singleton created")
+        NSLog("🔊 AUDIO_MANAGER: Initial isAudioInterrupted: %@", isAudioInterrupted ? "YES" : "NO")
+        NSLog("🔊 AUDIO_MANAGER: Initial currentFocus: %@", String(describing: currentFocus))
+        
         setupAudioSessionObservers()
         setupCallObserver()
+        
+        NSLog("🔊 AUDIO_MANAGER: ========== INITIALIZATION COMPLETE ==========")
     }
     
     deinit {
@@ -75,7 +88,21 @@ class AudioManager: NSObject {
      * Request audio focus with priority-based queueing
      */
     func requestAudioFocus(_ focus: AudioFocus, completion: @escaping (Bool) -> Void) {
+        NSLog("🔊 AUDIO_MANAGER: ========== REQUESTING AUDIO FOCUS ==========")
+        NSLog("🔊 AUDIO_MANAGER: Requesting audio focus: %@ with priority %d", String(describing: focus), focus.priority)
+        NSLog("🔊 AUDIO_MANAGER: isAudioInterrupted: %@", isAudioInterrupted ? "YES" : "NO")
+        NSLog("🔊 AUDIO_MANAGER: currentFocus: %@", String(describing: currentFocus))
         print("🔊 AUDIO_MANAGER: Requesting audio focus: \(focus) with priority \(focus.priority)")
+        
+        // Check if we're in an interrupted state and cannot acquire focus
+        if isAudioInterrupted {
+            NSLog("🔊 AUDIO_MANAGER: ❌ Cannot acquire audio focus - audio is interrupted")
+            NSLog("🔊 AUDIO_MANAGER: This prevents TTS from playing!")
+            completion(false)
+            return
+        }
+        
+        NSLog("🔊 AUDIO_MANAGER: Audio not interrupted, proceeding with focus request...")
         
         requestQueueLock.lock()
         defer { requestQueueLock.unlock() }
@@ -140,20 +167,35 @@ class AudioManager: NSObject {
      * Process audio focus request
      */
     private func processAudioFocusRequest(_ focus: AudioFocus, completion: @escaping (Bool) -> Void) {
+        NSLog("🔊 AUDIO_MANAGER: Processing audio focus request: %@", String(describing: focus))
+        NSLog("🔊 AUDIO_MANAGER: Current focus before request: %@", String(describing: currentFocus))
+        NSLog("🔊 AUDIO_MANAGER: Audio session current category: %@", audioSession.category.rawValue)
+        NSLog("🔊 AUDIO_MANAGER: Audio session current mode: %@", audioSession.mode.rawValue)
+        NSLog("🔊 AUDIO_MANAGER: Audio session is active: %@", audioSession.isOtherAudioPlaying ? "NO" : "YES")
+        NSLog("🔊 AUDIO_MANAGER: Is audio interrupted: %@", isAudioInterrupted ? "YES" : "NO")
+        
         do {
             switch focus {
             case .recording:
+                NSLog("🔊 AUDIO_MANAGER: Configuring for recording...")
                 try configureAudioSessionForRecording()
             case .playback:
+                NSLog("🔊 AUDIO_MANAGER: Configuring for playback...")
                 try configureAudioSessionForPlayback()
             case .playAndRecord:
+                NSLog("🔊 AUDIO_MANAGER: Configuring for play and record...")
                 try configureAudioSessionForPlayAndRecord()
             case .none:
+                NSLog("🔊 AUDIO_MANAGER: Releasing audio focus...")
                 releaseAudioFocus()
             }
             
+            NSLog("🔊 AUDIO_MANAGER: ✅ Audio focus request succeeded for: %@", String(describing: focus))
+            NSLog("🔊 AUDIO_MANAGER: New current focus: %@", String(describing: currentFocus))
             completion(true)
         } catch {
+            NSLog("🔊 AUDIO_MANAGER: ❌ Failed to configure audio session for %@: %@", String(describing: focus), error.localizedDescription)
+            NSLog("🔊 AUDIO_MANAGER: ❌ Error domain: %@, code: %ld", (error as NSError).domain, (error as NSError).code)
             print("🔊 AUDIO_MANAGER: ❌ Failed to configure audio session for \(focus): \(error)")
             completion(false)
         }
@@ -182,16 +224,28 @@ class AudioManager: NSObject {
      * Configure audio session for playback (TTS)
      */
     func configureAudioSessionForPlayback() throws {
+        NSLog("🔊 AUDIO_MANAGER: Configuring audio session for playback...")
         print("🔊 AUDIO_MANAGER: Configuring audio session for playback...")
         
         // Store current settings
+        NSLog("🔊 AUDIO_MANAGER: Storing previous audio settings...")
         storePreviousAudioSettings()
         
-        try audioSession.setCategory(.playback, mode: .default, options: [.defaultToSpeaker, .allowBluetooth, .allowAirPlay])
+        NSLog("🔊 AUDIO_MANAGER: Setting category to playback...")
+        // Use simpler configuration to avoid OSStatus error -50
+        try audioSession.setCategory(.playback, mode: .default, options: [])
+        NSLog("🔊 AUDIO_MANAGER: Category set successfully")
+        
+        NSLog("🔊 AUDIO_MANAGER: Activating audio session...")
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        NSLog("🔊 AUDIO_MANAGER: Audio session activated successfully")
         
         currentFocus = .playback
+        NSLog("🔊 AUDIO_MANAGER: Current focus set to: %@", String(describing: currentFocus))
         
+        NSLog("🔊 AUDIO_MANAGER: ✅ Audio session configured for playback")
+        NSLog("🔊 AUDIO_MANAGER: Final category: %@", audioSession.category.rawValue)
+        NSLog("🔊 AUDIO_MANAGER: Final mode: %@", audioSession.mode.rawValue)
         print("🔊 AUDIO_MANAGER: ✅ Audio session configured for playback")
     }
     
@@ -242,23 +296,64 @@ class AudioManager: NSObject {
      * Release audio focus
      */
     func releaseAudioFocus() {
+        NSLog("🔊 AUDIO_MANAGER: Releasing audio focus from: %@", String(describing: currentFocus))
         print("🔊 AUDIO_MANAGER: Releasing audio focus...")
         
-        do {
-            try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
-            currentFocus = .none
-            print("🔊 AUDIO_MANAGER: ✅ Audio focus released")
-            
-            // Process any pending requests after releasing focus
-            requestQueueLock.lock()
-            if !requestQueue.isEmpty && !isProcessingRequest {
-                requestQueueLock.unlock()
-                processNextRequest()
-            } else {
-                requestQueueLock.unlock()
+        // If releasing from playback focus, add a small delay to ensure TTS has fully released
+        let shouldDelay = (currentFocus == .playback)
+        
+        let performRelease = {
+            do {
+                NSLog("🔊 AUDIO_MANAGER: Attempting to deactivate audio session...")
+                try self.audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+                NSLog("🔊 AUDIO_MANAGER: Audio session deactivated successfully")
+                
+                // Reset to a neutral category to avoid conflicts
+                NSLog("🔊 AUDIO_MANAGER: Resetting audio session to ambient category")
+                try self.audioSession.setCategory(.ambient, mode: .default, options: [])
+                
+                self.currentFocus = .none
+                NSLog("🔊 AUDIO_MANAGER: ✅ Audio focus released and session reset")
+                print("🔊 AUDIO_MANAGER: ✅ Audio focus released")
+                
+                // Process any pending requests after releasing focus
+                self.requestQueueLock.lock()
+                if !self.requestQueue.isEmpty && !self.isProcessingRequest {
+                    self.requestQueueLock.unlock()
+                    self.processNextRequest()
+                } else {
+                    self.requestQueueLock.unlock()
+                }
+            } catch {
+                NSLog("🔊 AUDIO_MANAGER: ❌ Failed to release audio focus: %@", error.localizedDescription)
+                NSLog("🔊 AUDIO_MANAGER: ❌ Error code: %ld", (error as NSError).code)
+                print("🔊 AUDIO_MANAGER: ❌ Failed to release audio focus: \(error)")
+                
+                // If deactivation fails but we're transitioning from playback to recording,
+                // still update our focus state and reset category to allow the next operation
+                if self.currentFocus == .playback {
+                    NSLog("🔊 AUDIO_MANAGER: Forcing focus release despite deactivation failure")
+                    do {
+                        // Try to at least reset the category
+                        try self.audioSession.setCategory(.ambient, mode: .default, options: [])
+                        self.currentFocus = .none
+                        NSLog("🔊 AUDIO_MANAGER: ⚠️ Forced focus release completed (deactivation failed but category reset)")
+                    } catch {
+                        NSLog("🔊 AUDIO_MANAGER: ❌ Even category reset failed: %@", error.localizedDescription)
+                        // Still update focus state to prevent getting stuck
+                        self.currentFocus = .none
+                    }
+                }
             }
-        } catch {
-            print("🔊 AUDIO_MANAGER: ❌ Failed to release audio focus: \(error)")
+        }
+        
+        if shouldDelay {
+            NSLog("🔊 AUDIO_MANAGER: Adding 100ms delay for TTS audio session cleanup...")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                performRelease()
+            }
+        } else {
+            performRelease()
         }
     }
     
@@ -392,6 +487,13 @@ class AudioManager: NSObject {
      */
     func hasAudioFocus() -> Bool {
         return currentFocus != .none && !isAudioInterrupted
+    }
+    
+    /**
+     * Get interruption status for debugging
+     */
+    func getAudioInterruptionStatus() -> Bool {
+        return isAudioInterrupted
     }
     
     // MARK: - Private Helper Methods

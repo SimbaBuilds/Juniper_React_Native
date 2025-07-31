@@ -5,6 +5,8 @@ import VoiceService from '../VoiceService';
 import WakeWordService from '../../wakeword/WakeWordService';
 import { DatabaseService } from '../../supabase/supabase';
 import { useAuth } from '../../auth/AuthContext';
+import { DEFAULT_WAKE_PHRASE } from '../../wakeword/constants';
+import { Platform } from 'react-native';
 
 const VOICE_SETTINGS_KEY = 'voice_settings';
 
@@ -12,13 +14,15 @@ const defaultVoiceSettings: VoiceSettings = {
   deepgramEnabled: false,
   baseLanguageModel: 'claude-sonnet-4-20250514',
   generalInstructions: '',
-  selectedWakeWord: 'JARVIS',
+  selectedWakeWord: DEFAULT_WAKE_PHRASE,
   wakeWordSensitivity: 0.3,
   wakeWordDetectionEnabled: false,
   selectedDeepgramVoice: 'aura-2-thalia-en',
   // XAI LiveSearch settings
   xaiLiveSearchEnabled: false,
   xaiLiveSearchSafeSearch: true,
+  // Timezone setting
+  timezone: 'UTC',
 };
 
 export const useVoiceSettings = () => {
@@ -175,7 +179,9 @@ export const useVoiceSettings = () => {
                   console.error('📱 VOICE_SETTINGS: ❌ Wake word detection enabled but failed to start');
                 }
               } else {
-                console.error('📱 VOICE_SETTINGS: ❌ Failed to enable wake word detection');
+                if (Platform.OS === 'android') {
+                  console.error('📱 VOICE_SETTINGS: ❌ Failed to enable wake word detection');
+                }
               }
             } else {
               // Disable and stop wake word detection
@@ -191,7 +197,9 @@ export const useVoiceSettings = () => {
               
               if (stopSuccess && disableSuccess) {
               } else {
-                console.error('📱 VOICE_SETTINGS: ❌ Failed to fully disable wake word detection (stop:', stopSuccess, ', disable:', disableSuccess, ')');
+                if (Platform.OS === 'android') {
+                  console.error('📱 VOICE_SETTINGS: ❌ Failed to fully disable wake word detection (stop:', stopSuccess, ', disable:', disableSuccess, ')');
+                }
               }
             }
           }

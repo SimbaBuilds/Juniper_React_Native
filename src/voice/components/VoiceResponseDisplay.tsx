@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ViewStyle, Animated } from 'react-native';
+import { colors } from '../../shared/theme/colors';
 
 interface VoiceResponseDisplayProps {
   text: string;
@@ -66,7 +67,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 16,
-    color: '#333',
+    color: colors.text.primary,
     lineHeight: 22,
   },
 });

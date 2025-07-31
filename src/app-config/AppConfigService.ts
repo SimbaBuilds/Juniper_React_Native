@@ -1,4 +1,4 @@
-import { NativeModules } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 
 const { AppConfigModule } = NativeModules;
 
@@ -27,13 +27,21 @@ class SettingsService {
    * Get server API configuration
    */
   public async getServerApiConfig(): Promise<ServerApiConfig> {
+    if (Platform.OS === 'ios' || !AppConfigModule) {
+      // iOS fallback: return default configuration
+      return {
+        baseUrl: 'http://192.168.1.145:8000',
+        apiEndpoint: '/api/chat'
+      };
+    }
+
     try {
       return await AppConfigModule.getServerApiConfig();
     } catch (error) {
       console.error('Error getting server API config:', error);
       // Return default values on error
       return {
-        baseUrl: 'http://192.168.1.131:8000',
+        baseUrl: 'http://192.168.1.145:8000',
         apiEndpoint: '/api/chat'
       };
     }
@@ -43,6 +51,12 @@ class SettingsService {
    * Update server API configuration
    */
   public async updateServerApiConfig(config: Partial<ServerApiConfig>): Promise<boolean> {
+    if (Platform.OS === 'ios' || !AppConfigModule) {
+      // iOS fallback: configuration updates not supported, return true silently
+      console.warn('⚠️ Server API config updates not supported on iOS platform');
+      return true;
+    }
+
     try {
       return await AppConfigModule.updateServerApiConfig(
         config.baseUrl || '',
@@ -58,6 +72,20 @@ class SettingsService {
    * Get full application configuration
    */
   public async getAppConfig(): Promise<AppConfig> {
+    if (Platform.OS === 'ios' || !AppConfigModule) {
+      // iOS fallback: return minimal configuration
+      const serverConfig = await this.getServerApiConfig();
+      return {
+        serverApi: serverConfig,
+        apiKeys: {
+          picovoice: '',
+          openai: '',
+          deepgram: '',
+          elevenlabs: ''
+        }
+      };
+    }
+
     try {
       return await AppConfigModule.getAppConfig();
     } catch (error) {

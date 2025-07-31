@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Alert, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { isCancellationError } from '../../utils/cancellationUtils';
+import { colors } from '../../shared/theme/colors';
 
 interface TextChatInputProps {
   onSendMessage: (text: string) => Promise<void>;
@@ -27,6 +28,7 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
     try {
       await onSendMessage(trimmedMessage);
       setMessage(''); // Clear input after successful send
+      Keyboard.dismiss(); // Dismiss keyboard after sending
     } catch (error) {
       console.error('Error sending message:', error);
       
@@ -56,6 +58,8 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
         editable={!disabled && !isSending}
         onSubmitEditing={handleSend}
         blurOnSubmit={false}
+        returnKeyType="send"
+        enablesReturnKeyAutomatically={true}
       />
       <TouchableOpacity
         style={[styles.sendButton, isDisabled && styles.sendButtonDisabled]}
@@ -66,7 +70,7 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
         <Ionicons 
           name="send" 
           size={20} 
-          color={isDisabled ? "#666666" : "#FFFFFF"} 
+          color={isDisabled ? "#666666" : colors.text.primary} 
         />
       </TouchableOpacity>
     </View>
@@ -77,21 +81,18 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#333333',
-    backgroundColor: '#000000',
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    backgroundColor: 'transparent',
   },
   textInput: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#333333',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginRight: 8,
-    color: '#FFFFFF',
-    backgroundColor: '#1a1a1a',
+    color: colors.text.primary,
+    backgroundColor: '#404040',
     fontSize: 16,
     maxHeight: 100,
   },
@@ -99,11 +100,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#404040',
     justifyContent: 'center',
     alignItems: 'center',
   },
   sendButtonDisabled: {
-    backgroundColor: '#333333',
+    backgroundColor: '#2a2a2a',
   },
 }); 

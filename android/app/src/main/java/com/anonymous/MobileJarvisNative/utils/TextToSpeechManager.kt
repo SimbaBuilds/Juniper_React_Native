@@ -69,7 +69,7 @@ object TextToSpeechManager {
                         // Set audio attributes for better audio handling
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                             val audioAttributes = AudioAttributes.Builder()
-                                .setUsage(AudioAttributes.USAGE_ASSISTANT)
+                                .setUsage(AudioAttributes.USAGE_MEDIA)
                                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                                 .build()
                             textToSpeech?.setAudioAttributes(audioAttributes)
@@ -110,8 +110,18 @@ object TextToSpeechManager {
      */
     private fun requestAudioFocus(): Boolean {
         return try {
+            // TROUBLESHOOTING STEP 2: Check for internal conflicts with speech recognition
+            val currentRequest = centralAudioManager?.getCurrentRequestInfo()
+            if (currentRequest?.requestType == com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION) {
+                Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: ⚠️ TTS requesting audio focus while SPEECH_RECOGNITION is active!")
+                Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: Current speech recognition request ID: ${currentRequest.requestId}")
+                Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: TTS will be queued behind higher priority SPEECH_RECOGNITION")
+            }
+            
             val requestId = "tts_${UUID.randomUUID()}"
             currentRequestId = requestId
+            
+            Log.d(TAG, "🎵 TTS: Requesting audio focus (ID: $requestId)")
             
             val success = centralAudioManager?.requestAudioFocus(
                 requestType = com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.TTS,

@@ -10,6 +10,8 @@ import { DeviceEventEmitter, EmitterSubscription, Platform, NativeModules } from
 import { conversationService } from '../services/conversationService';
 import { isCancellationError } from '../utils/cancellationUtils';
 import { useRequestStatusPolling } from '../hooks/useRequestStatusPolling';
+import { DEFAULT_WAKE_PHRASE } from '../wakeword/constants';
+import requestMapping from '../utils/requestMapping';
 
 const { VoiceModule } = NativeModules;
 
@@ -75,6 +77,16 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const isListening = voiceStateFromHook.isListening;
   const isSpeaking = voiceStateFromHook.isSpeaking;
   const isError = voiceStateFromHook.isError;
+  
+  // Log whenever VoiceContext state changes
+  useEffect(() => {
+    console.log('🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========');
+    console.log('🔄 VOICE_CONTEXT: Context voiceState:', voiceState);
+    console.log('🔄 VOICE_CONTEXT: Context isListening:', isListening);
+    console.log('🔄 VOICE_CONTEXT: Context isSpeaking:', isSpeaking);
+    console.log('🔄 VOICE_CONTEXT: Context isError:', isError);
+    console.log('🔄 VOICE_CONTEXT: ====================================================');
+  }, [voiceState, isListening, isSpeaking, isError]);
   
   // Auth context for user ID
   const { user } = useAuth();
@@ -276,8 +288,8 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           deepgramEnabled: voiceSettings.deepgram_enabled,
           baseLanguageModel: voiceSettings.base_language_model,
           generalInstructions: generalInstructions,
-          wakeWord: voiceSettings.selectedWakeWord || 'Juniper',
-          selectedWakeWord: voiceSettings.selectedWakeWord || 'JUNIPER',
+          wakeWord: voiceSettings.selectedWakeWord || DEFAULT_WAKE_PHRASE,
+          selectedWakeWord: voiceSettings.selectedWakeWord || DEFAULT_WAKE_PHRASE,
           wakeWordSensitivity: voiceSettings.wake_word_sensitivity ?? 0.3,
           wakeWordDetectionEnabled: voiceSettings.wake_word_detection_enabled ?? true,
           selectedDeepgramVoice: voiceSettings.selected_deepgram_voice || 'aura-2-mars-en',
@@ -286,18 +298,18 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           xaiLiveSearchSafeSearch: voiceSettings.xai_live_search_safe_search ?? true,
         };
         
-        console.log('🔄 VOICE_CONTEXT: ========== MERGED SETTINGS FOR NATIVE ==========');
-        console.log('🔄 VOICE_CONTEXT: deepgramEnabled:', updates.deepgramEnabled);
-        console.log('🔄 VOICE_CONTEXT: baseLanguageModel:', updates.baseLanguageModel);
-        console.log('🔄 VOICE_CONTEXT: generalInstructions length:', updates.generalInstructions.length);
-        console.log('🔄 VOICE_CONTEXT: wakeWord:', updates.wakeWord);
-        console.log('🔄 VOICE_CONTEXT: selectedWakeWord:', updates.selectedWakeWord);
-        console.log('🔄 VOICE_CONTEXT: wakeWordSensitivity:', updates.wakeWordSensitivity);
-        console.log('🔄 VOICE_CONTEXT: wakeWordDetectionEnabled:', updates.wakeWordDetectionEnabled);
-        console.log('🔄 VOICE_CONTEXT: selectedDeepgramVoice:', updates.selectedDeepgramVoice);
-        console.log('🔄 VOICE_CONTEXT: xaiLiveSearchEnabled:', updates.xaiLiveSearchEnabled);
-        console.log('🔄 VOICE_CONTEXT: xaiLiveSearchSafeSearch:', updates.xaiLiveSearchSafeSearch);
-        console.log('🔄 VOICE_CONTEXT: Current settings before update:', JSON.stringify(voiceSettings, null, 2));
+        // console.log('🔄 VOICE_CONTEXT: ========== MERGED SETTINGS FOR NATIVE ==========');
+        // console.log('🔄 VOICE_CONTEXT: deepgramEnabled:', updates.deepgramEnabled);
+        // console.log('🔄 VOICE_CONTEXT: baseLanguageModel:', updates.baseLanguageModel);
+        // console.log('🔄 VOICE_CONTEXT: generalInstructions length:', updates.generalInstructions.length);
+        // console.log('🔄 VOICE_CONTEXT: wakeWord:', updates.wakeWord);
+        // console.log('🔄 VOICE_CONTEXT: selectedWakeWord:', updates.selectedWakeWord);
+        // console.log('🔄 VOICE_CONTEXT: wakeWordSensitivity:', updates.wakeWordSensitivity);
+        // console.log('🔄 VOICE_CONTEXT: wakeWordDetectionEnabled:', updates.wakeWordDetectionEnabled);
+        // console.log('🔄 VOICE_CONTEXT: selectedDeepgramVoice:', updates.selectedDeepgramVoice);
+        // console.log('🔄 VOICE_CONTEXT: xaiLiveSearchEnabled:', updates.xaiLiveSearchEnabled);
+        // console.log('🔄 VOICE_CONTEXT: xaiLiveSearchSafeSearch:', updates.xaiLiveSearchSafeSearch);
+        // console.log('🔄 VOICE_CONTEXT: Current settings before update:', JSON.stringify(voiceSettings, null, 2));
         
         // Specifically log wake word detection refresh
         if (updates.wakeWordDetectionEnabled !== undefined) {
@@ -385,6 +397,19 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     // Listen for text processing requests from native
     const processTextSub = DeviceEventEmitter.addListener('processTextFromNative', async (event) => {
       const { text, requestId } = event;
+      
+      console.log('🔍 RN_BRIDGE_DEBUG: ========== PROCESS TEXT FROM NATIVE ==========');
+      console.log('🔍 RN_BRIDGE_DEBUG: Event received at:', new Date().toISOString());
+      console.log('🔍 RN_BRIDGE_DEBUG: Event data:', JSON.stringify(event, null, 2));
+      console.log('🔍 RN_BRIDGE_DEBUG: Text to process:', text);
+      console.log('🔍 RN_BRIDGE_DEBUG: Request ID:', requestId);
+      console.log('🔍 RN_BRIDGE_DEBUG: Current voice state:', voiceState);
+      console.log('🔍 RN_BRIDGE_DEBUG: Chat history length:', chatHistory.length);
+      console.log('🔍 RN_BRIDGE_DEBUG: API loading state:', isRequestInProgress);
+      console.log('🔍 RN_BRIDGE_DEBUG: Thread info:', {
+        performanceNow: performance.now(),
+        timestamp: Date.now()
+      });
 
       try {
         console.log(`🟡 VOICE_SERVICE: Adding user message to chat history`);
@@ -414,10 +439,26 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               // Start polling immediately when request begins
               setRequestStatus('pending');
               
-              const response = await sendMessage(text, updatedHistory, (requestId) => {
-                console.log('📊 REQUEST_STATUS: Setting request ID for polling:', requestId);
-                setCurrentRequestId(requestId);
+              console.log('🔍 RN_BRIDGE_DEBUG: ========== STARTING API CALL ==========');
+              console.log('🔍 RN_BRIDGE_DEBUG: API call start time:', Date.now());
+              console.log('🔍 RN_BRIDGE_DEBUG: Text being sent to API:', text);
+              console.log('🔍 RN_BRIDGE_DEBUG: History entries count:', updatedHistory.length);
+              
+              const apiStartTime = performance.now();
+              const response = await sendMessage(text, updatedHistory, (reactNativeRequestId) => {
+                console.log('📊 REQUEST_STATUS: Setting request ID for polling:', reactNativeRequestId);
+                console.log('🔍 RN_BRIDGE_DEBUG: Request ID assigned:', reactNativeRequestId);
+                setCurrentRequestId(reactNativeRequestId);
+                
+                // Store mapping between React Native request ID and native request ID
+                requestMapping.mapRequestIds(reactNativeRequestId, requestId);
               });
+              const apiEndTime = performance.now();
+              
+              console.log('🔍 RN_BRIDGE_DEBUG: ========== API CALL COMPLETED ==========');
+              console.log('🔍 RN_BRIDGE_DEBUG: API call duration:', (apiEndTime - apiStartTime), 'ms');
+              console.log('🔍 RN_BRIDGE_DEBUG: Response received at:', Date.now());
+              console.log('🔍 RN_BRIDGE_DEBUG: Response data:', JSON.stringify(response, null, 2));
               console.log('🟠 VOICE_CONTEXT: Received API response');
               console.log('🔄 VOICE_CONTEXT: Response settings_updated flag:', response.settings_updated);
               
@@ -440,11 +481,21 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               // Send response back to native for TTS (only in voice mode)
               await voiceService.handleApiResponse(requestId, response.response);
               
+              // Clean up request mapping since request completed successfully
+              if (currentRequestId) {
+                requestMapping.removeMapping(currentRequestId);
+              }
+              
               // Don't clear request status immediately - let polling handle it
               // The polling will stop and clear when status reaches 'completed'
               
             } catch (error) {
               console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
+              
+              // Clean up request mapping on error
+              if (currentRequestId) {
+                requestMapping.removeMapping(currentRequestId);
+              }
               
               if (!isCancellationError(error)) {
                 const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -563,7 +614,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     if (Platform.OS === 'android' && VoiceModule?.clearNativeState) {
       try {
         console.log('🧹 CLEAR_CHAT: Clearing native state...');
-        await VoiceModule.clearNativeState();
+        await VoiceModule.clearNativeState(null);
         console.log('🧹 CLEAR_CHAT: ✅ Native state cleared');
       } catch (nativeError) {
         console.warn('🧹 CLEAR_CHAT: ⚠️ Failed to clear native state:', nativeError);
@@ -615,7 +666,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   }, [voiceStateFromHook]);
   
   // Send text message using existing API infrastructure
-  const sendTextMessage = useCallback(async (text: string) => {
+  const sendTextMessage = useCallback(async (text: string, integrationInProgress?: boolean) => {
     if (!text.trim()) {
       console.log('📝 TEXT_INPUT: Empty message, ignoring');
       return;
@@ -656,7 +707,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             const response = await sendMessage(text.trim(), updatedHistory, (requestId) => {
               console.log('📊 REQUEST_STATUS: Setting request ID for polling:', requestId);
               setCurrentRequestId(requestId);
-            });
+            }, integrationInProgress);
             const apiEndTime = Date.now();
             
             console.log('📝 TEXT_INPUT: ========== API RESPONSE RECEIVED ==========');

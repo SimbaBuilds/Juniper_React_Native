@@ -45,7 +45,7 @@ export interface VoiceContextActions {
   interruptSpeech: () => Promise<boolean>;
   clearChatHistory: () => void;
   refreshSettings: () => Promise<void>;
-  sendTextMessage: (text: string) => Promise<void>;
+  sendTextMessage: (text: string, integrationInProgress?: boolean) => Promise<void>;
   continuePreviousChat: (messages: { role: 'user' | 'assistant'; content: string; timestamp: number }[]) => void;
   cancelRequest: () => Promise<boolean>;
   isRequestInProgress: boolean;

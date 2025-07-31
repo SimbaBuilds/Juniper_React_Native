@@ -12,7 +12,7 @@ interface UseServerApiResult {
   isLoading: boolean;
   error: Error | null;
   response: ChatResponse | null;
-  sendMessage: (message: string, history: ChatMessage[], onRequestStart?: (requestId: string) => void) => Promise<ChatResponse>;
+  sendMessage: (message: string, history: ChatMessage[], onRequestStart?: (requestId: string) => void, integrationInProgress?: boolean) => Promise<ChatResponse>;
   updateConfig: (config: Partial<ServerApiConfig>) => void;
   cancelRequest: () => Promise<boolean>;
   isRequestInProgress: boolean;
@@ -56,6 +56,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
     message: string, 
     history: ChatMessage[],
     onRequestStart?: (requestId: string) => void,
+    integrationInProgress?: boolean,
   ): Promise<ChatResponse> => {
     // Clear any previous cancellation errors before starting new request
     setError(null);
@@ -68,6 +69,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
         history, 
         options.preferences,
         onRequestStart,
+        integrationInProgress,
       );
       
       setResponse(result);
@@ -104,20 +106,41 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
       console.log('🚫 CANCEL: Cancelling server request and clearing native state...');
       
       // Cancel the server request first
-      const cancelled = await ServerApiService.cancelCurrentRequest();
+      const cancelResult = await ServerApiService.cancelCurrentRequest();
       
       // Clear native state to prevent persistence across chats
-      if (Platform.OS === 'android' && VoiceModule?.clearNativeState) {
-        try {
-          await VoiceModule.clearNativeState();
-          console.log('🧹 CANCEL: ✅ Native state cleared after cancellation');
-        } catch (nativeError) {
-          console.warn('🧹 CANCEL: ⚠️ Failed to clear native state:', nativeError);
-          // Don't fail the whole cancellation if native cleanup fails
+      const [{ clearNativeState }, requestMapping] = await Promise.all([
+        import('../utils/nativeCleanup'),
+        import('../utils/requestMapping').then(m => m.default)
+      ]);
+      
+      try {
+        if (cancelResult.requestId) {
+          // Get the corresponding native request ID using the cancelled request ID
+          const nativeRequestId = requestMapping.getNativeRequestId(cancelResult.requestId);
+          
+          if (nativeRequestId) {
+            console.log(`🧹 CANCEL: Clearing native state for specific request: ${nativeRequestId}`);
+            await clearNativeState(nativeRequestId);
+            
+            // Remove the mapping since request is cancelled
+            requestMapping.removeMapping(cancelResult.requestId);
+          } else {
+            console.log('🧹 CANCEL: No native request ID found, clearing all native state');
+            await clearNativeState();
+          }
+        } else {
+          console.log('🧹 CANCEL: No React Native request ID available, clearing all native state');
+          await clearNativeState();
         }
+        
+        console.log('🧹 CANCEL: ✅ Native state cleared after cancellation');
+      } catch (nativeError) {
+        console.warn('🧹 CANCEL: ⚠️ Failed to clear native state:', nativeError);
+        // Don't fail the whole cancellation if native cleanup fails
       }
       
-      if (cancelled) {
+      if (cancelResult.success) {
         setIsLoading(false);
         setIsRequestInProgress(false);
         setError(new Error('Request was cancelled'));
@@ -126,7 +149,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
         console.log('🚫 CANCEL: ⚠️ Request was not cancelled (may have already completed)');
       }
       
-      return cancelled;
+      return cancelResult.success;
     } catch (error) {
       console.error('🚫 CANCEL: ❌ Error cancelling request:', error);
       setError(error instanceof Error ? error : new Error('Failed to cancel request'));

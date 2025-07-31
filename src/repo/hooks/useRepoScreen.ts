@@ -315,6 +315,9 @@ export const useRepoScreen = () => {
       grouped[type.value] = [];
     });
     
+    // Initialize 'other' category for unknown resource types
+    grouped['other'] = [];
+    
     resources.forEach(resource => {
       if (grouped[resource.type]) {
         grouped[resource.type].push(resource);

@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { conversationService, ConversationSummary } from '../../services/conversationService';
 import { ChatMessage } from '../VoiceContext';
 import { MarkdownMessage } from './MarkdownMessage';
+import { colors } from '../../shared/theme/colors';
 
 interface ConversationHistoryProps {
   visible: boolean;
@@ -248,7 +249,7 @@ export const ConversationHistory: React.FC<ConversationHistoryProps> = ({
                     message.role === 'user' ? styles.userMessage : styles.assistantMessage
                   ]}
                 >
-                  <MarkdownMessage content={message.content} />
+                  <MarkdownMessage content={message.content} role={message.role} />
                   <Text style={styles.messageTime}>{formatMessageTime(message.timestamp)}</Text>
                 </View>
               ))}
@@ -355,7 +356,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   headerActions: {
     flexDirection: 'row',
@@ -389,7 +390,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   retryButtonText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -427,7 +428,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   conversationTitle: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
@@ -484,24 +485,25 @@ const styles = StyleSheet.create({
     maxWidth: '85%',
   },
   userMessage: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: colors.background.userMessage,
     alignSelf: 'flex-end',
     borderBottomRightRadius: 4,
   },
   assistantMessage: {
-    backgroundColor: '#333333',
+    backgroundColor: colors.background.assistantMessage,
     alignSelf: 'flex-start',
     borderBottomLeftRadius: 4,
   },
   messageText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 14,
   },
   messageTime: {
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: colors.text.primary,
     fontSize: 10,
     marginTop: 4,
     textAlign: 'right',
+    opacity: 0.6,
   },
   noMessagesText: {
     color: '#888888',

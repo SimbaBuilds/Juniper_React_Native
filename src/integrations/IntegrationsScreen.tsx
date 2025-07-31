@@ -20,7 +20,9 @@ interface ServiceWithStatus {
   integration_id?: string;
   status?: string; // pending, active, etc.
   isPendingSetup?: boolean; // Waiting for online form completion
-  isSystemIntegration?: boolean; // Flag for system integrations (Twitter/X, Perplexity)
+  isSystemIntegration?: boolean; // Flag for system integrations (based on type field)
+  public: boolean; // Whether the service should be displayed publicly
+  type: string; // "user" or "system" - from database
 }
 
 interface TwilioCredentials {
@@ -79,7 +81,7 @@ export const IntegrationsScreen: React.FC = () => {
     }
     
     // Research
-    if (['perplexity', 'twitter', 'x'].includes(name)) {
+    if (['research', 'ai', 'search'].includes(name)) {
       return 'Research';
     }
     
@@ -103,12 +105,12 @@ export const IntegrationsScreen: React.FC = () => {
     return 'Other';
   };
 
-  // Organize regular services into categories (excludes system integrations and Twitter/X)
+  // Organize regular services into categories (excludes system integrations and non-public services)
   const organizeServicesByCategory = (services: ServiceWithStatus[]): ServiceCategory[] => {
     const categoryMap: { [key: string]: ServiceWithStatus[] } = {};
     
-    // Filter out system integrations and Twitter/X from regular categories
-    const regularServices = services.filter(service => !service.isSystemIntegration && !['twitter', 'x', 'twitter/x'].includes(service.service_name.toLowerCase()));
+    // Filter out system integrations and non-public services from regular categories
+    const regularServices = services.filter(service => !service.isSystemIntegration && service.public);
     
     regularServices.forEach(service => {
       const category = getServiceCategory(service.service_name);
@@ -118,7 +120,7 @@ export const IntegrationsScreen: React.FC = () => {
       categoryMap[category].push(service);
     });
     
-    // Define the order of categories (removed Research since Twitter/X and Perplexity are now system integrations)
+    // Define the order of categories
     const categoryOrder = [
       'Communications',
       'Productivity and Task Management',
@@ -149,9 +151,9 @@ export const IntegrationsScreen: React.FC = () => {
     return categories;
   };
 
-  // Get system integrations (Perplexity only, filter out Twitter/X)
+  // Get system integrations (only public ones)
   const getSystemIntegrations = (services: ServiceWithStatus[]): ServiceWithStatus[] => {
-    return services.filter(service => service.isSystemIntegration && !['twitter', 'x', 'twitter/x'].includes(service.service_name.toLowerCase()));
+    return services.filter(service => service.isSystemIntegration && service.public);
   };
 
   // Helper function to get icon for integration type
@@ -247,10 +249,12 @@ export const IntegrationsScreen: React.FC = () => {
         allServices.map(async (service: any) => {
           const serviceName = service.service_name.toLowerCase();
           
-          // Check if this is a system integration (Twitter/X or Perplexity)
-          if (['twitter', 'x', "twitter/x", 'perplexity'].includes(serviceName)) {
-            const integrationKey = serviceName === 'twitter' || serviceName === 'x' ? 'twitter_x' : 'perplexity';
-            const isActive = systemIntegrations[integrationKey] ?? true; // Default to true
+          // Check if this is a system integration (based on service type from database)
+          if (service.type === 'system') {
+            // For system integrations, we need to map the service name to the integration key
+            // The integration key should match the service name for consistency
+            const integrationKey = serviceName;
+            const isActive = systemIntegrations[integrationKey] ?? true; // Default to true for system integrations
             
             return {
               id: service.id,
@@ -263,10 +267,12 @@ export const IntegrationsScreen: React.FC = () => {
               status: isActive ? 'active' : 'inactive',
               isPendingSetup: false,
               isSystemIntegration: true, // Flag to identify system integrations
+              public: service.public, // Use the public field from database
+              type: service.type, // Use the type field from database
             };
           }
           
-          // Handle regular integrations
+          // Handle regular integrations (type === 'user')
           const integration = userIntegrations.find(
             (int: any) => int.service_id === service.id
           );
@@ -297,6 +303,8 @@ export const IntegrationsScreen: React.FC = () => {
             status: integration?.status,
             isPendingSetup,
             isSystemIntegration: false, // Regular OAuth integrations
+            public: service.public, // Use the public field from database
+            type: service.type, // Use the type field from database
           };
         })
       );
@@ -316,8 +324,6 @@ export const IntegrationsScreen: React.FC = () => {
       'Notion': 'notion',
       'Slack': 'slack',
       'Perplexity': 'perplexity',
-      'Twitter_X': 'twitter',
-      'X': 'twitter',
       'Google Sheets': 'google-sheets',
       'Google Docs': 'google-docs',
       'Gmail': 'gmail',
@@ -352,7 +358,7 @@ export const IntegrationsScreen: React.FC = () => {
       const integrationService = IntegrationService.getInstance();
       
       // Check if this service is a system-managed service (no auth required)
-      if (['perplexity', 'twitter'].includes(internalServiceName)) {
+      if (service.type === 'system') {
         // This should now be handled by handleSystemIntegrationToggle instead
         console.warn('System integration toggle should use handleSystemIntegrationToggle');
         return;
@@ -521,9 +527,8 @@ export const IntegrationsScreen: React.FC = () => {
 
       console.log(`🔧 Toggling system integration: ${service.service_name} to ${enabled}`);
       
-      // Map service name to integration key
-      const serviceName = service.service_name.toLowerCase();
-      const integrationKey = serviceName === 'twitter' || serviceName === 'x' ? 'twitter_x' : 'perplexity';
+      // Use the service name as the integration key for consistency
+      const integrationKey = service.service_name.toLowerCase();
       
       await DatabaseService.updateSystemIntegration(user.id, integrationKey, enabled);
       
@@ -653,7 +658,7 @@ export const IntegrationsScreen: React.FC = () => {
         <View style={styles.header}>
           {/* <Text style={styles.title}>Integrations</Text> */}
           <Text style={styles.subtitle}>
-            Give Juniper access to your frequently used services
+            Integrations below can take up to 3 minutes each to complete.
           </Text>
         </View>
 
@@ -799,10 +804,7 @@ export const IntegrationsScreen: React.FC = () => {
                       <View style={styles.serviceInfo}>
                         <Text style={styles.serviceName}>{service.service_name}</Text>
                         <Text style={styles.systemServiceDescription}>
-                          {service.service_name.toLowerCase() === 'twitter/x' || service.service_name.toLowerCase() === 'x' 
-                            ? 'Gives Juniper abiltity to scrape and build automations around Twitter/X. <br />Note: XAI Live Search with X/Twitter and Grok is built into Juniper\'s search functionality, managed in settings. '
-                            : 'Gives Juniper advanced research capabilities'
-                          }
+                          Gives Juniper advanced research capabilities
                         </Text>
                       </View>
                     </View>

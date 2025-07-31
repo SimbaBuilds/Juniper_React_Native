@@ -36,6 +36,7 @@ export default {
       eas: {
         projectId: "a1ca031e-4068-49f1-84f5-ab872bc450dc"
       },
+      EXPO_PUBLIC_SITE_URL: process.env.EXPO_PUBLIC_SITE_URL,
       SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
       SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
       GOOGLE_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,

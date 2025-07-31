@@ -2,6 +2,7 @@ import 'react-native-url-polyfill/auto'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createClient } from '@supabase/supabase-js'
 import { HotPhrase } from './tables'
+import { DEFAULT_WAKE_PHRASE } from '../wakeword/constants';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
@@ -44,7 +45,7 @@ export const DatabaseService = {
         deepgram_enabled: updates.deepgram_enabled ?? false,
         base_language_model: 'claude-sonnet-4-20250514',
         general_instructions: updates.general_instructions || '',
-        wake_word: updates.wake_word || 'JUNIPER',
+        wake_word: updates.wake_word || DEFAULT_WAKE_PHRASE,
         wake_word_sensitivity: updates.wake_word_sensitivity ?? 0.3,
         wake_word_detection_enabled: updates.wake_word_detection_enabled ?? true,
         selected_deepgram_voice: updates.selected_deepgram_voice || 'aura-2-arcas-en',
@@ -56,7 +57,7 @@ export const DatabaseService = {
         // User tags defaults
         user_tags: updates.user_tags || [],
         // System integrations defaults (enabled by default)
-        enabled_integrations: updates.enabled_integrations || {
+        enabled_system_integrations: updates.enabled_system_integrations || {
           twitter_x: true,
           perplexity: true
         },
@@ -111,6 +112,8 @@ export const DatabaseService = {
       // XAI LiveSearch settings
       xai_live_search_enabled: profile.xai_live_search_enabled,
       xai_live_search_safe_search: profile.xai_live_search_safe_search,
+      // Timezone setting
+      timezone: profile.timezone,
     }
   },
 
@@ -124,6 +127,7 @@ export const DatabaseService = {
     selected_deepgram_voice?: string;
     xai_live_search_enabled?: boolean;
     xai_live_search_safe_search?: boolean;
+    timezone?: string;
   }) {
     // First, ensure the user profile exists with all required fields
     let profile = await this.getUserProfile(userId);
@@ -136,7 +140,7 @@ export const DatabaseService = {
         deepgram_enabled: false,
         base_language_model: 'claude-sonnet-4-20250514',
         general_instructions: '',
-        wake_word: 'JUNIPER',
+        wake_word: DEFAULT_WAKE_PHRASE,
         wake_word_sensitivity: 0.3,
         wake_word_detection_enabled: true,
         selected_deepgram_voice: 'aura-2-arcas-en',
@@ -148,7 +152,7 @@ export const DatabaseService = {
         // User tags defaults
         user_tags: [],
         // System integrations defaults (enabled by default)
-        enabled_integrations: {
+        enabled_system_integrations: {
           twitter_x: true,
           perplexity: true
         },
@@ -852,10 +856,10 @@ export const DatabaseService = {
     }
   },
 
-  // System integration management (Twitter/X and Perplexity)
-  async updateSystemIntegration(userId: string, integration: 'twitter_x' | 'perplexity', enabled: boolean) {
+  // System integration management (generic for any system integration)
+  async updateSystemIntegration(userId: string, integration: string, enabled: boolean) {
     const currentProfile = await this.getUserProfile(userId);
-    const enabledIntegrations = currentProfile?.enabled_integrations || {
+    const enabledIntegrations = currentProfile?.enabled_system_integrations || {
       twitter_x: true,
       perplexity: true
     };
@@ -866,19 +870,19 @@ export const DatabaseService = {
     };
     
     return await this.updateUserProfile(userId, { 
-      enabled_integrations: updatedIntegrations 
+      enabled_system_integrations: updatedIntegrations 
     });
   },
 
   async getSystemIntegrations(userId: string) {
     const profile = await this.getUserProfile(userId);
-    return profile?.enabled_integrations || {
+    return profile?.enabled_system_integrations || {
       twitter_x: true,
       perplexity: true
     };
   },
 
-  async isSystemIntegrationEnabled(userId: string, integration: 'twitter_x' | 'perplexity'): Promise<boolean> {
+  async isSystemIntegrationEnabled(userId: string, integration: string): Promise<boolean> {
     const systemIntegrations = await this.getSystemIntegrations(userId);
     return systemIntegrations[integration] ?? true; // Default to true if not set
   },

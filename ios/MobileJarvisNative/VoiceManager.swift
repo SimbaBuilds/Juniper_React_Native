@@ -3,7 +3,7 @@ import Speech
 import AVFoundation
 
 // MARK: - STT Provider Types
-enum STTProvider: String, CaseIterable {
+enum STTProviderType: String, CaseIterable {
     case native = "ios_native"
     case deepgram = "deepgram"
     case whisper = "whisper"
@@ -33,9 +33,10 @@ class VoiceManager: NSObject {
     private var audioEngine = AVAudioEngine()
     
     // MARK: - STT Provider Management
-    private var currentSTTProvider: STTProvider = .native
+    private var currentSTTProvider: STTProviderType = .native
     private let deepgramAPI = DeepgramAPI.shared
     private let whisperAPI = WhisperAPI.shared
+    private var deepgramSTTProvider: DeepgramSTTProvider?
     
     // MARK: - TTS Integration
     private let ttsManager = TTSManager.shared
@@ -55,8 +56,8 @@ class VoiceManager: NSObject {
     // MARK: - Timing Parameters (copied from Android)
     private var speechTimeoutSeconds: Double = 10.0
     private var partialResultsTimeout: Double = 3.0
-    private var speechInputMinimumTime: Double = 1.0
-    private var speechInputMaximumTime: Double = 30.0
+    private var speechInputMinimumTime: Double = 0.5
+    private var speechInputMaximumTime: Double = 120.0
     private var endOfSpeechTimeout: Double = 2.0
     private var silenceTimeout: Double = 5.0
     private var startOfSpeechTimeout: Double = 10.0
@@ -78,11 +79,13 @@ class VoiceManager: NSObject {
     private var lastSpeechDetectedTime: Date?
     private var hasSpeechStarted = false
     private var lastPartialResult: String?
+    private var partialResult: String?
     private var finalResult: String?
     
     // MARK: - Callbacks
     var onStateChanged: ((VoiceState) -> Void)?
     var onSpeechResult: ((String, Bool) -> Void)?  // (text, isFinal)
+    var onPartialResult: ((String) -> Void)?
     var onError: ((VoiceError, String) -> Void)?
     
     // MARK: - React Native Bridge Callback
@@ -128,7 +131,7 @@ class VoiceManager: NSObject {
     // MARK: - STT Provider Loading
     private func loadSTTProvider() {
         let defaultProvider = config.getDefaultSTTProvider()
-        currentSTTProvider = STTProvider(rawValue: defaultProvider) ?? .native
+        currentSTTProvider = STTProviderType(rawValue: defaultProvider) ?? .native
         print("🎙️ VoiceManager: Loaded STT provider: \(currentSTTProvider.displayName)")
     }
     
@@ -181,13 +184,19 @@ class VoiceManager: NSObject {
     // MARK: - Audio Session Management
     private func configureAudioSession() throws {
         let audioSession = AVAudioSession.sharedInstance()
+        print("🎤 VoiceManager: Configuring audio session...")
+        print("🎤 VoiceManager: Current record permission: \(audioSession.recordPermission.rawValue)")
         try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        print("✅ VoiceManager: Audio session configured successfully")
     }
     
     // MARK: - Speech Recognition
     func startListening() {
+        NSLog("🎙️ VoiceManager: Starting speech recognition")
         print("🎙️ VoiceManager: Starting speech recognition")
+        print("🎙️ VoiceManager: Current state: \(currentState.description)")
+        print("🎙️ VoiceManager: Is already listening: \(isListening)")
         
         // Reset state
         resetSpeechTracking()
@@ -208,8 +217,12 @@ class VoiceManager: NSObject {
         print("🔄 VoiceManager: Attempt \(currentRetryCount) of \(maxRetries)")
         
         // Check permissions
-        guard SFSpeechRecognizer.authorizationStatus() == .authorized else {
-            handleError(.audioPermissionDenied, "Speech recognition permission not granted")
+        let authStatus = SFSpeechRecognizer.authorizationStatus()
+        NSLog("🔐 VoiceManager: Speech recognition auth status: %d", authStatus.rawValue)
+        print("🔐 VoiceManager: Speech recognition auth status: \(authStatus.rawValue)")
+        guard authStatus == .authorized else {
+            NSLog("❌ VoiceManager: Speech recognition not authorized. Status: %d", authStatus.rawValue)
+            handleError(.audioPermissionDenied, "Speech recognition permission not granted. Status: \(authStatus.rawValue)")
             return
         }
         
@@ -228,9 +241,11 @@ class VoiceManager: NSObject {
     
     private func setupRecognition() {
         print("🎙️ VoiceManager: Setting up recognition with provider: \(currentSTTProvider.displayName)")
+        print("🎙️ VoiceManager: Current STT provider: \(currentSTTProvider)")
         
         // Request audio focus for recording with priority-based management
         audioManager.requestAudioFocus(.recording) { [weak self] success in
+            print("🎙️ VoiceManager: Audio focus request result: \(success)")
             guard success else {
                 print("❌ VoiceManager: Failed to acquire audio focus for recording")
                 self?.scheduleRetry()
@@ -263,11 +278,14 @@ class VoiceManager: NSObject {
         }
         
         // Create recognition request
+        print("🎙️ VoiceManager: Creating recognition request...")
+        print("🎙️ VoiceManager: Speech recognizer available: \(speechRecognizer?.isAvailable ?? false)")
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         guard let recognitionRequest = recognitionRequest else {
             handleError(.speechRecognitionFailed, "Failed to create recognition request")
             return
         }
+        print("✅ VoiceManager: Recognition request created successfully")
         
         recognitionRequest.shouldReportPartialResults = true
         
@@ -290,30 +308,59 @@ class VoiceManager: NSObject {
         
         // Start audio engine
         do {
+            print("🎙️ VoiceManager: About to start audio engine...")
+            print("🎙️ VoiceManager: Audio engine running status before start: \(audioEngine.isRunning)")
             try audioEngine.start()
+            print("✅ VoiceManager: Audio engine started successfully")
+            print("🎙️ VoiceManager: Audio engine running status after start: \(audioEngine.isRunning)")
             setState(.listening)
             isListening = true
             startTimers()
             print("✅ VoiceManager: iOS Native STT started, listening for speech")
         } catch {
             print("❌ VoiceManager: Failed to start audio engine: \(error)")
+            print("❌ VoiceManager: Error details: \(error.localizedDescription)")
             scheduleRetry()
         }
     }
     
     // MARK: - Deepgram STT Setup
     private func setupDeepgramSTT() {
-        // For now, fallback to native STT since Deepgram STT implementation in DeepgramAPI.swift
-        // is primarily structured for TTS. The STT would require WebSocket streaming implementation.
-        print("⚠️ VoiceManager: Deepgram STT not fully implemented, falling back to Native STT")
-        setupNativeSTT()
+        print("🎙️ VoiceManager: Setting up Deepgram WebSocket STT...")
         
-        // TODO: Implement Deepgram WebSocket streaming STT
-        // This would require:
-        // 1. WebSocket connection to Deepgram streaming endpoint
-        // 2. Real-time audio streaming
-        // 3. Parsing streaming JSON responses
-        // 4. Handling connection errors and reconnection
+        // Initialize Deepgram STT provider if not already done
+        if deepgramSTTProvider == nil {
+            deepgramSTTProvider = DeepgramSTTProvider()
+            deepgramSTTProvider?.delegate = self
+        }
+        
+        // Validate configuration
+        guard let provider = deepgramSTTProvider else {
+            print("❌ VoiceManager: Failed to initialize Deepgram STT provider")
+            fallbackToNativeSTT()
+            return
+        }
+        
+        let validation = provider.validateConfiguration()
+        if !validation.isValid {
+            print("❌ VoiceManager: Deepgram STT configuration invalid: \(validation.issues.joined(separator: ", "))")
+            fallbackToNativeSTT()
+            return
+        }
+        
+        // Start listening with Deepgram
+        provider.startListening()
+        setState(.listening)
+        isListening = true
+        startTimers()
+        
+        print("✅ VoiceManager: Deepgram WebSocket STT started, listening for speech")
+    }
+    
+    private func fallbackToNativeSTT() {
+        print("⚠️ VoiceManager: Falling back to Native STT")
+        currentSTTProvider = .native
+        setupNativeSTT()
     }
     
     // MARK: - Whisper STT Setup  
@@ -398,7 +445,9 @@ class VoiceManager: NSObject {
     
     private func startSilenceTimer() {
         silenceTimer?.invalidate()
+        NSLog("⏰ VoiceManager: Starting silence timer with timeout: %f seconds", silenceTimeout)
         silenceTimer = Timer.scheduledTimer(withTimeInterval: silenceTimeout, repeats: false) { _ in
+            NSLog("⏰ VoiceManager: Silence timeout reached, calling finishListening")
             print("⏰ VoiceManager: Silence timeout reached")
             self.finishListening()
         }
@@ -516,17 +565,21 @@ class VoiceManager: NSObject {
         
         stopListening()
         
+        // If we don't have a final result but we have a partial result, use that
+        let resultToProcess = finalResult ?? lastPartialResult
+        
         // Process final result
-        if let finalResult = finalResult, !finalResult.isEmpty {
+        if let resultToProcess = resultToProcess, !resultToProcess.isEmpty {
             setState(.processing)
-            print("✅ VoiceManager: Processing final result: '\(finalResult)'")
+            print("✅ VoiceManager: Processing result: '\(resultToProcess)'")
+            print("✅ VoiceManager: (was final: \(finalResult != nil), using partial: \(finalResult == nil))")
             
             // **NEW: CONVERSATION FLOW - Emit processTextFromNative event**
-            processTextRequest(finalResult)
+            processTextRequest(resultToProcess)
         } else {
-            print("⚠️ VoiceManager: No final result to process")
-            // Don't automatically return to idle - let the conversation flow determine state
-            // This matches Android behavior where state management is more deliberate
+            print("⚠️ VoiceManager: No result to process (final: \(finalResult ?? "nil"), partial: \(lastPartialResult ?? "nil"))")
+            // Transition to error state if no speech was captured
+            handleError(.speechRecognitionFailed, "No speech detected")
         }
     }
     
@@ -542,44 +595,56 @@ class VoiceManager: NSObject {
         let requestId = UUID().uuidString
         print("🔵 VoiceManager: Generated requestId: \(requestId)")
         
-        // Set up timeout timer
-        let timeoutTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: false) { _ in
-            self.timeoutTimers.removeValue(forKey: requestId)
-            if let callback = self.pendingApiCallbacks.removeValue(forKey: requestId) {
-                print("⏰ VoiceManager: Request timeout for requestId: \(requestId)")
-                callback("I'm sorry, there was a timeout processing your request. Please try again.")
-            }
-        }
-        
-        timeoutTimers[requestId] = timeoutTimer
+        // Note: Timeout handling is managed by VoiceModule, not here
         
         // Store callback for when response comes back
         pendingApiCallbacks[requestId] = { [weak self] response in
+            NSLog("🔵 VoiceManager: Callback executing for API response")
             print("🔵 VoiceManager: Processing API response: \(response)")
-            self?.handleApiResponseInternal(response)
+            guard let self = self else {
+                NSLog("❌ VoiceManager: Self is nil in callback, cannot process response")
+                return
+            }
+            self.handleApiResponseInternal(response)
         }
         
         // Emit event to React Native (similar to Android pattern)
-        reactNativeApiCallback?(text, requestId)
+        NSLog("🔵 VoiceManager: About to call reactNativeApiCallback")
+        NSLog("🔵 VoiceManager: Callback is nil: %@", reactNativeApiCallback == nil ? "YES" : "NO")
+        
+        if let callback = reactNativeApiCallback {
+            NSLog("🔵 VoiceManager: Calling React Native API callback with text: %@ and requestId: %@", text, requestId)
+            callback(text, requestId)
+            NSLog("🔵 VoiceManager: React Native API callback called successfully")
+        } else {
+            NSLog("❌ VoiceManager: reactNativeApiCallback is nil! Cannot emit processTextFromNative event")
+            print("❌ VoiceManager: reactNativeApiCallback is nil! Cannot emit processTextFromNative event")
+            handleError(.speechRecognitionFailed, "API callback not set up")
+        }
     }
     
     /**
      * Handle API response from React Native (matching Android handleApiResponse)
      */
     @objc func handleApiResponse(_ requestId: String, _ response: String) {
+        NSLog("🟢 VoiceManager: handleApiResponse called")
+        NSLog("🟢 VoiceManager: RequestId: %@", requestId)
+        NSLog("🟢 VoiceManager: Response length: %d", response.count)
+        NSLog("🟢 VoiceManager: Response preview: %@...", String(response.prefix(100)))
         print("🟢 VoiceManager: handleApiResponse called")
         print("🟢 VoiceManager: RequestId: \(requestId)")
         print("🟢 VoiceManager: Response length: \(response.count)")
         print("🟢 VoiceManager: Response preview: \(String(response.prefix(100)))...")
         
-        // Cancel timeout timer
-        timeoutTimers.removeValue(forKey: requestId)?.invalidate()
+        // Note: Timeout timers are managed by VoiceModule, not here
         
         // Execute pending callback
         if let callback = pendingApiCallbacks.removeValue(forKey: requestId) {
+            NSLog("🟢 VoiceManager: Found pending callback for requestId: %@", requestId)
             print("🟢 VoiceManager: Found pending callback for requestId: \(requestId)")
             callback(response)
         } else {
+            NSLog("⚠️ VoiceManager: No pending callback found for requestId: %@", requestId)
             print("⚠️ VoiceManager: No pending callback found for requestId: \(requestId)")
             // Still speak the response
             handleApiResponseInternal(response)
@@ -590,23 +655,79 @@ class VoiceManager: NSObject {
      * Internal handling of API response - starts TTS and manages state
      */
     private func handleApiResponseInternal(_ response: String) {
+        NSLog("🟢 VoiceManager: handleApiResponseInternal called")
+        NSLog("🟢 VoiceManager: Response length: %d", response.count)
         print("🟢 VoiceManager: handleApiResponseInternal called")
         
-        // Stop any current listening first
-        stopListening()
+        // Stop any current listening first with error handling
+        NSLog("🟢 VoiceManager: About to stop listening")
+        NSLog("🟢 VoiceManager: Current state before stopping: %@", currentState.description)
+        NSLog("🟢 VoiceManager: Is listening: %@", isListening ? "YES" : "NO")
+        
+        do {
+            stopListening()
+            NSLog("🟢 VoiceManager: Successfully stopped listening")
+        } catch {
+            NSLog("❌ VoiceManager: Error stopping listening: %@", error.localizedDescription)
+        }
+        
+        NSLog("🟢 VoiceManager: Current state after stopping: %@", currentState.description)
+        
+        // Verify audio manager is available
+        NSLog("🟢 VoiceManager: Checking audio manager availability")
+        NSLog("🟢 VoiceManager: AudioManager instance: %@", String(describing: audioManager))
+        
+        // Force AudioManager singleton access to trigger initialization
+        NSLog("🟢 VoiceManager: Forcing AudioManager.shared access...")
+        let testManager = AudioManager.shared
+        NSLog("🟢 VoiceManager: AudioManager.shared instance: %@", String(describing: testManager))
+        NSLog("🟢 VoiceManager: Are instances the same? %@", audioManager === testManager ? "YES" : "NO")
+        
+        // Test direct access to AudioManager properties
+        NSLog("🟢 VoiceManager: AudioManager.isAudioAvailable: %@", audioManager.isAudioAvailable() ? "YES" : "NO")
+        NSLog("🟢 VoiceManager: AudioManager.isAudioInterrupted: %@", audioManager.getAudioInterruptionStatus() ? "YES" : "NO")
+        NSLog("🟢 VoiceManager: AudioManager.currentFocus: %@", String(describing: audioManager.getCurrentFocus()))
+        
+        // Ensure we're in a valid state before requesting audio focus
+        NSLog("🟢 VoiceManager: Current audio session info before requesting focus:")
+        let audioSession = AVAudioSession.sharedInstance()
+        NSLog("🟢 VoiceManager: Audio session category: %@", audioSession.category.rawValue)
+        NSLog("🟢 VoiceManager: Audio session mode: %@", audioSession.mode.rawValue)
+        NSLog("🟢 VoiceManager: Audio session is active: %@", audioSession.isOtherAudioPlaying ? "NO" : "YES")
+        
+        // Test AudioManager logging first
+        NSLog("🟢 VoiceManager: Testing AudioManager logging...")
+        audioManager.testLogging()
+        NSLog("🟢 VoiceManager: AudioManager test logging completed")
         
         // Request audio focus for TTS playback (higher priority than STT)
+        NSLog("🟢 VoiceManager: Requesting audio focus for TTS playback")
+        NSLog("🟢 VoiceManager: About to call audioManager.requestAudioFocus(.playback)")
+        
         audioManager.requestAudioFocus(.playback) { [weak self] success in
-            guard let self = self, success else {
+            NSLog("🟢 VoiceManager: requestAudioFocus completion callback called with success: %@", success ? "YES" : "NO")
+            NSLog("🟢 VoiceManager: Audio focus callback received, success: %@", success ? "YES" : "NO")
+            guard let self = self else {
+                NSLog("❌ VoiceManager: Self is nil in audio focus callback")
+                return
+            }
+            guard success else {
+                NSLog("❌ VoiceManager: Failed to acquire audio focus for TTS")
                 print("❌ VoiceManager: Failed to acquire audio focus for TTS")
-                self?.setState(.idle)
+                self.setState(.idle)
                 return
             }
             
+            NSLog("🟢 VoiceManager: Audio focus acquired successfully")
             // Start TTS playback
             self.setState(.speaking)
             
+            NSLog("🎵 VoiceManager: About to start TTS with response: %@", String(response.prefix(50)))
+            NSLog("🎵 VoiceManager: TTSManager instance: %@", String(describing: self.ttsManager))
+            
             self.ttsManager.speak(response) {
+                NSLog("🎵 VoiceManager: TTS completion callback received")
+                NSLog("🎵 VoiceManager: TTS completed, transitioning to LISTENING for continuous conversation")
                 print("🎵 VoiceManager: TTS completed, transitioning to LISTENING for continuous conversation")
                 
                 // Release audio focus to allow STT to take over
@@ -615,6 +736,7 @@ class VoiceManager: NSObject {
                 // Match Android behavior: transition to LISTENING instead of IDLE
                 // This enables continuous conversation without requiring wake word
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    NSLog("🎵 VoiceManager: Restarting listening for continuous conversation")
                     self.setState(.listening)
                     self.startListening()
                 }
@@ -646,21 +768,16 @@ class VoiceManager: NSObject {
     }
     
     /**
-     * Simulate wake word detection for iOS (matches Android wake word flow)
-     * This enables continuous conversation mode on iOS
+     * Simulate wake word detection for iOS - DEPRECATED
+     * iOS now uses direct listening flow without wake word simulation
      */
+    @available(*, deprecated, message: "iOS uses direct listening flow. Use startListening() directly.")
     @objc func simulateWakeWordDetection() {
-        print("🎯 VoiceManager: Simulating wake word detection for iOS continuous conversation")
+        print("⚠️ VoiceManager: simulateWakeWordDetection is deprecated on iOS")
+        print("⚠️ VoiceManager: iOS should use startListening() directly for conversation flow")
         
-        // Set state to WAKE_WORD_DETECTED to match Android flow
-        setState(.wakeWordDetected)
-        
-        // Play a sound or provide feedback that conversation mode is active
-        // This could be a simple beep or "Yes?" response
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            // Transition to listening state
-            self.setState(.listening)
-        }
+        // For backward compatibility, just start listening
+        startListening()
     }
     
     func stopListening() {
@@ -669,6 +786,23 @@ class VoiceManager: NSObject {
         isListening = false
         stopAllTimers()
         
+        // Stop based on current provider
+        switch currentSTTProvider {
+        case .native:
+            stopNativeSTT()
+        case .deepgram:
+            stopDeepgramSTT()
+        case .whisper:
+            stopWhisperSTT()
+        }
+        
+        // Release audio focus when stopping listening
+        audioManager.releaseAudioFocus()
+        
+        setState(.idle)
+    }
+    
+    private func stopNativeSTT() {
         // Stop audio engine
         if audioEngine.isRunning {
             audioEngine.stop()
@@ -682,16 +816,21 @@ class VoiceManager: NSObject {
         // Reset
         recognitionTask = nil
         recognitionRequest = nil
-        
-        // Release audio focus when stopping listening
-        audioManager.releaseAudioFocus()
-        
-        setState(.idle)
+    }
+    
+    private func stopDeepgramSTT() {
+        deepgramSTTProvider?.stopListening()
+    }
+    
+    private func stopWhisperSTT() {
+        // TODO: Implement Whisper STT stop logic
+        print("⚠️ VoiceManager: Whisper STT stop not implemented")
     }
     
     // MARK: - Error Handling
     private func handleError(_ error: VoiceError, _ message: String) {
         print("❌ VoiceManager: Error - \(error.description): \(message)")
+        print("❌ VoiceManager: Previous state was: \(currentState.description)")
         
         stopListening()
         setState(.error)
@@ -731,7 +870,7 @@ class VoiceManager: NSObject {
     }
     
     func isCurrentlySpeaking() -> Bool {
-        return currentState == .speaking && ttsManager.isSpeaking()
+        return currentState == .speaking && ttsManager.isTTSSpeaking()
     }
     
     // MARK: - STT Provider Management
@@ -740,7 +879,7 @@ class VoiceManager: NSObject {
      * Set STT provider (matching Android pattern)
      */
     @objc func setSTTProvider(_ provider: String) {
-        guard let sttProvider = STTProvider(rawValue: provider) else {
+        guard let sttProvider = STTProviderType(rawValue: provider) else {
             print("❌ VoiceManager: Invalid STT provider: \(provider)")
             return
         }
@@ -770,14 +909,14 @@ class VoiceManager: NSObject {
      * Get available STT providers (matching Android pattern)
      */
     @objc func getAvailableSTTProviders() -> [String] {
-        return STTProvider.allCases.map { $0.rawValue }
+        return STTProviderType.allCases.map { $0.rawValue }
     }
     
     /**
      * Get available STT providers with display names
      */
     @objc func getAvailableSTTProvidersWithNames() -> [[String: String]] {
-        return STTProvider.allCases.map { provider in
+        return STTProviderType.allCases.map { provider in
             [
                 "value": provider.rawValue,
                 "displayName": provider.displayName
@@ -789,7 +928,7 @@ class VoiceManager: NSObject {
      * Test STT provider connectivity
      */
     @objc func testSTTProvider(_ provider: String, completion: @escaping (Bool, String) -> Void) {
-        guard let sttProvider = STTProvider(rawValue: provider) else {
+        guard let sttProvider = STTProviderType(rawValue: provider) else {
             completion(false, "Invalid STT provider: \(provider)")
             return
         }
@@ -797,8 +936,7 @@ class VoiceManager: NSObject {
         print("🧪 VoiceManager: Testing STT provider: \(sttProvider.displayName)")
         
         Task {
-            do {
-                switch sttProvider {
+            switch sttProvider {
                 case .native:
                     // Test iOS native speech recognition availability
                     let isAvailable = SFSpeechRecognizer.authorizationStatus() == .authorized
@@ -807,19 +945,16 @@ class VoiceManager: NSObject {
                     
                 case .deepgram:
                     // Test Deepgram connectivity
-                    let isConnected = try await deepgramAPI.testConnectivity()
+                    let isConnected = await deepgramAPI.testConnectivity()
                     let message = isConnected ? "Deepgram STT is available" : "Deepgram STT connection failed"
                     completion(isConnected, message)
                     
                 case .whisper:
                     // Test Whisper connectivity
-                    let isConnected = try await whisperAPI.testConnectivity()
+                    let isConnected = await whisperAPI.testConnectivity()
                     let message = isConnected ? "Whisper STT is available" : "Whisper STT connection failed"
                     completion(isConnected, message)
                 }
-            } catch {
-                completion(false, "STT provider test failed: \(error.localizedDescription)")
-            }
         }
     }
 }
@@ -832,6 +967,47 @@ extension VoiceManager: SFSpeechRecognizerDelegate {
         
         if !available {
             handleError(.speechRecognitionFailed, "Speech recognition became unavailable")
+        }
+    }
+}
+
+// MARK: - STTProviderDelegate
+extension VoiceManager: STTProviderDelegate {
+    
+    func sttProvider(_ provider: STTProvider, didRecognizeSpeech text: String) {
+        print("🎙️ VoiceManager: STT Provider recognized speech: '\(text)'")
+        
+        // Store final result and process it
+        finalResult = text
+        finishListening()
+    }
+    
+    func sttProvider(_ provider: STTProvider, didReceivePartialTranscript transcript: String) {
+        print("🎙️ VoiceManager: STT Provider partial transcript: '\(transcript)'")
+        
+        // Track speech activity
+        if !hasSpeechStarted && !transcript.isEmpty {
+            hasSpeechStarted = true
+            speechStartTime = Date()
+            print("🗣️ VoiceManager: Speech started")
+        }
+        
+        // Update partial result and emit event
+        partialResult = transcript
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.onPartialResult?(transcript)
+        }
+    }
+    
+    func sttProvider(_ provider: STTProvider, didEncounterError error: Error) {
+        print("❌ VoiceManager: STT Provider error: \(error)")
+        
+        // Handle error based on current retry count
+        if currentRetryCount < maxRetries {
+            scheduleRetry()
+        } else {
+            handleError(.speechRecognitionFailed, error.localizedDescription)
         }
     }
 } 

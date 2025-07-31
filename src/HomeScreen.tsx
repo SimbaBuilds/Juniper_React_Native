@@ -3,8 +3,8 @@ import { View, Text, StyleSheet, SafeAreaView, Platform } from 'react-native';
 import { WakeWordStatus } from './wakeword/components/WakeWordStatus';
 import { WakeWordToggle } from './wakeword/components/WakeWordToggle';
 import { VoiceAssistant } from './voice/components/VoiceAssistant';
-import { VoiceErrorBoundary } from './voice/ErrorBoundary/VoiceErrorBoundary';
 import { useVoice } from './voice/VoiceContext';
+import { colors } from './shared/theme/colors';
 
 export const HomeScreen: React.FC = () => {
   
@@ -24,11 +24,9 @@ export const HomeScreen: React.FC = () => {
           </View>
         )}
         
-        <VoiceErrorBoundary>
-          <View style={styles.voiceAssistantContainer}>
-            <VoiceAssistant onSpeechResult={(text) => console.log('Speech recognized:', text)} />
-          </View>
-        </VoiceErrorBoundary>
+        <View style={styles.voiceAssistantContainer}>
+          <VoiceAssistant onSpeechResult={(text) => console.log('Speech recognized:', text)} />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -55,7 +53,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   subtitle: {
