@@ -18,7 +18,7 @@ interface VoiceButtonProps {
  */
 export const VoiceButton: React.FC<VoiceButtonProps> = ({
   size = 60,
-  color = 'white', // Changed default to white
+  color = '#F5F5DC', // Light beige color
   activeColor = '#2ecc71',
   errorColor = '#e74c3c',
   onPress,
