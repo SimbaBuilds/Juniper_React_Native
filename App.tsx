@@ -21,6 +21,7 @@ import PhoneSignUpPage from './src/auth/PhoneSignUpPage';
 import { AuthProvider, useAuth } from './src/auth/AuthContext';
 import IntegrationCompletionService from './src/integrations/IntegrationCompletionService';
 import { DatabaseService } from './src/supabase/supabase';
+import { colors } from './src/shared/theme/colors';
 
 type RootStackParamList = {
   MainTabs: undefined;
@@ -626,8 +627,8 @@ function MainTabNavigator() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#4A90E2',
-        tabBarInactiveTintColor: '#B0B0B0',
+        tabBarActiveTintColor: colors.text.primary,
+        tabBarInactiveTintColor: colors.text.secondary,
         tabBarStyle: {
           backgroundColor: '#1E1E1E',
           borderTopColor: '#3A3A3A',
@@ -635,7 +636,7 @@ function MainTabNavigator() {
         headerStyle: {
           backgroundColor: '#121212',
         },
-        headerTintColor: '#FFFFFF',
+        headerTintColor: colors.text.primary,
         headerTitleStyle: {
           fontWeight: 'bold',
         },

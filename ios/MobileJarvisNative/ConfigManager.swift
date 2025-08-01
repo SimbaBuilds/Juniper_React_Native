@@ -117,7 +117,7 @@ class ConfigManager: NSObject {
     // MARK: - Server API Configuration
     func getServerApiConfig() -> (baseUrl: String, apiEndpoint: String) {
         return (
-            baseUrl: config["server_api_base_url"] ?? "http://192.168.1.145:8000",
+            baseUrl: config["server_api_base_url"] ?? "https://mobile-jarvis-backend.onrender.com",
             apiEndpoint: config["server_api_endpoint"] ?? "/api/chat"
         )
     }

@@ -63,7 +63,7 @@ class ConfigManager private constructor(private val context: Context) {
      * Get the server API base URL
      */
     fun getServerApiBaseUrl(): String {
-        val propertyValue = properties.getProperty(Constants.Config.SERVER_API_BASE_URL, "http://192.168.1.145:8000")
+        val propertyValue = properties.getProperty(Constants.Config.SERVER_API_BASE_URL, "https://mobile-jarvis-backend.onrender.com")
         return prefs.getString(Constants.Config.SERVER_API_BASE_URL, propertyValue) ?: propertyValue
     }
     
