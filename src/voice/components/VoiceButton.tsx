@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useVoiceState } from '../VoiceContext';
 import { VoiceState } from '../VoiceService';
 import { useWakeWord } from '../../wakeword/WakeWordContext';
+import { colors } from '../../shared/theme/colors';
 
 interface VoiceButtonProps {
   size?: number;
@@ -19,7 +20,7 @@ interface VoiceButtonProps {
 export const VoiceButton: React.FC<VoiceButtonProps> = ({
   size = 60,
   color = '#F5F5DC', // Light beige color
-  activeColor = '#2ecc71',
+  activeColor = colors.button.voiceActive, // Muted green for active state
   errorColor = '#e74c3c',
   onPress,
 }) => {

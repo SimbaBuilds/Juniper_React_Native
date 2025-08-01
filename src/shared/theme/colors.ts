@@ -21,6 +21,7 @@ export const colors = {
     disabled: '#ecf0f1',
     interrupt: '#8B6969', // Muted rose brown
     cancel: '#8B7355', // Muted tan brown
+    voiceActive: '#6B8E6B', // Muted green for voice button active state
   },
   
   // Border colors
