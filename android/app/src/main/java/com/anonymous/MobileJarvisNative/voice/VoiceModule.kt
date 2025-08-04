@@ -121,10 +121,18 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
     fun stopListening(promise: Promise) {
         Log.d(TAG, "stopListening called from JS")
         try {
-            voiceManager.stopListening()
-            promise.resolve(true)
+            // Ensure stopListening runs on main thread since it's called from RN thread
+            Handler(Looper.getMainLooper()).post {
+                try {
+                    voiceManager.stopListening()
+                    promise.resolve(true)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error stopping listening on main thread", e)
+                    promise.reject("ERR_VOICE_STOP", e.message, e)
+                }
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Error stopping listening", e)
+            Log.e(TAG, "Error posting stopListening to main thread", e)
             promise.reject("ERR_VOICE_STOP", e.message, e)
         }
     }

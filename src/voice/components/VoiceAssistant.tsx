@@ -341,7 +341,6 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           
           <View style={styles.chatContainer}>
             {chatHistory.length > 0 ? (
-              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View style={styles.chatListContainer}>
                   <FlatList
                     data={chatHistory}
@@ -349,17 +348,15 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
                     style={styles.chatList}
                     contentContainerStyle={styles.chatListContent}
                     keyboardShouldPersistTaps="always"
-                    keyboardDismissMode="interactive"
+                    keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={true}
                     removeClippedSubviews={false}
                     initialNumToRender={10}
                     maxToRenderPerBatch={10}
                     windowSize={10}
-                    getItemLayout={(data, index) => ({
-                      length: 80, // Approximate height of each message
-                      offset: 80 * index,
-                      index,
-                    })}
+                    scrollEventThrottle={16}
+                    decelerationRate="normal"
+                    bounces={true}
                     renderItem={({ item }) => {
                       return (
                         <View style={[
@@ -387,7 +384,6 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
                     </View>
                   )}
                 </View>
-              </TouchableWithoutFeedback>
             ) : (
               <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View style={styles.emptyChatContainer}>
@@ -594,20 +590,22 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   statusText: {
-    color: colors.text.primary,
+    color: colors.text.white,
     fontSize: 11,
     fontStyle: 'italic',
   },
   statusOverlay: {
     position: 'absolute',
     bottom: 16,
-    left: 16,
-    right: 16,
-    backgroundColor: 'rgba(59, 130, 246, 0.9)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    marginHorizontal: 16,
+    left: 0,
+    right: 0,
+    backgroundColor: `${colors.status.mutedBlue}E6`, // Add opacity (90%)
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
     alignItems: 'center',
+    alignSelf: 'center',
     zIndex: 1000,
     elevation: 1000,
   },
@@ -685,8 +683,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   bottomSection: {
-    paddingBottom: 8,
-    paddingTop: 4,
+    paddingBottom: 4,
+    paddingTop: 2,
   },
   voiceButtonContainer: {
     alignItems: 'center',

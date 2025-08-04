@@ -201,7 +201,7 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
-    paddingVertical: 4,
+    paddingVertical: 2,
     backgroundColor: 'transparent',
   },
   inputRow: {

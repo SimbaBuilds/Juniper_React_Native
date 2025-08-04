@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   },
   voiceAssistantContainer: {
     flex: 1,
-    marginBottom: 24,
+    marginBottom: 8,
   },
   infoSection: {
     backgroundColor: '#1E1E1E',

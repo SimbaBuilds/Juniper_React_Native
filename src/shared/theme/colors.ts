@@ -3,6 +3,7 @@ export const colors = {
   text: {
     primary: '#D4D4C0', // Light beige color
     secondary: '#888888',
+    white: '#FFFFFF',
     disabled: '#95a5a6',
   },
   

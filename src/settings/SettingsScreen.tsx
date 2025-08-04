@@ -43,7 +43,7 @@ const WAKE_WORD_SENSITIVITY_MAP: Record<string, number> = {
   'Hey Juni': 0.02,
   'Hey Juniper': 0.001,
   'Hey': 0.01,
-  'Jarvis': 0.7,
+  'Jarvis': 0.4,
   'Hey Jarvis': 0.9,
   'Jasmine': 0.001,
   'Hey Jade': 0.001,
