@@ -19,7 +19,11 @@ export default {
     },
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.anonymous.MobileJarvisNative"
+      bundleIdentifier: "com.anonymous.MobileJarvisNative",
+      infoPlist: {
+        NSCameraUsageDescription: "This app needs access to camera to take photos for chat messages.",
+        NSPhotoLibraryUsageDescription: "This app needs access to photo library to select images for chat messages."
+      }
     },
     android: {
       adaptiveIcon: {
@@ -27,7 +31,12 @@ export default {
         backgroundColor: "#ffffff"
       },
       edgeToEdgeEnabled: true,
-      package: "com.anonymous.MobileJarvisNative"
+      package: "com.anonymous.MobileJarvisNative",
+      permissions: [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     web: {
       favicon: "./assets/favicon.png"

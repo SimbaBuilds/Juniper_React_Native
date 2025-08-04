@@ -6,10 +6,12 @@ import { useVoice } from '../VoiceContext';
 import { VoiceStatusIndicator } from './VoiceStatusIndicator';
 import { VoiceState } from '../types/voice';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../auth/AuthContext';
 import { NativeModules } from 'react-native';
 import { ConversationHistory } from './ConversationHistory';
 import { TextChatInput } from './TextChatInput';
 import { MarkdownMessage } from './MarkdownMessage';
+import { ChatMessageContent } from './ChatMessageContent';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { colors } from '../../shared/theme/colors';
 
@@ -26,6 +28,7 @@ interface VoiceAssistantProps {
 export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ 
   onSpeechResult 
 }) => {
+  const { user } = useAuth();
   const { 
     isListening,
     isSpeaking,
@@ -139,6 +142,34 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     console.log('🔴 VoiceAssistant: voiceState:', voiceState);
     console.log('🔴 VoiceAssistant: typeof voiceState:', typeof voiceState);
   }, [isSpeaking, voiceState]);
+
+  /**
+   * Handle sending text messages with optional image
+   * This is a wrapper around sendTextMessage to support image uploads
+   */
+  const handleSendMessage = async (text: string, imageUrl?: string) => {
+    if (!user?.id) {
+      Alert.alert('Error', 'User not authenticated');
+      return;
+    }
+
+    try {
+      console.log('📷 Sending message:', { text, imageUrl });
+      
+      // For now, we'll send the text message normally
+      // The image URL will be handled by the backend when we implement the full integration
+      // Future enhancement: We'll need to update sendTextMessage to accept imageUrl and store it in the requests table
+      await sendTextMessage(text || (imageUrl ? 'Image attached' : ''));
+      
+      if (imageUrl) {
+        console.log('📷 Image URL available for backend processing:', imageUrl);
+        // TODO: Implement proper integration with request creation in database
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw error; // Re-throw to let TextChatInput handle the error display
+    }
+  };
 
   /**
    * Handle cancel button press
@@ -299,7 +330,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
                       styles.chatBubble, 
                       item.role === 'user' ? styles.userBubble : styles.assistantBubble
                     ]}>
-                      <MarkdownMessage content={item.content} role={item.role} />
+                      <ChatMessageContent message={item} />
                       <View style={styles.messageFooter}>
                         <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
                       </View>
@@ -365,11 +396,14 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
             </View>
 
             {/* Text input at the bottom */}
-            <TextChatInput 
-              onSendMessage={sendTextMessage}
-              disabled={isListening || isSpeaking}
-              placeholder="Type a message..."
-            />
+            {user?.id && (
+              <TextChatInput 
+                onSendMessage={handleSendMessage}
+                disabled={isListening || isSpeaking}
+                placeholder="Type a message..."
+                userId={user.id}
+              />
+            )}
           </View>
 
           {/* Conversation History Modal */}

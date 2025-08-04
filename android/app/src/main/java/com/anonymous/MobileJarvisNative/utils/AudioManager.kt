@@ -1,10 +1,15 @@
 package com.anonymous.MobileJarvisNative.utils
 
+import android.bluetooth.BluetoothHeadset
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager as AndroidAudioManager
 import android.os.Build
+import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +30,7 @@ class AudioManager private constructor() {
     // Android AudioManager
     private var androidAudioManager: AndroidAudioManager? = null
     private var currentAudioFocusRequest: AudioFocusRequest? = null
+    private var context: Context? = null
     
     // Audio focus state
     private val _audioFocusState = MutableStateFlow<AudioFocusState>(AudioFocusState.NONE)
@@ -33,6 +39,14 @@ class AudioManager private constructor() {
     // Request queue for priority management
     private val requestQueue = ConcurrentLinkedQueue<AudioFocusRequestInfo>()
     private var currentRequestInfo: AudioFocusRequestInfo? = null
+    
+    // Bluetooth audio route monitoring
+    private var bluetoothReceiver: BroadcastReceiver? = null
+    private var isBluetoothReceiverRegistered = false
+    private val mainHandler = Handler(Looper.getMainLooper())
+    
+    // Audio route change listeners
+    private val audioRouteChangeListeners = mutableListOf<(Boolean) -> Unit>()
     
     // Coroutine scope for async operations
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
@@ -85,8 +99,232 @@ class AudioManager private constructor() {
      * Initialize the audio manager
      */
     fun initialize(context: Context) {
+        this.context = context
         androidAudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AndroidAudioManager
-        Log.i(TAG, "AudioManager initialized")
+        setupBluetoothAudioRouteMonitoring()
+        Log.i(TAG, "AudioManager initialized with Bluetooth monitoring")
+    }
+    
+    /**
+     * Setup Bluetooth audio route monitoring
+     */
+    private fun setupBluetoothAudioRouteMonitoring() {
+        Log.d(TAG, "Setting up Bluetooth audio route monitoring...")
+        
+        bluetoothReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                when (intent?.action) {
+                    AndroidAudioManager.ACTION_SCO_AUDIO_STATE_UPDATED -> {
+                        val state = intent.getIntExtra(AndroidAudioManager.EXTRA_SCO_AUDIO_STATE, -1)
+                        handleScoAudioStateChange(state)
+                    }
+                    AndroidAudioManager.ACTION_HEADSET_PLUG -> {
+                        val state = intent.getIntExtra("state", -1)
+                        val name = intent.getStringExtra("name")
+                        handleHeadsetPlugChange(state, name)
+                    }
+                    BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED -> {
+                        val state = intent.getIntExtra(BluetoothHeadset.EXTRA_STATE, -1)
+                        handleBluetoothConnectionStateChange(state)
+                    }
+                    BluetoothHeadset.ACTION_AUDIO_STATE_CHANGED -> {
+                        val state = intent.getIntExtra(BluetoothHeadset.EXTRA_STATE, -1)
+                        handleBluetoothAudioStateChange(state)
+                    }
+                }
+            }
+        }
+        
+        // Register the receiver
+        registerBluetoothReceiver()
+    }
+    
+    private fun registerBluetoothReceiver() {
+        context?.let { ctx ->
+            if (!isBluetoothReceiverRegistered && bluetoothReceiver != null) {
+                val filter = IntentFilter().apply {
+                    addAction(AndroidAudioManager.ACTION_SCO_AUDIO_STATE_UPDATED)
+                    addAction(AndroidAudioManager.ACTION_HEADSET_PLUG)
+                    addAction(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED)
+                    addAction(BluetoothHeadset.ACTION_AUDIO_STATE_CHANGED)
+                }
+                
+                try {
+                    ctx.registerReceiver(bluetoothReceiver, filter)
+                    isBluetoothReceiverRegistered = true
+                    Log.d(TAG, "Bluetooth audio route receiver registered")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to register Bluetooth receiver: ${e.message}")
+                }
+            }
+        }
+    }
+    
+    private fun unregisterBluetoothReceiver() {
+        context?.let { ctx ->
+            if (isBluetoothReceiverRegistered && bluetoothReceiver != null) {
+                try {
+                    ctx.unregisterReceiver(bluetoothReceiver)
+                    isBluetoothReceiverRegistered = false
+                    Log.d(TAG, "Bluetooth audio route receiver unregistered")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to unregister Bluetooth receiver: ${e.message}")
+                }
+            }
+        }
+    }
+    
+    // MARK: - Bluetooth Audio Route Event Handlers
+    
+    private fun handleScoAudioStateChange(state: Int) {
+        Log.d(TAG, "SCO Audio state changed: $state")
+        when (state) {
+            AndroidAudioManager.SCO_AUDIO_STATE_CONNECTED -> {
+                Log.i(TAG, "🔵 Bluetooth SCO audio connected")
+                notifyAudioRouteChange(true)
+            }
+            AndroidAudioManager.SCO_AUDIO_STATE_DISCONNECTED -> {
+                Log.i(TAG, "🔵 Bluetooth SCO audio disconnected")
+                handleBluetoothDisconnection()
+            }
+            AndroidAudioManager.SCO_AUDIO_STATE_CONNECTING -> {
+                Log.d(TAG, "🔵 Bluetooth SCO audio connecting...")
+            }
+            AndroidAudioManager.SCO_AUDIO_STATE_ERROR -> {
+                Log.w(TAG, "🔵 Bluetooth SCO audio error")
+                handleBluetoothError()
+            }
+        }
+    }
+    
+    private fun handleHeadsetPlugChange(state: Int, name: String?) {
+        Log.d(TAG, "Headset plug changed: state=$state, name=$name")
+        when (state) {
+            0 -> {
+                Log.i(TAG, "🎧 Headset disconnected: $name")
+                notifyAudioRouteChange(false)
+            }
+            1 -> {
+                Log.i(TAG, "🎧 Headset connected: $name")
+                notifyAudioRouteChange(true)
+            }
+        }
+    }
+    
+    private fun handleBluetoothConnectionStateChange(state: Int) {
+        Log.d(TAG, "Bluetooth connection state changed: $state")
+        when (state) {
+            BluetoothHeadset.STATE_CONNECTED -> {
+                Log.i(TAG, "🔵 Bluetooth headset connected")
+                notifyAudioRouteChange(true)
+            }
+            BluetoothHeadset.STATE_DISCONNECTED -> {
+                Log.i(TAG, "🔵 Bluetooth headset disconnected")
+                handleBluetoothDisconnection()
+            }
+        }
+    }
+    
+    private fun handleBluetoothAudioStateChange(state: Int) {
+        Log.d(TAG, "Bluetooth audio state changed: $state")
+        when (state) {
+            BluetoothHeadset.STATE_AUDIO_CONNECTED -> {
+                Log.i(TAG, "🔵 Bluetooth audio connected")
+                notifyAudioRouteChange(true)
+            }
+            BluetoothHeadset.STATE_AUDIO_DISCONNECTED -> {
+                Log.i(TAG, "🔵 Bluetooth audio disconnected")
+                handleBluetoothDisconnection()
+            }
+        }
+    }
+    
+    private fun handleBluetoothDisconnection() {
+        Log.w(TAG, "Handling Bluetooth disconnection...")
+        
+        // If we have active audio focus, attempt recovery
+        if (_audioFocusState.value != AudioFocusState.NONE) {
+            Log.w(TAG, "Active audio focus detected during Bluetooth disconnection, attempting recovery...")
+            
+            // Notify listeners about the disconnection
+            notifyAudioRouteChange(false, isBluetoothDisconnection = true)
+            
+            // Schedule audio session recovery after a brief delay
+            mainHandler.postDelayed({
+                attemptAudioSessionRecovery()
+            }, 500)
+        } else {
+            // Just notify about the disconnection
+            notifyAudioRouteChange(false, isBluetoothDisconnection = true)
+        }
+    }
+    
+    private fun handleBluetoothError() {
+        Log.e(TAG, "Bluetooth audio error occurred")
+        
+        // Similar to disconnection but might be recoverable
+        if (_audioFocusState.value != AudioFocusState.NONE) {
+            Log.w(TAG, "Attempting recovery from Bluetooth audio error...")
+            mainHandler.postDelayed({
+                attemptAudioSessionRecovery()
+            }, 1000) // Longer delay for error recovery
+        }
+    }
+    
+    private fun attemptAudioSessionRecovery() {
+        Log.i(TAG, "Attempting audio session recovery...")
+        
+        val currentRequest = currentRequestInfo
+        if (currentRequest != null) {
+            Log.i(TAG, "Recovering audio session for: ${currentRequest.requestType}")
+            
+            // Release current focus and try to reacquire
+            releaseAudioFocus(currentRequest.requestId)
+            
+            // Request focus again after a short delay
+            mainHandler.postDelayed({
+                requestAudioFocus(
+                    currentRequest.requestType,
+                    "${currentRequest.requestId}_recovery",
+                    currentRequest.onFocusGained,
+                    currentRequest.onFocusLost,
+                    currentRequest.onFocusDucked
+                )
+            }, 200)
+        }
+    }
+    
+    private fun notifyAudioRouteChange(isConnected: Boolean, isBluetoothDisconnection: Boolean = false) {
+        Log.d(TAG, "Notifying audio route change: connected=$isConnected, bluetoothDisconnection=$isBluetoothDisconnection")
+        
+        // Notify all registered listeners
+        audioRouteChangeListeners.forEach { listener ->
+            try {
+                listener(isConnected)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error notifying audio route change listener: ${e.message}")
+            }
+        }
+    }
+    
+    // MARK: - Public API for Audio Route Monitoring
+    
+    fun addAudioRouteChangeListener(listener: (Boolean) -> Unit) {
+        audioRouteChangeListeners.add(listener)
+        Log.d(TAG, "Added audio route change listener. Total listeners: ${audioRouteChangeListeners.size}")
+    }
+    
+    fun removeAudioRouteChangeListener(listener: (Boolean) -> Unit) {
+        audioRouteChangeListeners.remove(listener)
+        Log.d(TAG, "Removed audio route change listener. Total listeners: ${audioRouteChangeListeners.size}")
+    }
+    
+    fun cleanup() {
+        Log.i(TAG, "Cleaning up AudioManager...")
+        unregisterBluetoothReceiver()
+        audioRouteChangeListeners.clear()
+        currentRequestInfo = null
+        requestQueue.clear()
     }
     
     /**

@@ -1,7 +1,7 @@
 import 'react-native-url-polyfill/auto'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createClient } from '@supabase/supabase-js'
-import { HotPhrase } from './tables'
+import { HotPhrase, Request } from './tables'
 import { DEFAULT_WAKE_PHRASE } from '../wakeword/constants';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
@@ -913,6 +913,32 @@ export const DatabaseService = {
     }
     
     return data?.status || null;
+  },
+
+  async createRequest(userId: string, requestData: {
+    request_id: string;
+    request_type: string;
+    status?: string;
+    metadata?: Record<string, any>;
+    image_url?: string;
+  }): Promise<Request> {
+    const { data, error } = await supabase
+      .from('requests')
+      .insert({
+        user_id: userId,
+        request_id: requestData.request_id,
+        request_type: requestData.request_type,
+        status: requestData.status || 'pending',
+        metadata: requestData.metadata || {},
+        image_url: requestData.image_url,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
   },
 }
         

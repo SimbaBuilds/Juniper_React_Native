@@ -53,7 +53,8 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
     }
     
     if (isListening) {
-      // If currently listening, stop listening
+      // If currently listening, stop listening (tap-to-stop functionality)
+      console.log('🎤 VOICE_BUTTON: Tap-to-stop - stopping listening');
       await stopListening();
     } else if (isSpeaking) {
       // If currently speaking, interrupt the speech
@@ -86,13 +87,13 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
   // Determine the icon based on state
   const getIcon = () => {
     if (isListening) {
-      return 'mic';
+      return 'mic'; // Solid mic icon when listening (tap to stop)
     } else if (isSpeaking) {
       return 'volume-high';
     } else if (isError) {
       return 'warning';
     }
-    return 'mic-outline';
+    return 'mic-outline'; // Outline mic icon when idle (tap to start)
   };
   
   // Determine the color based on state

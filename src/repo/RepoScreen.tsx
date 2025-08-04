@@ -319,6 +319,9 @@ export const RepoScreen: React.FC = () => {
                           {resource.title && (
                             <Text style={styles.resourceTitle}>{resource.title}</Text>
                           )}
+                          <Text style={styles.regularRelevanceScore}>
+                            {Math.round(resource.relevance_score)}%
+                          </Text>
                         </View>
                         
                         {resource.instructions && (
@@ -1199,6 +1202,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#FF6B35',
+    marginLeft: 'auto',
+  },
+  regularRelevanceScore: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4A90E2',
     marginLeft: 'auto',
   },
   expiringResourceActions: {

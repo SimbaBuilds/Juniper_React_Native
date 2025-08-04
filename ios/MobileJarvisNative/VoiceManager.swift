@@ -97,6 +97,11 @@ class VoiceManager: NSObject {
         loadConfiguration()
         setupSpeechRecognizer()
         loadSTTProvider()
+        setupAudioRouteObserver()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     // MARK: - Configuration Loading
@@ -146,6 +151,83 @@ class VoiceManager: NSObject {
         
         speechRecognizer.delegate = self
         print("✅ VoiceManager: Speech recognizer setup complete for locale: \(locale)")
+    }
+    
+    // MARK: - Audio Route Observer Setup
+    private func setupAudioRouteObserver() {
+        print("🎙️ VoiceManager: Setting up audio route observer...")
+        
+        // Listen for audio device disconnections
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioDeviceDisconnected(_:)),
+            name: .audioDeviceDisconnected,
+            object: nil
+        )
+        
+        // Listen for audio session recovery failures
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioSessionRecoveryFailed(_:)),
+            name: .audioSessionRecoveryFailed,
+            object: nil
+        )
+        
+        print("✅ VoiceManager: Audio route observer setup complete")
+    }
+    
+    @objc private func handleAudioDeviceDisconnected(_ notification: Notification) {
+        print("🎙️ VoiceManager: ========== AUDIO DEVICE DISCONNECTED ==========")
+        
+        guard let userInfo = notification.object as? [String: Any],
+              let deviceType = userInfo["deviceType"] as? String else {
+            print("🎙️ VoiceManager: No device type information in notification")
+            return
+        }
+        
+        print("🎙️ VoiceManager: Device disconnected: \(deviceType)")
+        
+        // If we're currently listening, we need to handle the disconnection gracefully
+        if isListening {
+            print("🎙️ VoiceManager: Currently listening when \(deviceType) disconnected, handling gracefully...")
+            
+            if deviceType == "bluetooth" {
+                handleBluetoothDisconnectionDuringListening()
+            } else {
+                print("🎙️ VoiceManager: Non-Bluetooth device disconnected, continuing with current session")
+            }
+        }
+    }
+    
+    @objc private func handleAudioSessionRecoveryFailed(_ notification: Notification) {
+        print("🎙️ VoiceManager: ========== AUDIO SESSION RECOVERY FAILED ==========")
+        
+        guard let userInfo = notification.object as? [String: Any],
+              let previousFocus = userInfo["previousFocus"] as? String else {
+            print("🎙️ VoiceManager: No previous focus information in recovery failure notification")
+            return
+        }
+        
+        print("🎙️ VoiceManager: Audio session recovery failed for: \(previousFocus)")
+        
+        // If we were listening and recovery failed, stop and show error
+        if isListening && previousFocus == "recording" {
+            print("🎙️ VoiceManager: Recording session recovery failed, stopping listening...")
+            handleError(.audioSessionFailed, "Audio session recovery failed after device disconnection")
+        }
+    }
+    
+    private func handleBluetoothDisconnectionDuringListening() {
+        print("🎙️ VoiceManager: Handling Bluetooth disconnection during listening...")
+        
+        // Stop current listening session cleanly
+        stopListening()
+        
+        // Try to restart listening after a delay to allow audio session recovery
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            print("🎙️ VoiceManager: Attempting to restart listening after Bluetooth disconnection...")
+            self.startListening()
+        }
     }
     
     // MARK: - State Management
@@ -271,10 +353,20 @@ class VoiceManager: NSObject {
     
     // MARK: - Native STT Setup
     private func setupNativeSTT() {
+        print("🎙️ VoiceManager: Setting up Native STT...")
+        
         // Cancel any existing recognition
         if let recognitionTask = recognitionTask {
+            print("🎙️ VoiceManager: Canceling existing recognition task...")
             recognitionTask.cancel()
             self.recognitionTask = nil
+        }
+        
+        // Clean up audio engine if it's running
+        if audioEngine.isRunning {
+            print("🎙️ VoiceManager: Stopping existing audio engine...")
+            audioEngine.stop()
+            audioEngine.inputNode.removeTap(onBus: 0)
         }
         
         // Create recognition request
@@ -289,24 +381,47 @@ class VoiceManager: NSObject {
         
         recognitionRequest.shouldReportPartialResults = true
         
-        // Get audio input node
+        // Get audio input node with error handling
         let inputNode = audioEngine.inputNode
         let recordingFormat = inputNode.outputFormat(forBus: 0)
         
-        // Install tap on input node
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
-            self.recognitionRequest?.append(buffer)
+        print("🎙️ VoiceManager: Audio input node format: \(recordingFormat)")
+        
+        // Install tap on input node with error handling
+        do {
+            // Remove any existing tap first
+            if audioEngine.isRunning {
+                inputNode.removeTap(onBus: 0)
+            }
+            
+            inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
+                self.recognitionRequest?.append(buffer)
+            }
+            print("✅ VoiceManager: Audio tap installed successfully")
+        } catch {
+            print("❌ VoiceManager: Failed to install audio tap: \(error)")
+            handleError(.audioSessionError, "Failed to install audio tap: \(error.localizedDescription)")
+            return
         }
         
-        // Prepare audio engine
-        audioEngine.prepare()
+        // Prepare audio engine with error handling
+        do {
+            print("🎙️ VoiceManager: Preparing audio engine...")
+            audioEngine.prepare()
+            print("✅ VoiceManager: Audio engine prepared successfully")
+        } catch {
+            print("❌ VoiceManager: Failed to prepare audio engine: \(error)")
+            handleError(.audioSessionError, "Failed to prepare audio engine: \(error.localizedDescription)")
+            return
+        }
         
         // Start recognition task
+        print("🎙️ VoiceManager: Starting recognition task...")
         recognitionTask = speechRecognizer?.recognitionTask(with: recognitionRequest) { result, error in
             self.handleRecognitionResult(result: result, error: error)
         }
         
-        // Start audio engine
+        // Start audio engine with enhanced error handling
         do {
             print("🎙️ VoiceManager: About to start audio engine...")
             print("🎙️ VoiceManager: Audio engine running status before start: \(audioEngine.isRunning)")
@@ -320,8 +435,63 @@ class VoiceManager: NSObject {
         } catch {
             print("❌ VoiceManager: Failed to start audio engine: \(error)")
             print("❌ VoiceManager: Error details: \(error.localizedDescription)")
+            print("❌ VoiceManager: Error code: \((error as NSError).code)")
+            
+            // Clean up on failure
+            cleanupAudioResources()
+            
+            // Check if it's an audio session error that might be recoverable
+            let nsError = error as NSError
+            if nsError.domain == NSOSStatusErrorDomain {
+                handleAudioEngineError(nsError)
+            } else {
+                scheduleRetry()
+            }
+        }
+    }
+    
+    private func handleAudioEngineError(_ error: NSError) {
+        print("🎙️ VoiceManager: Handling audio engine error with code: \(error.code)")
+        
+        switch error.code {
+        case -50: // Invalid parameter
+            print("🎙️ VoiceManager: Invalid parameter error, attempting recovery...")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.scheduleRetry()
+            }
+        case 561015905: // Audio session error
+            print("🎙️ VoiceManager: Audio session error, attempting recovery...")
+            handleError(.audioSessionError, "Audio engine failed to start due to session error")
+        default:
+            print("🎙️ VoiceManager: Unknown audio engine error, scheduling retry...")
             scheduleRetry()
         }
+    }
+    
+    private func cleanupAudioResources() {
+        print("🎙️ VoiceManager: Cleaning up audio resources...")
+        
+        // Stop audio engine if running
+        if audioEngine.isRunning {
+            audioEngine.stop()
+        }
+        
+        // Remove audio tap
+        do {
+            audioEngine.inputNode.removeTap(onBus: 0)
+        } catch {
+            print("🎙️ VoiceManager: Note: No tap to remove or error removing tap: \(error)")
+        }
+        
+        // Cancel recognition task
+        recognitionTask?.cancel()
+        recognitionTask = nil
+        
+        // End recognition request
+        recognitionRequest?.endAudio()
+        recognitionRequest = nil
+        
+        print("✅ VoiceManager: Audio resources cleaned up")
     }
     
     // MARK: - Deepgram STT Setup
@@ -536,9 +706,22 @@ class VoiceManager: NSObject {
     
     // MARK: - Retry Logic
     private func scheduleRetry() {
+        print("🔄 VoiceManager: Scheduling retry (attempt \(currentRetryCount + 1) of \(maxRetries))")
+        
+        // Clean up current session
         stopListening()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + retryDelay) {
+        // Clean up any remaining audio resources
+        cleanupAudioResources()
+        
+        // Release audio focus to allow fresh start
+        audioManager.releaseAudioFocus()
+        
+        // Schedule retry with exponential backoff
+        let backoffDelay = retryDelay * Double(currentRetryCount + 1)
+        print("🔄 VoiceManager: Retrying in \(backoffDelay) seconds...")
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + backoffDelay) {
             print("🔄 VoiceManager: Retrying speech recognition")
             self.startListeningWithRetry()
         }
@@ -803,19 +986,9 @@ class VoiceManager: NSObject {
     }
     
     private func stopNativeSTT() {
-        // Stop audio engine
-        if audioEngine.isRunning {
-            audioEngine.stop()
-            audioEngine.inputNode.removeTap(onBus: 0)
-        }
-        
-        // Cancel recognition
-        recognitionTask?.cancel()
-        recognitionRequest?.endAudio()
-        
-        // Reset
-        recognitionTask = nil
-        recognitionRequest = nil
+        print("🎙️ VoiceManager: Stopping Native STT...")
+        cleanupAudioResources()
+        print("✅ VoiceManager: Native STT stopped")
     }
     
     private func stopDeepgramSTT() {

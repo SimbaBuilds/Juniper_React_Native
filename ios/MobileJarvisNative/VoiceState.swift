@@ -53,7 +53,8 @@ import Foundation
     case apiError = 3
     case configurationError = 4
     case audioSessionError = 5
-    case unknownError = 6
+    case audioSessionFailed = 6
+    case unknownError = 7
     
     var description: String {
         switch self {
@@ -69,6 +70,8 @@ import Foundation
             return "Configuration error"
         case .audioSessionError:
             return "Audio session error"
+        case .audioSessionFailed:
+            return "Audio session failed"
         case .unknownError:
             return "Unknown error"
         }

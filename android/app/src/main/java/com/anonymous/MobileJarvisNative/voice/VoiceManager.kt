@@ -115,7 +115,11 @@ class VoiceManager private constructor() {
         
         // Initialize centralized AudioManager
         Log.d(TAG, "Initializing centralized AudioManager")
-        com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().initialize(context)
+        val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+        audioManager.initialize(context)
+        
+        // Setup audio route change listener for Bluetooth disconnection handling
+        setupAudioRouteChangeListener()
         
         // Initialize TextToSpeechManager early to ensure it's ready
         Log.d(TAG, "Initializing TextToSpeechManager")
@@ -296,6 +300,63 @@ class VoiceManager private constructor() {
                 Log.e(TAG, "Error initializing Deepgram for future use: ${e.message}", e)
             }
         }
+    }
+    
+    /**
+     * Setup audio route change listener for Bluetooth disconnection handling
+     */
+    private fun setupAudioRouteChangeListener() {
+        Log.d(TAG, "Setting up audio route change listener for Bluetooth handling...")
+        
+        val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+        audioManager.addAudioRouteChangeListener { isConnected ->
+            handleAudioRouteChange(isConnected)
+        }
+        
+        Log.i(TAG, "✅ Audio route change listener setup complete")
+    }
+    
+    /**
+     * Handle audio route changes (Bluetooth disconnection, etc.)
+     */
+    private fun handleAudioRouteChange(isConnected: Boolean) {
+        Log.i(TAG, "========== AUDIO ROUTE CHANGE ==========")
+        Log.i(TAG, "Audio device connected: $isConnected")
+        Log.i(TAG, "Current voice state: ${_voiceState.value}")
+        Log.i(TAG, "Is listening: $isListening")
+        
+        // If audio device disconnected while we're listening, handle gracefully
+        if (!isConnected && isListening) {
+            Log.w(TAG, "🔵 Audio device disconnected while listening - handling gracefully...")
+            handleAudioDeviceDisconnectionDuringListening()
+        }
+        
+        Log.i(TAG, "========================================")
+    }
+    
+    /**
+     * Handle audio device disconnection during active listening
+     */
+    private fun handleAudioDeviceDisconnectionDuringListening() {
+        Log.w(TAG, "Handling audio device disconnection during listening...")
+        
+        // Stop current listening session
+        Log.i(TAG, "Stopping current listening session due to device disconnection...")
+        stopListening()
+        
+        // Wait a moment for audio system to stabilize, then attempt to restart
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (!isListening) { // Only restart if we're not already listening again
+                Log.i(TAG, "Attempting to restart listening after audio device disconnection...")
+                try {
+                    startListening()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to restart listening after device disconnection: ${e.message}")
+                    // If restart fails, set error state
+                    _voiceState.value = VoiceState.ERROR("Failed to restart listening after device disconnection")
+                }
+            }
+        }, 1000) // 1 second delay to allow audio system recovery
     }
     
     /**

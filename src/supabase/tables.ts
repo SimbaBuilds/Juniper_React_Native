@@ -352,13 +352,14 @@ export type UserProfile = {
     request_type: string;            // Type of request (chat, integration, etc.)
     status: string;                  // pending, processing, completed, failed, cancelled
     metadata: Record<string, any>;   // Additional request context and data
+    image_url?: string;              // Optional image URL for chat requests with image attachments
     created_at: Date;
     updated_at: Date;
   };
 
   export const requestFields = [
     'id', 'user_id', 'request_id', 'request_type', 'status',
-    'metadata', 'created_at', 'updated_at'
+    'metadata', 'image_url', 'created_at', 'updated_at'
   ] as const;
   export type RequestField = (typeof requestFields)[number];
 

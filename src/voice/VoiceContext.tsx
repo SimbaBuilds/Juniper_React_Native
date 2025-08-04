@@ -59,6 +59,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: number;
+  imageUrl?: string; // Optional image URL for messages with image attachments
 }
 
 // Auto-refresh constants

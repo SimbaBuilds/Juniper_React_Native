@@ -212,8 +212,22 @@ class AudioManager: NSObject {
         // Store current settings
         storePreviousAudioSettings()
         
-        try audioSession.setCategory(.record, mode: .measurement, options: [.allowBluetooth])
-        try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        do {
+            // Try with Bluetooth support first
+            try audioSession.setCategory(.record, mode: .measurement, options: [.allowBluetooth])
+        } catch {
+            print("🔊 AUDIO_MANAGER: ⚠️ Failed to set category with Bluetooth, trying without: \(error)")
+            // Fallback without Bluetooth if it fails
+            try audioSession.setCategory(.record, mode: .measurement, options: [])
+        }
+        
+        do {
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        } catch {
+            print("🔊 AUDIO_MANAGER: ⚠️ Failed to activate with notifyOthers, trying without: \(error)")
+            // Fallback activation without notification
+            try audioSession.setActive(true)
+        }
         
         currentFocus = .recording
         
@@ -232,13 +246,25 @@ class AudioManager: NSObject {
         storePreviousAudioSettings()
         
         NSLog("🔊 AUDIO_MANAGER: Setting category to playback...")
-        // Use simpler configuration to avoid OSStatus error -50
-        try audioSession.setCategory(.playback, mode: .default, options: [])
-        NSLog("🔊 AUDIO_MANAGER: Category set successfully")
+        do {
+            // Try with default options first
+            try audioSession.setCategory(.playback, mode: .default, options: [])
+            NSLog("🔊 AUDIO_MANAGER: Category set successfully")
+        } catch {
+            NSLog("🔊 AUDIO_MANAGER: ⚠️ Failed to set playback category, trying with spokenAudio mode: %@", error.localizedDescription)
+            // Fallback to spoken audio mode which might work better
+            try audioSession.setCategory(.playback, mode: .spokenAudio, options: [])
+        }
         
         NSLog("🔊 AUDIO_MANAGER: Activating audio session...")
-        try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-        NSLog("🔊 AUDIO_MANAGER: Audio session activated successfully")
+        do {
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            NSLog("🔊 AUDIO_MANAGER: Audio session activated successfully")
+        } catch {
+            NSLog("🔊 AUDIO_MANAGER: ⚠️ Failed to activate with notifyOthers, trying without: %@", error.localizedDescription)
+            // Fallback activation without notification
+            try audioSession.setActive(true)
+        }
         
         currentFocus = .playback
         NSLog("🔊 AUDIO_MANAGER: Current focus set to: %@", String(describing: currentFocus))
@@ -621,18 +647,7 @@ class AudioManager: NSObject {
             
         case .oldDeviceUnavailable:
             print("🔊 AUDIO_MANAGER: 🎧 Audio device disconnected")
-            
-            // If headphones were disconnected, might want to pause/stop audio
-            if let previousRoute = userInfo[AVAudioSessionRouteChangePreviousRouteKey] as? AVAudioSessionRouteDescription {
-                let wasUsingHeadphones = previousRoute.outputs.contains { output in
-                    output.portType == .headphones || output.portType == .headsetMic
-                }
-                
-                if wasUsingHeadphones {
-                    print("🔊 AUDIO_MANAGER: 🎧 Headphones disconnected - may need to pause audio")
-                    NotificationCenter.default.post(name: .audioDeviceDisconnected, object: ["deviceType": "headphones"])
-                }
-            }
+            handleDeviceDisconnection(userInfo)
             
         case .categoryChange:
             print("🔊 AUDIO_MANAGER: 📱 Audio category changed")
@@ -645,6 +660,7 @@ class AudioManager: NSObject {
             
         case .noSuitableRouteForCategory:
             print("🔊 AUDIO_MANAGER: ❌ No suitable route for category")
+            handleNoSuitableRoute()
             
         case .routeConfigurationChange:
             print("🔊 AUDIO_MANAGER: ⚙️ Route configuration changed")
@@ -655,6 +671,124 @@ class AudioManager: NSObject {
         
         // Post general route change notification
         NotificationCenter.default.post(name: .audioRouteChanged, object: ["route": currentRoute, "reason": reason])
+    }
+    
+    /**
+     * Handle device disconnection with proper recovery
+     */
+    private func handleDeviceDisconnection(_ userInfo: [AnyHashable: Any]) {
+        print("🔊 AUDIO_MANAGER: Handling device disconnection...")
+        
+        guard let previousRoute = userInfo[AVAudioSessionRouteChangePreviousRouteKey] as? AVAudioSessionRouteDescription else {
+            print("🔊 AUDIO_MANAGER: No previous route information available")
+            return
+        }
+        
+        // Check what type of device was disconnected
+        let wasUsingBluetooth = previousRoute.outputs.contains { output in
+            output.portType == .bluetoothHFP || output.portType == .bluetoothA2DP || output.portType == .bluetoothLE
+        }
+        
+        let wasUsingHeadphones = previousRoute.outputs.contains { output in
+            output.portType == .headphones || output.portType == .headsetMic
+        }
+        
+        if wasUsingBluetooth {
+            print("🔊 AUDIO_MANAGER: 🔵 Bluetooth device disconnected")
+            handleBluetoothDisconnection()
+        } else if wasUsingHeadphones {
+            print("🔊 AUDIO_MANAGER: 🎧 Headphones disconnected")
+            NotificationCenter.default.post(name: .audioDeviceDisconnected, object: ["deviceType": "headphones"])
+        }
+    }
+    
+    /**
+     * Handle Bluetooth disconnection with proper audio session recovery
+     */
+    private func handleBluetoothDisconnection() {
+        print("🔊 AUDIO_MANAGER: Handling Bluetooth disconnection...")
+        
+        // If we have active audio focus, we need to recover the audio session
+        if currentFocus != .none {
+            print("🔊 AUDIO_MANAGER: Active audio focus detected, attempting recovery...")
+            
+            // Post notification first to inform voice components
+            NotificationCenter.default.post(name: .audioDeviceDisconnected, object: ["deviceType": "bluetooth"])
+            
+            // Attempt to recover audio session after a brief delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.recoverAudioSession()
+            }
+        } else {
+            // Just notify about the disconnection
+            NotificationCenter.default.post(name: .audioDeviceDisconnected, object: ["deviceType": "bluetooth"])
+        }
+    }
+    
+    /**
+     * Handle no suitable route scenario
+     */
+    private func handleNoSuitableRoute() {
+        print("🔊 AUDIO_MANAGER: No suitable route available, attempting recovery...")
+        
+        // This can happen when Bluetooth disconnects during active audio
+        if currentFocus != .none {
+            print("🔊 AUDIO_MANAGER: Attempting to recover from no suitable route...")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self.recoverAudioSession()
+            }
+        }
+    }
+    
+    /**
+     * Recover audio session after route changes or disconnections
+     */
+    private func recoverAudioSession() {
+        print("🔊 AUDIO_MANAGER: Attempting audio session recovery...")
+        
+        let previousFocus = currentFocus
+        
+        // Reset current focus
+        currentFocus = .none
+        
+        // Try to restore the audio session based on what was previously active
+        switch previousFocus {
+        case .recording:
+            print("🔊 AUDIO_MANAGER: Recovering recording audio session...")
+            requestAudioFocus(.recording) { success in
+                if success {
+                    print("🔊 AUDIO_MANAGER: ✅ Recording audio session recovered")
+                } else {
+                    print("🔊 AUDIO_MANAGER: ❌ Failed to recover recording audio session")
+                    NotificationCenter.default.post(name: .audioSessionRecoveryFailed, object: ["previousFocus": "recording"])
+                }
+            }
+            
+        case .playback:
+            print("🔊 AUDIO_MANAGER: Recovering playback audio session...")
+            requestAudioFocus(.playback) { success in
+                if success {
+                    print("🔊 AUDIO_MANAGER: ✅ Playback audio session recovered")
+                } else {
+                    print("🔊 AUDIO_MANAGER: ❌ Failed to recover playback audio session")
+                    NotificationCenter.default.post(name: .audioSessionRecoveryFailed, object: ["previousFocus": "playback"])
+                }
+            }
+            
+        case .playAndRecord:
+            print("🔊 AUDIO_MANAGER: Recovering play and record audio session...")
+            requestAudioFocus(.playAndRecord) { success in
+                if success {
+                    print("🔊 AUDIO_MANAGER: ✅ Play and record audio session recovered")
+                } else {
+                    print("🔊 AUDIO_MANAGER: ❌ Failed to recover play and record audio session")
+                    NotificationCenter.default.post(name: .audioSessionRecoveryFailed, object: ["previousFocus": "playAndRecord"])
+                }
+            }
+            
+        case .none:
+            print("🔊 AUDIO_MANAGER: No previous focus to recover")
+        }
     }
     
     @objc private func handleMediaServicesReset(_ notification: Notification) {
@@ -709,6 +843,7 @@ extension Notification.Name {
     static let audioInterruptionEnded = Notification.Name("AudioInterruptionEnded")
     static let audioRouteChanged = Notification.Name("AudioRouteChanged")
     static let audioDeviceDisconnected = Notification.Name("AudioDeviceDisconnected")
+    static let audioSessionRecoveryFailed = Notification.Name("AudioSessionRecoveryFailed")
     static let audioServicesReset = Notification.Name("AudioServicesReset")
     static let phoneCallStarted = Notification.Name("PhoneCallStarted")
     static let phoneCallEnded = Notification.Name("PhoneCallEnded")
