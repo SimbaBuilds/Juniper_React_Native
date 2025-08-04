@@ -21,9 +21,9 @@ export const VoiceStatusIndicator: React.FC = () => {
   
   // Determine indicator color based on locally derived state (removed error)
   const getStatusColor = () => {
-    if (isSpeaking) return 'blue';
-    if (isListening) return 'green';
-    return 'gray';
+    if (isSpeaking) return colors.status.mutedBlue;
+    if (isListening) return colors.status.mutedGreen;
+    return colors.text.secondary;
   };
   
   // Get status text to display with case-insensitive matching (removed error)

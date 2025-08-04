@@ -11,8 +11,8 @@ export const WakeWordStatus: React.FC = () => {
     const selectedWakeWord = voiceSettings?.selectedWakeWord || DEFAULT_WAKE_PHRASE;
 
     const getStatusColor = () => {
-        if (!isEnabled) return '#666666';
-        return isRunning ? '#4CAF50' : '#FFA000';
+        if (!isEnabled) return colors.status.disabled;
+        return isRunning ? colors.status.mutedGreen : colors.status.warning;
     };
 
     const getStatusText = () => {
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: 8,
-        backgroundColor: '#1E1E1E',
+        backgroundColor: colors.background.dark,
         borderRadius: 8,
     },
     indicator: {

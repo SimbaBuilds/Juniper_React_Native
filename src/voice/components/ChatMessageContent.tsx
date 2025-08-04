@@ -79,7 +79,7 @@ export const ChatMessageContent: React.FC<ChatMessageContentProps> = ({ message 
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    width: '100%',
   },
   imageContainer: {
     position: 'relative',

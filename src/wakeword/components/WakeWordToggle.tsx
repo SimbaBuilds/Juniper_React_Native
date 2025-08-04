@@ -71,8 +71,8 @@ export const WakeWordToggle: React.FC = () => {
                 <Switch
                     value={isEnabled}
                     onValueChange={handleToggle}
-                    trackColor={{ false: '#767577', true: '#81b0ff' }}
-                    thumbColor={isEnabled ? '#2196F3' : '#f4f3f4'}
+                    trackColor={{ false: colors.common.switchTrackFalse, true: colors.status.mutedBlue }}
+                    thumbColor={isEnabled ? colors.status.mutedBlue : colors.common.switchThumbInactive}
                 />
             </View>
             
@@ -95,7 +95,7 @@ export const WakeWordToggle: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         padding: 16,
-        backgroundColor: '#F5F5DC',
+        backgroundColor: colors.background.card,
         borderRadius: 8,
         marginBottom: 16,
     },
@@ -114,10 +114,10 @@ const styles = StyleSheet.create({
     },
     statusText: {
         fontSize: 14,
-        color: '#666',
+        color: colors.text.secondary,
     },
     detectionIndicator: {
-        backgroundColor: '#2196F3',
+        backgroundColor: colors.status.mutedBlue,
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,

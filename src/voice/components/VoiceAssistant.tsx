@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Animated } from 'react-native';
 import { VoiceButton } from './VoiceButton';
 import { VoiceResponseDisplay } from './VoiceResponseDisplay';
 import { useVoice } from '../VoiceContext';
@@ -16,6 +16,41 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { colors } from '../../shared/theme/colors';
 
 const { VoiceModule } = NativeModules;
+
+// Loading dot component with subtle pulsing animation
+const LoadingDot: React.FC = () => {
+  const pulseAnim = React.useRef(new Animated.Value(0.3)).current;
+
+  React.useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0.3,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [pulseAnim]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.loadingDot,
+        {
+          opacity: pulseAnim,
+        },
+      ]}
+    />
+  );
+};
 
 interface VoiceAssistantProps {
   onSpeechResult?: (text: string) => void;
@@ -248,7 +283,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     <KeyboardAvoidingView 
       style={styles.keyboardAvoidingView}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 140 : 0}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 20}
     >
       <View style={styles.container}>
           <View style={styles.header}>
@@ -306,38 +341,53 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           
           <View style={styles.chatContainer}>
             {chatHistory.length > 0 ? (
-              <FlatList
-                data={chatHistory}
-                keyExtractor={(item, index) => `chat-${index}-${item.timestamp}`}
-                style={styles.chatList}
-                contentContainerStyle={styles.chatListContent}
-                keyboardShouldPersistTaps="handled"
-                keyboardDismissMode="interactive"
-                showsVerticalScrollIndicator={true}
-                onScrollBeginDrag={Keyboard.dismiss}
-                removeClippedSubviews={false}
-                initialNumToRender={10}
-                maxToRenderPerBatch={10}
-                windowSize={10}
-                getItemLayout={(data, index) => ({
-                  length: 80, // Approximate height of each message
-                  offset: 80 * index,
-                  index,
-                })}
-                renderItem={({ item }) => {
-                  return (
-                    <View style={[
-                      styles.chatBubble, 
-                      item.role === 'user' ? styles.userBubble : styles.assistantBubble
-                    ]}>
-                      <ChatMessageContent message={item} />
-                      <View style={styles.messageFooter}>
-                        <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={styles.chatListContainer}>
+                  <FlatList
+                    data={chatHistory}
+                    keyExtractor={(item, index) => `chat-${index}-${item.timestamp}`}
+                    style={styles.chatList}
+                    contentContainerStyle={styles.chatListContent}
+                    keyboardShouldPersistTaps="always"
+                    keyboardDismissMode="interactive"
+                    showsVerticalScrollIndicator={true}
+                    removeClippedSubviews={false}
+                    initialNumToRender={10}
+                    maxToRenderPerBatch={10}
+                    windowSize={10}
+                    getItemLayout={(data, index) => ({
+                      length: 80, // Approximate height of each message
+                      offset: 80 * index,
+                      index,
+                    })}
+                    renderItem={({ item }) => {
+                      return (
+                        <View style={[
+                          styles.chatBubble, 
+                          item.role === 'user' ? styles.userBubble : styles.assistantBubble
+                        ]}>
+                          <ChatMessageContent message={item} />
+                          <View style={styles.messageFooter}>
+                            <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
+                          </View>
+                        </View>
+                      );
+                    }}
+                  />
+                  
+                  {/* Status indicator overlay */}
+                  {requestStatus && requestStatus !== 'completed' && (
+                    <View style={styles.statusOverlay}>
+                      <View style={styles.statusContent}>
+                        <LoadingDot />
+                        <Text style={styles.statusIndicator}>
+                          {getRequestStatusText(requestStatus, 'indicator')}
+                        </Text>
                       </View>
                     </View>
-                  );
-                }}
-              />
+                  )}
+                </View>
+              </TouchableWithoutFeedback>
             ) : (
               <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View style={styles.emptyChatContainer}>
@@ -345,6 +395,18 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
                     Start or continue a conversation by tapping the voice button or typing a message.
                     {Platform.OS === 'android' && ' Or, use the wake word.'}
                   </Text>
+                  
+                  {/* Status indicator overlay for empty chat */}
+                  {requestStatus && requestStatus !== 'completed' && (
+                    <View style={styles.statusOverlay}>
+                      <View style={styles.statusContent}>
+                        <LoadingDot />
+                        <Text style={styles.statusIndicator}>
+                          {getRequestStatusText(requestStatus, 'indicator')}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
                 </View>
               </TouchableWithoutFeedback>
             )}
@@ -378,14 +440,6 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
             </TouchableOpacity>
           )}
 
-          {/* Request status indicator */}
-          {requestStatus && requestStatus !== 'completed' && (
-            <View style={styles.statusContainer}>
-              <Text style={styles.statusIndicator}>
-                {getRequestStatusText(requestStatus, 'indicator')}
-              </Text>
-            </View>
-          )}
 
           <View style={styles.bottomSection}>
             {/* Voice button - positioned above text input */}
@@ -492,32 +546,38 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 4,
   },
+  chatListContainer: {
+    flex: 1,
+    minHeight: 0, // Important for FlatList scrolling
+  },
   chatList: {
     flex: 1,
     paddingHorizontal: 16,
     minHeight: 0, // Important for FlatList scrolling
   },
   chatListContent: {
-    paddingBottom: 16,
+    paddingBottom: 80,
   },
   chatBubble: {
-    padding: 12,
+    padding: 8,
     borderRadius: 16,
-    marginVertical: 6,
-    maxWidth: '80%',
-    minWidth: 100,
+    marginVertical: 3,
+    maxWidth: '75%',
+    alignSelf: 'flex-start',
   },
   userBubble: {
     backgroundColor: colors.background.userMessage,
     alignSelf: 'flex-end',
     marginLeft: 40,
     borderBottomRightRadius: 4,
+    maxWidth: '75%',
   },
   assistantBubble: {
     backgroundColor: colors.background.assistantMessage,
     alignSelf: 'flex-start',
     marginRight: 40,
     borderBottomLeftRadius: 4,
+    maxWidth: '75%',
   },
   chatText: {
     color: colors.text.primary,
@@ -538,22 +598,35 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontStyle: 'italic',
   },
-  statusContainer: {
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+  statusOverlay: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    right: 16,
+    backgroundColor: 'rgba(59, 130, 246, 0.9)',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    marginHorizontal: 16,
-    marginBottom: 8,
     borderRadius: 8,
     alignItems: 'center',
     zIndex: 1000,
     elevation: 1000,
-    position: 'relative',
+  },
+  statusContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   statusIndicator: {
     color: colors.text.secondary,
     fontSize: 14,
     fontWeight: '500',
+  },
+  loadingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.text.primary,
+    marginRight: 8,
   },
   emptyChatContainer: {
     flex: 1,
@@ -573,7 +646,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 25,
-    marginBottom: 20,
+    marginBottom: 8,
     marginHorizontal: 16,
     alignSelf: 'center',
     elevation: 4,
@@ -596,7 +669,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 25,
-    marginBottom: 20,
+    marginBottom: 8,
     marginHorizontal: 16,
     alignSelf: 'center',
     elevation: 4,
@@ -612,12 +685,13 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   bottomSection: {
-    paddingBottom: 4,
+    paddingBottom: 8,
+    paddingTop: 4,
   },
   voiceButtonContainer: {
     alignItems: 'center',
-    marginBottom: 8,
-    paddingVertical: 4,
+    marginBottom: 4,
+    paddingVertical: 2,
   },
   errorContainer: {
     flex: 1,

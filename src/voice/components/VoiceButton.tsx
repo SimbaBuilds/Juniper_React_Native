@@ -19,9 +19,9 @@ interface VoiceButtonProps {
  */
 export const VoiceButton: React.FC<VoiceButtonProps> = ({
   size = 60,
-  color = '#F5F5DC', // Light beige color
+  color = colors.button.voiceIdle, // Light beige color
   activeColor = colors.button.voiceActive, // Muted green for active state
-  errorColor = '#e74c3c',
+  errorColor = colors.button.error,
   onPress,
 }) => {
   const { voiceState, isListening, isSpeaking, isError, startListening, startContinuousConversation, stopListening, interruptSpeech } = useVoiceState();
@@ -105,9 +105,9 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
 
   // Determine icon color based on state
   const getIconColor = () => {
-    if (isError) return 'white';
-    if (isListening || isSpeaking) return 'white';
-    return 'black'; // Black icon for white idle state
+    if (isError) return colors.common.white;
+    if (isListening || isSpeaking) return colors.common.white;
+    return colors.common.black; // Black icon for white idle state
   };
 
   // Determine size based on state (enlarge during listening)
@@ -133,7 +133,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
             borderRadius: buttonSize / 2,
             backgroundColor: getColor(),
             // Add border for white idle state visibility
-            borderWidth: color === 'white' && !isListening && !isSpeaking && !isError ? 1 : 0,
+            borderWidth: color === colors.common.white && !isListening && !isSpeaking && !isError ? 1 : 0,
             borderColor: 'rgba(0, 0, 0, 0.1)',
           },
         ]}
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 5, // Android shadow
-    shadowColor: '#000', // iOS shadow
+    shadowColor: colors.common.shadow, // iOS shadow
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
