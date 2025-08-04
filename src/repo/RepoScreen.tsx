@@ -154,9 +154,9 @@ export const RepoScreen: React.FC = () => {
                       {resource.title && (
                         <Text style={styles.resourceTitle}>{resource.title}</Text>
                       )}
-                      <Text style={styles.relevanceScore}>
+                      {/* <Text style={styles.relevanceScore}>
                         {Math.round(resource.relevance_score)}%
-                      </Text>
+                      </Text> */}
                     </View>
                     
                     {resource.instructions && (
@@ -319,9 +319,9 @@ export const RepoScreen: React.FC = () => {
                           {resource.title && (
                             <Text style={styles.resourceTitle}>{resource.title}</Text>
                           )}
-                          <Text style={styles.regularRelevanceScore}>
+                          {/* <Text style={styles.regularRelevanceScore}>
                             {Math.round(resource.relevance_score)}%
-                          </Text>
+                          </Text> */}
                         </View>
                         
                         {resource.instructions && (
