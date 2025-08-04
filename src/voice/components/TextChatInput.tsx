@@ -78,45 +78,14 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
         return;
       }
 
-      // Show action sheet for camera vs gallery
-      Alert.alert(
-        'Select Image',
-        'Choose an option',
-        [
-          { text: 'Camera', onPress: () => openCamera() },
-          { text: 'Gallery', onPress: () => openGallery() },
-          { text: 'Cancel', style: 'cancel' }
-        ]
-      );
+      // Directly open gallery
+      openGallery();
     } catch (error) {
       console.error('Error with image picker:', error);
       Alert.alert('Error', 'Failed to open image picker');
     }
   };
 
-  const openCamera = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Sorry, we need camera permissions to take photos.');
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setSelectedImage(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error('Error opening camera:', error);
-      Alert.alert('Error', 'Failed to open camera');
-    }
-  };
 
   const openGallery = async () => {
     try {
