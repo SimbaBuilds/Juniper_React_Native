@@ -280,7 +280,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     <KeyboardAvoidingView 
       style={styles.keyboardAvoidingView}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 20}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
     >
       <View style={styles.container}>
           <View style={styles.header}>
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   statusIndicator: {
-    color: colors.text.secondary,
+    color: colors.text.white, // Changed from colors.text.secondary for better contrast
     fontSize: 14,
     fontWeight: '500',
   },
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   bottomSection: {
-    paddingBottom: 4,
+    paddingBottom: Platform.OS === 'ios' ? 44 : 4,
     paddingTop: 2,
   },
   voiceButtonContainer: {

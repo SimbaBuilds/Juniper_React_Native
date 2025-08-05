@@ -53,6 +53,8 @@
     <string>Allow $(PRODUCT_NAME) to access your Face ID biometric data.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>This app needs access to microphone for voice commands and speech recognition.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>This app needs access to your photo library to allow you to share images in conversations.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
     <string>This app needs access to speech recognition to process voice commands.</string>
     <key>UILaunchStoryboardName</key>

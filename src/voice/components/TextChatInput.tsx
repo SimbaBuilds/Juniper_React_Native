@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Alert, Keyboard, Image, Text } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Alert, Keyboard, Image, Text, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { isCancellationError } from '../../utils/cancellationUtils';
@@ -27,7 +27,15 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
 
   const handleSend = async () => {
     const trimmedMessage = message.trim();
+    console.log('🔄 TextChatInput: handleSend called', {
+      hasMessage: !!trimmedMessage,
+      hasImage: !!selectedImage,
+      isSending,
+      platform: Platform.OS
+    });
+
     if ((!trimmedMessage && !selectedImage) || isSending) {
+      console.log('❌ TextChatInput: Send conditions not met');
       return;
     }
 
@@ -37,34 +45,83 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
     try {
       // Upload image if selected
       if (selectedImage) {
+        console.log('🔄 TextChatInput: Starting image upload', {
+          imageUri: selectedImage,
+          hasBase64: !!selectedImageBase64,
+          base64Length: selectedImageBase64?.length || 0
+        });
+
         setIsUploadingImage(true);
-        const uploadResult = await ImageStorageService.uploadChatImage(
-          userId,
-          selectedImage,
-          `chat_image_${Date.now()}.jpg`,
-          selectedImageBase64 || undefined
-        );
-        
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.error || 'Failed to upload image');
+
+        try {
+          const uploadResult = await ImageStorageService.uploadChatImage(
+            userId,
+            selectedImage,
+            `chat_image_${Date.now()}.jpg`,
+            selectedImageBase64 || undefined
+          );
+          
+          console.log('🔄 TextChatInput: Upload result', uploadResult);
+          
+          if (!uploadResult.success) {
+            const errorMessage = uploadResult.error || 'Failed to upload image';
+            console.error('❌ TextChatInput: Image upload failed:', errorMessage);
+            throw new Error(errorMessage);
+          }
+          
+          imageUrl = uploadResult.imageUrl;
+          console.log('✅ TextChatInput: Image uploaded successfully', { imageUrl });
+        } catch (uploadError) {
+          console.error('❌ TextChatInput: Image upload error:', uploadError);
+          setIsUploadingImage(false);
+          
+          // Show specific error message for upload failures
+          const errorMessage = uploadError instanceof Error ? uploadError.message : 'Unknown upload error';
+          Alert.alert(
+            'Image Upload Failed', 
+            `Failed to upload image: ${errorMessage}. You can try sending the message without the image.`,
+            [
+              { text: 'Remove Image & Send', onPress: () => {
+                setSelectedImage(null);
+                setSelectedImageBase64(null);
+                // Retry sending without image
+                if (trimmedMessage) {
+                  handleSendWithoutImage(trimmedMessage);
+                }
+              }},
+              { text: 'Cancel', style: 'cancel' }
+            ]
+          );
+          return;
         }
-        
-        imageUrl = uploadResult.imageUrl;
       }
 
+      console.log('🔄 TextChatInput: Sending message', { 
+        messageLength: trimmedMessage.length,
+        hasImageUrl: !!imageUrl 
+      });
+
       await onSendMessage(trimmedMessage || '', imageUrl);
+      
+      console.log('✅ TextChatInput: Message sent successfully');
       setMessage(''); // Clear input after successful send
       setSelectedImage(null); // Clear selected image
       setSelectedImageBase64(null); // Clear base64 data
       Keyboard.dismiss(); // Dismiss keyboard after sending
+      
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ TextChatInput: Error sending message:', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        platform: Platform.OS
+      });
       
       // Don't show alert for cancellation errors
       if (!isCancellationError(error)) {
-        Alert.alert('Error', 'Failed to send message. Please try again.');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        Alert.alert('Error', `Failed to send message: ${errorMessage}. Please try again.`);
       } else {
-        console.log('Message was cancelled - not showing error alert');
+        console.log('✅ TextChatInput: Message was cancelled - not showing error alert');
       }
     } finally {
       setIsSending(false);
@@ -72,25 +129,65 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
     }
   };
 
+  const handleSendWithoutImage = async (messageText: string) => {
+    console.log('🔄 TextChatInput: Sending message without image', { messageText });
+    try {
+      await onSendMessage(messageText);
+      setMessage('');
+      Keyboard.dismiss();
+      console.log('✅ TextChatInput: Message sent without image');
+    } catch (error) {
+      console.error('❌ TextChatInput: Error sending message without image:', error);
+      if (!isCancellationError(error)) {
+        Alert.alert('Error', 'Failed to send message. Please try again.');
+      }
+    }
+  };
+
   const handleImagePicker = async () => {
+    console.log('🔄 TextChatInput: handleImagePicker called', { platform: Platform.OS });
+    
     try {
       // Request permission
+      console.log('🔄 TextChatInput: Requesting media library permissions');
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      console.log('🔄 TextChatInput: Permission status', { status });
+      
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to select images.');
+        console.error('❌ TextChatInput: Media library permission denied');
+        Alert.alert(
+          'Permission Required', 
+          'Sorry, we need camera roll permissions to select images. Please enable permissions in your device settings.',
+          [
+            { text: 'OK', style: 'default' }
+          ]
+        );
         return;
       }
 
+      console.log('✅ TextChatInput: Media library permission granted');
+      
       // Directly open gallery
-      openGallery();
+      await openGallery();
     } catch (error) {
-      console.error('Error with image picker:', error);
-      Alert.alert('Error', 'Failed to open image picker');
+      console.error('❌ TextChatInput: Error with image picker:', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        platform: Platform.OS
+      });
+      
+      Alert.alert(
+        'Error', 
+        `Failed to open image picker: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`
+      );
     }
   };
 
 
   const openGallery = async () => {
+    console.log('🔄 TextChatInput: Opening gallery');
+    
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -100,19 +197,64 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
         base64: true, // Get base64 data for React Native compatibility
       });
 
-      if (!result.canceled && result.assets[0]) {
-        setSelectedImage(result.assets[0].uri);
-        setSelectedImageBase64(result.assets[0].base64 || null);
+      console.log('🔄 TextChatInput: Gallery result', {
+        canceled: result.canceled,
+        assetsCount: result.assets?.length || 0,
+        hasFirstAsset: !!(result.assets && result.assets[0])
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        const asset = result.assets[0];
+        
+        console.log('🔄 TextChatInput: Selected image asset', {
+          uri: asset.uri,
+          width: asset.width,
+          height: asset.height,
+          type: asset.type,
+          fileSize: asset.fileSize,
+          hasBase64: !!asset.base64,
+          base64Length: asset.base64?.length || 0,
+          platform: Platform.OS
+        });
+
+        // Validate the selected image
+        if (!asset.uri) {
+          console.error('❌ TextChatInput: Selected image has no URI');
+          Alert.alert('Error', 'Selected image is invalid. Please try selecting another image.');
+          return;
+        }
+
+        // Check if base64 data is available (important for upload)
+        if (!asset.base64) {
+          console.warn('⚠️ TextChatInput: Selected image has no base64 data, will use URI fallback');
+        }
+
+        setSelectedImage(asset.uri);
+        setSelectedImageBase64(asset.base64 || null);
+        
+        console.log('✅ TextChatInput: Image selected successfully');
+      } else {
+        console.log('✅ TextChatInput: User cancelled image selection');
       }
     } catch (error) {
-      console.error('Error opening gallery:', error);
-      Alert.alert('Error', 'Failed to open gallery');
+      console.error('❌ TextChatInput: Error opening gallery:', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        platform: Platform.OS
+      });
+      
+      Alert.alert(
+        'Error', 
+        `Failed to open gallery: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`
+      );
     }
   };
 
   const removeImage = () => {
+    console.log('🔄 TextChatInput: Removing selected image');
     setSelectedImage(null);
     setSelectedImageBase64(null);
+    console.log('✅ TextChatInput: Image removed');
   };
 
   const isDisabled = disabled || isSending || (!message.trim() && !selectedImage);
