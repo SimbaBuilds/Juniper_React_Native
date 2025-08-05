@@ -22,6 +22,7 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImageBase64, setSelectedImageBase64] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const handleSend = async () => {
@@ -40,7 +41,8 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
         const uploadResult = await ImageStorageService.uploadChatImage(
           userId,
           selectedImage,
-          `chat_image_${Date.now()}.jpg`
+          `chat_image_${Date.now()}.jpg`,
+          selectedImageBase64 || undefined
         );
         
         if (!uploadResult.success) {
@@ -53,6 +55,7 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
       await onSendMessage(trimmedMessage || '', imageUrl);
       setMessage(''); // Clear input after successful send
       setSelectedImage(null); // Clear selected image
+      setSelectedImageBase64(null); // Clear base64 data
       Keyboard.dismiss(); // Dismiss keyboard after sending
     } catch (error) {
       console.error('Error sending message:', error);
@@ -94,10 +97,12 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
+        base64: true, // Get base64 data for React Native compatibility
       });
 
       if (!result.canceled && result.assets[0]) {
         setSelectedImage(result.assets[0].uri);
+        setSelectedImageBase64(result.assets[0].base64 || null);
       }
     } catch (error) {
       console.error('Error opening gallery:', error);
@@ -107,6 +112,7 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
 
   const removeImage = () => {
     setSelectedImage(null);
+    setSelectedImageBase64(null);
   };
 
   const isDisabled = disabled || isSending || (!message.trim() && !selectedImage);

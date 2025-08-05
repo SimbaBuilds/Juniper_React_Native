@@ -898,21 +898,34 @@ export const DatabaseService = {
 
   // Request status polling
   async getRequestStatus(requestId: string): Promise<string | null> {
+    console.log('🔍 DB_QUERY: Querying request status for requestId:', requestId);
+    
     const { data, error } = await supabase
       .from('requests')
-      .select('status')
+      .select('status, id, created_at, updated_at')
       .eq('request_id', requestId)
       .single();
     
     if (error) {
       if (error.code === 'PGRST116') {
-        // No rows returned - request not found
+        console.log('🔍 DB_QUERY: No request record found for requestId:', requestId);
         return null;
       }
+      console.error('🔍 DB_QUERY: Database error for requestId:', requestId, 'error:', error);
       throw error;
     }
     
-    return data?.status || null;
+    console.log('🔍 DB_QUERY: Found request record:', {
+      id: data?.id,
+      status: data?.status,
+      created_at: data?.created_at,
+      updated_at: data?.updated_at,
+      requestId
+    });
+    
+    const status = data?.status || null;
+    console.log('🔍 DB_QUERY: Returning status:', status, 'for requestId:', requestId);
+    return status;
   },
 
   async createRequest(userId: string, requestData: {
@@ -934,6 +947,27 @@ export const DatabaseService = {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async updateRequestStatus(requestId: string, status: string, metadata?: Record<string, any>): Promise<Request> {
+    const updateData: any = {
+      status,
+      updated_at: new Date().toISOString()
+    };
+    
+    if (metadata) {
+      updateData.metadata = metadata;
+    }
+    
+    const { data, error } = await supabase
+      .from('requests')
+      .update(updateData)
+      .eq('request_id', requestId)
       .select()
       .single();
     

@@ -571,8 +571,8 @@ function MainTabNavigator() {
   // Set up integration completion handler
   useEffect(() => {
     IntegrationCompletionService.getInstance().setHandler({
-      sendTextMessage: async (message: string, integrationInProgress?: boolean) => {
-        await sendTextMessage(message, integrationInProgress);
+      sendTextMessage: async (message: string, integrationInProgress?: boolean, imageUrl?: string) => {
+        await sendTextMessage(message, integrationInProgress, imageUrl);
       },
       navigateToHome: () => {
         navigation.navigate('Juniper' as never);

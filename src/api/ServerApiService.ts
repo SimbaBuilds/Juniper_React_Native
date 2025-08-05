@@ -52,6 +52,7 @@ export interface ChatRequest {
   };
   request_id?: string; // Optional request ID for tracking
   integration_in_progress?: boolean; // Flag to indicate integration completion message
+  image_url?: string; // Optional image URL for messages with attachments
   // feature_settings removed - backend will fetch from database
 }
 
@@ -193,8 +194,9 @@ class ServerApiService {
     message: string,
     history: ChatMessage[],
     preferences?: ChatRequest['preferences'],
-    onRequestStart?: (requestId: string) => void,
+    onRequestStart?: (requestId: string) => void | Promise<void>,
     integrationInProgress?: boolean,
+    imageUrl?: string,
   ): Promise<ChatResponse> {
     // Queue requests to prevent concurrent auth issues
     // Use .catch() to prevent cancelled requests from breaking the queue
@@ -214,7 +216,9 @@ class ServerApiService {
 
       // Call the callback immediately after request ID is generated
       if (onRequestStart && this.currentRequestId) {
-        onRequestStart(this.currentRequestId);
+        console.log('🔴 SERVER_API_CALLBACK: Calling onRequestStart callback with requestId:', this.currentRequestId);
+        await onRequestStart(this.currentRequestId);
+        console.log('🔴 SERVER_API_CALLBACK_DONE: onRequestStart callback completed for requestId:', this.currentRequestId);
       }
 
       try {
@@ -243,7 +247,8 @@ class ServerApiService {
             ...preferences // Allow override of defaults with passed preferences
           },
           request_id: this.currentRequestId, // Include request_id in the payload
-          ...(integrationInProgress && { integration_in_progress: integrationInProgress })
+          ...(integrationInProgress && { integration_in_progress: integrationInProgress }),
+          ...(imageUrl && { image_url: imageUrl })
         };
 
         history.forEach((message, index) => {

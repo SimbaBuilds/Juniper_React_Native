@@ -136,7 +136,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         setTimeout(() => {
           setCurrentRequestId(null);
           setRequestStatus(null);
-        }, 2000); // Keep status visible for 2 seconds
+        }, 500); // Keep status visible for 2 seconds
       }
     }
   });
@@ -667,7 +667,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   }, [voiceStateFromHook]);
   
   // Send text message using existing API infrastructure
-  const sendTextMessage = useCallback(async (text: string, integrationInProgress?: boolean) => {
+  const sendTextMessage = useCallback(async (text: string, integrationInProgress?: boolean, imageUrl?: string) => {
     if (!text.trim()) {
       console.log('📝 TEXT_INPUT: Empty message, ignoring');
       return;
@@ -705,10 +705,39 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             setRequestStatus('pending');
             
             const apiStartTime = Date.now();
-            const response = await sendMessage(text.trim(), updatedHistory, (requestId) => {
-              console.log('📊 REQUEST_STATUS: Setting request ID for polling:', requestId);
-              setCurrentRequestId(requestId);
-            }, integrationInProgress);
+            const response = await sendMessage(text.trim(), updatedHistory, async (requestId) => {
+              console.log('🔄 CALLBACK_START: onRequestStart callback called with requestId:', requestId);
+              
+              // Create database request record BEFORE setting request ID to ensure it exists when polling starts
+              if (user?.id) {
+                try {
+                  console.log('🔄 DB_CREATE_START: Starting database record creation for user:', user.id);
+                  const dbRecord = await DatabaseService.createRequest(user.id, {
+                    request_id: requestId,
+                    request_type: 'chat_message',
+                    status: 'pending',
+                    metadata: { 
+                      message: text.trim(),
+                      hasImage: !!imageUrl 
+                    },
+                    ...(imageUrl && { image_url: imageUrl })
+                  });
+                  console.log('🔄 DB_CREATE_SUCCESS: Database request record created:', dbRecord.id, 'with image URL:', !!imageUrl);
+                  
+                  // Set request ID AFTER database record is successfully created
+                  console.log('🔄 SET_REQUEST_ID: Setting currentRequestId to trigger polling:', requestId);
+                  setCurrentRequestId(requestId);
+                  console.log('🔄 SET_REQUEST_ID_COMPLETE: currentRequestId set, polling should start now');
+                } catch (error) {
+                  console.error('🔄 DB_CREATE_ERROR: Failed to create database request record:', error);
+                  // Don't set request ID if database record creation fails
+                }
+              } else {
+                console.log('🔄 NO_USER: No user ID, setting request ID for local tracking only');
+                setCurrentRequestId(requestId);
+              }
+              console.log('🔄 CALLBACK_END: onRequestStart callback completed');
+            }, integrationInProgress, imageUrl);
             const apiEndTime = Date.now();
             
             console.log('📝 TEXT_INPUT: ========== API RESPONSE RECEIVED ==========');
@@ -764,8 +793,10 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             // Note: No TTS playback because we're in text mode
             console.log('📝 TEXT_INPUT: Response added to chat (no TTS in text mode)');
             
-            // Don't clear request status immediately - let polling handle it
-            // The polling will stop and clear when status reaches 'completed'
+            // Clear request ID after successful completion to stop polling
+            console.log('🔄 COMPLETION: Clearing request ID to stop polling');
+            setCurrentRequestId(null);
+            setRequestStatus('completed');
             
           } catch (error) {
             console.error('📝 TEXT_INPUT: ❌ Error processing text message:', error);

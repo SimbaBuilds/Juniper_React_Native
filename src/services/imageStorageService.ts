@@ -1,4 +1,5 @@
 import { supabase } from '../supabase/supabase';
+import { decode } from 'base64-arraybuffer';
 
 export interface ImageUploadResult {
   success: boolean;
@@ -15,7 +16,8 @@ export class ImageStorageService {
   static async uploadChatImage(
     userId: string,
     imageUri: string,
-    fileName: string = `image_${Date.now()}.jpg`
+    fileName: string = `image_${Date.now()}.jpg`,
+    base64Data?: string
   ): Promise<ImageUploadResult> {
     try {
       // Check if user is authenticated
@@ -24,17 +26,32 @@ export class ImageStorageService {
         return { success: false, error: 'User not authenticated' };
       }
 
-      // Convert image URI to blob
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
+      // Convert image to ArrayBuffer using base64 data or fetch
+      let arrayBuffer: ArrayBuffer;
+      
+      if (base64Data) {
+        // Use provided base64 data (recommended for React Native)
+        arrayBuffer = decode(base64Data);
+      } else {
+        // Fallback: fetch the image URI and convert to ArrayBuffer
+        const response = await fetch(imageUri);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+        }
+        arrayBuffer = await response.arrayBuffer();
+      }
+      
+      if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+        throw new Error('Image data is empty or invalid');
+      }
 
       // Create file path: userId/images/filename
       const filePath = `${userId}/images/${fileName}`;
 
-      // Upload to Supabase Storage
+      // Upload to Supabase Storage using ArrayBuffer
       const { data, error } = await supabase.storage
         .from(ImageStorageService.BUCKET_NAME)
-        .upload(filePath, blob, {
+        .upload(filePath, arrayBuffer, {
           contentType: 'image/jpeg',
           upsert: false
         });

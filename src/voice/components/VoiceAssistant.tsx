@@ -191,14 +191,11 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     try {
       console.log('📷 Sending message:', { text, imageUrl });
       
-      // For now, we'll send the text message normally
-      // The image URL will be handled by the backend when we implement the full integration
-      // Future enhancement: We'll need to update sendTextMessage to accept imageUrl and store it in the requests table
-      await sendTextMessage(text || (imageUrl ? 'Image attached' : ''));
+      // Send the text message with image URL
+      await sendTextMessage(text || (imageUrl ? 'Image attached' : ''), false, imageUrl);
       
       if (imageUrl) {
-        console.log('📷 Image URL available for backend processing:', imageUrl);
-        // TODO: Implement proper integration with request creation in database
+        console.log('📷 Image URL sent to backend for processing:', imageUrl);
       }
     } catch (error) {
       console.error('Error sending message:', error);

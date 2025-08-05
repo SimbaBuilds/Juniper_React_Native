@@ -12,7 +12,7 @@ interface UseServerApiResult {
   isLoading: boolean;
   error: Error | null;
   response: ChatResponse | null;
-  sendMessage: (message: string, history: ChatMessage[], onRequestStart?: (requestId: string) => void, integrationInProgress?: boolean) => Promise<ChatResponse>;
+  sendMessage: (message: string, history: ChatMessage[], onRequestStart?: (requestId: string) => void | Promise<void>, integrationInProgress?: boolean, imageUrl?: string) => Promise<ChatResponse>;
   updateConfig: (config: Partial<ServerApiConfig>) => void;
   cancelRequest: () => Promise<boolean>;
   isRequestInProgress: boolean;
@@ -55,8 +55,9 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
   const sendMessage = useCallback(async (
     message: string, 
     history: ChatMessage[],
-    onRequestStart?: (requestId: string) => void,
+    onRequestStart?: (requestId: string) => void | Promise<void>,
     integrationInProgress?: boolean,
+    imageUrl?: string,
   ): Promise<ChatResponse> => {
     // Clear any previous cancellation errors before starting new request
     setError(null);
@@ -70,6 +71,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
         options.preferences,
         onRequestStart,
         integrationInProgress,
+        imageUrl,
       );
       
       setResponse(result);

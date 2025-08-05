@@ -75,6 +75,6 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.text.primary, // Light beige color for good contrast
+    color: colors.text.white, // Light beige color for good contrast
   },
 });

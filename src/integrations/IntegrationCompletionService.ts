@@ -1,7 +1,7 @@
 import { DeviceEventEmitter } from 'react-native';
 
 export interface IntegrationCompletionHandler {
-  sendTextMessage: (message: string, integrationInProgress?: boolean) => Promise<void>;
+  sendTextMessage: (message: string, integrationInProgress?: boolean, imageUrl?: string) => Promise<void>;
   navigateToHome: () => void;
 }
 
