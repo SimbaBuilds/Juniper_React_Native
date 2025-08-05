@@ -3,6 +3,8 @@ import VoiceService, { VoiceState, VoiceStateChangeEvent } from '../VoiceService
 
 // Helper function to extract state from Java object string or direct value
 const extractStateValue = (state: any): string => {
+    console.log('🔍 EXTRACT_STATE: Input state:', state, 'Type:', typeof state);
+    
     if (typeof state === 'string') {
         // Handle Java object string format: "com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@xxxxx"
         if (state.includes('$')) {
@@ -12,25 +14,32 @@ const extractStateValue = (state: any): string => {
                 const statePart = parts[2];
                 // Extract state name before the @ symbol
                 const stateValue = statePart.split('@')[0];
+                console.log('🔍 EXTRACT_STATE: Extracted from Java format:', stateValue);
                 return stateValue;
             }
         }
         
         // Handle RESPONDING(message=...) format
         if (state.startsWith('RESPONDING(')) {
+            console.log('🔍 EXTRACT_STATE: Extracted RESPONDING from parentheses format');
             return 'RESPONDING';
         }
         
         // Handle other state formats with parentheses (extract base state name)
         const parenMatch = state.match(/^([A-Z_]+)\(/);
         if (parenMatch) {
+            console.log('🔍 EXTRACT_STATE: Extracted from parentheses:', parenMatch[1]);
             return parenMatch[1];
         }
         
         // Direct string state value
+        console.log('🔍 EXTRACT_STATE: Using direct string value:', state);
         return state;
     }
-    return String(state);
+    
+    const stringState = String(state);
+    console.log('🔍 EXTRACT_STATE: Converted to string:', stringState);
+    return stringState;
 };
 
 /**
@@ -53,9 +62,19 @@ export function useVoiceState() {
   const normalizedState = extractStateValue(voiceState);
 
   // Derived states computed from normalized native state (no duplication)
-  const isListening = normalizedState === VoiceState.LISTENING || normalizedState === VoiceState.WAKE_WORD_DETECTED;
-  const isSpeaking = normalizedState.toUpperCase() === VoiceState.SPEAKING || normalizedState.includes('RESPONDING');
-  const isError = normalizedState === VoiceState.ERROR;
+  // Make comparison case-insensitive to handle iOS/Android differences
+  const normalizedUpperState = normalizedState.toUpperCase();
+  const isListening = normalizedUpperState === VoiceState.LISTENING.toUpperCase() || normalizedUpperState === VoiceState.WAKE_WORD_DETECTED.toUpperCase();
+  
+  // Debug the state derivation to identify the issue
+  console.log('🔍 STATE_DERIVATION: voiceState raw:', voiceState);
+  console.log('🔍 STATE_DERIVATION: normalizedState:', normalizedState);
+  console.log('🔍 STATE_DERIVATION: normalizedUpperState:', normalizedUpperState);
+  console.log('🔍 STATE_DERIVATION: VoiceState.LISTENING:', VoiceState.LISTENING);
+  console.log('🔍 STATE_DERIVATION: isListening computed:', isListening);
+  console.log('🔍 STATE_DERIVATION: comparison result:', normalizedUpperState === VoiceState.LISTENING.toUpperCase());
+  const isSpeaking = normalizedUpperState === VoiceState.SPEAKING.toUpperCase() || normalizedState.toUpperCase().includes('RESPONDING');
+  const isError = normalizedUpperState === VoiceState.ERROR.toUpperCase();
 
   // Debug logging for Speaking state detection
   if (normalizedState.toUpperCase() === VoiceState.SPEAKING || normalizedState === 'SPEAKING') {

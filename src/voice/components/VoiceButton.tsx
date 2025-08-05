@@ -54,12 +54,33 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
     
     if (isListening) {
       // If currently listening, stop listening (tap-to-stop functionality)
-      console.log('🎤 VOICE_BUTTON: Tap-to-stop - stopping listening');
-      await stopListening();
+      console.log('🎤 VOICE_BUTTON: ========== TAP-TO-STOP TRIGGERED ==========');
+      console.log('🎤 VOICE_BUTTON: Platform:', Platform.OS);
+      console.log('🎤 VOICE_BUTTON: Current voiceState:', voiceState);
+      console.log('🎤 VOICE_BUTTON: Current isListening:', isListening);
+      console.log('🎤 VOICE_BUTTON: About to call stopListening()...');
+      
+      try {
+        const result = await stopListening();
+        console.log('🎤 VOICE_BUTTON: stopListening() result:', result);
+        console.log('🎤 VOICE_BUTTON: ✅ Tap-to-stop completed successfully');
+      } catch (error) {
+        console.error('🎤 VOICE_BUTTON: ❌ Error in tap-to-stop:', error);
+      }
     } else if (isSpeaking) {
       // If currently speaking, interrupt the speech
       await interruptSpeech();
     } else {
+      // Check if we're already in a listening state (safety check)
+      const currentStateUpper = String(voiceState).toUpperCase();
+      if (currentStateUpper === 'LISTENING' || currentStateUpper === VoiceState.LISTENING.toUpperCase()) {
+        console.log('🎤 VOICE_BUTTON: ⚠️ Already in listening state, ignoring start request');
+        console.log('🎤 VOICE_BUTTON: voiceState:', voiceState);
+        console.log('🎤 VOICE_BUTTON: currentStateUpper:', currentStateUpper);
+        console.log('🎤 VOICE_BUTTON: isListening:', isListening);
+        return;
+      }
+      
       // Otherwise, start listening - but first check if wake word is enabled
       if (Platform.OS === 'android' && isWakeWordEnabled) {
         console.log('🎤 VOICE_BUTTON: Wake word is enabled, auto-toggling off before starting chat');
@@ -74,12 +95,24 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
       }
       
       // Start listening - use platform-specific method
-      if (Platform.OS === 'ios') {
-        console.log('🎤 VOICE_BUTTON: iOS - Starting continuous conversation');
-        await startContinuousConversation();
-      } else {
-        console.log('🎤 VOICE_BUTTON: Android - Starting listening');
-        await startListening();
+      console.log('🎤 VOICE_BUTTON: ========== STARTING LISTENING ==========');
+      console.log('🎤 VOICE_BUTTON: Platform:', Platform.OS);
+      console.log('🎤 VOICE_BUTTON: Current voiceState:', voiceState);
+      console.log('🎤 VOICE_BUTTON: Current isListening:', isListening);
+      
+      try {
+        if (Platform.OS === 'ios') {
+          console.log('🎤 VOICE_BUTTON: iOS - Starting continuous conversation');
+          const result = await startContinuousConversation();
+          console.log('🎤 VOICE_BUTTON: iOS startContinuousConversation result:', result);
+        } else {
+          console.log('🎤 VOICE_BUTTON: Android - Starting listening');
+          const result = await startListening();
+          console.log('🎤 VOICE_BUTTON: Android startListening result:', result);
+        }
+        console.log('🎤 VOICE_BUTTON: ✅ Start listening completed successfully');
+      } catch (error) {
+        console.error('🎤 VOICE_BUTTON: ❌ Error starting listening:', error);
       }
     }
   }, [isListening, isSpeaking, startListening, startContinuousConversation, stopListening, interruptSpeech, onPress, isWakeWordEnabled, setWakeWordEnabled, pulseAnim]);

@@ -275,10 +275,19 @@ class VoiceManager: NSObject {
     
     // MARK: - Speech Recognition
     func startListening() {
-        NSLog("🎙️ VoiceManager: Starting speech recognition")
-        print("🎙️ VoiceManager: Starting speech recognition")
+        NSLog("🎙️ VoiceManager: ========== START LISTENING CALLED ==========")
+        print("🎙️ VoiceManager: ========== START LISTENING CALLED ==========")
         print("🎙️ VoiceManager: Current state: \(currentState.description)")
         print("🎙️ VoiceManager: Is already listening: \(isListening)")
+        
+        // Safety check: prevent starting if already listening
+        if isListening || currentState == .listening {
+            NSLog("🎙️ VoiceManager: ⚠️ Already listening, ignoring start request")
+            print("🎙️ VoiceManager: ⚠️ Already listening, ignoring start request")
+            print("🎙️ VoiceManager: Current state: \(currentState.description)")
+            print("🎙️ VoiceManager: isListening flag: \(isListening)")
+            return
+        }
         
         // Reset state
         resetSpeechTracking()
@@ -469,29 +478,58 @@ class VoiceManager: NSObject {
     }
     
     private func cleanupAudioResources() {
-        print("🎙️ VoiceManager: Cleaning up audio resources...")
+        NSLog("🎙️ VoiceManager: ========== CLEANING UP AUDIO RESOURCES ==========")
+        print("🎙️ VoiceManager: ========== CLEANING UP AUDIO RESOURCES ==========")
+        
+        // Cancel recognition task first (most important)
+        if let task = recognitionTask {
+            print("🎙️ VoiceManager: Cancelling recognition task...")
+            task.cancel()
+            recognitionTask = nil
+            print("🎙️ VoiceManager: ✅ Recognition task cancelled")
+        } else {
+            print("🎙️ VoiceManager: No recognition task to cancel")
+        }
+        
+        // End recognition request
+        if let request = recognitionRequest {
+            print("🎙️ VoiceManager: Ending recognition request...")
+            request.endAudio()
+            recognitionRequest = nil
+            print("🎙️ VoiceManager: ✅ Recognition request ended")
+        } else {
+            print("🎙️ VoiceManager: No recognition request to end")
+        }
         
         // Stop audio engine if running
         if audioEngine.isRunning {
+            print("🎙️ VoiceManager: Stopping audio engine...")
             audioEngine.stop()
+            print("🎙️ VoiceManager: ✅ Audio engine stopped")
+        } else {
+            print("🎙️ VoiceManager: Audio engine was not running")
         }
         
-        // Remove audio tap
+        // Remove audio tap (do this after stopping engine)
         do {
+            print("🎙️ VoiceManager: Removing audio tap...")
             audioEngine.inputNode.removeTap(onBus: 0)
+            print("🎙️ VoiceManager: ✅ Audio tap removed successfully")
         } catch {
             print("🎙️ VoiceManager: Note: No tap to remove or error removing tap: \(error)")
         }
         
-        // Cancel recognition task
-        recognitionTask?.cancel()
-        recognitionTask = nil
+        // Try to deactivate audio session
+        do {
+            print("🎙️ VoiceManager: Deactivating audio session...")
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            print("🎙️ VoiceManager: ✅ Audio session deactivated")
+        } catch {
+            print("🎙️ VoiceManager: Note: Error deactivating audio session: \(error)")
+        }
         
-        // End recognition request
-        recognitionRequest?.endAudio()
-        recognitionRequest = nil
-        
-        print("✅ VoiceManager: Audio resources cleaned up")
+        NSLog("✅ VoiceManager: Audio resources cleanup completed")
+        print("✅ VoiceManager: Audio resources cleanup completed")
     }
     
     // MARK: - Deepgram STT Setup
@@ -964,12 +1002,24 @@ class VoiceManager: NSObject {
     }
     
     func stopListening() {
-        print("🛑 VoiceManager: Stopping speech recognition")
+        NSLog("🛑 VoiceManager: ========== STOP LISTENING CALLED ==========")
+        print("🛑 VoiceManager: ========== STOP LISTENING CALLED ==========")
+        print("🛑 VoiceManager: Current state before stop: \(currentState.description)")
+        print("🛑 VoiceManager: Is currently listening: \(isListening)")
+        print("🛑 VoiceManager: Current STT provider: \(currentSTTProvider)")
+        print("🛑 VoiceManager: Audio engine running: \(audioEngine.isRunning)")
         
+        // Set listening flag to false immediately
         isListening = false
+        print("🛑 VoiceManager: Set isListening to false")
+        
+        // Stop all timers first
+        print("🛑 VoiceManager: Stopping all timers...")
         stopAllTimers()
+        print("🛑 VoiceManager: ✅ All timers stopped")
         
         // Stop based on current provider
+        print("🛑 VoiceManager: Stopping STT provider: \(currentSTTProvider.displayName)")
         switch currentSTTProvider {
         case .native:
             stopNativeSTT()
@@ -978,17 +1028,41 @@ class VoiceManager: NSObject {
         case .whisper:
             stopWhisperSTT()
         }
+        print("🛑 VoiceManager: ✅ STT provider stopped")
         
         // Release audio focus when stopping listening
+        print("🛑 VoiceManager: Releasing audio focus...")
         audioManager.releaseAudioFocus()
+        print("🛑 VoiceManager: ✅ Audio focus released")
         
+        // Set state to idle
+        print("🛑 VoiceManager: Setting state to IDLE...")
         setState(.idle)
+        print("🛑 VoiceManager: ✅ State set to IDLE")
+        
+        NSLog("🛑 VoiceManager: ========== STOP LISTENING COMPLETED ==========")
+        print("🛑 VoiceManager: ========== STOP LISTENING COMPLETED ==========")
+        print("🛑 VoiceManager: Final state: \(currentState.description)")
+        print("🛑 VoiceManager: Final isListening: \(isListening)")
+        print("🛑 VoiceManager: Final audio engine running: \(audioEngine.isRunning)")
     }
     
     private func stopNativeSTT() {
-        print("🎙️ VoiceManager: Stopping Native STT...")
+        NSLog("🎙️ VoiceManager: ========== STOPPING NATIVE STT ==========")
+        print("🎙️ VoiceManager: ========== STOPPING NATIVE STT ==========")
+        print("🎙️ VoiceManager: Audio engine running before cleanup: \(audioEngine.isRunning)")
+        print("🎙️ VoiceManager: Recognition task exists: \(recognitionTask != nil)")
+        print("🎙️ VoiceManager: Recognition request exists: \(recognitionRequest != nil)")
+        
+        // Force cleanup of audio resources
         cleanupAudioResources()
-        print("✅ VoiceManager: Native STT stopped")
+        
+        print("🎙️ VoiceManager: Audio engine running after cleanup: \(audioEngine.isRunning)")
+        print("🎙️ VoiceManager: Recognition task after cleanup: \(recognitionTask != nil)")
+        print("🎙️ VoiceManager: Recognition request after cleanup: \(recognitionRequest != nil)")
+        
+        NSLog("✅ VoiceManager: Native STT stopped successfully")
+        print("✅ VoiceManager: Native STT stopped successfully")
     }
     
     private func stopDeepgramSTT() {
