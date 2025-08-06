@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from 'react';
 import { TouchableOpacity, StyleSheet, View, ActivityIndicator, Platform, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useVoiceState } from '../VoiceContext';
+import { useVoiceState, useVoice } from '../VoiceContext';
 import { VoiceState } from '../VoiceService';
 import { useWakeWord } from '../../wakeword/WakeWordContext';
 import { colors } from '../../shared/theme/colors';
@@ -25,12 +25,24 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
   onPress,
 }) => {
   const { voiceState, isListening, isSpeaking, isError, startListening, startContinuousConversation, stopListening, interruptSpeech } = useVoiceState();
+  const { error } = useVoice();
   
   // Get wake word context to check and toggle wake word state
   const { isEnabled: isWakeWordEnabled, setEnabled: setWakeWordEnabled } = useWakeWord();
   
   // Animation value for pulse effect
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  
+  // Only show error state for persistent errors or critical failures
+  // Skip showing errors during normal voice operations or successful API calls
+  const shouldShowError = isError && 
+    error && 
+    !error.includes('Audio focus lost') && 
+    !error.includes('successful') && 
+    !error.includes('completed') &&
+    voiceState !== VoiceState.LISTENING &&
+    voiceState !== VoiceState.IDLE &&
+    voiceState !== VoiceState.SPEAKING;
   
   // Handle button press based on current state
   const handlePress = useCallback(async () => {
@@ -123,7 +135,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
       return 'mic'; // Solid mic icon when listening (tap to stop)
     } else if (isSpeaking) {
       return 'volume-high';
-    } else if (isError) {
+    } else if (shouldShowError) {
       return 'warning';
     }
     return 'mic-outline'; // Outline mic icon when idle (tap to start)
@@ -131,14 +143,14 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
   
   // Determine the color based on state
   const getColor = () => {
-    if (isError) return errorColor;
+    if (shouldShowError) return errorColor;
     if (isListening || isSpeaking) return activeColor;
     return color;
   };
 
   // Determine icon color based on state
   const getIconColor = () => {
-    if (isError) return colors.common.white;
+    if (shouldShowError) return colors.common.white;
     if (isListening || isSpeaking) return colors.common.white;
     return colors.common.black; // Black icon for white idle state
   };
@@ -166,7 +178,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
             borderRadius: buttonSize / 2,
             backgroundColor: getColor(),
             // Add border for white idle state visibility
-            borderWidth: color === colors.common.white && !isListening && !isSpeaking && !isError ? 1 : 0,
+            borderWidth: color === colors.common.white && !isListening && !isSpeaking && !shouldShowError ? 1 : 0,
             borderColor: 'rgba(0, 0, 0, 0.1)',
           },
         ]}
