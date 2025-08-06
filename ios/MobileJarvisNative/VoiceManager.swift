@@ -230,14 +230,24 @@ class VoiceManager: NSObject {
         }
     }
     
-    // MARK: - State Management
+    // MARK: - State Management (ANDROID PATTERN)
     private func setState(_ newState: VoiceState) {
-        if currentState != newState {
-            print("🔄 VoiceManager: State changed from \(currentState.description) to \(newState.description)")
-            currentState = newState
-            DispatchQueue.main.async {
-                self.onStateChanged?(newState)
-            }
+        // ANDROID PATTERN: State deduplication to prevent conflicts
+        // This matches Android's updateState method that ignores duplicate state changes
+        if currentState == newState {
+            NSLog("🔄 VoiceManager: Ignoring duplicate state change to: %@", newState.description)
+            print("🔄 VoiceManager: Ignoring duplicate state change to: \(newState.description)")
+            return
+        }
+        
+        NSLog("🔄 VoiceManager: State transition: %@ -> %@", currentState.description, newState.description)
+        print("🔄 VoiceManager: State transition: \(currentState.description) -> \(newState.description)")
+        
+        currentState = newState
+        
+        // Emit state change on main thread
+        DispatchQueue.main.async {
+            self.onStateChanged?(newState)
         }
     }
     
@@ -765,9 +775,10 @@ class VoiceManager: NSObject {
         }
     }
     
-    // MARK: - Finish Listening
+    // MARK: - Finish Listening (ANDROID PATTERN)
     func finishListening() {
-        print("🛑 VoiceManager: Finishing speech recognition")
+        NSLog("🛑 VoiceManager: ========== FINISH LISTENING (ANDROID PATTERN) ==========")
+        print("🛑 VoiceManager: ========== FINISH LISTENING (ANDROID PATTERN) ==========")
         
         // Check minimum speech duration
         if let startTime = speechStartTime {
@@ -784,24 +795,54 @@ class VoiceManager: NSObject {
             }
         }
         
-        stopListening()
-        
-        // If we don't have a final result but we have a partial result, use that
+        // Get result to process BEFORE stopping listening
         let resultToProcess = finalResult ?? lastPartialResult
         
-        // Process final result
+        // IMMEDIATE CLEANUP (matching Android's onSpeechRecognized pattern)
+        // 1. IMMEDIATELY stop listening and release audio focus (like Android)
+        NSLog("🛑 VoiceManager: STEP 1 - Immediate resource cleanup (Android pattern)")
+        isListening = false
+        stopAllTimers()
+        
+        // Stop recognition immediately (matching Android's speechRecognizer?.stopListening())
+        recognitionTask?.cancel()
+        recognitionTask = nil
+        recognitionRequest?.endAudio()
+        recognitionRequest = nil
+        
+        // Stop audio engine immediately
+        if audioEngine.isRunning {
+            audioEngine.stop()
+        }
+        
+        // Remove tap immediately
+        do {
+            audioEngine.inputNode.removeTap(onBus: 0)
+        } catch {
+            // Ignore errors - Android doesn't worry about cleanup errors
+        }
+        
+        // IMMEDIATE audio focus release (matching Android's releaseSpeechRecognitionAudioFocus())
+        audioManager.releaseAudioFocus()
+        
+        // 2. IMMEDIATELY set to PROCESSING (matching Android)
+        NSLog("🛑 VoiceManager: STEP 2 - Set PROCESSING state (Android pattern)")
+        setState(.processing)
+        
+        // 3. Process result (matching Android's voiceProcessor.processText)
         if let resultToProcess = resultToProcess, !resultToProcess.isEmpty {
-            setState(.processing)
+            NSLog("🛑 VoiceManager: STEP 3 - Process text request (Android pattern)")
             print("✅ VoiceManager: Processing result: '\(resultToProcess)'")
             print("✅ VoiceManager: (was final: \(finalResult != nil), using partial: \(finalResult == nil))")
             
-            // **NEW: CONVERSATION FLOW - Emit processTextFromNative event**
+            // Process the text (this will eventually call handleApiResponseInternal)
             processTextRequest(resultToProcess)
         } else {
             print("⚠️ VoiceManager: No result to process (final: \(finalResult ?? "nil"), partial: \(lastPartialResult ?? "nil"))")
-            // Transition to error state if no speech was captured
             handleError(.speechRecognitionFailed, "No speech detected")
         }
+        
+        NSLog("✅ VoiceManager: finishListening completed - Android pattern implemented")
     }
     
     // MARK: - **NEW: CONVERSATION FLOW METHODS**
@@ -873,96 +914,41 @@ class VoiceManager: NSObject {
     }
     
     /**
-     * Internal handling of API response - starts TTS and manages state
+     * Internal handling of API response - starts TTS and manages state (ANDROID PATTERN)
      */
     private func handleApiResponseInternal(_ response: String) {
-        NSLog("🟢 VoiceManager: handleApiResponseInternal called")
-        NSLog("🟢 VoiceManager: Response length: %d", response.count)
-        print("🟢 VoiceManager: handleApiResponseInternal called")
+        NSLog("🟢 VoiceManager: ========== HANDLE API RESPONSE (ANDROID PATTERN) ==========")
+        print("🟢 VoiceManager: ========== HANDLE API RESPONSE (ANDROID PATTERN) ==========")
+        print("🟢 VoiceManager: Response length: \(response.count)")
         
-        // Stop any current listening first with error handling
-        NSLog("🟢 VoiceManager: About to stop listening")
-        NSLog("🟢 VoiceManager: Current state before stopping: %@", currentState.description)
-        NSLog("🟢 VoiceManager: Is listening: %@", isListening ? "YES" : "NO")
+        // ANDROID PATTERN: Direct state transition to RESPONDING/SPEAKING
+        // No complex audio focus negotiation - just set state and speak
+        NSLog("🟢 VoiceManager: STEP 1 - Set SPEAKING state (Android pattern)")
+        setState(.speaking)
         
-        do {
-            stopListening()
-            NSLog("🟢 VoiceManager: Successfully stopped listening")
-        } catch {
-            NSLog("❌ VoiceManager: Error stopping listening: %@", error.localizedDescription)
+        // ANDROID PATTERN: Direct TTS start (no async audio focus requests)
+        NSLog("🟢 VoiceManager: STEP 2 - Start TTS immediately (Android pattern)")
+        print("🎵 VoiceManager: Starting TTS with response: \(String(response.prefix(50)))...")
+        
+        ttsManager.speak(response) { [weak self] in
+            guard let self = self else { return }
+            
+            NSLog("🎵 VoiceManager: TTS completed - direct transition to LISTENING (Android pattern)")
+            print("🎵 VoiceManager: TTS completed - direct transition to LISTENING (Android pattern)")
+            
+            // ANDROID PATTERN: Direct transition to LISTENING (no delays, no async operations)
+            // This matches Android's immediate transition in the TTS completion callback
+            NSLog("🟢 VoiceManager: STEP 3 - Direct transition to LISTENING (Android pattern)")
+            self.setState(.listening)
+            
+            // Start listening immediately (matching Android's pattern)
+            NSLog("🟢 VoiceManager: STEP 4 - Start listening immediately (Android pattern)")
+            self.startListening()
+            
+            NSLog("✅ VoiceManager: Continuous conversation cycle completed (Android pattern)")
         }
         
-        NSLog("🟢 VoiceManager: Current state after stopping: %@", currentState.description)
-        
-        // Verify audio manager is available
-        NSLog("🟢 VoiceManager: Checking audio manager availability")
-        NSLog("🟢 VoiceManager: AudioManager instance: %@", String(describing: audioManager))
-        
-        // Force AudioManager singleton access to trigger initialization
-        NSLog("🟢 VoiceManager: Forcing AudioManager.shared access...")
-        let testManager = AudioManager.shared
-        NSLog("🟢 VoiceManager: AudioManager.shared instance: %@", String(describing: testManager))
-        NSLog("🟢 VoiceManager: Are instances the same? %@", audioManager === testManager ? "YES" : "NO")
-        
-        // Test direct access to AudioManager properties
-        NSLog("🟢 VoiceManager: AudioManager.isAudioAvailable: %@", audioManager.isAudioAvailable() ? "YES" : "NO")
-        NSLog("🟢 VoiceManager: AudioManager.isAudioInterrupted: %@", audioManager.getAudioInterruptionStatus() ? "YES" : "NO")
-        NSLog("🟢 VoiceManager: AudioManager.currentFocus: %@", String(describing: audioManager.getCurrentFocus()))
-        
-        // Ensure we're in a valid state before requesting audio focus
-        NSLog("🟢 VoiceManager: Current audio session info before requesting focus:")
-        let audioSession = AVAudioSession.sharedInstance()
-        NSLog("🟢 VoiceManager: Audio session category: %@", audioSession.category.rawValue)
-        NSLog("🟢 VoiceManager: Audio session mode: %@", audioSession.mode.rawValue)
-        NSLog("🟢 VoiceManager: Audio session is active: %@", audioSession.isOtherAudioPlaying ? "NO" : "YES")
-        
-        // Test AudioManager logging first
-        NSLog("🟢 VoiceManager: Testing AudioManager logging...")
-        audioManager.testLogging()
-        NSLog("🟢 VoiceManager: AudioManager test logging completed")
-        
-        // Request audio focus for TTS playback (higher priority than STT)
-        NSLog("🟢 VoiceManager: Requesting audio focus for TTS playback")
-        NSLog("🟢 VoiceManager: About to call audioManager.requestAudioFocus(.playback)")
-        
-        audioManager.requestAudioFocus(.playback) { [weak self] success in
-            NSLog("🟢 VoiceManager: requestAudioFocus completion callback called with success: %@", success ? "YES" : "NO")
-            NSLog("🟢 VoiceManager: Audio focus callback received, success: %@", success ? "YES" : "NO")
-            guard let self = self else {
-                NSLog("❌ VoiceManager: Self is nil in audio focus callback")
-                return
-            }
-            guard success else {
-                NSLog("❌ VoiceManager: Failed to acquire audio focus for TTS")
-                print("❌ VoiceManager: Failed to acquire audio focus for TTS")
-                self.setState(.idle)
-                return
-            }
-            
-            NSLog("🟢 VoiceManager: Audio focus acquired successfully")
-            // Start TTS playback
-            self.setState(.speaking)
-            
-            NSLog("🎵 VoiceManager: About to start TTS with response: %@", String(response.prefix(50)))
-            NSLog("🎵 VoiceManager: TTSManager instance: %@", String(describing: self.ttsManager))
-            
-            self.ttsManager.speak(response) {
-                NSLog("🎵 VoiceManager: TTS completion callback received")
-                NSLog("🎵 VoiceManager: TTS completed, transitioning to LISTENING for continuous conversation")
-                print("🎵 VoiceManager: TTS completed, transitioning to LISTENING for continuous conversation")
-                
-                // Release audio focus to allow STT to take over
-                self.audioManager.releaseAudioFocus()
-                
-                // Match Android behavior: transition to LISTENING instead of IDLE
-                // This enables continuous conversation without requiring wake word
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    NSLog("🎵 VoiceManager: Restarting listening for continuous conversation")
-                    self.setState(.listening)
-                    self.startListening()
-                }
-            }
-        }
+        NSLog("✅ VoiceManager: handleApiResponseInternal completed - Android pattern implemented")
     }
     
     /**

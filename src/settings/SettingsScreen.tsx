@@ -38,20 +38,20 @@ export interface VoiceSettings {
   timezone: string;
 }
 
-// Wake word sensitivity mapping
+// Wake word threshold mapping
 const WAKE_WORD_SENSITIVITY_MAP: Record<string, number> = {
-  'Hey Juni': 0.02,
+  'Hey Juni': 0.01,
   'Hey Juniper': 0.001,
   'Hey': 0.01,
   'Jarvis': 0.4,
-  'Hey Jarvis': 0.9,
+  'Hey Jarvis': 0.7,
   'Jasmine': 0.001,
   'Hey Jade': 0.001,
   'Hey Jay': 0.001,
-  'Hey Jasper': 0.02,
+  'Hey Jasper': 0.01,
   'Alex': 0.001,
   'Aloe': 0.001,
-  'Hey Michael': 0.7,
+  'Hey Michael': 0.4,
 };
 
 // Available wake words from OpenWakeWord (native Android)
@@ -536,12 +536,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                   
                   console.log('🎯 WAKEWORD_SELECTION: ✅ Wake word setting update completed');
                 }}
-                description="The word you say to activate your assistant (minimum required sensitivity). If wake phrase is failing, try speaking a bit slower."
+                description="The word you say to activate your assistant (minimum required threshold). If wake phrase is failing, try speaking a bit slower."
               />
 
               <View style={styles.indentedSetting}>
                 <SettingsNumberInput
-                  label="Wake Word Sensitivity"
+                  label="Wake Word Threshold"
                   value={settings.wakeWordSensitivity || 0.3}
                   onSave={async (wakeWordSensitivity) => {
                     console.log('🎚️ WAKEWORD_SENSITIVITY: Sensitivity changed in settings screen');
@@ -582,7 +582,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                   minimumValue={0}
                   maximumValue={1}
                   step={1e-5}
-                  description="The sensitivity level for wake word detection (0 = less sensitive, 1 = more sensitive)."
+                  description="The threshold level for wake word detection (0 = more sensitive, 1 = less sensitive)."
                   formatValue={(value) => `${Math.round(value * 100)}%`}
                 />
               </View>
