@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Animated } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { VoiceButton } from './VoiceButton';
 import { VoiceResponseDisplay } from './VoiceResponseDisplay';
 import { useVoice } from '../VoiceContext';
@@ -64,6 +65,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   onSpeechResult 
 }) => {
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const { 
     isListening,
     isSpeaking,
@@ -446,7 +448,12 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
           )}
 
 
-          <View style={styles.bottomSection}>
+          <View style={[
+            styles.bottomSection,
+            Platform.OS === 'ios' && {
+              paddingBottom: Math.max(insets.bottom, 4), // Use safe area insets or minimum 4px
+            }
+          ]}>
             {/* Voice button - positioned above text input */}
             <View style={styles.voiceButtonContainer}>
               <VoiceButton 
@@ -692,7 +699,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   bottomSection: {
-    paddingBottom: Platform.OS === 'ios' ? 44 : 4,
+    paddingBottom: 4, // Base padding, iOS uses safe area insets above
     paddingTop: 2,
   },
   voiceButtonContainer: {
