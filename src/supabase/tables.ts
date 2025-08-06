@@ -29,6 +29,10 @@ export type UserProfile = {
     requests_today: number;
     requests_week: number;
     requests_month: number;
+    // Service-specific usage tracking (monthly only)
+    perplexity_usage_month: number;
+    twitter_x_usage_month: number;
+    textbelt_usage_month: number;
     created_at: Date;
     updated_at: Date;
   };
@@ -37,7 +41,9 @@ export type UserProfile = {
     'id', 'display_name', 'name', 'location', 'education', 'profession', 'language', 'deepgram_enabled', 'base_language_model', 'general_instructions',
     'wake_word', 'wake_word_sensitivity', 'wake_word_detection_enabled', 'selected_deepgram_voice', 'timezone', 'preferences', 
     'xai_live_search_enabled', 'xai_live_search_safe_search', 'user_tags', 'enabled_system_integrations',
-    'requests_today', 'requests_week', 'requests_month', 'created_at', 'updated_at'
+    'requests_today', 'requests_week', 'requests_month', 
+    'perplexity_usage_month', 'twitter_x_usage_month', 'textbelt_usage_month',
+    'created_at', 'updated_at'
   ] as const;
   export type UserProfileField = (typeof userProfileFields)[number];
   
