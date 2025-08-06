@@ -1,2 +1,0 @@
-- [ ]  Voice error boundary is flashing error messages unnecessarily on successful API calls and successful native bridging
-- [ ]  Hanging on processing state - needs to be set to completed on API response

@@ -212,7 +212,18 @@ export const useRepoScreen = () => {
       Alert.alert('Success', 'Resource saved successfully');
     } catch (err) {
       console.error('Error saving resource:', err);
-      Alert.alert('Error', 'Failed to save resource');
+      
+      // Check if this is a resource limit error
+      const errorStr = String(err).toLowerCase();
+      if (errorStr.includes('resource limit exceeded') || errorStr.includes('p0001')) {
+        Alert.alert(
+          'Resource Limit Reached',
+          'You have reached the maximum number of resources allowed. Please delete some existing resources before adding new ones.',
+          [{ text: 'OK', style: 'default' }]
+        );
+      } else {
+        Alert.alert('Error', 'Failed to save resource');
+      }
     } finally {
       setSaving(false);
     }
@@ -292,7 +303,18 @@ export const useRepoScreen = () => {
       Alert.alert('Success', 'Resource updated successfully');
     } catch (err) {
       console.error('Error updating resource:', err);
-      Alert.alert('Error', 'Failed to update resource');
+      
+      // Check if this is a resource limit error
+      const errorStr = String(err).toLowerCase();
+      if (errorStr.includes('resource limit exceeded') || errorStr.includes('p0001')) {
+        Alert.alert(
+          'Resource Limit Reached',
+          'You have reached the maximum number of resources allowed. Please delete some existing resources before adding new ones.',
+          [{ text: 'OK', style: 'default' }]
+        );
+      } else {
+        Alert.alert('Error', 'Failed to update resource');
+      }
     } finally {
       setSaving(false);
     }
