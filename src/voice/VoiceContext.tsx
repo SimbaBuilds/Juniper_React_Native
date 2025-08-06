@@ -384,6 +384,12 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           content: event.response,
           timestamp: Date.now()
         }]);
+        
+        // Mark request as completed after successful voice response
+        console.log('✅ VOICE_RESPONSE: Setting request status to completed after voice response');
+        setRequestStatus('completed');
+        // Clear current request ID to stop polling
+        setCurrentRequestId(null);
       }
     });
     subscriptions.push(responseSub);
@@ -487,8 +493,10 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
                 requestMapping.removeMapping(currentRequestId);
               }
               
-              // Don't clear request status immediately - let polling handle it
-              // The polling will stop and clear when status reaches 'completed'
+              // Mark request as completed after successful API response (voice mode)
+              console.log('✅ VOICE_BRIDGE: Setting request status to completed after successful API response');
+              setRequestStatus('completed');
+              setCurrentRequestId(null);
               
             } catch (error) {
               console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);

@@ -70,6 +70,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     transcript,
     voiceState,
     isError,
+    error,
     chatHistory,
     inputMode,
     setTranscript,
@@ -222,7 +223,18 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     }
   };
 
-  if (isError) {
+  // Only show error UI for persistent errors or critical failures
+  // Skip showing errors during normal voice operations or successful API calls
+  const shouldShowError = isError && 
+    error && 
+    !error.includes('Audio focus lost') && 
+    !error.includes('successful') && 
+    !error.includes('completed') &&
+    voiceState !== VoiceState.LISTENING &&
+    voiceState !== VoiceState.IDLE &&
+    voiceState !== VoiceState.SPEAKING;
+
+  if (shouldShowError) {
     let errorMessage = 'Voice service error occurred';
     
     // Extract error message from voice state

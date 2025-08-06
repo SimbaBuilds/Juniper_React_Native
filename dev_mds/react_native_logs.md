@@ -1,3 +1,8 @@
+
+ LOG  🔄 VOICE_CONTEXT: Context isError: false
+ LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
  LOG  🎤 VOICE_BUTTON: ========== STARTING LISTENING ==========
  LOG  🎤 VOICE_BUTTON: Platform: ios
  LOG  🎤 VOICE_BUTTON: Current voiceState: idle
@@ -8,35 +13,191 @@
  LOG  🔐 iOS: Requesting permissions...
  LOG  🔐 iOS: Permissions result: true
  LOG  📱 iOS: Calling native startContinuousConversation...
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: idle
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: listening
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: idle
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: listening
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
  LOG  📱 iOS: Continuous conversation started: true
  LOG  🎤 VOICE_BUTTON: iOS startContinuousConversation result: true
  LOG  🎤 VOICE_BUTTON: ✅ Start listening completed successfully
- LOG  🔴 VoiceAssistant: isSpeaking changed: false
- LOG  🔴 VoiceAssistant: voiceState: listening
- LOG  🔴 VoiceAssistant: typeof voiceState: string
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: idle
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: error
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: idle
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: error
  LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
- LOG  🔄 VOICE_CONTEXT: Context voiceState: listening
- LOG  🔄 VOICE_CONTEXT: Context isListening: false
- LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
- LOG  🔄 VOICE_CONTEXT: Context isError: false
- LOG  🔄 VOICE_CONTEXT: ====================================================
- LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
- LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
- LOG  🎤 VOICE_BUTTON: ========== STARTING LISTENING ==========
- LOG  🎤 VOICE_BUTTON: Platform: ios
- LOG  🎤 VOICE_BUTTON: Current voiceState: listening
- LOG  🎤 VOICE_BUTTON: Current isListening: false
- LOG  🎤 VOICE_BUTTON: iOS - Starting continuous conversation
- LOG  🎤 Starting continuous conversation (iOS mode)
- LOG  🎤 iOS: Starting continuous conversation mode...
- LOG  🔐 iOS: Requesting permissions...
- LOG  🔐 iOS: Permissions result: true
- LOG  📱 iOS: Calling native startContinuousConversation...
+ ERROR  ReferenceError: Property 'error' doesn't exist
+
+This error is located at:
+    in VoiceAssistant (at HomeScreen.tsx:28)
+    in RCTView (at View.js:116)
+    in View (at HomeScreen.tsx:27)
+    in RCTView (at View.js:116)
+    in View (at HomeScreen.tsx:13)
+    in RCTSafeAreaView (at HomeScreen.tsx:12)
+    in HomeScreen (at SceneView.tsx:132)
+    in StaticContainer
+    in EnsureSingleNavigator (at SceneView.tsx:124)
+    in SceneView (at useDescriptors.tsx:218)
+    in RCTView (at View.js:116)
+    in View (at Screen.tsx:63)
+    in RCTView (at View.js:116)
+    in View (at Background.tsx:13)
+    in Background (at Screen.tsx:58)
+    in Screen (at BottomTabView.tsx:135)
+    in RNSScreen (at createAnimatedComponent.js:54)
+    in Unknown (at src/index.native.tsx:314)
+    in Suspender (at src/index.tsx:27)
+    in Suspense (at src/index.tsx:26)
+    in Freeze (at src/index.native.tsx:206)
+    in DelayedFreeze (at src/index.native.tsx:313)
+    in InnerScreen (at src/index.native.tsx:566)
+    in Screen (at ScreenFallback.tsx:39)
+    in MaybeScreen (at BottomTabView.tsx:127)
+    in RNSScreenNavigationContainer (at src/index.native.tsx:398)
+    in ScreenContainer (at ScreenFallback.tsx:30)
+    in MaybeScreenContainer (at BottomTabView.tsx:93)
+    in RCTView (at View.js:116)
+    in View (at SafeAreaProviderCompat.tsx:43)
+    in SafeAreaProviderCompat (at BottomTabView.tsx:92)
+    in BottomTabView (at createBottomTabNavigator.tsx:118)
+    in PreventRemoveProvider (at useNavigationBuilder.tsx:718)
+    in NavigationContent (at useComponent.tsx:35)
+    in Unknown (at createBottomTabNavigator.tsx:117)
+    in BottomTabNavigator (at App.tsx:608)
+    in MainTabNavigator (at SceneView.tsx:132)
+    in StaticContainer
+    in EnsureSingleNavigator (at SceneView.tsx:124)
+    in SceneView (at useDescriptors.tsx:218)
+    in RCTView (at View.js:116)
+    in View (at DebugContainer.native.tsx:34)
+    in DebugContainer (at NativeStackView.native.tsx:82)
+    in MaybeNestedStack (at NativeStackView.native.tsx:364)
+    in RCTView (at View.js:116)
+    in View (at NativeStackView.native.tsx:357)
+    in RNSScreen (at createAnimatedComponent.js:54)
+    in Unknown (at src/index.native.tsx:314)
+    in Suspender (at src/index.tsx:27)
+    in Suspense (at src/index.tsx:26)
+    in Freeze (at src/index.native.tsx:206)
+    in DelayedFreeze (at src/index.native.tsx:313)
+    in InnerScreen (at src/index.native.tsx:566)
+    in Screen (at NativeStackView.native.tsx:280)
+    in SceneView (at NativeStackView.native.tsx:452)
+    in Suspender (at src/index.tsx:27)
+    in Suspense (at src/index.tsx:26)
+    in Freeze (at src/index.native.tsx:206)
+    in DelayedFreeze (at src/index.native.tsx:220)
+    in RNSScreenStack (at src/index.native.tsx:227)
+    in ScreenStack (at NativeStackView.native.tsx:440)
+    in NativeStackViewInner (at NativeStackView.native.tsx:526)
+    in RNCSafeAreaProvider (at SafeAreaContext.tsx:92)
+    in SafeAreaProvider (at SafeAreaProviderCompat.tsx:55)
+    in SafeAreaProviderCompat (at NativeStackView.native.tsx:525)
+    in NativeStackView (at createNativeStackNavigator.tsx:72)
+    in PreventRemoveProvider (at useNavigationBuilder.tsx:718)
+    in NavigationContent (at useComponent.tsx:35)
+    in Unknown (at createNativeStackNavigator.tsx:71)
+    in NativeStackNavigator (at App.tsx:518)
+    in WakeWordProvider (at App.tsx:517)
+    in VoiceProvider (at App.tsx:473)
+    in AuthProvider (at App.tsx:472)
+    in EnsureSingleNavigator (at BaseNavigationContainer.tsx:433)
+    in BaseNavigationContainer (at NavigationContainer.tsx:132)
+    in ThemeProvider (at NavigationContainer.tsx:131)
+    in NavigationContainerInner (at App.tsx:471)
+    in App (at withDevTools.ios.js:29)
+    in withDevTools(App) (at renderApplication.js:57)
+    in RCTView (at View.js:116)
+    in View (at AppContainer.js:127)
+    in RCTView (at View.js:116)
+    in View (at AppContainer.js:155)
+    in AppContainer (at renderApplication.js:50)
+    in main(RootComponent) (at renderApplication.js:67), js engine: hermes
+ ERROR  ReferenceError: Property 'error' doesn't exist
+
+This error is located at:
+    in VoiceAssistant (at HomeScreen.tsx:28)
+    in RCTView (at View.js:116)
+    in View (at HomeScreen.tsx:27)
+    in RCTView (at View.js:116)
+    in View (at HomeScreen.tsx:13)
+    in RCTSafeAreaView (at HomeScreen.tsx:12)
+    in HomeScreen (at SceneView.tsx:132)
+    in StaticContainer
+    in EnsureSingleNavigator (at SceneView.tsx:124)
+    in SceneView (at useDescriptors.tsx:218)
+    in RCTView (at View.js:116)
+    in View (at Screen.tsx:63)
+    in RCTView (at View.js:116)
+    in View (at Background.tsx:13)
+    in Background (at Screen.tsx:58)
+    in Screen (at BottomTabView.tsx:135)
+    in RNSScreen (at createAnimatedComponent.js:54)
+    in Unknown (at src/index.native.tsx:314)
+    in Suspender (at src/index.tsx:27)
+    in Suspense (at src/index.tsx:26)
+    in Freeze (at src/index.native.tsx:206)
+    in DelayedFreeze (at src/index.native.tsx:313)
+    in InnerScreen (at src/index.native.tsx:566)
+    in Screen (at ScreenFallback.tsx:39)
+    in MaybeScreen (at BottomTabView.tsx:127)
+    in RNSScreenNavigationContainer (at src/index.native.tsx:398)
+    in ScreenContainer (at ScreenFallback.tsx:30)
+    in MaybeScreenContainer (at BottomTabView.tsx:93)
+    in RCTView (at View.js:116)
+    in View (at SafeAreaProviderCompat.tsx:43)
+    in SafeAreaProviderCompat (at BottomTabView.tsx:92)
+    in BottomTabView (at createBottomTabNavigator.tsx:118)
+    in PreventRemoveProvider (at useNavigationBuilder.tsx:718)
+    in NavigationContent (at useComponent.tsx:35)
+    in Unknown (at createBottomTabNavigator.tsx:117)
+    in BottomTabNavigator (at App.tsx:608)
+    in MainTabNavigator (at SceneView.tsx:132)
+    in StaticContainer
+    in EnsureSingleNavigator (at SceneView.tsx:124)
+    in SceneView (at useDescriptors.tsx:218)
+    in RCTView (at View.js:116)
+    in View (at DebugContainer.native.tsx:34)
+    in DebugContainer (at NativeStackView.native.tsx:82)
+    in MaybeNestedStack (at NativeStackView.native.tsx:364)
+    in RCTView (at View.js:116)
+    in View (at NativeStackView.native.tsx:357)
+    in RNSScreen (at createAnimatedComponent.js:54)
+    in Unknown (at src/index.native.tsx:314)
+    in Suspender (at src/index.tsx:27)
+    in Suspense (at src/index.tsx:26)
+    in Freeze (at src/index.native.tsx:206)
+    in DelayedFreeze (at src/index.native.tsx:313)
+    in InnerScreen (at src/index.native.tsx:566)
+    in Screen (at NativeStackView.native.tsx:280)
+    in SceneView (at NativeStackView.native.tsx:452)
+    in Suspender (at src/index.tsx:27)
+    in Suspense (at src/index.tsx:26)
+    in Freeze (at src/index.native.tsx:206)
+    in DelayedFreeze (at src/index.native.tsx:220)
+    in RNSScreenStack (at src/index.native.tsx:227)
+    in ScreenStack (at NativeStackView.native.tsx:440)
+    in NativeStackViewInner (at NativeStackView.native.tsx:526)
+    in RNCSafeAreaProvider (at SafeAreaContext.tsx:92)
+    in SafeAreaProvider (at SafeAreaProviderCompat.tsx:55)
+    in SafeAreaProviderCompat (at NativeStackView.native.tsx:525)
+    in NativeStackView (at createNativeStackNavigator.tsx:72)
+    in PreventRemoveProvider (at useNavigationBuilder.tsx:718)
+    in NavigationContent (at useComponent.tsx:35)
+    in Unknown (at createNativeStackNavigator.tsx:71)
+    in NativeStackNavigator (at App.tsx:518)
+    in WakeWordProvider (at App.tsx:517)
+    in VoiceProvider (at App.tsx:473)
+    in AuthProvider (at App.tsx:472)
+    in EnsureSingleNavigator (at BaseNavigationContainer.tsx:433)
+    in BaseNavigationContainer (at NavigationContainer.tsx:132)
+    in ThemeProvider (at NavigationContainer.tsx:131)
+    in NavigationContainerInner (at App.tsx:471)
+    in App (at withDevTools.ios.js:29)
+    in withDevTools(App) (at renderApplication.js:57)
+    in RCTView (at View.js:116)
+    in View (at AppContainer.js:127)
+    in RCTView (at View.js:116)
+    in View (at AppContainer.js:155)
+    in AppContainer (at renderApplication.js:50)
+    in main(RootComponent) (at renderApplication.js:67), js engine: hermes
+ LOG  Removing deep link event listener...
+ LOG  🧹 Cleaning up voice event listeners
+ LOG  🎧 WAKE_WORD_CONTEXT: Cleaning up wake word event listener
