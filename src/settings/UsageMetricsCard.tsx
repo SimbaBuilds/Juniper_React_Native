@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../supabase/supabase';
 import { Service, UserProfile } from '../supabase/tables';
@@ -123,6 +123,15 @@ export const UsageMetricsCard: React.FC<UsageMetricsCardProps> = ({ userProfile 
           </View>
         ))}
       </View>
+      <TouchableOpacity 
+        style={styles.manageLink}
+        onPress={() => Linking.openURL('https://hightower-ai.com')}
+      >
+        <Text style={styles.manageLinkText}>
+          Manage account and usage limits in our web app
+        </Text>
+        <Ionicons name="open-outline" size={16} color="#4A90E2" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -161,5 +170,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: colors.text.primary,
+  },
+  manageLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 8,
+  },
+  manageLinkText: {
+    fontSize: 14,
+    color: '#4A90E2',
+    fontWeight: '500',
   },
 });
