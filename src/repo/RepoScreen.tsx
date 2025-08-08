@@ -131,7 +131,7 @@ export const RepoScreen: React.FC = () => {
                 </Text>
               </View>
               <Text style={styles.expiringSectionSubtitle}>
-                These resources have low relevance scores and may be outdated
+                These resources have not been accessed by Juniper in a while. Their content, instructions, or tags may need to be adjusted.  Please modify, delete, or reset.
               </Text>
               
               {filteredExpiringResources.map((resource) => {

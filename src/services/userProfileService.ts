@@ -31,7 +31,7 @@ export class UserProfileService {
         },
         perplexity_usage_month: 0,
         textbelt_usage_month: 0,
-        xai_ls_usage_month: 0,
+        xai_live_search_month: 0,
         ubp_current: 0,
         ubp_max: 0
       };

@@ -320,6 +320,10 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   // Enhanced voice settings update function that saves to both local and database
   const handleVoiceSettingsUpdate = async (updates: any) => {
     try {
+      // Debug logging to see what's being passed
+      console.log('🔍 SETTINGS: handleVoiceSettingsUpdate called with:', JSON.stringify(updates, null, 2));
+      console.log('🔍 SETTINGS: updates keys:', Object.keys(updates));
+      
       setSavingToDatabase(true);
       
       // Update local settings first for immediate UI response
@@ -328,7 +332,19 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
       // Save to database if user is authenticated
       if (user?.id) {
         try {
-          // Convert camelCase keys to snake_case for database
+          // Define valid database fields for voice settings
+          const validDbFields = [
+            'deepgram_enabled',
+            'base_language_model', 
+            'general_instructions',
+            'wake_word',
+            'wake_word_sensitivity',
+            'wake_word_detection_enabled',
+            'selected_deepgram_voice',
+            'timezone'
+          ];
+
+          // Convert camelCase keys to snake_case for database, filtering only valid fields
           const dbUpdates = Object.keys(updates).reduce((acc, key) => {
             let dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
             let value = updates[key];
@@ -338,10 +354,16 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               dbKey = 'wake_word';
             }
             
-                          // Allow empty general_instructions
-              if (dbKey === 'general_instructions' && value === null) {
-                value = '';
-              }
+            // Only include valid database fields
+            if (!validDbFields.includes(dbKey)) {
+              console.log('📱 SETTINGS: ⚠️ Skipping invalid database field:', dbKey, 'from key:', key);
+              return acc;
+            }
+            
+            // Allow empty general_instructions
+            if (dbKey === 'general_instructions' && value === null) {
+              value = '';
+            }
             
             acc[dbKey] = value;
             return acc;

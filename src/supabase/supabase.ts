@@ -50,10 +50,6 @@ export const DatabaseService = {
         wake_word_detection_enabled: updates.wake_word_detection_enabled ?? true,
         selected_deepgram_voice: updates.selected_deepgram_voice || 'aura-2-arcas-en',
         timezone: updates.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-        preferences: updates.preferences || {},
-        // User tags defaults
-        user_tags: updates.user_tags || [],
-        // System integrations defaults
         enabled_system_integrations: updates.enabled_system_integrations || {
           perplexity: true,
           textbelt: true,
@@ -138,10 +134,6 @@ export const DatabaseService = {
         wake_word_detection_enabled: true,
         selected_deepgram_voice: 'aura-2-arcas-en',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-        preferences: {},
-        // User tags defaults
-        user_tags: [],
-        // System integrations defaults
         enabled_system_integrations: {
           perplexity: true,
           textbelt: true,
@@ -290,21 +282,6 @@ export const DatabaseService = {
         await this.createTag(serviceType, 'service_type');
       }
     }
-  },
-
-  async migrateUserProfileTags(userId: string): Promise<void> {
-    const profile = await this.getUserProfile(userId);
-    const oldTags = profile?.user_tags || [];
-    
-    if (oldTags.length === 0) return;
-    
-    // Create tag records for each user tag
-    for (const tagName of oldTags) {
-      await this.createTag(tagName, 'user_created', userId);
-    }
-    
-    // Clear old user_tags array
-    await this.updateUserProfile(userId, { user_tags: [] });
   },
 
   // Legacy methods for backward compatibility (deprecated)

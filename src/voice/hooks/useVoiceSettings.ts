@@ -79,7 +79,9 @@ export const useVoiceSettings = () => {
 
   // Update voice settings
   const updateSettings = useCallback(async (updates: Partial<VoiceSettings>) => {
-
+    // Debug logging to see what's being passed
+    console.log('🔍 VOICE_SETTINGS: updateSettings called with:', JSON.stringify(updates, null, 2));
+    console.log('🔍 VOICE_SETTINGS: updates keys:', Object.keys(updates));
     
     const newSettings = {
       ...settings,
@@ -94,7 +96,19 @@ export const useVoiceSettings = () => {
     if (user?.id) {
       try {
 
-        // Convert camelCase keys to snake_case for database
+        // Define valid database fields for voice settings
+        const validDbFields = [
+          'deepgram_enabled',
+          'base_language_model', 
+          'general_instructions',
+          'wake_word',
+          'wake_word_sensitivity',
+          'wake_word_detection_enabled',
+          'selected_deepgram_voice',
+          'timezone'
+        ];
+
+        // Convert camelCase keys to snake_case for database, filtering only valid fields
         const dbUpdates = Object.keys(updates).reduce((acc, key) => {
           let dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
           let value = updates[key as keyof Partial<VoiceSettings>];
@@ -102,6 +116,12 @@ export const useVoiceSettings = () => {
           // Map selectedWakeWord to wake_word (consolidating duplicate fields)
           if (key === 'selectedWakeWord') {
             dbKey = 'wake_word';
+          }
+          
+          // Only include valid database fields
+          if (!validDbFields.includes(dbKey)) {
+            console.log('📱 VOICE_SETTINGS: ⚠️ Skipping invalid database field:', dbKey, 'from key:', key);
+            return acc;
           }
           
           // Allow empty general_instructions

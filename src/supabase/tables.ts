@@ -1,4 +1,4 @@
-export type SystemIntegration = 'perplexity' | 'textbelt' | 'xai_live_search';
+export type SystemIntegration = 'perplexity' | 'textbelt' | 'xai_live_search' | 'twitter_x';
 
 export type EnabledSystemIntegrations = Record<SystemIntegration, boolean>;
 
@@ -28,20 +28,31 @@ export type UserProfile = {
     // Service-specific usage tracking (monthly only)
     perplexity_usage_month: number;
     textbelt_usage_month: number;
-    xai_ls_usage_month: number;
+    xai_live_search_month: number;
+    
+    // Stripe subscription fields
+    stripe_customer_id?: string;
+    stripe_subscription_id?: string;
+    subscription_status?: string;
+    subscription_tier?: string;
+    subscription_current_period_end?: Date;
+    subscription_cancel_at_period_end?: boolean;
+    
     created_at: Date;
     updated_at: Date;
     ubp_current: number;
     ubp_max: number;
+    user_tags?: string[]; // deprecated but some weird mapping happening hard to remove
   };
   
   export const userProfileFields = [
     'id', 'display_name', 'name', 'location', 'education', 'profession', 'language', 'deepgram_enabled', 'base_language_model', 'general_instructions',
-    'wake_word', 'wake_word_sensitivity', 'wake_word_detection_enabled', 'selected_deepgram_voice', 'timezone', 'preferences', 
-    'user_tags', 'enabled_system_integrations',
+    'wake_word', 'wake_word_sensitivity', 'wake_word_detection_enabled', 'selected_deepgram_voice', 'timezone', 
+    'enabled_system_integrations',
     'requests_today', 'requests_week', 'requests_month', 
-    'perplexity_usage_month', 'textbelt_usage_month', 'xai_ls_usage_month',
-    'created_at', 'updated_at'
+    'perplexity_usage_month', 'textbelt_usage_month', 'xai_live_search_month',
+    'stripe_customer_id', 'stripe_subscription_id', 'subscription_status', 'subscription_tier', 'subscription_current_period_end', 'subscription_cancel_at_period_end',
+    'created_at', 'updated_at', 'ubp_current', 'ubp_max'
   ] as const;
   export type UserProfileField = (typeof userProfileFields)[number];
   

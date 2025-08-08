@@ -93,7 +93,7 @@ export const UsageMetricsCard: React.FC<UsageMetricsCardProps> = ({ userProfile 
     },
     {
       serviceName: 'XAI Live Search',
-      field: 'xai_ls_usage_month',
+      field: 'xai_live_search_month',
       icon: 'logo-twitter',
     },
   ];
