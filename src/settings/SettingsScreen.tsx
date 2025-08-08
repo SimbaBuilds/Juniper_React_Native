@@ -18,6 +18,7 @@ import { SettingsArrayInput } from './components/SettingsArrayInput';
 import { SettingsNumberInput } from './components/SettingsNumberInput';
 import { VoiceSelectionDropdown } from './components/VoiceSelectionDropdown';
 import { PermissionsCard } from './components/PermissionsCard';
+import { UsageMetricsCard } from './UsageMetricsCard';
 import WakeWordService from '../wakeword/WakeWordService';
 import { DEFAULT_WAKE_PHRASE } from '../wakeword/constants';
 import { colors } from '../shared/theme/colors';
@@ -31,9 +32,6 @@ export interface VoiceSettings {
   wakeWordSensitivity: number;
   wakeWordDetectionEnabled: boolean;
   selectedDeepgramVoice: string;
-  // XAI LiveSearch settings
-  xaiLiveSearchEnabled: boolean;
-  xaiLiveSearchSafeSearch: boolean;
   // Timezone setting
   timezone: string;
 }
@@ -215,6 +213,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   // Local state for general instructions to avoid database updates on every character
   const [localGeneralInstructions, setLocalGeneralInstructions] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
 
 
@@ -239,6 +238,11 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         try {
           console.log('🔄 SETTINGS: Refreshing settings from database on focus...');
           await refreshSettingsRef.current();
+          
+          // Also fetch full user profile for usage metrics
+          const profile = await DatabaseService.getUserProfile(user.id);
+          setUserProfile(profile);
+          
           console.log('✅ SETTINGS: Settings refreshed successfully');
         } catch (error) {
           console.error('❌ SETTINGS: Error refreshing settings from database:', error);
@@ -631,30 +635,6 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             description="The model used for chat; other models are used for complex backend tasks."
           />
 
-          <ExpandableSettingsToggle
-            label="XAI LiveSearch"
-            value={settings.xaiLiveSearchEnabled || false}
-            onValueChange={async (xaiLiveSearchEnabled) => {
-              await handleVoiceSettingsUpdate({ xaiLiveSearchEnabled });
-            }}
-            description="Make XAI LiveSearch the default search tool.  If toggled off, your assistant will default to a traditional web search engine."
-            hasSubSettings={true}
-          >
-            <View style={styles.noteContainer}>
-              <Text style={styles.noteText}>
-                💡 You can specify specific X handles and date ranges in your request (e.g., "search X posts from Shelby Talcott about recent updates from the White House from the past two days")
-              </Text>
-            </View>
-            
-            <SettingsToggle
-              label="Safe Search"
-              value={settings.xaiLiveSearchSafeSearch !== false}
-              onValueChange={async (xaiLiveSearchSafeSearch) => {
-                await handleVoiceSettingsUpdate({ xaiLiveSearchSafeSearch });
-              }}
-              description="Enable safe search filtering for web and news sources. Enabled by default to filter explicit content."
-            />
-          </ExpandableSettingsToggle>
         </View>
 
         <View style={styles.accountSection}>
@@ -671,6 +651,8 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             </View>
           )}
+
+          <UsageMetricsCard userProfile={userProfile} />
 
           <TouchableOpacity
             style={styles.logoutButton}

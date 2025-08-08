@@ -51,8 +51,7 @@ function mapServiceName(dbServiceName: string): string {
     'Slack': 'slack',
     'Zoom': 'zoom',
     'Perplexity': 'perplexity',
-    'Twitter_X': 'twitter',
-    'X': 'twitter',
+    'XAI Live Search': 'xai_live_search',
     'Google Sheets': 'google-sheets',
     'Google Docs': 'google-docs',
     'Gmail': 'gmail',
@@ -67,7 +66,7 @@ function mapServiceName(dbServiceName: string): string {
     'Todoist': 'todoist'
   };
   
-  return serviceMap[dbServiceName] || dbServiceName.toLowerCase().replace(/\s+/g, '-');
+  return serviceMap[dbServiceName] || dbServiceName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
 }
 
 export class IntegrationService {

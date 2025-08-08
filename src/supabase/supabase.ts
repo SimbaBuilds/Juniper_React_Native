@@ -51,15 +51,13 @@ export const DatabaseService = {
         selected_deepgram_voice: updates.selected_deepgram_voice || 'aura-2-arcas-en',
         timezone: updates.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         preferences: updates.preferences || {},
-        // XAI LiveSearch defaults
-        xai_live_search_enabled: updates.xai_live_search_enabled ?? true,
-        xai_live_search_safe_search: updates.xai_live_search_safe_search ?? true,
         // User tags defaults
         user_tags: updates.user_tags || [],
-        // System integrations defaults (enabled by default)
+        // System integrations defaults
         enabled_system_integrations: updates.enabled_system_integrations || {
-          twitter_x: true,
-          perplexity: true
+          perplexity: true,
+          textbelt: true,
+          xai_live_search: true
         },
         updated_at: new Date().toISOString()
       };
@@ -109,9 +107,6 @@ export const DatabaseService = {
       wake_word_sensitivity: profile.wake_word_sensitivity,
       wake_word_detection_enabled: profile.wake_word_detection_enabled,
       selected_deepgram_voice: profile.selected_deepgram_voice,
-      // XAI LiveSearch settings
-      xai_live_search_enabled: profile.xai_live_search_enabled,
-      xai_live_search_safe_search: profile.xai_live_search_safe_search,
       // Timezone setting
       timezone: profile.timezone,
     }
@@ -125,8 +120,6 @@ export const DatabaseService = {
     wake_word_sensitivity?: number;
     wake_word?: string;
     selected_deepgram_voice?: string;
-    xai_live_search_enabled?: boolean;
-    xai_live_search_safe_search?: boolean;
     timezone?: string;
   }) {
     // First, ensure the user profile exists with all required fields
@@ -146,15 +139,13 @@ export const DatabaseService = {
         selected_deepgram_voice: 'aura-2-arcas-en',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         preferences: {},
-        // XAI LiveSearch defaults
-        xai_live_search_enabled: true,
-        xai_live_search_safe_search: true,
         // User tags defaults
         user_tags: [],
-        // System integrations defaults (enabled by default)
+        // System integrations defaults
         enabled_system_integrations: {
-          twitter_x: true,
-          perplexity: true
+          perplexity: true,
+          textbelt: true,
+          xai_live_search: true
         },
         updated_at: new Date().toISOString()
       };
@@ -856,12 +847,14 @@ export const DatabaseService = {
     }
   },
 
-  // System integration management (generic for any system integration)
+
+  // System integration management
   async updateSystemIntegration(userId: string, integration: string, enabled: boolean) {
     const currentProfile = await this.getUserProfile(userId);
     const enabledIntegrations = currentProfile?.enabled_system_integrations || {
-      twitter_x: true,
-      perplexity: true
+      perplexity: true,
+      textbelt: true,
+      xai_live_search: true
     };
     
     const updatedIntegrations = {
@@ -877,8 +870,9 @@ export const DatabaseService = {
   async getSystemIntegrations(userId: string) {
     const profile = await this.getUserProfile(userId);
     return profile?.enabled_system_integrations || {
-      twitter_x: true,
-      perplexity: true
+      perplexity: true,
+      textbelt: true,
+      xai_live_search: true
     };
   },
 

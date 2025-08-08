@@ -18,9 +18,6 @@ const defaultVoiceSettings: VoiceSettings = {
   wakeWordSensitivity: 0.3,
   wakeWordDetectionEnabled: false,
   selectedDeepgramVoice: 'aura-2-thalia-en',
-  // XAI LiveSearch settings
-  xaiLiveSearchEnabled: false,
-  xaiLiveSearchSafeSearch: true,
   // Timezone setting
   timezone: 'UTC',
 };
@@ -263,9 +260,7 @@ export const useVoiceSettings = () => {
       
       // Also sync other settings if they changed
       const hasOtherChanges = 'baseLanguageModel' in updates || 
-                             'generalInstructions' in updates ||
-                             'xaiLiveSearchEnabled' in updates ||
-                             'xaiLiveSearchSafeSearch' in updates;
+                             'generalInstructions' in updates;
       
       
 

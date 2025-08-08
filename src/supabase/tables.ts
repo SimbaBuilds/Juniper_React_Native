@@ -1,3 +1,7 @@
+export type SystemIntegration = 'perplexity' | 'textbelt' | 'xai_live_search';
+
+export type EnabledSystemIntegrations = Record<SystemIntegration, boolean>;
+
 export type UserProfile = {
     id: string;
     display_name?: string;
@@ -14,35 +18,29 @@ export type UserProfile = {
     wake_word_detection_enabled: boolean;
     selected_deepgram_voice: string;
     timezone: string;
-    preferences: Record<string, any>;
-    // XAI LiveSearch settings
-    xai_live_search_enabled?: boolean;
-    xai_live_search_safe_search?: boolean;
-    // User-defined tags for categorization and organization (max 50 tags)
-    user_tags: string[];
     // Integration enablement flags
-    enabled_system_integrations: {
-      twitter_x: boolean;
-      perplexity: boolean;
-    };
+    enabled_system_integrations: EnabledSystemIntegrations;
+
     // Usage tracking
     requests_today: number;
     requests_week: number;
     requests_month: number;
     // Service-specific usage tracking (monthly only)
     perplexity_usage_month: number;
-    twitter_x_usage_month: number;
     textbelt_usage_month: number;
+    xai_ls_usage_month: number;
     created_at: Date;
     updated_at: Date;
+    ubp_current: number;
+    ubp_max: number;
   };
   
   export const userProfileFields = [
     'id', 'display_name', 'name', 'location', 'education', 'profession', 'language', 'deepgram_enabled', 'base_language_model', 'general_instructions',
     'wake_word', 'wake_word_sensitivity', 'wake_word_detection_enabled', 'selected_deepgram_voice', 'timezone', 'preferences', 
-    'xai_live_search_enabled', 'xai_live_search_safe_search', 'user_tags', 'enabled_system_integrations',
+    'user_tags', 'enabled_system_integrations',
     'requests_today', 'requests_week', 'requests_month', 
-    'perplexity_usage_month', 'twitter_x_usage_month', 'textbelt_usage_month',
+    'perplexity_usage_month', 'textbelt_usage_month', 'xai_ls_usage_month',
     'created_at', 'updated_at'
   ] as const;
   export type UserProfileField = (typeof userProfileFields)[number];
@@ -252,6 +250,7 @@ export type UserProfile = {
     execution_timeout?: number;        // Timeout in seconds
     rate_limit?: number;              // Max executions per minute
     tag_id?: string;                   // Foreign key to Tag.id
+    required_intelligence?: number;    // Intelligence level required (1=basic, 2=standard, 3=high, 4=maximum)
     // Foreign key columns for resources (up to 5 resources per service tool)
     resource_1_id?: string;           // Foreign key to Resource.id
     resource_2_id?: string;           // Foreign key to Resource.id
@@ -267,7 +266,7 @@ export type UserProfile = {
     'returns', 'example', 'run_script', 'endpoint_url', 'http_method',
     'auth_required', 'category', 'version', 'is_active', 'execution_timeout',
     'rate_limit', 'tag_id', 'resource_1_id', 'resource_2_id', 'resource_3_id', 'resource_4_id', 'resource_5_id',
-    'created_at', 'updated_at'
+    'created_at', 'updated_at', 'required_intelligence'
   ] as const;
   export type ServiceToolField = (typeof serviceToolFields)[number];
 

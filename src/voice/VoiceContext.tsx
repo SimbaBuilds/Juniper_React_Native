@@ -294,9 +294,6 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           wakeWordSensitivity: voiceSettings.wake_word_sensitivity ?? 0.3,
           wakeWordDetectionEnabled: voiceSettings.wake_word_detection_enabled ?? true,
           selectedDeepgramVoice: voiceSettings.selected_deepgram_voice || 'aura-2-mars-en',
-          // XAI LiveSearch settings
-          xaiLiveSearchEnabled: voiceSettings.xai_live_search_enabled ?? true,
-          xaiLiveSearchSafeSearch: voiceSettings.xai_live_search_safe_search ?? true,
         };
         
         // console.log('🔄 VOICE_CONTEXT: ========== MERGED SETTINGS FOR NATIVE ==========');
@@ -308,8 +305,6 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         // console.log('🔄 VOICE_CONTEXT: wakeWordSensitivity:', updates.wakeWordSensitivity);
         // console.log('🔄 VOICE_CONTEXT: wakeWordDetectionEnabled:', updates.wakeWordDetectionEnabled);
         // console.log('🔄 VOICE_CONTEXT: selectedDeepgramVoice:', updates.selectedDeepgramVoice);
-        // console.log('🔄 VOICE_CONTEXT: xaiLiveSearchEnabled:', updates.xaiLiveSearchEnabled);
-        // console.log('🔄 VOICE_CONTEXT: xaiLiveSearchSafeSearch:', updates.xaiLiveSearchSafeSearch);
         // console.log('🔄 VOICE_CONTEXT: Current settings before update:', JSON.stringify(voiceSettings, null, 2));
         
         // Specifically log wake word detection refresh

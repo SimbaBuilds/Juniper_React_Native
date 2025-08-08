@@ -19,27 +19,21 @@ export class UserProfileService {
         wake_word_detection_enabled: true,
         selected_deepgram_voice: 'aura-2-mars-en',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-        preferences: {
-          theme: 'system',
-          notifications: true,
-          privacy: {
-            shareUsageData: false,
-            personalizedExperience: true
-          },
-          language: 'en'
-        },
-        // XAI LiveSearch defaults
-        xai_live_search_enabled: true,
-        xai_live_search_safe_search: true,
         // Add missing properties
-        user_tags: [],
         requests_today: 0,
         requests_week: 0,
         requests_month: 0,
+        // System integrations defaults
         enabled_system_integrations: {
-          twitter_x: true,
-          perplexity: true
-        }
+          perplexity: true,
+          textbelt: true,
+          xai_live_search: true
+        },
+        perplexity_usage_month: 0,
+        textbelt_usage_month: 0,
+        xai_ls_usage_month: 0,
+        ubp_current: 0,
+        ubp_max: 0
       };
 
       const { data, error } = await supabase

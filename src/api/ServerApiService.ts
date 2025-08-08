@@ -44,12 +44,6 @@ export interface ChatRequest {
     timestamp: number;
     type: 'text';  // Backend expects 'text' for the type field
   }>;
-  preferences?: {
-    voice?: string;
-    response_type?: string;
-    model?: string; // Language model to use (e.g., 'grok-3', 'grok-3.5', 'o3-mini-2025-01-31', 'claude-sonnet-4-20250514')
-    [key: string]: any;
-  };
   request_id?: string; // Optional request ID for tracking
   integration_in_progress?: boolean; // Flag to indicate integration completion message
   image_url?: string; // Optional image URL for messages with attachments
@@ -193,7 +187,6 @@ class ServerApiService {
   public async sendChatRequest(
     message: string,
     history: ChatMessage[],
-    preferences?: ChatRequest['preferences'],
     onRequestStart?: (requestId: string) => void | Promise<void>,
     integrationInProgress?: boolean,
     imageUrl?: string,
@@ -226,12 +219,7 @@ class ServerApiService {
         console.log('🔴 SERVER_API: Adding delay for Android stability...');
         await new Promise(resolve => setTimeout(resolve, 150));
         
-        // Extract baseLanguageModel from voice settings and include it in preferences
-        const defaultPreferences: ChatRequest['preferences'] = {
-          voice: 'male',
-          response_type: 'concise'
-        };
-        
+
 
         const jsonData: ChatRequest = {
           message,
@@ -242,10 +230,6 @@ class ServerApiService {
             timestamp: msg.timestamp,
             type: 'text'  // Always set type to 'text' for now
           })),
-          preferences: {
-            ...defaultPreferences,
-            ...preferences // Allow override of defaults with passed preferences
-          },
           request_id: this.currentRequestId, // Include request_id in the payload
           ...(integrationInProgress && { integration_in_progress: integrationInProgress }),
           ...(imageUrl && { image_url: imageUrl })

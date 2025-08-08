@@ -245,15 +245,25 @@ export const IntegrationsScreen: React.FC = () => {
       ]);
       
       // Map services to their status
-      const servicesWithStatus: ServiceWithStatus[] = await Promise.all(
+      const serviceResults = await Promise.all(
         allServices.map(async (service: any) => {
           const serviceName = service.service_name.toLowerCase();
           
           // Check if this is a system integration (based on service type from database)
           if (service.type === 'system') {
-            // For system integrations, we need to map the service name to the integration key
-            // The integration key should match the service name for consistency
-            const integrationKey = serviceName;
+            // Map specific system services to their integration keys
+            const serviceKeyMap: Record<string, string> = {
+              'Perplexity': 'perplexity',
+              'Textbelt': 'textbelt',
+              'XAI Live Search': 'xai_live_search'
+            };
+            
+            const integrationKey = serviceKeyMap[service.service_name];
+            if (!integrationKey) {
+              console.warn(`No integration key mapped for system service: ${service.service_name}`);
+              return null;
+            }
+            
             const isActive = systemIntegrations[integrationKey] ?? true; // Default to true for system integrations
             
             return {
@@ -308,6 +318,9 @@ export const IntegrationsScreen: React.FC = () => {
           };
         })
       );
+      
+      // Filter out null results for system services without mapped integration keys
+      const servicesWithStatus: ServiceWithStatus[] = serviceResults.filter(Boolean);
       
       setServices(servicesWithStatus);
     } catch (err) {
@@ -527,8 +540,18 @@ export const IntegrationsScreen: React.FC = () => {
 
       console.log(`🔧 Toggling system integration: ${service.service_name} to ${enabled}`);
       
-      // Use the service name as the integration key for consistency
-      const integrationKey = service.service_name.toLowerCase();
+      // Map specific system services to their integration keys
+      const serviceKeyMap: Record<string, string> = {
+        'Perplexity': 'perplexity',
+        'Textbelt': 'textbelt',
+        'XAI Live Search': 'xai_live_search'
+      };
+      
+      const integrationKey = serviceKeyMap[service.service_name];
+      if (!integrationKey) {
+        Alert.alert('Error', `No integration key mapped for system service: ${service.service_name}`);
+        return;
+      }
       
       await DatabaseService.updateSystemIntegration(user.id, integrationKey, enabled);
       
