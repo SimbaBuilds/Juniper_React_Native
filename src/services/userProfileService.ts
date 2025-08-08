@@ -27,7 +27,7 @@ export class UserProfileService {
         enabled_system_integrations: {
           perplexity: true,
           textbelt: true,
-          xai_live_search: true
+          xai_live_search: true,
         },
         perplexity_usage_month: 0,
         textbelt_usage_month: 0,

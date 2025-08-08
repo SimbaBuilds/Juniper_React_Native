@@ -95,7 +95,7 @@ export const RepoScreen: React.FC = () => {
             Add/edit resources by telling your assistant e.g.{'\n'}
             "Remember the details of this workflow for future reference."
             {'\n\n'}
-            Or use the + button above to add manually
+            Or use the + button above to add manually.  You can also manage resources in the web application.
           </Text>
         </View>
 

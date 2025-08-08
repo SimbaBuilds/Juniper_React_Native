@@ -352,6 +352,52 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
       access_type: 'offline',
       prompt: 'consent'
     }
+  },
+
+  'fitbit': {
+    serviceName: 'fitbit',
+    clientId: getServiceClientId('FITBIT'),
+    clientSecret: getServiceClientSecret('FITBIT'),
+    scopes: [
+      'activity',
+      'heartrate',
+      'location',
+      'nutrition',
+      'profile',
+      'settings',
+      'sleep',
+      'social',
+      'weight'
+    ],
+    redirectUri: generateRedirectUri('fitbit'),
+    authEndpoint: 'https://www.fitbit.com/oauth2/authorize',
+    tokenEndpoint: 'https://api.fitbit.com/oauth2/token',
+    revokeEndpoint: 'https://api.fitbit.com/oauth2/revoke',
+    additionalParameters: {
+      prompt: 'consent'
+    }
+  },
+
+  'oura': {
+    serviceName: 'oura',
+    clientId: getServiceClientId('OURA'),
+    clientSecret: getServiceClientSecret('OURA'),
+    scopes: [
+      'email',
+      'personal',
+      'daily',
+      'heartrate',
+      'workout',
+      'tag',
+      'session',
+      'spo2'
+    ],
+    redirectUri: generateRedirectUri('oura'),
+    authEndpoint: 'https://cloud.ouraring.com/oauth/authorize',
+    tokenEndpoint: 'https://api.ouraring.com/oauth/token',
+    additionalParameters: {
+      prompt: 'consent'
+    }
   }
 };
 

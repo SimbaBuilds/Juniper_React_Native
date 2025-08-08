@@ -1,4 +1,4 @@
-export type SystemIntegration = 'perplexity' | 'textbelt' | 'xai_live_search' | 'twitter_x';
+export type SystemIntegration = 'perplexity' | 'textbelt' | 'xai_live_search';
 
 export type EnabledSystemIntegrations = Record<SystemIntegration, boolean>;
 

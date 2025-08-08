@@ -21,6 +21,8 @@ export { default as MicrosoftWordAuthService } from './services/MicrosoftWordAut
 export { default as MicrosoftOutlookCalendarAuthService } from './services/MicrosoftOutlookCalendarAuthService';
 export { default as MicrosoftOutlookMailAuthService } from './services/MicrosoftOutlookMailAuthService';
 export { default as MicrosoftTeamsAuthService } from './services/MicrosoftTeamsAuthService';
+export { default as FitbitAuthService } from './services/FitbitAuthService';
+export { default as OuraAuthService } from './services/OuraAuthService';
 
 // Import services for use in getAuthService
 import NotionAuthService from './services/NotionAuthService';
@@ -39,6 +41,8 @@ import MicrosoftWordAuthService from './services/MicrosoftWordAuthService';
 import MicrosoftOutlookCalendarAuthService from './services/MicrosoftOutlookCalendarAuthService';
 import MicrosoftOutlookMailAuthService from './services/MicrosoftOutlookMailAuthService';
 import MicrosoftTeamsAuthService from './services/MicrosoftTeamsAuthService';
+import FitbitAuthService from './services/FitbitAuthService';
+import OuraAuthService from './services/OuraAuthService';
 
 // Export types for external use
 export type { NotionAuthService as NotionAuthServiceType } from './services/NotionAuthService';
@@ -56,6 +60,8 @@ export type { MicrosoftWordAuthService as MicrosoftWordAuthServiceType } from '.
 export type { MicrosoftOutlookCalendarAuthService as MicrosoftOutlookCalendarAuthServiceType } from './services/MicrosoftOutlookCalendarAuthService';
 export type { MicrosoftOutlookMailAuthService as MicrosoftOutlookMailAuthServiceType } from './services/MicrosoftOutlookMailAuthService';
 export type { MicrosoftTeamsAuthService as MicrosoftTeamsAuthServiceType } from './services/MicrosoftTeamsAuthService';
+export type { FitbitAuthService as FitbitAuthServiceType } from './services/FitbitAuthService';
+export type { OuraAuthService as OuraAuthServiceType } from './services/OuraAuthService';
 
 // Service factory function for easier access
 export const getAuthService = (serviceName: string) => {
@@ -97,6 +103,10 @@ export const getAuthService = (serviceName: string) => {
     case 'microsoft-teams':
     case 'microsoft_teams':
       return MicrosoftTeamsAuthService.getInstance();
+    case 'fitbit':
+      return FitbitAuthService.getInstance();
+    case 'oura':
+      return OuraAuthService.getInstance();
     default:
       throw new Error(`OAuth service not implemented for: ${serviceName}`);
   }
