@@ -24,11 +24,6 @@ interface UseServerApiResult {
  */
 interface UseServerApiOptions {
   initialConfig?: Partial<ServerApiConfig>;
-  preferences?: {
-    voice?: string;
-    response_type?: string;
-    [key: string]: any;
-  };
   onResponse?: (response: ChatResponse) => void;
   onError?: (error: Error) => void;
 }
@@ -68,7 +63,6 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
       const result = await ServerApiService.sendChatRequest(
         message, 
         history, 
-        options.preferences,
         onRequestStart,
         integrationInProgress,
         imageUrl,
@@ -98,7 +92,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
       
       throw error;
     }
-  }, [options.preferences, options.onResponse, options.onError]);
+  }, [options.onResponse, options.onError]);
 
   /**
    * Cancel the current request and clear native state

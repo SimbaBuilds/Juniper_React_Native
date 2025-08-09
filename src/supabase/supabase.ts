@@ -47,7 +47,7 @@ export const DatabaseService = {
         general_instructions: updates.general_instructions || '',
         wake_word: updates.wake_word || DEFAULT_WAKE_PHRASE,
         wake_word_sensitivity: updates.wake_word_sensitivity ?? 0.3,
-        wake_word_detection_enabled: updates.wake_word_detection_enabled ?? true,
+        wake_word_detection_enabled: updates.wake_word_detection_enabled ?? false,
         selected_deepgram_voice: updates.selected_deepgram_voice || 'aura-2-arcas-en',
         timezone: updates.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         enabled_system_integrations: updates.enabled_system_integrations || {
@@ -131,7 +131,7 @@ export const DatabaseService = {
         general_instructions: '',
         wake_word: DEFAULT_WAKE_PHRASE,
         wake_word_sensitivity: 0.3,
-        wake_word_detection_enabled: true,
+        wake_word_detection_enabled: false,
         selected_deepgram_voice: 'aura-2-arcas-en',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         enabled_system_integrations: {

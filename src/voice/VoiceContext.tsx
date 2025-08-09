@@ -292,7 +292,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           wakeWord: voiceSettings.selectedWakeWord || DEFAULT_WAKE_PHRASE,
           selectedWakeWord: voiceSettings.selectedWakeWord || DEFAULT_WAKE_PHRASE,
           wakeWordSensitivity: voiceSettings.wake_word_sensitivity ?? 0.3,
-          wakeWordDetectionEnabled: voiceSettings.wake_word_detection_enabled ?? true,
+          wakeWordDetectionEnabled: voiceSettings.wake_word_detection_enabled ?? false,
           selectedDeepgramVoice: voiceSettings.selected_deepgram_voice || 'aura-2-mars-en',
         };
         

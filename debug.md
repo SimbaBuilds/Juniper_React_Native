@@ -1,5 +1,6 @@
- LOG  WakeWordModule available: No
- ERROR  Error: Cannot find native module 'ExponentImagePicker', js engine: hermes
- LOG  ServerApiService config updated: {"apiEndpoint": "/api/chat", "baseUrl": "https://mobile-jarvis-backend.onrender.com"}
- LOG  Loaded server config from native settings: {"apiEndpoint": "/api/chat", "baseUrl": "https://mobile-jarvis-backend.onrender.com"}
- ERROR  [AuthApiError: Invalid Refresh Token: Refresh Token Not Found]
+ ERROR  ❌ API Response Error: 500 /api/chat
+ ERROR  📱 Android: API request failed with status: 500
+ ERROR  🔴 SERVER_API: ❌ API request error: [AxiosError: Request failed with status code 500]
+ ERROR  🔴 SERVER_API: API request failed in queue
+ ERROR  🔴 SERVER_API: ❌ Error sending chat request: [AxiosError: Request failed with status code 500]
+ ERROR  🔴 SERVER_API: Queued request failed

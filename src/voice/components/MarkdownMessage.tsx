@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Linking } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { colors } from '../../shared/theme/colors';
 
@@ -9,12 +9,18 @@ interface MarkdownMessageProps {
   role?: 'user' | 'assistant';
 }
 
+const autoLinkUrls = (text: string): string => {
+  const urlRegex = /(https?:\/\/[^\s\[\]()]+)/g;
+  return text.replace(urlRegex, '[$1]($1)');
+};
+
 export const MarkdownMessage: React.FC<MarkdownMessageProps> = ({ 
   content, 
   style,
   role = 'user'
 }) => {
   const textColor = role === 'assistant' ? '#333333' : colors.text.primary;
+  const processedContent = autoLinkUrls(content);
   
   const dynamicStyles = StyleSheet.create({
     body: {
@@ -96,8 +102,13 @@ export const MarkdownMessage: React.FC<MarkdownMessageProps> = ({
     <Markdown 
       style={dynamicStyles}
       mergeStyle={true}
+      onLinkPress={(url) => {
+        Linking.openURL(url).catch((err) => 
+          console.error('Failed to open URL:', err)
+        );
+      }}
     >
-      {content}
+      {processedContent}
     </Markdown>
   );
 };
