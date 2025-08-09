@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { MAX_TAG_LENGTH, MAX_MEMORY_TAGS } from '../constants/tags';
 import { DatabaseService } from '../../supabase/supabase';
+import { colors } from '../../shared/theme/colors';
 
 interface TagSelectorProps {
   selectedTags: any[]; // Array of tag objects
@@ -198,7 +199,7 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
     borderRadius: 8,
     padding: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.text.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -238,7 +239,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.text.primary,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -308,6 +309,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   selectedTagButtonText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
 }); 

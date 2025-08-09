@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../../shared/theme/colors';
 
 interface SettingsDropdownProps<T> {
   label: string;
@@ -112,7 +113,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 4,
   },
   description: {
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
   },
   dropdownButtonText: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     flex: 1,
   },
   disabledText: {
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
   dropdownTitle: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   optionsList: {
     maxHeight: 300,
@@ -185,7 +186,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     flex: 1,
   },
   selectedOptionText: {

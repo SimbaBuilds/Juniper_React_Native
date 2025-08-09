@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { colors } from '../../shared/theme/colors';
 
 interface SettingsTextInputProps {
   label: string;
@@ -65,6 +66,7 @@ export const SettingsTextInput: React.FC<SettingsTextInputProps> = ({
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#1E1E1E',
@@ -75,7 +77,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 4,
   },
   counter: {
@@ -97,7 +99,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2A2A2A',
     borderRadius: 6,
     padding: 12,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#3A3A3A',

@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { HotPhrase } from '../supabase/tables';
 import { DatabaseService } from '../supabase/supabase';
+import { colors } from '../shared/theme/colors';
 
 interface HotPhraseModalProps {
   visible: boolean;
@@ -359,7 +360,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   closeButton: {
     padding: 4,
@@ -373,7 +374,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   input: {
@@ -497,7 +498,7 @@ const styles = StyleSheet.create({
   pickerTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   pickerList: {
     maxHeight: 300,

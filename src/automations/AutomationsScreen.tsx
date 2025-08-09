@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
 import { HotPhraseSection } from './HotPhraseSection';
+import { colors } from '../shared/theme/colors';
 
 interface Automation {
   id: string;
@@ -175,9 +176,9 @@ export const AutomationsScreen: React.FC = () => {
         </View>
 
         {/* Hot Phrases Section */}
-        <View style={styles.divider} />
+        {/* <View style={styles.divider} /> */}
         
-        <HotPhraseSection userId={user?.id || ''} />
+        {/* <HotPhraseSection userId={user?.id || ''} /> */}
       </ScrollView>
     </SafeAreaView>
   );
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   instructionsSection: {
     backgroundColor: '#1E1E1E',
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
   instructionsTitle: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 12,
   },
   instructionsText: {
@@ -222,7 +223,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 16,
   },
   automationCard: {
@@ -245,7 +246,7 @@ const styles = StyleSheet.create({
   automationName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginLeft: 12,
     flex: 1,
   },
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 4,
   },
   detailValue: {
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
   exampleTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   exampleText: {

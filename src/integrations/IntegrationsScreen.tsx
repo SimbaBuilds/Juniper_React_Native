@@ -9,6 +9,7 @@ import IntegrationEmailService from '../services/IntegrationEmailService';
 import TwilioCredentialsModal from './components/TwilioCredentialsModal';
 import TextbeltCredentialsModal from './components/TextbeltCredentialsModal';
 import { SettingsToggle } from '../settings/components/SettingsToggle';
+import { colors } from '../shared/theme/colors';
 
 interface ServiceWithStatus {
   id: string;
@@ -936,7 +937,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   subtitle: {
@@ -959,7 +960,7 @@ const styles = StyleSheet.create({
   categoryTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginLeft: 8,
   },
   categoryDivider: {
@@ -995,7 +996,7 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   tagsContainer: {
@@ -1040,7 +1041,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   connectButtonText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -1161,7 +1162,7 @@ const styles = StyleSheet.create({
   systemIntegrationsTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginLeft: 8,
   },
   systemIntegrationsDescription: {

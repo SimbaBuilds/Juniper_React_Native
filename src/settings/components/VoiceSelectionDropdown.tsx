@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import VoiceService from '../../voice/VoiceService';
-
+import { colors } from '../../shared/theme/colors';
 interface VoiceOption {
   label: string;
   value: string;
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 4,
   },
   description: {
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   },
   dropdownButtonText: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     flex: 1,
   },
   disabledText: {
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   dropdownTitle: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   previewNotice: {
     flexDirection: 'row',
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     flex: 1,
   },
   selectedOptionText: {

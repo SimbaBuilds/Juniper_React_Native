@@ -5,6 +5,7 @@ import { HotPhrase } from '../supabase/tables';
 import { DatabaseService } from '../supabase/supabase';
 import { HotPhraseCard } from './HotPhraseCard';
 import { HotPhraseModal } from './HotPhraseModal';
+import { colors } from '../shared/theme/colors';
 
 interface HotPhraseSectionProps {
   userId: string;
@@ -269,7 +270,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   addButton: {
     flexDirection: 'row',
@@ -294,7 +295,7 @@ const styles = StyleSheet.create({
   instructionsTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   instructionsText: {
@@ -331,7 +332,7 @@ const styles = StyleSheet.create({
   subsectionTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 12,
   },
   examplesSection: {
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
   exampleTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   exampleText: {

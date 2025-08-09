@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
-
+import { colors } from '../../shared/theme/colors';
 interface SettingsSliderProps {
   label: string;
   value: number;
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     flex: 1,
   },
   value: {

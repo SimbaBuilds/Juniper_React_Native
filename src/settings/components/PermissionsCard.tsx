@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../../shared/theme/colors';
 
 interface PermissionsCardProps {
   hasMicrophonePermission: boolean;
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     flex: 1,
   },
   infoIcon: {
@@ -119,7 +120,7 @@ const styles = StyleSheet.create({
   permissionTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 4,
   },
   permissionStatus: {

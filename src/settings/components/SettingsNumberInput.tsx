@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../../shared/theme/colors';
 
 interface SettingsNumberInputProps {
   label: string;
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     flex: 1,
   },
   currentValue: {
@@ -189,7 +190,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2A2A2A',
     borderRadius: 6,
     padding: 12,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#3A3A3A',
@@ -224,7 +225,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   saveButtonText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 14,
     fontWeight: '500',
   },

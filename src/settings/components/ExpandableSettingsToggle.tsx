@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Switch, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../../shared/theme/colors';
 
 interface ExpandableSettingsToggleProps {
   label: string;
@@ -94,7 +95,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   description: {
     fontSize: 14,

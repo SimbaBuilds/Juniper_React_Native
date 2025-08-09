@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { TagSelector } from './components/TagSelector';
 import { NUM_DISPLAYED_RESOURCES, useRepoScreen } from './hooks/useRepoScreen';
 import { RESOURCE_TYPES } from './types';
+import { colors } from '../shared/theme/colors';
 
 
 
@@ -211,9 +212,9 @@ export const RepoScreen: React.FC = () => {
                       <TouchableOpacity
                         style={styles.editResourceButton}
                         onPress={() => openEditModal(resource)}
-                        activeOpacity={0.7}
+                        activeOpacity={0.5}
                       >
-                        <Ionicons name="create-outline" size={16} color="#4A90E2" />
+                        <Ionicons name="create-outline" size={16} color={colors.text.primary} />
                         <Text style={styles.editResourceButtonText}>Edit</Text>
                       </TouchableOpacity>
                       
@@ -836,7 +837,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   emptyState: {
     alignItems: 'center',
@@ -875,7 +876,7 @@ const styles = StyleSheet.create({
   categoryTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   categoryCount: {
     backgroundColor: '#4A90E2',
@@ -888,7 +889,7 @@ const styles = StyleSheet.create({
   categoryCountText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   resourceCard: {
     backgroundColor: '#1E1E1E',
@@ -912,7 +913,7 @@ const styles = StyleSheet.create({
   resourceTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     flex: 1,
   },
   resourceContent: {
@@ -921,7 +922,7 @@ const styles = StyleSheet.create({
   resourceText: {
     fontSize: 15,
     lineHeight: 22,
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   resourceFooter: {
     marginTop: 8,
@@ -997,7 +998,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   modalCloseButton: {
     padding: 4,
@@ -1030,7 +1031,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: 8,
   },
   titleInput: {
@@ -1040,7 +1041,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: '#1E1E1E',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   characterCount: {
     fontSize: 12,
@@ -1055,7 +1056,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: '#1E1E1E',
-    color: '#FFFFFF',
+    color: colors.text.primary,
     minHeight: 100,
   },
   pickerContainer: {
@@ -1069,7 +1070,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pickerText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
   },
   typeSelector: {
@@ -1088,12 +1089,12 @@ const styles = StyleSheet.create({
   },
   typeOptionText: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginLeft: 12,
     flex: 1,
   },
   typeOptionTextSelected: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontWeight: '600',
   },
   filterTag: {
@@ -1111,12 +1112,12 @@ const styles = StyleSheet.create({
     borderColor: '#4A90E2',
   },
   filterTagText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 14,
     fontWeight: '500',
   },
   filterTagTextSelected: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   instructionsContainer: {
     marginBottom: 8,

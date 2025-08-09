@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../../shared/theme/colors';
 
 interface SettingsArrayInputProps {
   label: string;
@@ -113,7 +114,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   counter: {
     fontSize: 14,
@@ -138,7 +139,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2A2A2A',
     borderRadius: 6,
     padding: 12,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#3A3A3A',
@@ -185,7 +186,7 @@ const styles = StyleSheet.create({
   },
   itemText: {
     flex: 1,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 16,
   },
   removeButton: {

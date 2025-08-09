@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Switch, StyleSheet } from 'react-native';
-
+import { colors } from '../../shared/theme/colors';
 interface SettingsToggleProps {
   label: string;
   value: boolean;
@@ -28,7 +28,7 @@ export const SettingsToggle: React.FC<SettingsToggleProps> = ({
           onValueChange={onValueChange}
           disabled={disabled}
           trackColor={{ false: '#767577', true: '#4A90E2' }}
-          thumbColor={value ? '#FFFFFF' : '#f4f3f4'}
+          thumbColor={value ? colors.text.primary : '#f4f3f4'}
           ios_backgroundColor="#767577"
         />
       </View>
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   description: {
     fontSize: 14,
