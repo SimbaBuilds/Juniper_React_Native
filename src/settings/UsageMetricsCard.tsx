@@ -62,24 +62,13 @@ export const UsageMetricsCard: React.FC<UsageMetricsCardProps> = ({ userProfile 
 
   const metrics: UsageMetric[] = [
     {
-      label: 'Requests today',
-      value: userProfile.requests_today || 0,
-      icon: 'time-outline',
-    },
-    {
-      label: 'Requests this week',
-      value: userProfile.requests_week || 0,
-      icon: 'calendar-outline',
-    },
-    {
-      label: 'Requests this month',
+      label: 'Requests',
       value: userProfile.requests_month || 0,
       icon: 'calendar-outline',
     },
   ];
 
   // Add service-specific metrics for specific services we track monthly usage for
-  // Note: In the future, this could be made more dynamic by adding usage tracking fields to services
   const serviceMetrics = [
     {
       serviceName: 'Perplexity',
@@ -87,21 +76,21 @@ export const UsageMetricsCard: React.FC<UsageMetricsCardProps> = ({ userProfile 
       icon: 'search-outline',
     },
     {
-      serviceName: 'Textbelt',
-      field: 'textbelt_usage_month',
-      icon: 'mail-outline',
-    },
-    {
       serviceName: 'XAI Live Search',
       field: 'xai_live_search_month',
       icon: 'logo-twitter',
+    },
+    {
+      serviceName: 'Textbelt',
+      field: 'textbelt_usage_month',
+      icon: 'mail-outline',
     },
   ];
 
   serviceMetrics.forEach(({ serviceName, field, icon }) => {
     if (isServicePublic(serviceName) && userProfile[field as keyof UserProfile] !== undefined) {
       metrics.push({
-        label: `${serviceName} usage`,
+        label: serviceName,
         value: (userProfile[field as keyof UserProfile] as number) || 0,
         icon,
         serviceName,
@@ -111,7 +100,7 @@ export const UsageMetricsCard: React.FC<UsageMetricsCardProps> = ({ userProfile 
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Usage Metrics</Text>
+      <Text style={styles.title}>Monthly Usage</Text>
       <View style={styles.metricsContainer}>
         {metrics.map((metric, index) => (
           <View key={index} style={styles.metricRow}>
