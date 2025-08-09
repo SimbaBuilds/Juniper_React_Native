@@ -128,7 +128,7 @@ export const UsageMetricsCard: React.FC<UsageMetricsCardProps> = ({ userProfile 
         onPress={() => Linking.openURL('https://hightower-ai.com')}
       >
         <Text style={styles.manageLinkText}>
-          Manage account and usage limits in our web app
+          Manage account and usage limits in the web app in your account page.
         </Text>
         <Ionicons name="open-outline" size={16} color="#4A90E2" />
       </TouchableOpacity>
