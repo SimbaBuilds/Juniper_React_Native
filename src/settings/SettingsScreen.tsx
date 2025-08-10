@@ -26,7 +26,7 @@ import { colors } from '../shared/theme/colors';
 // Voice Settings interface
 export interface VoiceSettings {
   deepgramEnabled: boolean;
-  baseLanguageModel: 'grok-3'| 'o3-mini-2025-01-31' | 'claude-sonnet-4-20250514';
+  baseLanguageModel: 'grok-3'| 'o3-mini-2025-01-31' | 'claude-sonnet-4-20250514' | 'gemini-2.5-pro';
   generalInstructions: string;
   selectedWakeWord: string;
   wakeWordSensitivity: number;
@@ -138,7 +138,8 @@ const AVAILABLE_DEEPGRAM_VOICES = [
 const MODEL_DISPLAY_NAMES = {
   'grok-3': 'Grok 3',
   'o3-mini-2025-01-31': 'OpenAI O3 Mini',
-  'claude-sonnet-4-20250514': 'Claude Sonnet 4 (Recommended)'
+  'claude-sonnet-4-20250514': 'Claude Sonnet 4 (Recommended)',
+  'gemini-2.5-pro': 'Gemini 2.5 Pro'
 } as const;
 
 type RootStackParamList = {
