@@ -260,7 +260,9 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   linkButton: {
-    display: 'inline-flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   linkText: {
     color: '#3498db',
