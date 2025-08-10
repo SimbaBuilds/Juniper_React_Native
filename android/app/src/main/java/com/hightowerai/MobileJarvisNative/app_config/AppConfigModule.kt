@@ -1,7 +1,7 @@
-package com.anonymous.MobileJarvisNative.app_config
+package com.hightowerai.MobileJarvisNative.app_config
 
 import android.util.Log
-import com.anonymous.MobileJarvisNative.ConfigManager
+import com.hightowerai.MobileJarvisNative.ConfigManager
 import com.facebook.react.bridge.*
 
 /**

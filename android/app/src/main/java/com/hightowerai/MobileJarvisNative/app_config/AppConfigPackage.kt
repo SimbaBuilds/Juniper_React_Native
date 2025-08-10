@@ -1,4 +1,4 @@
-package com.anonymous.MobileJarvisNative.app_config
+package com.hightowerai.MobileJarvisNative.app_config
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.NativeModule

@@ -1,9 +1,9 @@
-package com.anonymous.MobileJarvisNative
+package com.hightowerai.MobileJarvisNative
 
 import android.content.Context
 import android.util.Log
 import androidx.preference.PreferenceManager
-import com.anonymous.MobileJarvisNative.utils.Constants
+import com.hightowerai.MobileJarvisNative.utils.Constants
 import java.util.Properties
 
 /**

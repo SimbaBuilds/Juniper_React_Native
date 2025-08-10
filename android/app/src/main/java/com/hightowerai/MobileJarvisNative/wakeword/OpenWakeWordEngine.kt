@@ -1,4 +1,4 @@
-package com.anonymous.MobileJarvisNative.wakeword
+package com.hightowerai.MobileJarvisNative.wakeword
 
 import android.content.Context
 import android.content.res.AssetManager

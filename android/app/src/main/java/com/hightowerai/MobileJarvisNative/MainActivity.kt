@@ -1,4 +1,4 @@
-package com.anonymous.MobileJarvisNative
+package com.hightowerai.MobileJarvisNative
 
 import android.os.Build
 import android.os.Bundle

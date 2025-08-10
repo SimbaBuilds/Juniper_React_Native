@@ -379,7 +379,7 @@ export default function App() {
                             url.includes('/oauth/callback') ||
                             url.includes('code=') ||
                             url.includes('error=') ||
-                            url.startsWith('msauth.com.anonymous.MobileJarvisNative') ||
+                            url.startsWith('msauth.com.hightowerai.MobileJarvisNative') ||
                             url.startsWith('slack://oauth/callback') ||
                             url.startsWith('notion://oauth/callback') ||
                             url.startsWith('db-') ||
@@ -401,7 +401,7 @@ export default function App() {
             handleGoogleCallback(url);
           }
           // Handle Microsoft services
-          else if (url.includes('msauth.com.anonymous.MobileJarvisNative')) {
+          else if (url.includes('msauth.com.hightowerai.MobileJarvisNative')) {
             handleMicrosoftCallback(url);
           }
           // Handle Slack

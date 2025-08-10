@@ -92,7 +92,7 @@ class WakeWordService {
   private static eventSubscription: EmitterSubscription | null = null;
 
   // Define the correct fully qualified service class name
-  private static ANDROID_SERVICE_CLASS = 'com.anonymous.MobileJarvisNative.wakeword.WakeWordService';
+  private static ANDROID_SERVICE_CLASS = 'com.hightowerai.MobileJarvisNative.wakeword.WakeWordService';
 
   constructor() {
     // Event listeners are handled by individual consumers via addListener()

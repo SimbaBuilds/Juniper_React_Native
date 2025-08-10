@@ -19,7 +19,7 @@ export default {
     },
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.anonymous.MobileJarvisNative",
+      bundleIdentifier: "com.hightowerai.MobileJarvisNative",
       infoPlist: {
         NSCameraUsageDescription: "This app needs access to camera to take photos for chat messages.",
         NSPhotoLibraryUsageDescription: "This app needs access to photo library to select images for chat messages."
@@ -31,7 +31,7 @@ export default {
         backgroundColor: "#ffffff"
       },
       edgeToEdgeEnabled: true,
-      package: "com.anonymous.MobileJarvisNative",
+      package: "com.hightowerai.MobileJarvisNative",
       permissions: [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",

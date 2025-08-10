@@ -1,4 +1,4 @@
-package com.anonymous.MobileJarvisNative.wakeword
+package com.hightowerai.MobileJarvisNative.wakeword
 
 import android.Manifest
 import android.app.Notification
@@ -18,11 +18,11 @@ import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import com.anonymous.MobileJarvisNative.MainActivity
-import com.anonymous.MobileJarvisNative.utils.PermissionUtils
-import com.anonymous.MobileJarvisNative.voice.VoiceManager
-import com.anonymous.MobileJarvisNative.ConfigManager
-import com.anonymous.MobileJarvisNative.utils.Constants
+import com.hightowerai.MobileJarvisNative.MainActivity
+import com.hightowerai.MobileJarvisNative.utils.PermissionUtils
+import com.hightowerai.MobileJarvisNative.voice.VoiceManager
+import com.hightowerai.MobileJarvisNative.ConfigManager
+import com.hightowerai.MobileJarvisNative.utils.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

@@ -36,13 +36,13 @@ const withNativeModules = (config) => {
     // Only add if the packages aren't already configured
     if (!config.modResults.contents.includes('WakeWordPackage()')) {
       // Find the line where packages are created
-      const importSection = `import com.anonymous.MobileJarvisNative.wakeword.WakeWordPackage
-import com.anonymous.MobileJarvisNative.voice.VoicePackage
-import com.anonymous.MobileJarvisNative.settings.AppConfigPackage
-import com.anonymous.MobileJarvisNative.permissions.PermissionsPackage`;
+      const importSection = `import com.hightowerai.MobileJarvisNative.wakeword.WakeWordPackage
+import com.hightowerai.MobileJarvisNative.voice.VoicePackage
+import com.hightowerai.MobileJarvisNative.settings.AppConfigPackage
+import com.hightowerai.MobileJarvisNative.permissions.PermissionsPackage`;
 
       // Add imports if they don't exist
-      if (!config.modResults.contents.includes('import com.anonymous.MobileJarvisNative.wakeword.WakeWordPackage')) {
+      if (!config.modResults.contents.includes('import com.hightowerai.MobileJarvisNative.wakeword.WakeWordPackage')) {
         const lastImportIndex = config.modResults.contents.lastIndexOf('import ');
         const endOfLastImport = config.modResults.contents.indexOf('\n', lastImportIndex) + 1;
         

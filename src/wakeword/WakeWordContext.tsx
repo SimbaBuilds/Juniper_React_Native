@@ -244,7 +244,7 @@ export const WakeWordProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             // Helper function to extract state from Java object string or direct value
             const extractStateValue = (state: any): string => {
                 if (typeof state === 'string') {
-                    // Handle Java object string format: "com.anonymous.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@xxxxx"
+                    // Handle Java object string format: "com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@xxxxx"
                     if (state.includes('$')) {
                         const parts = state.split('$');
                         if (parts.length >= 3) {

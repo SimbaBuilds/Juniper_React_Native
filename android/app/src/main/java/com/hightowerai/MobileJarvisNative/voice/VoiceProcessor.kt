@@ -1,8 +1,8 @@
-package com.anonymous.MobileJarvisNative.voice
+package com.hightowerai.MobileJarvisNative.voice
 
 import android.content.Context
 import android.util.Log
-import com.anonymous.MobileJarvisNative.utils.TextToSpeechManager
+import com.hightowerai.MobileJarvisNative.utils.TextToSpeechManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -12,10 +12,10 @@ import kotlin.coroutines.suspendCoroutine
 import kotlin.coroutines.resume
 import org.json.JSONObject
 import java.io.File
-import com.anonymous.MobileJarvisNative.voice.DeepgramClient
+import com.hightowerai.MobileJarvisNative.voice.DeepgramClient
 import android.speech.tts.TextToSpeech
 import com.facebook.react.modules.core.DeviceEventManagerModule
-import com.anonymous.MobileJarvisNative.utils.Constants
+import com.hightowerai.MobileJarvisNative.utils.Constants
 import android.os.Handler
 import android.os.Looper
 

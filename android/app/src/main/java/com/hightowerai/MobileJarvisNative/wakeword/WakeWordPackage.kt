@@ -1,4 +1,4 @@
-package com.anonymous.MobileJarvisNative.wakeword
+package com.hightowerai.MobileJarvisNative.wakeword
 
 import android.util.Log
 import com.facebook.react.ReactPackage

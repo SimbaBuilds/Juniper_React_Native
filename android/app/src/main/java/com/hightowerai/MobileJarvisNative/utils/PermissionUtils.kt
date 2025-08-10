@@ -1,4 +1,4 @@
-package com.anonymous.MobileJarvisNative.utils
+package com.hightowerai.MobileJarvisNative.utils
 
 import android.Manifest
 import android.content.Context

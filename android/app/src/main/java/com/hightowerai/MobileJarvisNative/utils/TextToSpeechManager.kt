@@ -1,4 +1,4 @@
-package com.anonymous.MobileJarvisNative.utils
+package com.hightowerai.MobileJarvisNative.utils
 
 import android.content.Context
 import android.media.AudioAttributes
@@ -18,7 +18,7 @@ object TextToSpeechManager {
     private const val TAG = "TextToSpeechManager"
     private var textToSpeech: TextToSpeech? = null
     private var isInitialized = false
-    private var centralAudioManager: com.anonymous.MobileJarvisNative.utils.AudioManager? = null
+    private var centralAudioManager: com.hightowerai.MobileJarvisNative.utils.AudioManager? = null
     private var currentRequestId: String? = null
     
     // TTS operation queue to prevent overlapping speech
@@ -51,7 +51,7 @@ object TextToSpeechManager {
             Log.d(TAG, "Initializing TextToSpeech")
             
             // Initialize centralized AudioManager
-            centralAudioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+            centralAudioManager = com.hightowerai.MobileJarvisNative.utils.AudioManager.getInstance()
             centralAudioManager?.initialize(context)
             
             textToSpeech = TextToSpeech(context) { status ->
@@ -112,7 +112,7 @@ object TextToSpeechManager {
         return try {
             // TROUBLESHOOTING STEP 2: Check for internal conflicts with speech recognition
             val currentRequest = centralAudioManager?.getCurrentRequestInfo()
-            if (currentRequest?.requestType == com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION) {
+            if (currentRequest?.requestType == com.hightowerai.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION) {
                 Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: ⚠️ TTS requesting audio focus while SPEECH_RECOGNITION is active!")
                 Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: Current speech recognition request ID: ${currentRequest.requestId}")
                 Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: TTS will be queued behind higher priority SPEECH_RECOGNITION")
@@ -124,7 +124,7 @@ object TextToSpeechManager {
             Log.d(TAG, "🎵 TTS: Requesting audio focus (ID: $requestId)")
             
             val success = centralAudioManager?.requestAudioFocus(
-                requestType = com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.TTS,
+                requestType = com.hightowerai.MobileJarvisNative.utils.AudioManager.AudioRequestType.TTS,
                 requestId = requestId,
                 onFocusGained = {
                     Log.d(TAG, "🎵 TTS audio focus gained")

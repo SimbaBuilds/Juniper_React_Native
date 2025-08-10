@@ -1,10 +1,10 @@
-package com.anonymous.MobileJarvisNative.wakeword
+package com.hightowerai.MobileJarvisNative.wakeword
 
 import android.content.Intent
 import android.util.Log
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
-import com.anonymous.MobileJarvisNative.MainActivity
+import com.hightowerai.MobileJarvisNative.MainActivity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.IntentFilter
@@ -13,7 +13,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.anonymous.MobileJarvisNative.utils.Constants
+import com.hightowerai.MobileJarvisNative.utils.Constants
 
 class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
     private val TAG = "WakeWordModule"

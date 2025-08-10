@@ -1,4 +1,4 @@
-package com.anonymous.MobileJarvisNative.permissions
+package com.hightowerai.MobileJarvisNative.permissions
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.ReactApplicationContext

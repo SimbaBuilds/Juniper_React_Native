@@ -1,4 +1,4 @@
-package com.anonymous.MobileJarvisNative.voice
+package com.hightowerai.MobileJarvisNative.voice
 
 import android.content.Context
 import android.media.AudioAttributes
@@ -6,8 +6,8 @@ import android.media.MediaPlayer
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
-import com.anonymous.MobileJarvisNative.ConfigManager
-import com.anonymous.MobileJarvisNative.utils.AudioManager
+import com.hightowerai.MobileJarvisNative.ConfigManager
+import com.hightowerai.MobileJarvisNative.utils.AudioManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.CoroutineScope

@@ -1,4 +1,4 @@
-package com.anonymous.MobileJarvisNative.voice
+package com.hightowerai.MobileJarvisNative.voice
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.ReactApplicationContext

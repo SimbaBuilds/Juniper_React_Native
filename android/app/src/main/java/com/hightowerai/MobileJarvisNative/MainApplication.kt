@@ -1,4 +1,4 @@
-package com.anonymous.MobileJarvisNative
+package com.hightowerai.MobileJarvisNative
 
 import android.app.Application
 import android.content.res.Configuration
@@ -19,10 +19,10 @@ import com.facebook.soloader.SoLoader
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
 
-import com.anonymous.MobileJarvisNative.wakeword.WakeWordPackage
-import com.anonymous.MobileJarvisNative.voice.VoicePackage
-import com.anonymous.MobileJarvisNative.permissions.PermissionsPackage
-import com.anonymous.MobileJarvisNative.app_config.AppConfigPackage
+import com.hightowerai.MobileJarvisNative.wakeword.WakeWordPackage
+import com.hightowerai.MobileJarvisNative.voice.VoicePackage
+import com.hightowerai.MobileJarvisNative.permissions.PermissionsPackage
+import com.hightowerai.MobileJarvisNative.app_config.AppConfigPackage
 import android.util.Log
 
 class MainApplication : Application(), ReactApplication {

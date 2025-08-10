@@ -1,4 +1,4 @@
-package com.anonymous.MobileJarvisNative.voice
+package com.hightowerai.MobileJarvisNative.voice
 
 import android.content.Context
 import android.os.Handler
@@ -9,7 +9,7 @@ import android.speech.SpeechRecognizer
 import android.util.Log
 import android.content.Intent
 import android.os.Bundle
-import com.anonymous.MobileJarvisNative.utils.TextToSpeechManager
+import com.hightowerai.MobileJarvisNative.utils.TextToSpeechManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

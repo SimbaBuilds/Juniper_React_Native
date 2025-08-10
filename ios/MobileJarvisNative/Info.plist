@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>mobilejarvisnative</string>
-          <string>com.anonymous.MobileJarvisNative</string>
+          <string>com.hightowerai.MobileJarvisNative</string>
         </array>
       </dict>
       <dict>

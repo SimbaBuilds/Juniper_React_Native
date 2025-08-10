@@ -1,4 +1,4 @@
-package com.anonymous.MobileJarvisNative.permissions
+package com.hightowerai.MobileJarvisNative.permissions
 
 import android.Manifest
 import android.app.Activity
@@ -18,7 +18,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.modules.core.DeviceEventManagerModule
-import com.anonymous.MobileJarvisNative.utils.PermissionUtils
+import com.hightowerai.MobileJarvisNative.utils.PermissionUtils
 
 /**
  * React Native module for handling permissions

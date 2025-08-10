@@ -1,11 +1,11 @@
-package com.anonymous.MobileJarvisNative.utils
+package com.hightowerai.MobileJarvisNative.utils
 
 /**
  * Application-wide constants
  */
 object Constants {
     // Wake word constants
-    const val WAKE_WORD_ACTION = "com.anonymous.MobileJarvisNative.WAKE_WORD_DETECTED"
+    const val WAKE_WORD_ACTION = "com.hightowerai.MobileJarvisNative.WAKE_WORD_DETECTED"
     
     // Notification constants
     const val NOTIFICATION_CHANNEL_ID = "voice_assistant_channel"
@@ -69,9 +69,9 @@ object Constants {
     
     object Actions {
         // Wake word actions
-        const val WAKE_WORD_DETECTED_RN = "com.anonymous.MobileJarvisNative.WAKE_WORD_DETECTED_RN"
-        const val PAUSE_WAKE_WORD_KEEP_LISTENING = "com.anonymous.MobileJarvisNative.PAUSE_WAKE_WORD_KEEP_LISTENING"
-        const val RESUME_WAKE_WORD = "com.anonymous.MobileJarvisNative.RESUME_WAKE_WORD"
+        const val WAKE_WORD_DETECTED_RN = "com.hightowerai.MobileJarvisNative.WAKE_WORD_DETECTED_RN"
+        const val PAUSE_WAKE_WORD_KEEP_LISTENING = "com.hightowerai.MobileJarvisNative.PAUSE_WAKE_WORD_KEEP_LISTENING"
+        const val RESUME_WAKE_WORD = "com.hightowerai.MobileJarvisNative.RESUME_WAKE_WORD"
         
         // Voice events
         const val SPEECH_RESULT = "speechResult"
