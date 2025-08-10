@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, ActivityIndicator, Platform, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, ActivityIndicator, Platform, TouchableOpacity, Alert, Linking } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -315,6 +315,14 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         },
       ]
     );
+  };
+
+  const openTermsOfUse = () => {
+    Linking.openURL('https://www.hightower-ai.com/terms-of-use');
+  };
+
+  const openPrivacyPolicy = () => {
+    Linking.openURL('https://www.hightower-ai.com/privacy-policy');
   };
 
   // Enhanced voice settings update function that saves to both local and database
@@ -676,6 +684,20 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
           <UsageMetricsCard userProfile={userProfile} />
 
+          <View style={styles.linksContainer}>
+            <TouchableOpacity style={styles.linkItem} onPress={openTermsOfUse}>
+              <Ionicons name="document-text-outline" size={20} color="#B0B0B0" />
+              <Text style={styles.linkItemText}>Terms of Use</Text>
+              <Ionicons name="chevron-forward" size={16} color="#B0B0B0" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.linkItem} onPress={openPrivacyPolicy}>
+              <Ionicons name="shield-checkmark-outline" size={20} color="#B0B0B0" />
+              <Text style={styles.linkItemText}>Privacy Policy</Text>
+              <Ionicons name="chevron-forward" size={16} color="#B0B0B0" />
+            </TouchableOpacity>
+          </View>
+
           <TouchableOpacity
             style={styles.logoutButton}
             onPress={handleLogout}
@@ -848,5 +870,22 @@ const styles = StyleSheet.create({
     color: '#B0B0B0',
     fontSize: 14,
     lineHeight: 20,
+  },
+  linksContainer: {
+    marginBottom: 16,
+  },
+  linkItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  linkItemText: {
+    flex: 1,
+    marginLeft: 12,
+    fontSize: 16,
+    color: colors.text.primary,
   },
 }); 

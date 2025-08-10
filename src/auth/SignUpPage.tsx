@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, Alert, Linking } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import SignUpForm from './SignUpForm';
 import { useAuth } from './useAuth';
@@ -78,6 +78,14 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
     navigation.navigate('Login');
   };
 
+  const openTermsOfUse = () => {
+    Linking.openURL('https://www.hightower-ai.com/terms-of-use');
+  };
+
+  const openPrivacyPolicy = () => {
+    Linking.openURL('https://www.hightower-ai.com/privacy-policy');
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -125,7 +133,14 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
 
           <View style={styles.termsContainer}>
             <Text style={styles.termsText}>
-              By creating an account, you agree to our Terms of Service and Privacy Policy
+              By creating an account, you agree to our{' '}
+              <TouchableOpacity onPress={openTermsOfUse} style={styles.linkButton}>
+                <Text style={styles.linkText}>Terms of Use</Text>
+              </TouchableOpacity>
+              {' '}and{' '}
+              <TouchableOpacity onPress={openPrivacyPolicy} style={styles.linkButton}>
+                <Text style={styles.linkText}>Privacy Policy</Text>
+              </TouchableOpacity>
             </Text>
           </View>
         </ScrollView>
@@ -243,6 +258,15 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'center',
     lineHeight: 16,
+  },
+  linkButton: {
+    display: 'inline-flex',
+  },
+  linkText: {
+    color: '#3498db',
+    fontWeight: '600',
+    fontSize: 12,
+    textDecorationLine: 'underline',
   },
 });
 
