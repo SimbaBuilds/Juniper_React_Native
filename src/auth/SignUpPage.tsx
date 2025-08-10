@@ -101,7 +101,7 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
 
           <SignUpForm onSignUp={handleSignUp} isLoading={isLoading} />
 
-          <View style={styles.dividerContainer}>
+          {/* <View style={styles.dividerContainer}>
             <View style={styles.divider} />
             <Text style={styles.dividerText}>OR</Text>
             <View style={styles.divider} />
@@ -114,7 +114,7 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
           >
             <GoogleLogo size={20} />
             <Text style={styles.googleButtonText}>Sign up with Google</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>

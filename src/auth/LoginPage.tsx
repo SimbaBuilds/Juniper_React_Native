@@ -88,7 +88,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigation }) => {
 
           <LoginForm onLogin={handleLogin} isLoading={isLoading} />
 
-          <View style={styles.dividerContainer}>
+          {/* <View style={styles.dividerContainer}>
             <View style={styles.divider} />
             <Text style={styles.dividerText}>OR</Text>
             <View style={styles.divider} />
@@ -101,7 +101,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigation }) => {
           >
             <GoogleLogo size={20} />
             <Text style={styles.googleButtonText}>Sign in with Google</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
