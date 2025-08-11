@@ -39,7 +39,7 @@ class DeepgramClient private constructor(private val context: Context) {
     private lateinit var okHttpClient: OkHttpClient
     private lateinit var configManager: ConfigManager
     private var mediaPlayer: MediaPlayer? = null
-    private var centralAudioManager: com.anonymous.MobileJarvisNative.utils.AudioManager? = null
+    private var centralAudioManager: com.hightowerai.MobileJarvisNative.utils.AudioManager? = null
     private var currentRequestId: String? = null
     
     // WebSocket streaming support with real-time playback
@@ -202,7 +202,7 @@ class DeepgramClient private constructor(private val context: Context) {
             Log.d(TAG, "🎵 DEEPGRAM_INIT: MediaPlayer created")
             
             // Initialize centralized AudioManager
-            centralAudioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+            centralAudioManager = com.hightowerai.MobileJarvisNative.utils.AudioManager.getInstance()
             Log.d(TAG, "🎵 DEEPGRAM_INIT: AudioManager obtained")
             
             val initEndTime = System.currentTimeMillis()
@@ -832,7 +832,7 @@ class DeepgramClient private constructor(private val context: Context) {
         return try {
             // TROUBLESHOOTING STEP 2: Check for internal conflicts with speech recognition
             val currentRequest = centralAudioManager?.getCurrentRequestInfo()
-            if (currentRequest?.requestType == com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION) {
+            if (currentRequest?.requestType == com.hightowerai.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION) {
                 Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: ⚠️ Deepgram TTS requesting audio focus while SPEECH_RECOGNITION is active!")
                 Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: Current speech recognition request ID: ${currentRequest.requestId}")
                 Log.w(TAG, "🎵 INTERNAL_CONFLICT_CHECK: Deepgram TTS will be queued behind higher priority SPEECH_RECOGNITION")

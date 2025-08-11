@@ -249,7 +249,7 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
             
             // Release audio focus
             try {
-                val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                val audioManager = com.hightowerai.MobileJarvisNative.utils.AudioManager.getInstance()
                 val currentRequest = audioManager.getCurrentRequestInfo()
                 if (currentRequest?.requestId == "wake_word_detection") {
                     Log.i(TAG, "🎵 CLEANUP: Releasing wake word audio focus")
@@ -443,12 +443,12 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
         try {
             // Request audio focus for wake word detection
             try {
-                val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                val audioManager = com.hightowerai.MobileJarvisNative.utils.AudioManager.getInstance()
                 audioManager.initialize(this)
                 
                 Log.i(TAG, "🎵 WAKE_WORD_SETUP: Requesting audio focus for wake word detection...")
                 val focusResult = audioManager.requestAudioFocus(
-                    com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.BACKGROUND_AUDIO,
+                    com.hightowerai.MobileJarvisNative.utils.AudioManager.AudioRequestType.BACKGROUND_AUDIO,
                     "wake_word_detection",
                     onFocusGained = {
                         Log.i(TAG, "🎵 WAKE_WORD_SETUP: Audio focus GAINED for wake word detection")
@@ -800,7 +800,7 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
             
             // Release any audio focus held by wake word service to allow speech recognition
             try {
-                val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+                val audioManager = com.hightowerai.MobileJarvisNative.utils.AudioManager.getInstance()
                 val currentRequest = audioManager.getCurrentRequestInfo()
                 if (currentRequest?.requestId == "wake_word_detection") {
                     Log.i(TAG, "⏸️ PAUSE_RESUME: 🎵 Releasing wake word audio focus for speech recognition handoff")

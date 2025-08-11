@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0259A6DE89EC8DF577E741D3 /* VoiceModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01828ED0735CDE9D6B536902 /* VoiceModule.swift */; };
 		079AC8495A5BC2265E667C38 /* DeepgramAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F2F0DE634C53D0485F6EDCB /* DeepgramAPI.swift */; };
+		0D4FFDD1EAF47C54B4BDB4C4 /* libPods-MobileJarvisNative.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7213466AC24E631DBCCDF8FB /* libPods-MobileJarvisNative.a */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
@@ -28,7 +29,6 @@
 		CF1234567890ABCDEF123456 /* config.properties in Resources */ = {isa = PBXBuildFile; fileRef = CF1234567890ABCDEF123457 /* config.properties */; };
 		DC396D5D571554EDE389A53F /* VoiceModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 422C0D0F6C1ECF06551206A4 /* VoiceModule.m */; };
 		DF809AC9525CF392E64780F2 /* DeepgramWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62711FA7517604D98094C9B6 /* DeepgramWebSocketClient.swift */; };
-		E36837D3B6797FEB3D36487C /* libPods-MobileJarvisNative.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C94237CA111A3CCE612B88E8 /* libPods-MobileJarvisNative.a */; };
 		E754EDB309E94822A370492E /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7456B750B749258C0C427A /* noop-file.swift */; };
 /* End PBXBuildFile section */
 
@@ -44,20 +44,20 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MobileJarvisNative/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = MobileJarvisNative/main.m; sourceTree = "<group>"; };
 		1A7456B750B749258C0C427A /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "MobileJarvisNative/noop-file.swift"; sourceTree = "<group>"; };
+		1D5BC66BEA55678AD0E701D6 /* Pods-MobileJarvisNative.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MobileJarvisNative.release.xcconfig"; path = "Target Support Files/Pods-MobileJarvisNative/Pods-MobileJarvisNative.release.xcconfig"; sourceTree = "<group>"; };
 		2BA2D88D5503FF67AEE23FEE /* TTSManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TTSManager.swift; path = MobileJarvisNative/TTSManager.swift; sourceTree = "<group>"; };
 		422C0D0F6C1ECF06551206A4 /* VoiceModule.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = VoiceModule.m; path = MobileJarvisNative/VoiceModule.m; sourceTree = "<group>"; };
 		52F1D23A85634C093B383947 /* VoiceState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = VoiceState.swift; path = MobileJarvisNative/VoiceState.swift; sourceTree = "<group>"; };
-		61AA201B3BCCE0930F74B920 /* Pods-MobileJarvisNative.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MobileJarvisNative.release.xcconfig"; path = "Target Support Files/Pods-MobileJarvisNative/Pods-MobileJarvisNative.release.xcconfig"; sourceTree = "<group>"; };
 		62711FA7517604D98094C9B6 /* DeepgramWebSocketClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DeepgramWebSocketClient.swift; path = MobileJarvisNative/DeepgramWebSocketClient.swift; sourceTree = "<group>"; };
+		7213466AC24E631DBCCDF8FB /* libPods-MobileJarvisNative.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MobileJarvisNative.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7837AEB5718272A7D31010B4 /* AppConfigModule.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppConfigModule.swift; path = MobileJarvisNative/AppConfigModule.swift; sourceTree = "<group>"; };
 		8BB77D5B0FDB46E1E6AFE775 /* AudioManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AudioManager.swift; path = MobileJarvisNative/AudioManager.swift; sourceTree = "<group>"; };
+		8C5AB30E392389AC6DB19F7F /* Pods-MobileJarvisNative.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MobileJarvisNative.debug.xcconfig"; path = "Target Support Files/Pods-MobileJarvisNative/Pods-MobileJarvisNative.debug.xcconfig"; sourceTree = "<group>"; };
 		942DB604591B123018626165 /* WhisperAPI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WhisperAPI.swift; path = MobileJarvisNative/WhisperAPI.swift; sourceTree = "<group>"; };
 		98B68069DC08BFAC8E8ADADA /* DeepgramSTTProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DeepgramSTTProvider.swift; path = MobileJarvisNative/DeepgramSTTProvider.swift; sourceTree = "<group>"; };
 		9FDB97EEEC2D4062B18EBD67 /* MobileJarvisNative-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "MobileJarvisNative-Bridging-Header.h"; path = "MobileJarvisNative/MobileJarvisNative-Bridging-Header.h"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = MobileJarvisNative/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B49661FC373A6AEE05007839 /* Pods-MobileJarvisNative.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MobileJarvisNative.debug.xcconfig"; path = "Target Support Files/Pods-MobileJarvisNative/Pods-MobileJarvisNative.debug.xcconfig"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		C94237CA111A3CCE612B88E8 /* libPods-MobileJarvisNative.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MobileJarvisNative.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CF1234567890ABCDEF123457 /* config.properties */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = config.properties; path = MobileJarvisNative/config.properties; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F4CC0EECBA2E21DC4A1D9803 /* ConfigManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConfigManager.swift; path = MobileJarvisNative/ConfigManager.swift; sourceTree = "<group>"; };
@@ -70,7 +70,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E36837D3B6797FEB3D36487C /* libPods-MobileJarvisNative.a in Frameworks */,
+				0D4FFDD1EAF47C54B4BDB4C4 /* libPods-MobileJarvisNative.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,7 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				C94237CA111A3CCE612B88E8 /* libPods-MobileJarvisNative.a */,
+				7213466AC24E631DBCCDF8FB /* libPods-MobileJarvisNative.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -167,8 +167,8 @@
 		D65327D7A22EEC0BE12398D9 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				B49661FC373A6AEE05007839 /* Pods-MobileJarvisNative.debug.xcconfig */,
-				61AA201B3BCCE0930F74B920 /* Pods-MobileJarvisNative.release.xcconfig */,
+				8C5AB30E392389AC6DB19F7F /* Pods-MobileJarvisNative.debug.xcconfig */,
+				1D5BC66BEA55678AD0E701D6 /* Pods-MobileJarvisNative.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -188,14 +188,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "MobileJarvisNative" */;
 			buildPhases = (
-				13BD7DA6A431E6948ED33D7A /* [CP] Check Pods Manifest.lock */,
+				2F296F96A7E6AF3585C221B4 /* [CP] Check Pods Manifest.lock */,
 				5F0DC602577BFAD65C3E482F /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				C5BBCEFF47E3859BBD668DB5 /* [CP] Embed Pods Frameworks */,
-				316BE1D874523569795260E3 /* [CP] Copy Pods Resources */,
+				F25CCAD133252B61AF3EC6F0 /* [CP] Embed Pods Frameworks */,
+				D6F676B20B90B6309A6B9BE8 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -212,10 +212,13 @@
 		83CBB9F71A601CBA00E9B192 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1130;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
+						DevelopmentTeam = 2D46F842HA;
 						LastSwiftMigration = 1250;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -267,7 +270,7 @@
 			shellPath = /bin/sh;
 			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios relative | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n# Source .xcode.env.updates if it exists to allow\n# SKIP_BUNDLING to be unset if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.updates\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.updates\"\nfi\n# Source local changes to allow overrides\n# if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n\n";
 		};
-		13BD7DA6A431E6948ED33D7A /* [CP] Check Pods Manifest.lock */ = {
+		2F296F96A7E6AF3585C221B4 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -289,7 +292,26 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		316BE1D874523569795260E3 /* [CP] Copy Pods Resources */ = {
+		5F0DC602577BFAD65C3E482F /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-MobileJarvisNative/expo-configure-project.sh\"\n";
+		};
+		D6F676B20B90B6309A6B9BE8 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -319,26 +341,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MobileJarvisNative/Pods-MobileJarvisNative-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		5F0DC602577BFAD65C3E482F /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-MobileJarvisNative/expo-configure-project.sh\"\n";
-		};
-		C5BBCEFF47E3859BBD668DB5 /* [CP] Embed Pods Frameworks */ = {
+		F25CCAD133252B61AF3EC6F0 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -389,11 +392,13 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B49661FC373A6AEE05007839 /* Pods-MobileJarvisNative.debug.xcconfig */;
+			baseConfigurationReference = 8C5AB30E392389AC6DB19F7F /* Pods-MobileJarvisNative.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MobileJarvisNative/MobileJarvisNative.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 2D46F842HA;
 				ENABLE_BITCODE = NO;
@@ -426,11 +431,13 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 61AA201B3BCCE0930F74B920 /* Pods-MobileJarvisNative.release.xcconfig */;
+			baseConfigurationReference = 1D5BC66BEA55678AD0E701D6 /* Pods-MobileJarvisNative.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MobileJarvisNative/MobileJarvisNative.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 2D46F842HA;
 				INFOPLIST_FILE = MobileJarvisNative/Info.plist;
@@ -478,6 +485,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -485,8 +493,10 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = 2D46F842HA;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -546,6 +556,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -553,8 +564,10 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEVELOPMENT_TEAM = 2D46F842HA;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -579,6 +592,7 @@
 				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
 				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
 			};

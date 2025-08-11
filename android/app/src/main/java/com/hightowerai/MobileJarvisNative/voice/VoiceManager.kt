@@ -19,8 +19,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import com.facebook.react.modules.core.DeviceEventManagerModule
-import com.anonymous.MobileJarvisNative.utils.Constants
-import com.anonymous.MobileJarvisNative.ConfigManager
+import com.hightowerai.MobileJarvisNative.utils.Constants
+import com.hightowerai.MobileJarvisNative.ConfigManager
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
@@ -115,7 +115,7 @@ class VoiceManager private constructor() {
         
         // Initialize centralized AudioManager
         Log.d(TAG, "Initializing centralized AudioManager")
-        val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+        val audioManager = com.hightowerai.MobileJarvisNative.utils.AudioManager.getInstance()
         audioManager.initialize(context)
         
         // Setup audio route change listener for Bluetooth disconnection handling
@@ -237,7 +237,7 @@ class VoiceManager private constructor() {
             updateState(VoiceState.WAKE_WORD_DETECTED)
             
             // Explicitly tell the WakeWordService to pause but keep mic active
-            val intent = Intent("com.anonymous.MobileJarvisNative.PAUSE_WAKE_WORD_KEEP_LISTENING")
+            val intent = Intent("com.hightowerai.MobileJarvisNative.PAUSE_WAKE_WORD_KEEP_LISTENING")
             context.sendBroadcast(intent)
             Log.d(TAG, "Sent broadcast to pause wake word detection but keep mic active")
             
@@ -308,7 +308,7 @@ class VoiceManager private constructor() {
     private fun setupAudioRouteChangeListener() {
         Log.d(TAG, "Setting up audio route change listener for Bluetooth handling...")
         
-        val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+        val audioManager = com.hightowerai.MobileJarvisNative.utils.AudioManager.getInstance()
         audioManager.addAudioRouteChangeListener { isConnected ->
             handleAudioRouteChange(isConnected)
         }
@@ -383,7 +383,7 @@ class VoiceManager private constructor() {
         
         // Always ensure wake word detection is paused when actively listening
         try {
-            val intent = Intent("com.anonymous.MobileJarvisNative.PAUSE_WAKE_WORD_KEEP_LISTENING")
+            val intent = Intent("com.hightowerai.MobileJarvisNative.PAUSE_WAKE_WORD_KEEP_LISTENING")
             context.sendBroadcast(intent)
             Log.d(TAG, "Sent broadcast to pause wake word detection during listening")
         } catch (e: Exception) {
@@ -416,11 +416,11 @@ class VoiceManager private constructor() {
     private fun startActualListening() {
         try {
             Log.i(TAG, "🎵 SPEECH_RECOGNITION: Requesting HIGH PRIORITY audio focus for speech recognition")
-            val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+            val audioManager = com.hightowerai.MobileJarvisNative.utils.AudioManager.getInstance()
             val requestId = "speech_recognition_${System.currentTimeMillis()}"
             
             val focusGranted = audioManager.requestAudioFocus(
-                requestType = com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION,
+                requestType = com.hightowerai.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION,
                 requestId = requestId,
                 onFocusGained = { 
                     Log.i(TAG, "🎵 SPEECH_RECOGNITION: HIGH PRIORITY audio focus gained for speech recognition") 
@@ -429,7 +429,7 @@ class VoiceManager private constructor() {
                     Log.w(TAG, "🎵 SPEECH_RECOGNITION: Audio focus lost for speech recognition")
                     // TROUBLESHOOTING STEP 1: Only set error state for permanent loss
                     // Check if this is a permanent loss or if we're already in an error state
-                    if (_voiceState.value !is VoiceState.ERROR && audioManager.audioFocusState.value == com.anonymous.MobileJarvisNative.utils.AudioManager.AudioFocusState.LOST) {
+                    if (_voiceState.value !is VoiceState.ERROR && audioManager.audioFocusState.value == com.hightowerai.MobileJarvisNative.utils.AudioManager.AudioFocusState.LOST) {
                         Log.w(TAG, "🎵 SPEECH_RECOGNITION: Permanent audio focus loss - stopping speech recognition")
                         stopListening()
                     } else {
@@ -682,9 +682,9 @@ class VoiceManager private constructor() {
             speechRecognizer?.cancel()
             
             // Explicitly release audio focus from centralized manager
-            val centralAudioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+            val centralAudioManager = com.hightowerai.MobileJarvisNative.utils.AudioManager.getInstance()
             val currentRequest = centralAudioManager.getCurrentRequestInfo()
-            if (currentRequest?.requestType == com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION) {
+            if (currentRequest?.requestType == com.hightowerai.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION) {
                 centralAudioManager.releaseAudioFocus(currentRequest.requestId)
                 Log.d(TAG, "🎵 SPEECH_RECOGNITION: Released audio focus for speech recognition")
             }
@@ -1268,7 +1268,7 @@ class VoiceManager private constructor() {
     private fun releaseSpeechRecognitionAudioFocus() {
         speechRecognitionAudioFocusRequestId?.let { requestId ->
             try {
-                com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance().releaseAudioFocus(requestId)
+                com.hightowerai.MobileJarvisNative.utils.AudioManager.getInstance().releaseAudioFocus(requestId)
                 Log.d(TAG, "🎵 Released audio focus for speech recognition (ID: $requestId)")
             } catch (e: Exception) {
                 Log.e(TAG, "Error releasing audio focus for speech recognition", e)
@@ -1278,9 +1278,9 @@ class VoiceManager private constructor() {
         
         // Also check if there's any current speech recognition audio focus and release it
         try {
-            val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+            val audioManager = com.hightowerai.MobileJarvisNative.utils.AudioManager.getInstance()
             val currentRequest = audioManager.getCurrentRequestInfo()
-            if (currentRequest?.requestType == com.anonymous.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION) {
+            if (currentRequest?.requestType == com.hightowerai.MobileJarvisNative.utils.AudioManager.AudioRequestType.SPEECH_RECOGNITION) {
                 Log.d(TAG, "🎵 Found active speech recognition audio focus, releasing it")
                 audioManager.releaseAudioFocus(currentRequest.requestId)
             }

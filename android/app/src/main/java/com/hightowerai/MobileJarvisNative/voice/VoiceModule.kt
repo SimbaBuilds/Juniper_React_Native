@@ -18,9 +18,9 @@ import kotlin.coroutines.resume
 import com.hightowerai.MobileJarvisNative.utils.Constants
 import android.os.Handler
 import android.os.Looper
-import com.anonymous.MobileJarvisNative.utils.TextToSpeechManager
+import com.hightowerai.MobileJarvisNative.utils.TextToSpeechManager
 import android.media.AudioManager
-import com.anonymous.MobileJarvisNative.utils.PermissionUtils
+import com.hightowerai.MobileJarvisNative.utils.PermissionUtils
 import java.util.UUID
 import android.content.Context
 import java.io.File
@@ -795,7 +795,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         }
 
         // Check if audio focus can be acquired
-        val audioManager = com.anonymous.MobileJarvisNative.utils.AudioManager.getInstance()
+        val audioManager = com.hightowerai.MobileJarvisNative.utils.AudioManager.getInstance()
         if (!audioManager.hasAudioFocus()) {
             Log.w(TAG, "Cannot acquire audio focus")
             return false

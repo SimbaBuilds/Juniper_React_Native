@@ -270,7 +270,7 @@ class WakeWordModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     fun startDetection(promise: Promise) {
         try {
             // Use the default service class path
-            val defaultServiceClass = "com.anonymous.MobileJarvisNative.wakeword.WakeWordService"
+            val defaultServiceClass = "com.hightowerai.MobileJarvisNative.wakeword.WakeWordService"
             startDetection(defaultServiceClass, promise)
         } catch (e: Exception) {
             Log.e(TAG, "Error in backward compatibility startDetection: ${e.message}", e)

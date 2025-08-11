@@ -11,7 +11,7 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 import com.facebook.react.ReactApplication
 
 import expo.modules.ReactActivityDelegateWrapper
-import com.anonymous.MobileJarvisNative.permissions.PermissionsModule
+import com.hightowerai.MobileJarvisNative.permissions.PermissionsModule
 
 class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
