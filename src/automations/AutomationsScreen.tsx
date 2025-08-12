@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
 import { HotPhraseSection } from './HotPhraseSection';
@@ -24,64 +25,72 @@ export const AutomationsScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Load automations from database
-  useEffect(() => {
-    const loadAutomations = async () => {
-      if (!user?.id) return;
+  const loadAutomations = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
       
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const dbAutomations = await DatabaseService.getAutomations(user.id);
-        
-        // Convert database automations to UI format
-        const formattedAutomations: Automation[] = dbAutomations.map((automation: any) => ({
-          id: automation.id,
-          name: automation.name,
-          trigger_conditions: automation.trigger_conditions,
-          actions: automation.actions,
-          integrations: automation.actions?.integrations || [],
-          enabled: automation.is_active,
-          execution_count: automation.execution_count || 0,
-          last_executed: automation.last_executed,
-        }));
+      const dbAutomations = await DatabaseService.getAutomations(user.id);
+      
+      // Convert database automations to UI format
+      const formattedAutomations: Automation[] = dbAutomations.map((automation: any) => ({
+        id: automation.id,
+        name: automation.name,
+        trigger_conditions: automation.trigger_conditions,
+        actions: automation.actions,
+        integrations: automation.actions?.integrations || [],
+        enabled: automation.is_active,
+        execution_count: automation.execution_count || 0,
+        last_executed: automation.last_executed,
+      }));
 
-        // Add default automations if none exist
-        if (formattedAutomations.length === 0) {
-          const defaultAutomations: Automation[] = [
-            {
-              id: '1',
-              name: 'Add Starship missions to calendar',
-              integrations: ['Google Calendar', 'SpaceX API'],
-              enabled: true,
-            },
-            {
-              id: '2',
-              name: 'Daily stock briefing',
-              integrations: ['Finance API'],
-              enabled: true,
-            },
-            {
-              id: '3',
-              name: 'Weather-based reminders',
-              integrations: ['Weather API', 'Push Notifications'],
-              enabled: false,
-            },
-          ];
-          setAutomations(defaultAutomations);
-        } else {
-          setAutomations(formattedAutomations);
-        }
-      } catch (err) {
-        console.error('Error loading automations:', err);
-        setError('Failed to load automations');
-      } finally {
-        setLoading(false);
+      // Add default automations if none exist
+      if (formattedAutomations.length === 0) {
+        const defaultAutomations: Automation[] = [
+          {
+            id: '1',
+            name: 'Add Starship missions to calendar',
+            integrations: ['Google Calendar', 'SpaceX API'],
+            enabled: true,
+          },
+          {
+            id: '2',
+            name: 'Daily stock briefing',
+            integrations: ['Finance API'],
+            enabled: true,
+          },
+          {
+            id: '3',
+            name: 'Weather-based reminders',
+            integrations: ['Weather API', 'Push Notifications'],
+            enabled: false,
+          },
+        ];
+        setAutomations(defaultAutomations);
+      } else {
+        setAutomations(formattedAutomations);
       }
-    };
+    } catch (err) {
+      console.error('Error loading automations:', err);
+      setError('Failed to load automations');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Load automations on mount
+  useEffect(() => {
     loadAutomations();
   }, [user?.id]);
+
+  // Refresh when screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      loadAutomations();
+    }, [user?.id])
+  );
 
   if (loading) {
     return (
@@ -99,6 +108,9 @@ export const AutomationsScreen: React.FC = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadAutomations}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -330,11 +342,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 32,
   },
   errorText: {
     fontSize: 16,
+    color: '#F44336',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  retryButtonText: {
     color: '#FFFFFF',
-    marginTop: 16,
+    fontSize: 14,
+    fontWeight: '500',
   },
   divider: {
     height: 1,
