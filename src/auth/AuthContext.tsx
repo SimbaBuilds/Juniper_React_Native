@@ -14,6 +14,8 @@ type AuthContextType = {
   signUpWithPhone: (phone: string) => Promise<{ error: Error | null }>;
   verifyOtp: (phone: string, token: string, type: 'sms' | 'phone_change') => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
+  resetPasswordForEmail: (email: string) => Promise<{ error: Error | null }>;
+  updateUserPassword: (password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 };
 
@@ -78,6 +80,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         
+        // Handle password recovery event
+        if (event === 'PASSWORD_RECOVERY') {
+          console.log('Password recovery event triggered');
+          // The user has clicked on the password reset link
+          // We should navigate to the reset password screen
+          setLoading(false);
+        }
+
         // Handle loading state for auth events
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
           setLoading(false);
@@ -278,6 +288,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: error as Error };
       } finally {
         setLoading(false);
+      }
+    },
+    resetPasswordForEmail: async (email: string) => {
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: 'com.mobilejarvislanding://reset-password',
+        });
+        
+        if (error) {
+          console.error('Reset password error:', error);
+          return { error };
+        }
+        
+        return { error: null };
+      } catch (error) {
+        console.error('Reset password exception:', error);
+        return { error: error as Error };
+      }
+    },
+    updateUserPassword: async (password: string) => {
+      try {
+        const { error } = await supabase.auth.updateUser({
+          password,
+        });
+        
+        if (error) {
+          console.error('Update password error:', error);
+          return { error };
+        }
+        
+        return { error: null };
+      } catch (error) {
+        console.error('Update password exception:', error);
+        return { error: error as Error };
       }
     },
     signOut: async () => {

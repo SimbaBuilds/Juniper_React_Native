@@ -18,6 +18,8 @@ import { supabase } from './src/supabase/supabase';
 import LoginPage from './src/auth/LoginPage';
 import SignUpPage from './src/auth/SignUpPage';
 import PhoneSignUpPage from './src/auth/PhoneSignUpPage';
+import ForgotPasswordScreen from './src/auth/ForgotPasswordScreen';
+import ResetPasswordScreen from './src/auth/ResetPasswordScreen';
 import { AuthProvider, useAuth } from './src/auth/AuthContext';
 import IntegrationCompletionService from './src/integrations/IntegrationCompletionService';
 import { DatabaseService } from './src/supabase/supabase';
@@ -33,6 +35,8 @@ type RootStackParamList = {
   Login: undefined;
   SignUp: undefined;
   PhoneSignUp: undefined;
+  ForgotPassword: undefined;
+  ResetPassword: undefined;
   OAuthCallback: { url: string; integration_id?: string };
 };
 
@@ -372,6 +376,9 @@ export default function App() {
       console.log('URL starts with https://', url.startsWith('https://'));
       console.log('URL includes /oauth/', url.includes('/oauth/'));
       
+      // Check if this is a password reset callback URL
+      const isPasswordResetCallback = url.startsWith('com.mobilejarvislanding://reset-password');
+      
       // Check if this is an OAuth callback URL
       const isOAuthCallback = url.includes('oauth2redirect') || 
                             url.includes('com.googleusercontent.apps') ||
@@ -388,7 +395,13 @@ export default function App() {
                             // HTTPS callback URLs
                             (url.startsWith('https://') && url.includes('/oauth/'));
       
-      if (isOAuthCallback) {
+      if (isPasswordResetCallback) {
+        console.log('✅ Detected password reset callback');
+        // Navigate to reset password screen
+        if (navigationRef.current) {
+          navigationRef.current.navigate('ResetPassword');
+        }
+      } else if (isOAuthCallback) {
         console.log('✅ Detected OAuth callback - using new OAuth routing system');
         
         try {
@@ -509,6 +522,20 @@ export default function App() {
                         title: 'Phone Sign Up',
                       }}
                     />
+                    <Stack.Screen 
+                      name="ForgotPassword" 
+                      component={ForgotPasswordScreen}
+                      options={{
+                        title: 'Reset Password',
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="ResetPassword" 
+                      component={ResetPasswordScreen}
+                      options={{
+                        title: 'Set New Password',
+                      }}
+                    />
                   </>
                 )}
               </Stack.Navigator>
@@ -549,6 +576,20 @@ export default function App() {
                     component={PhoneSignUpPage}
                     options={{
                       title: 'Phone Sign Up',
+                    }}
+                  />
+                  <Stack.Screen 
+                    name="ForgotPassword" 
+                    component={ForgotPasswordScreen}
+                    options={{
+                      title: 'Reset Password',
+                    }}
+                  />
+                  <Stack.Screen 
+                    name="ResetPassword" 
+                    component={ResetPasswordScreen}
+                    options={{
+                      title: 'Set New Password',
                     }}
                   />
                 </>

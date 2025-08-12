@@ -43,6 +43,16 @@ export const useAuth = () => {
       if (error) throw error;
     },
     
+    // Password reset
+    resetPasswordForEmail: async (email: string) => {
+      const { error } = await context.resetPasswordForEmail(email);
+      return { error };
+    },
+    updateUserPassword: async (password: string) => {
+      const { error } = await context.updateUserPassword(password);
+      return { error };
+    },
+    
     // Common
     logout: async () => {
       await context.signOut();

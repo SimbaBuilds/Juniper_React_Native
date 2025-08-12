@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, View, Text } from 'react-native';
+import { StyleSheet, TextInput, View, Text, TouchableOpacity } from 'react-native';
 import Button from '../shared/components/Button';
 
 interface LoginFormProps {
   onLogin: (email: string, password: string) => void;
+  onForgotPassword?: () => void;
   isLoading?: boolean;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ 
   onLogin,
+  onForgotPassword,
   isLoading = false,
 }) => {
   const [email, setEmail] = useState('');
@@ -76,6 +78,15 @@ const LoginForm: React.FC<LoginFormProps> = ({
         loading={isLoading}
         style={styles.button}
       />
+      
+      {onForgotPassword && (
+        <TouchableOpacity 
+          style={styles.forgotPasswordContainer}
+          onPress={onForgotPassword}
+        >
+          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -111,6 +122,15 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 8,
+  },
+  forgotPasswordContainer: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  forgotPasswordText: {
+    color: '#007bff',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 

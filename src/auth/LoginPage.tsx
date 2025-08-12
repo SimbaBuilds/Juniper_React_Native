@@ -10,6 +10,7 @@ type RootStackParamList = {
   Settings: undefined;
   Login: undefined;
   SignUp: undefined;
+  ForgotPassword: undefined;
 };
 
 type LoginPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -65,6 +66,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigation }) => {
     navigation.navigate('SignUp');
   };
 
+  const handleNavigateToForgotPassword = () => {
+    navigation.navigate('ForgotPassword');
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -89,7 +94,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigation }) => {
             </View>
           )}
 
-          <LoginForm onLogin={handleLogin} isLoading={isLoading} />
+          <LoginForm 
+            onLogin={handleLogin} 
+            onForgotPassword={handleNavigateToForgotPassword}
+            isLoading={isLoading} 
+          />
 
           {/* <View style={styles.dividerContainer}>
             <View style={styles.divider} />

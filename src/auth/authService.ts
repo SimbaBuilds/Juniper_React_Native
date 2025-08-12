@@ -99,4 +99,26 @@ export const authService = {
     const { data } = await supabase.auth.getSession();
     return data.session;
   },
+
+  /**
+   * Send password reset email
+   */
+  resetPasswordForEmail: async (email: string) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'com.mobilejarvislanding://reset-password',
+    });
+    
+    return { data, error };
+  },
+
+  /**
+   * Update user password
+   */
+  updateUserPassword: async (password: string) => {
+    const { data, error } = await supabase.auth.updateUser({
+      password,
+    });
+    
+    return { data, error };
+  },
 }; 
