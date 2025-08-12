@@ -639,11 +639,11 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           >
             <VoiceSelectionDropdown
               label="Voice Selection"
-              value={settings.selectedDeepgramVoice || 'aura-2-mars-en'}
+              value={settings.selectedDeepgramVoice || 'aura-2-pandora-en'}
               options={AVAILABLE_DEEPGRAM_VOICES}
               onValueChange={async (selectedDeepgramVoice) => {
                 console.log('🎵 DEEPGRAM_SELECTION: Deepgram voice selected in settings screen');
-                console.log('🎵 DEEPGRAM_SELECTION: Previous voice:', settings.selectedDeepgramVoice || 'aura-2-mars-en');
+                console.log('🎵 DEEPGRAM_SELECTION: Previous voice:', settings.selectedDeepgramVoice || 'aura-2-pandora-en');
                 console.log('🎵 DEEPGRAM_SELECTION: New voice:', selectedDeepgramVoice);
                 console.log('🎵 DEEPGRAM_SELECTION: Available voices:', AVAILABLE_DEEPGRAM_VOICES.map(v => v.value));
                 await handleVoiceSettingsUpdate({ selectedDeepgramVoice });

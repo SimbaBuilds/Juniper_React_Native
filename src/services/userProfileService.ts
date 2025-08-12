@@ -17,7 +17,7 @@ export class UserProfileService {
         wake_word: DEFAULT_WAKE_PHRASE,
         wake_word_sensitivity: 0.3,
         wake_word_detection_enabled: false,
-        selected_deepgram_voice: 'aura-2-mars-en',
+        selected_deepgram_voice: 'aura-2-pandora-en',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         // Add missing properties
         requests_today: 0,
