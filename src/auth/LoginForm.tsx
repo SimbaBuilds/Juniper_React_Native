@@ -51,6 +51,9 @@ const LoginForm: React.FC<LoginFormProps> = ({
           placeholder="Enter your email"
           keyboardType="email-address"
           autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+          textContentType="emailAddress"
         />
         {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
       </View>
@@ -98,6 +101,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
+    height: 48,
+    includeFontPadding: false,
   },
   errorText: {
     color: '#e74c3c',

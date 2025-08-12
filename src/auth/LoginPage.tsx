@@ -70,10 +70,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigation }) => {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
       >
         <ScrollView 
           contentContainerStyle={styles.scrollView}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
         >
           <View style={styles.header}>
             <Text style={styles.title}>Welcome Back</Text>

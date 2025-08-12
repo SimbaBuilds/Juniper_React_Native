@@ -130,13 +130,13 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       console.log('📊 REQUEST_STATUS: Status changed to:', status);
       setRequestStatus(status);
       
-      // Clear request ID when request completes
+      // Clear request ID when request completes, fails, or is cancelled
       if (status === 'completed' || status === 'failed' || status === 'cancelled') {
         console.log('📊 REQUEST_STATUS: Request reached final state, clearing request ID');
         setTimeout(() => {
           setCurrentRequestId(null);
           setRequestStatus(null);
-        }, 500); // Keep status visible for 2 seconds
+        }, 500); // Keep status visible for 0.5 seconds before clearing
       }
     }
   });

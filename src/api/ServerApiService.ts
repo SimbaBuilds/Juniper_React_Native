@@ -18,9 +18,9 @@ function toSnakeCase(str: string): string {
  * Prepare feature settings for API call by removing categories and capping array lengths
  */
 
-// Default server configuration
+// Default server configuration - prioritize React Native environment variables
 const DEFAULT_SERVER_CONFIG = {
-  baseUrl: 'https://mobile-jarvis-backend.onrender.com',
+  baseUrl: process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL || 'https://mobile-jarvis-backend.onrender.com',
   apiEndpoint: '/api/chat'
 };
 
@@ -83,15 +83,31 @@ class ServerApiService {
   }
   
   /**
-   * Load configuration from native settings
+   * Load configuration from React Native environment, fallback to native settings
    */
   private async loadConfig(): Promise<void> {
     try {
+      // First, check if React Native environment variables are set
+      const envBaseUrl = process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL;
+      
+      if (envBaseUrl) {
+        const envConfig = {
+          baseUrl: envBaseUrl,
+          apiEndpoint: '/api/chat'
+        };
+        this.updateConfig(envConfig);
+        console.log('✅ Loaded server config from React Native environment:', envConfig);
+        return;
+      }
+
+      // Fallback to native settings if environment variables are not set
+      console.log('🔄 No React Native environment variables found, falling back to native settings...');
       const serverConfig = await SettingsService.getServerApiConfig();
       this.updateConfig(serverConfig);
-      console.log('Loaded server config from native settings:', serverConfig);
+      console.log('✅ Loaded server config from native settings:', serverConfig);
     } catch (error) {
-      console.error('Error loading server config from native settings:', error);
+      console.error('❌ Error loading server config:', error);
+      console.log('🔄 Using default configuration as fallback');
     }
   }
 

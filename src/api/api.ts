@@ -4,6 +4,9 @@ import { supabase } from '../supabase/supabase';
 
 // const supabase = createClient();
 
+// Log the backend URL being used
+console.log('🌐 API: Using backend URL from environment:', process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL);
+
 const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL,
   timeout: Platform.OS === 'android' ? 300000 : 300000, // 5 minute timeout for both platforms to match ServerApiService

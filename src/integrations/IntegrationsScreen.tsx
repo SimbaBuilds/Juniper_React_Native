@@ -56,6 +56,16 @@ export const IntegrationsScreen: React.FC = () => {
   const getServiceCategory = (serviceName: string): string => {
     const name = serviceName.toLowerCase();
     
+     // Health and Wellness
+     if (['oura', 'fitbit'].includes(name)) {
+      return 'Health and Wellness';
+    }
+    
+     // Email
+    if (['gmail', 'microsoft outlook email', 'microsoft outlook mail'].includes(name)) {
+      return 'Email';
+    }
+    
     // Communications
     if (['slack', 'microsoft teams', 'twilio', 'textbelt'].includes(name)) {
       return 'Communications';
@@ -71,11 +81,7 @@ export const IntegrationsScreen: React.FC = () => {
       return 'Calendar';
     }
     
-    // Email
-    if (['gmail', 'microsoft outlook email', 'microsoft outlook mail'].includes(name)) {
-      return 'Email';
-    }
-    
+   
     // Video Conferencing
     if (['google meet'].includes(name)) {
       return 'Video Conferencing';
@@ -100,7 +106,7 @@ export const IntegrationsScreen: React.FC = () => {
     if (['google sheets', 'microsoft excel online'].includes(name)) {
       return 'Cloud Spreadsheets';
     }
-  
+    
     
     // Default category for uncategorized services
     return 'Other';
@@ -123,10 +129,11 @@ export const IntegrationsScreen: React.FC = () => {
     
     // Define the order of categories
     const categoryOrder = [
+      'Health and Wellness',
+      'Email',
       'Communications',
       'Productivity and Task Management',
       'Calendar',
-      'Email',
       'Video Conferencing',
       'Cloud Storage',
       'Cloud Text Documents',
@@ -199,6 +206,10 @@ export const IntegrationsScreen: React.FC = () => {
         return 'document';
       case 'twilio':
         return 'chatbox-ellipses';
+      case 'fitbit':
+        return 'fitness';
+      case 'oura':
+        return 'heart';
       default:
         return 'link';
     }
@@ -225,6 +236,8 @@ export const IntegrationsScreen: React.FC = () => {
         return 'grid-outline';
       case 'Communications':
         return 'chatbubbles-outline';
+      case 'Health and Wellness':
+        return 'fitness-outline';
       default:
         return 'apps-outline';
     }
@@ -321,7 +334,7 @@ export const IntegrationsScreen: React.FC = () => {
       );
       
       // Filter out null results for system services without mapped integration keys
-      const servicesWithStatus: ServiceWithStatus[] = serviceResults.filter(Boolean);
+      const servicesWithStatus: ServiceWithStatus[] = serviceResults.filter(Boolean) as ServiceWithStatus[];
       
       setServices(servicesWithStatus);
     } catch (err) {
