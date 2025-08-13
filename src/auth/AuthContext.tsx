@@ -64,15 +64,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const displayName = currentSession.user.user_metadata?.display_name || 
                                  currentSession.user.user_metadata?.full_name;
               
-              // Check if profile already exists to avoid duplicates
-              const profileExists = await UserProfileService.profileExists(currentSession.user.id);
-              
-              if (!profileExists) {
-                await UserProfileService.createUserProfile(
-                  currentSession.user.id, 
-                  displayName
-                );
-              }
+              // Create or update profile (upsert handles duplicates safely)
+              await UserProfileService.createUserProfile(
+                currentSession.user.id, 
+                displayName
+              );
             }
           } catch (error) {
             console.error('Failed to create user profile:', error);

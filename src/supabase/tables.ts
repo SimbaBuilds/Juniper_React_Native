@@ -401,5 +401,3 @@ export type UserProfile = {
   ] as const;
   export type HotPhraseField = (typeof hotPhraseFields)[number];
 
-
-

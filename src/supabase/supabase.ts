@@ -60,7 +60,7 @@ export const DatabaseService = {
       
       const { data, error } = await supabase
         .from('user_profiles')
-        .insert(defaultProfile)
+        .upsert(defaultProfile, { onConflict: 'id' })
         .select()
         .single();
       
@@ -144,7 +144,7 @@ export const DatabaseService = {
       
       const { data, error } = await supabase
         .from('user_profiles')
-        .insert(defaultProfile)
+        .upsert(defaultProfile, { onConflict: 'id' })
         .select()
         .single();
       

@@ -38,7 +38,7 @@ export class UserProfileService {
 
       const { data, error } = await supabase
         .from('user_profiles')
-        .insert(defaultProfile)
+        .upsert(defaultProfile, { onConflict: 'id' })
         .select()
         .single();
 
