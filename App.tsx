@@ -24,6 +24,8 @@ import { AuthProvider, useAuth } from './src/auth/AuthContext';
 import IntegrationCompletionService from './src/integrations/IntegrationCompletionService';
 import { DatabaseService } from './src/supabase/supabase';
 import { colors } from './src/shared/theme/colors';
+import { AppErrorBoundary } from './src/error/AppErrorBoundary';
+import { VoiceErrorBoundary } from './src/voice/ErrorBoundary/VoiceErrorBoundary';
 
 type RootStackParamList = {
   MainTabs: undefined;
@@ -481,17 +483,19 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef}>
-      <AuthProvider>
-        <VoiceProvider>
-          {Platform.OS === 'android' ? (
-            <WakeWordProvider>
-              <Stack.Navigator
-                screenOptions={{
-                  headerShown: false,
-                }}
-                initialRouteName={session ? "MainTabs" : "Login"}
-              >
+    <AppErrorBoundary>
+      <NavigationContainer ref={navigationRef}>
+        <AuthProvider>
+          <VoiceErrorBoundary>
+            <VoiceProvider>
+              {Platform.OS === 'android' ? (
+                <WakeWordProvider>
+                  <Stack.Navigator
+                    screenOptions={{
+                      headerShown: false,
+                    }}
+                    initialRouteName={session ? "MainTabs" : "Login"}
+                  >
                 {session ? (
                   <>
                     <Stack.Screen 
@@ -594,12 +598,14 @@ export default function App() {
                   />
                 </>
               )}
-            </Stack.Navigator>
-            </WakeWordProvider>
-          )}
-        </VoiceProvider>
-      </AuthProvider>
-    </NavigationContainer>
+              </Stack.Navigator>
+              </WakeWordProvider>
+            )}
+            </VoiceProvider>
+          </VoiceErrorBoundary>
+        </AuthProvider>
+      </NavigationContainer>
+    </AppErrorBoundary>
   );
 }
 

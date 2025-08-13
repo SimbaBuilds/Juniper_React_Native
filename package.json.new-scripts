@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "test:apple-review": "./tests/apple-review/run-apple-review-tests.sh",
+    "test:apple-review-simulator": "node tests/apple-review/apple-review-simulator.js",
+    "test:crash-simulation": "jest tests/apple-review/crash-simulation.test.js",
+    "test:device-simulation": "jest tests/apple-review/device-simulation.test.js",
+    "test:production-errors": "jest tests/apple-review/production-error-handling.test.js",
+    "validate:apple-review": "npm run test:apple-review && echo '✅ App is ready for Apple Review submission!'",
+    "prebuild": "npm run validate:apple-review"
+  }
+}

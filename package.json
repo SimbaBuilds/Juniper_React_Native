@@ -15,7 +15,16 @@
     "test:ios:errors": "./scripts/error-handling-tests.sh",
     "test:ios:validate": "./scripts/pre-manual-validation.sh",
     "test:ios:conversation": "node tests/integration/conversation-test-fixed.js",
-    "test:ios:full": "npm run test:ios && npm run test:ios:performance && npm run test:ios:errors && npm run test:ios:validate"
+    "test:ios:full": "npm run test:ios && npm run test:ios:performance && npm run test:ios:errors && npm run test:ios:validate",
+    "test:apple-review": "node tests/apple-review/run-tests-expo.js",
+    "test:apple-review-simulator": "node tests/apple-review/apple-review-simulator.js",
+    "test:crash-simulation": "jest tests/apple-review/crash-simulation.test.js",
+    "test:device-simulation": "jest tests/apple-review/device-simulation.test.js",
+    "test:production-errors": "jest tests/apple-review/production-error-handling.test.js",
+    "validate:apple-review": "npm run test:apple-review && echo '✅ App is ready for Apple Review submission!'",
+    "preios": "npm run validate:apple-review",
+    "ios:release": "npx expo run:ios --configuration Release",
+    "android:release": "npx expo run:android --variant release"
   },
   "dependencies": {
     "@expo/config-plugins": "^7.8.0",
