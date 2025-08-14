@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TagSelector } from './components/TagSelector';
 import { NUM_DISPLAYED_RESOURCES, useRepoScreen } from './hooks/useRepoScreen';
@@ -507,7 +507,17 @@ export const RepoScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalContent}>
+            <KeyboardAvoidingView
+              style={styles.keyboardAvoidingView}
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+            >
+              <ScrollView 
+                style={styles.modalContent}
+                contentContainerStyle={styles.modalScrollContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={true}
+              >
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Title (Optional)</Text>
                 <TextInput
@@ -597,7 +607,8 @@ export const RepoScreen: React.FC = () => {
                 onTagsChange={(tags) => setNewResource(prev => ({ ...prev, tags }))}
                 disabled={saving}
               />
-            </ScrollView>
+              </ScrollView>
+            </KeyboardAvoidingView>
           </SafeAreaView>
         </Modal>
 
@@ -634,7 +645,17 @@ export const RepoScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalContent}>
+            <KeyboardAvoidingView
+              style={styles.keyboardAvoidingView}
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+            >
+              <ScrollView 
+                style={styles.modalContent}
+                contentContainerStyle={styles.modalScrollContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={true}
+              >
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Title (Optional)</Text>
                 <TextInput
@@ -724,7 +745,8 @@ export const RepoScreen: React.FC = () => {
                 onTagsChange={(tags) => setEditResource(prev => ({ ...prev, tags }))}
                 disabled={saving}
               />
-            </ScrollView>
+              </ScrollView>
+            </KeyboardAvoidingView>
           </SafeAreaView>
         </Modal>
 
@@ -995,9 +1017,16 @@ const styles = StyleSheet.create({
   modalSaveTextDisabled: {
     opacity: 0.5,
   },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   modalContent: {
     flex: 1,
     padding: 16,
+  },
+  modalScrollContent: {
+    paddingBottom: 50,
+    flexGrow: 1,
   },
   inputGroup: {
     marginBottom: 20,
