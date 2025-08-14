@@ -43,7 +43,6 @@ export const useRepoScreen = () => {
     type: 'memory',
     tags: []
   });
-  const [showTypeSelector, setShowTypeSelector] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedFilterTags, setSelectedFilterTags] = useState<any[]>([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -478,8 +477,6 @@ export const useRepoScreen = () => {
     setShowAddModal,
     newResource,
     setNewResource,
-    showTypeSelector,
-    setShowTypeSelector,
     saving,
     selectedFilterTags,
     setSelectedFilterTags,

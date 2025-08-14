@@ -25,8 +25,6 @@ export const RepoScreen: React.FC = () => {
     setShowAddModal,
     newResource,
     setNewResource,
-    showTypeSelector,
-    setShowTypeSelector,
     saving,
     selectedFilterTags,
     setSelectedFilterTags,
@@ -524,16 +522,31 @@ export const RepoScreen: React.FC = () => {
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Resource Type *</Text>
-                <TouchableOpacity
-                  style={styles.pickerContainer}
-                  onPress={() => setShowTypeSelector(true)}
-                  disabled={saving}
-                >
-                  <Text style={styles.pickerText}>
-                    {RESOURCE_TYPES.find(type => type.value === newResource.type)?.label || 'Select Type'}
-                  </Text>
-                  <Ionicons name="chevron-down" size={20} color="#666666" />
-                </TouchableOpacity>
+                <View style={styles.resourceTypeSelector}>
+                  {RESOURCE_TYPES.map((type) => (
+                    <TouchableOpacity
+                      key={type.value}
+                      style={[
+                        styles.resourceTypeOption,
+                        newResource.type === type.value && styles.resourceTypeOptionSelected
+                      ]}
+                      onPress={() => setNewResource(prev => ({ ...prev, type: type.value }))}
+                      disabled={saving}
+                    >
+                      <Ionicons 
+                        name={RESOURCE_ICONS[type.value as keyof typeof RESOURCE_ICONS] as any} 
+                        size={18} 
+                        color={newResource.type === type.value ? '#FFFFFF' : '#4A90E2'} 
+                      />
+                      <Text style={[
+                        styles.resourceTypeOptionText,
+                        newResource.type === type.value && styles.resourceTypeOptionTextSelected
+                      ]}>
+                        {type.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
 
               <View style={styles.inputGroup}>
@@ -636,16 +649,31 @@ export const RepoScreen: React.FC = () => {
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Resource Type *</Text>
-                <TouchableOpacity
-                  style={styles.pickerContainer}
-                  onPress={() => setShowTypeSelector(true)}
-                  disabled={saving}
-                >
-                  <Text style={styles.pickerText}>
-                    {RESOURCE_TYPES.find(type => type.value === editResource.type)?.label || 'Select Type'}
-                  </Text>
-                  <Ionicons name="chevron-down" size={20} color="#666666" />
-                </TouchableOpacity>
+                <View style={styles.resourceTypeSelector}>
+                  {RESOURCE_TYPES.map((type) => (
+                    <TouchableOpacity
+                      key={type.value}
+                      style={[
+                        styles.resourceTypeOption,
+                        editResource.type === type.value && styles.resourceTypeOptionSelected
+                      ]}
+                      onPress={() => setEditResource(prev => ({ ...prev, type: type.value }))}
+                      disabled={saving}
+                    >
+                      <Ionicons 
+                        name={RESOURCE_ICONS[type.value as keyof typeof RESOURCE_ICONS] as any} 
+                        size={18} 
+                        color={editResource.type === type.value ? '#FFFFFF' : '#4A90E2'} 
+                      />
+                      <Text style={[
+                        styles.resourceTypeOptionText,
+                        editResource.type === type.value && styles.resourceTypeOptionTextSelected
+                      ]}>
+                        {type.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
 
               <View style={styles.inputGroup}>
@@ -700,60 +728,6 @@ export const RepoScreen: React.FC = () => {
           </SafeAreaView>
         </Modal>
 
-        {/* Resource Type Selector Modal */}
-        <Modal
-          visible={showTypeSelector}
-          animationType="slide"
-          presentationStyle="pageSheet"
-          onRequestClose={() => setShowTypeSelector(false)}
-        >
-          <SafeAreaView style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <TouchableOpacity onPress={() => setShowTypeSelector(false)}>
-                <Text style={styles.modalCloseText}>Cancel</Text>
-              </TouchableOpacity>
-              <Text style={styles.modalTitle}>Select Resource Type</Text>
-              <TouchableOpacity onPress={() => setShowTypeSelector(false)}>
-                <Text style={styles.modalCloseText}>Done</Text>
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.typeSelector}>
-              {RESOURCE_TYPES.map((type) => (
-                <TouchableOpacity
-                  key={type.value}
-                  style={[
-                    styles.typeOption,
-                    ((showEditModal ? editResource.type : newResource.type) === type.value) && styles.typeOptionSelected
-                  ]}
-                  onPress={() => {
-                    if (showEditModal) {
-                      setEditResource(prev => ({ ...prev, type: type.value }));
-                    } else {
-                      setNewResource(prev => ({ ...prev, type: type.value }));
-                    }
-                    setShowTypeSelector(false);
-                  }}
-                >
-                  <Ionicons 
-                    name={RESOURCE_ICONS[type.value as keyof typeof RESOURCE_ICONS] as any} 
-                    size={24} 
-                    color={((showEditModal ? editResource.type : newResource.type) === type.value) ? '#FFFFFF' : '#4A90E2'} 
-                  />
-                  <Text style={[
-                    styles.typeOptionText,
-                    ((showEditModal ? editResource.type : newResource.type) === type.value) && styles.typeOptionTextSelected
-                  ]}>
-                    {type.label}
-                  </Text>
-                  {((showEditModal ? editResource.type : newResource.type) === type.value) && (
-                    <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          </SafeAreaView>
-        </Modal>
       </ScrollView>
     </SafeAreaView>
   );
@@ -1073,28 +1047,35 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: 16,
   },
-  typeSelector: {
-    padding: 16,
+  resourceTypeSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  typeOption: {
+  resourceTypeOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 8,
-    marginBottom: 8,
     backgroundColor: '#1E1E1E',
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
+    flex: 1,
+    minWidth: '45%',
   },
-  typeOptionSelected: {
+  resourceTypeOptionSelected: {
     backgroundColor: '#4A90E2',
+    borderColor: '#4A90E2',
   },
-  typeOptionText: {
-    fontSize: 16,
+  resourceTypeOptionText: {
+    fontSize: 14,
     color: colors.text.primary,
-    marginLeft: 12,
+    marginLeft: 8,
     flex: 1,
   },
-  typeOptionTextSelected: {
-    color: colors.text.primary,
+  resourceTypeOptionTextSelected: {
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   filterTag: {
