@@ -76,7 +76,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         title="Login"
         onPress={handleSubmit}
         loading={isLoading}
-        style={styles.button}
+        variant="outlined"
       />
       
       {onForgotPassword && (

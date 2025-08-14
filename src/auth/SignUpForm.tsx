@@ -122,7 +122,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         title="Create Account"
         onPress={handleSubmit}
         loading={isLoading}
-        style={styles.button}
+        variant="outlined"
       />
     </View>
   );
