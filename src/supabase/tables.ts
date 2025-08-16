@@ -366,3 +366,329 @@ export type UserProfile = {
   ] as const;
   export type HotPhraseField = (typeof hotPhraseFields)[number];
 
+  // Automation Schema Tables
+
+  export type AutomationRun = {
+    id: string;
+    automation_id: string;
+    trigger_data: Record<string, any>;
+    result: Record<string, any>;
+    error?: string;
+    duration_ms?: number;
+    executed_at: Date;
+  };
+
+  export const automationRunFields = [
+    'id', 'automation_id', 'trigger_data', 'result', 'error', 'duration_ms', 'executed_at'
+  ] as const;
+  export type AutomationRunField = (typeof automationRunFields)[number];
+
+  export type AutomationUsage = {
+    id: string;
+    user_id: string;
+    automation_id?: string;
+    service_name?: string;
+    timestamp: Date;
+    tokens_used: number;
+    execution_time_ms: number;
+  };
+
+  export const automationUsageFields = [
+    'id', 'user_id', 'automation_id', 'service_name', 'timestamp', 'tokens_used', 'execution_time_ms'
+  ] as const;
+  export type AutomationUsageField = (typeof automationUsageFields)[number];
+
+  export type AutomationRecord = {
+    id: string;
+    user_id: string;
+    name: string;
+    description?: string;
+    trigger_type: 'webhook' | 'schedule' | 'manual';
+    trigger_config: Record<string, any>;
+    script_code: string;
+    execution_params: Record<string, any>;
+    dependencies: string[];
+    active: boolean;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const automationRecordFields = [
+    'id', 'user_id', 'name', 'description', 'trigger_type', 'trigger_config', 
+    'script_code', 'execution_params', 'dependencies', 'active', 'created_at', 'updated_at'
+  ] as const;
+  export type AutomationRecordField = (typeof automationRecordFields)[number];
+
+  export type AutomationAuditLog = {
+    id: string;
+    automation_id?: string;
+    user_id: string;
+    service_accessed?: string;
+    action_performed?: string;
+    timestamp: Date;
+    success: boolean;
+    error_message?: string;
+  };
+
+  export const automationAuditLogFields = [
+    'id', 'automation_id', 'user_id', 'service_accessed', 'action_performed', 
+    'timestamp', 'success', 'error_message'
+  ] as const;
+  export type AutomationAuditLogField = (typeof automationAuditLogFields)[number];
+
+  export type AutomationEvent = {
+    id: string;
+    user_id: string;
+    service_name: string;
+    event_type: string;
+    event_id?: string;
+    event_data: Record<string, any>;
+    processed: boolean;
+    retry_count: number;
+    created_at: Date;
+    processed_at?: Date;
+  };
+
+  export const automationEventFields = [
+    'id', 'user_id', 'service_name', 'event_type', 'event_id', 'event_data', 
+    'processed', 'retry_count', 'created_at', 'processed_at'
+  ] as const;
+  export type AutomationEventField = (typeof automationEventFields)[number];
+
+  export type AutomationExecutionSession = {
+    id: string;
+    automation_id?: string;
+    user_id: string;
+    session_token?: string;
+    sandbox_instance_id?: string;
+    started_at: Date;
+    completed_at?: Date;
+    status: 'running' | 'completed' | 'failed';
+  };
+
+  export const automationExecutionSessionFields = [
+    'id', 'automation_id', 'user_id', 'session_token', 'sandbox_instance_id', 
+    'started_at', 'completed_at', 'status'
+  ] as const;
+  export type AutomationExecutionSessionField = (typeof automationExecutionSessionFields)[number];
+
+  export type BatchOperation = {
+    id: string;
+    service_name: string;
+    user_id: string;
+    operation_type: string;
+    item_count: number;
+    batch_size: number;
+    total_duration_ms?: number;
+    items_per_request?: number;
+    started_at: Date;
+    completed_at?: Date;
+    success: boolean;
+    metadata: Record<string, any>;
+  };
+
+  export const batchOperationFields = [
+    'id', 'service_name', 'user_id', 'operation_type', 'item_count', 'batch_size', 
+    'total_duration_ms', 'items_per_request', 'started_at', 'completed_at', 'success', 'metadata'
+  ] as const;
+  export type BatchOperationField = (typeof batchOperationFields)[number];
+
+  export type ServiceApiError = {
+    id: string;
+    user_id: string;
+    service_name: string;
+    error_type: string;
+    error_message?: string;
+    error_code?: string;
+    occurred_at: Date;
+    resolved: boolean;
+    resolved_at?: Date;
+  };
+
+  export const serviceApiErrorFields = [
+    'id', 'user_id', 'service_name', 'error_type', 'error_message', 'error_code', 
+    'occurred_at', 'resolved', 'resolved_at'
+  ] as const;
+  export type ServiceApiErrorField = (typeof serviceApiErrorFields)[number];
+
+  export type ServiceApiQuota = {
+    id: string;
+    service_name: string;
+    user_id?: string;
+    quota_type: string;
+    quota_limit: number;
+    current_usage: number;
+    reset_at: Date;
+    created_at: Date;
+  };
+
+  export const serviceApiQuotaFields = [
+    'id', 'service_name', 'user_id', 'quota_type', 'quota_limit', 'current_usage', 'reset_at', 'created_at'
+  ] as const;
+  export type ServiceApiQuotaField = (typeof serviceApiQuotaFields)[number];
+
+  export type ServiceAutomationPattern = {
+    service_name: string;
+    optimization_hints: Record<string, any>;
+    webhook_config: Record<string, any>;
+    rate_limits: Record<string, any>;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const serviceAutomationPatternFields = [
+    'service_name', 'optimization_hints', 'webhook_config', 'rate_limits', 'created_at', 'updated_at'
+  ] as const;
+  export type ServiceAutomationPatternField = (typeof serviceAutomationPatternFields)[number];
+
+  export type ServiceAutomationTemplate = {
+    id: string;
+    service_name: string;
+    template_name: string;
+    description?: string;
+    trigger_pattern: Record<string, any>;
+    script_template: string;
+    parameter_schema?: Record<string, any>;
+    tags: string[];
+    usage_count: number;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const serviceAutomationTemplateFields = [
+    'id', 'service_name', 'template_name', 'description', 'trigger_pattern', 'script_template', 
+    'parameter_schema', 'tags', 'usage_count', 'created_at', 'updated_at'
+  ] as const;
+  export type ServiceAutomationTemplateField = (typeof serviceAutomationTemplateFields)[number];
+
+  export type ServiceCapability = {
+    service_name: string;
+    supports_webhooks: boolean;
+    webhook_events?: string[];
+    supports_polling: boolean;
+    polling_endpoints: Record<string, any>;
+    rate_limits: Record<string, any>;
+    auth_types: string[];
+    api_version?: string;
+    documentation_url?: string;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const serviceCapabilityFields = [
+    'service_name', 'supports_webhooks', 'webhook_events', 'supports_polling', 'polling_endpoints', 
+    'rate_limits', 'auth_types', 'api_version', 'documentation_url', 'created_at', 'updated_at'
+  ] as const;
+  export type ServiceCapabilityField = (typeof serviceCapabilityFields)[number];
+
+  export type ServiceCircuitBreaker = {
+    service_name: string;
+    state: 'closed' | 'half_open' | 'open';
+    failure_count: number;
+    last_failure_at?: Date;
+    recovery_timeout_minutes: number;
+    next_attempt_at?: Date;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const serviceCircuitBreakerFields = [
+    'service_name', 'state', 'failure_count', 'last_failure_at', 'recovery_timeout_minutes', 
+    'next_attempt_at', 'created_at', 'updated_at'
+  ] as const;
+  export type ServiceCircuitBreakerField = (typeof serviceCircuitBreakerFields)[number];
+
+  export type ServiceOptimizationRule = {
+    id: string;
+    service_name: string;
+    rule_type: string;
+    condition_expression: string;
+    optimization_action: Record<string, any>;
+    active: boolean;
+    priority: number;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const serviceOptimizationRuleFields = [
+    'id', 'service_name', 'rule_type', 'condition_expression', 'optimization_action', 
+    'active', 'priority', 'created_at', 'updated_at'
+  ] as const;
+  export type ServiceOptimizationRuleField = (typeof serviceOptimizationRuleFields)[number];
+
+  export type ServicePerformanceMetric = {
+    id: string;
+    service_name: string;
+    user_id?: string;
+    metric_type: string;
+    metric_value: number;
+    measurement_window_minutes: number;
+    recorded_at: Date;
+    metadata: Record<string, any>;
+  };
+
+  export const servicePerformanceMetricFields = [
+    'id', 'service_name', 'user_id', 'metric_type', 'metric_value', 'measurement_window_minutes', 
+    'recorded_at', 'metadata'
+  ] as const;
+  export type ServicePerformanceMetricField = (typeof servicePerformanceMetricFields)[number];
+
+  export type ServicePollingState = {
+    id: string;
+    user_id: string;
+    service_name: string;
+    last_polled_at?: Date;
+    last_cursor?: string;
+    last_sync_token?: string;
+    polling_interval_minutes: number;
+    next_poll_at?: Date;
+    consecutive_empty_polls: number;
+    active: boolean;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const servicePollingStateFields = [
+    'id', 'user_id', 'service_name', 'last_polled_at', 'last_cursor', 'last_sync_token', 
+    'polling_interval_minutes', 'next_poll_at', 'consecutive_empty_polls', 'active', 'created_at', 'updated_at'
+  ] as const;
+  export type ServicePollingStateField = (typeof servicePollingStateFields)[number];
+
+  export type ServiceRateLimit = {
+    id: string;
+    service_name: string;
+    user_id?: string;
+    rate_limit_type: string;
+    limit_value: number;
+    current_usage: number;
+    reset_at: Date;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const serviceRateLimitFields = [
+    'id', 'service_name', 'user_id', 'rate_limit_type', 'limit_value', 'current_usage', 
+    'reset_at', 'created_at', 'updated_at'
+  ] as const;
+  export type ServiceRateLimitField = (typeof serviceRateLimitFields)[number];
+
+  export type ServiceWebhookConfig = {
+    id: string;
+    user_id: string;
+    service_name: string;
+    webhook_url: string;
+    webhook_secret?: string;
+    subscription_id?: string;
+    subscription_expires_at?: Date;
+    verification_token?: string;
+    active: boolean;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const serviceWebhookConfigFields = [
+    'id', 'user_id', 'service_name', 'webhook_url', 'webhook_secret', 'subscription_id', 
+    'subscription_expires_at', 'verification_token', 'active', 'created_at', 'updated_at'
+  ] as const;
+  export type ServiceWebhookConfigField = (typeof serviceWebhookConfigFields)[number];
+

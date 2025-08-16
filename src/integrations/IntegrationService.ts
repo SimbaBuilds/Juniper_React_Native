@@ -212,7 +212,7 @@ export class IntegrationService {
 
         Alert.alert(
           'Integration Successful!',
-          `Your ${serviceName} account has been successfully connected.`,
+          `Note: integration completion can take up to 3 minutes.`,
           [{ text: 'OK' }]
         );
       } else {
