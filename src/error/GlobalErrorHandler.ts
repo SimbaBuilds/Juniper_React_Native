@@ -30,7 +30,6 @@ class GlobalErrorHandler {
   private setupGlobalErrorHandler(): void {
     // Check if ErrorUtils is available (it might not be in some environments)
     if (typeof ErrorUtils === 'undefined' || !ErrorUtils) {
-      console.warn('ErrorUtils not available in this environment');
       return;
     }
 

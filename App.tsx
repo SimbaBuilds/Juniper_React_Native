@@ -351,6 +351,12 @@ export default function App() {
         case 'zoom':
           require('./src/integrations/auth/services/ZoomAuthService').default.getInstance().handleAuthCallback(code, state);
           break;
+        case 'fitbit':
+          require('./src/integrations/auth/services/FitbitAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'oura':
+          require('./src/integrations/auth/services/OuraAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
         default:
           console.warn(`❌ Unknown service in HTTPS callback: ${serviceName}`);
           // Fall back to legacy handler

@@ -1,7 +1,0 @@
-- [ ]  Google now requires Android App Bundle (AAB) format
-- [ ]  In Android Studio: Build → Generate Signed Bundle/APK
-- [ ]  Choose Android App Bundle
-- [ ]  Create or use existing keystore (CRITICAL: back this up!)
-- [ ]  Set key alias and passwords
-- [ ]  Choose release build variant
-- [ ]  Enable app signing by Google Play (recommended)

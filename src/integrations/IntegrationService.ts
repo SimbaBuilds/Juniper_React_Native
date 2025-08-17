@@ -63,7 +63,9 @@ function mapServiceName(dbServiceName: string): string {
     'Microsoft Teams': 'microsoft-teams',
     'Twilio': 'twilio',
     'Textbelt': 'textbelt',
-    'Todoist': 'todoist'
+    'Todoist': 'todoist',
+    'Fitbit': 'fitbit',
+    'Oura': 'oura'
   };
   
   return serviceMap[dbServiceName] || dbServiceName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
@@ -106,7 +108,9 @@ export class IntegrationService {
         'microsoft-word',
         'microsoft-outlook-calendar',
         'microsoft-outlook-mail',
-        'microsoft-teams'
+        'microsoft-teams',
+        'fitbit',
+        'oura'
       ];
       if (!supportedServices.includes(internalServiceName)) {
         Alert.alert(

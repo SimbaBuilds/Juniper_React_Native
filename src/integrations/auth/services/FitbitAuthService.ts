@@ -2,7 +2,8 @@ import { Linking } from 'react-native';
 import { BaseOAuthService, AuthResult } from '../BaseOAuthService';
 import { supabase } from '../../../supabase/supabase';
 import { createBasicAuthHeader } from '../../../utils/base64';
-// Removed expo-crypto import - using native alternatives
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
 
 export class FitbitAuthService extends BaseOAuthService {
   private static instance: FitbitAuthService;
@@ -52,25 +53,14 @@ export class FitbitAuthService extends BaseOAuthService {
   }
 
   /**
-   * Generate PKCE code verifier and challenge
+   * Create Fitbit OAuth discovery configuration
    */
-  private async generatePKCE(): Promise<{ codeVerifier: string; codeChallenge: string }> {
-    // Generate cryptographically random 128-character code verifier
-    const array = new Uint8Array(96);
-    // Generate random values without expo-crypto
-    for (let i = 0; i < array.length; i++) {
-      array[i] = Math.floor(Math.random() * 256);
-    }
-    const codeVerifier = btoa(String.fromCharCode(...array))
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=/g, '');
-    
-    // For now, using plain challenge method (S256 would require a crypto library)
-    // In production, you'd want to use a proper SHA256 implementation
-    const codeChallenge = codeVerifier;
-
-    return { codeVerifier, codeChallenge };
+  private getFitbitDiscovery(): AuthSession.DiscoveryDocument {
+    return {
+      authorizationEndpoint: 'https://www.fitbit.com/oauth2/authorize',
+      tokenEndpoint: 'https://api.fitbit.com/oauth2/token',
+      revocationEndpoint: 'https://api.fitbit.com/oauth2/revoke',
+    };
   }
 
   /**
@@ -111,7 +101,7 @@ export class FitbitAuthService extends BaseOAuthService {
   }
 
   /**
-   * Start OAuth authentication flow with PKCE
+   * Start OAuth authentication flow with expo-auth-session PKCE
    */
   async authenticate(integrationId: string): Promise<AuthResult> {
     try {
@@ -119,43 +109,53 @@ export class FitbitAuthService extends BaseOAuthService {
         await this.initialize();
       }
 
-      // Generate PKCE parameters
-      const { codeVerifier, codeChallenge } = await this.generatePKCE();
-      this.codeVerifier = codeVerifier;
+      console.log('📈 Starting Fitbit OAuth flow with expo-auth-session PKCE...');
+      console.log('📈 Integration ID:', integrationId);
 
-      // Build auth URL with PKCE
-      const params = new URLSearchParams({
-        client_id: this.config.clientId,
-        redirect_uri: this.config.redirectUri,
-        response_type: 'code',
-        scope: this.config.scopes.join(' '),
+      // Configure OAuth request with automatic PKCE
+      const authRequest = new AuthSession.AuthRequest({
+        clientId: this.config.clientId,
+        scopes: this.config.scopes,
+        responseType: AuthSession.ResponseType.Code,
+        redirectUri: this.config.redirectUri,
+        usePKCE: true, // Enable automatic PKCE
         state: integrationId,
-        code_challenge: codeChallenge,
-        code_challenge_method: 'S256',
-        ...this.config.additionalParameters
+        extraParams: this.config.additionalParameters || {},
       });
 
-      const authUrl = `${this.config.authEndpoint}?${params}`;
+      // Get discovery document
+      const discovery = this.getFitbitDiscovery();
+
+      console.log('🔐 Starting OAuth with automatic PKCE...');
       
-      console.log('📈 Starting Fitbit OAuth flow with PKCE...');
-      console.log('📈 Integration ID:', integrationId);
-      console.log('📈 Opening OAuth URL:', authUrl);
+      // Ensure web browser can complete auth session
+      WebBrowser.maybeCompleteAuthSession();
       
-      const supported = await Linking.canOpenURL(authUrl);
-      if (supported) {
-        console.log('✅ Opening OAuth URL in browser...');
-        await Linking.openURL(authUrl);
-        console.log('✅ OAuth URL opened successfully');
+      // Start the authentication flow
+      const result = await authRequest.promptAsync(discovery);
+      
+      console.log('📝 OAuth result:', result.type);
+
+      if (result.type === 'success') {
+        console.log('✅ OAuth authorization successful');
         
-        // Return a placeholder - actual token exchange happens in callback
+        // Store the code verifier for token exchange
+        if (authRequest.codeVerifier) {
+          this.codeVerifier = authRequest.codeVerifier;
+          console.log('🔐 Code verifier stored for token exchange');
+        }
+
+        // The actual token exchange will happen in handleAuthCallback
         return {
           accessToken: 'pending',
           refreshToken: 'pending',
           expiresAt: Date.now(),
           scope: this.config.scopes.join(' ')
         };
+      } else if (result.type === 'error') {
+        throw new Error(`OAuth error: ${result.error?.description || 'Unknown error'}`);
       } else {
-        throw new Error('Cannot open OAuth URL - URL not supported');
+        throw new Error('OAuth flow was cancelled or failed');
       }
     } catch (error) {
       console.error('❌ Error during Fitbit authentication:', error);
@@ -169,7 +169,11 @@ export class FitbitAuthService extends BaseOAuthService {
   async handleAuthCallback(code: string, integrationId: string): Promise<boolean> {
     try {
       console.log('📈 Handling Fitbit OAuth callback...');
-      console.log('📈 Integration ID:', integrationId);
+      
+      // Clean integration ID (remove URL fragments like #_=_)
+      const cleanIntegrationId = integrationId.split('#')[0];
+      console.log('📈 Integration ID (cleaned):', cleanIntegrationId);
+      console.log('📈 Authorization Code:', code.substring(0, 10) + '...');
       
       if (!code) {
         throw new Error('No authorization code provided');
@@ -181,12 +185,21 @@ export class FitbitAuthService extends BaseOAuthService {
       console.log('✅ Token exchange successful');
       
       // Store tokens using base class method
-      await this.storeTokens(tokenData, integrationId);
-      await this.saveIntegrationToSupabase(tokenData, integrationId);
-      await this.completeIntegration(tokenData, integrationId);
+      await this.storeTokens(tokenData, cleanIntegrationId);
+      await this.saveIntegrationToSupabase(tokenData, cleanIntegrationId);
+      await this.completeIntegration(tokenData, cleanIntegrationId);
+      
+      // Set up webhook subscriptions after successful authentication
+      try {
+        console.log('🔗 Setting up Fitbit webhook subscriptions...');
+        await this.setupWebhookSubscriptions(cleanIntegrationId);
+        console.log('✅ Webhook subscriptions created successfully');
+      } catch (webhookError) {
+        console.error('⚠️ Failed to create webhook subscriptions (authentication still successful):', webhookError);
+      }
       
       console.log('✅ Fitbit authentication successful');
-      await this.notifyAuthCallbacks(integrationId);
+      await this.notifyAuthCallbacks(cleanIntegrationId);
       return true;
     } catch (error) {
       console.error('❌ Error handling Fitbit auth callback:', error);
@@ -335,6 +348,15 @@ export class FitbitAuthService extends BaseOAuthService {
    */
   async disconnect(integrationId: string): Promise<void> {
     try {
+      // Remove webhook subscriptions before disconnecting
+      try {
+        console.log('🔗 Removing Fitbit webhook subscriptions...');
+        await this.removeWebhookSubscriptions(integrationId);
+        console.log('✅ Webhook subscriptions removed successfully');
+      } catch (webhookError) {
+        console.error('⚠️ Failed to remove webhook subscriptions (disconnect will continue):', webhookError);
+      }
+
       await super.disconnect(integrationId);
       await this.deactivateIntegrationInSupabase(integrationId);
       await this.notifyAuthCallbacks(integrationId);
@@ -370,6 +392,178 @@ export class FitbitAuthService extends BaseOAuthService {
       console.log('✅ Fitbit integration deactivated in Supabase');
     } catch (error) {
       console.error('❌ Error deactivating Fitbit integration in Supabase:', error);
+    }
+  }
+
+  /**
+   * Set up webhook subscriptions for a user
+   */
+  private async setupWebhookSubscriptions(integrationId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated with Supabase');
+      }
+
+      // Default collections to subscribe to
+      const collections = ['activities', 'sleep', 'body', 'foods'];
+      const subscriptionIds: string[] = [];
+
+      for (const collection of collections) {
+        try {
+          const subscriptionId = await this.createWebhookSubscription(collection, integrationId, user.id);
+          if (subscriptionId) {
+            subscriptionIds.push(subscriptionId);
+            console.log(`✅ Created ${collection} webhook subscription: ${subscriptionId}`);
+          }
+        } catch (error) {
+          console.error(`❌ Failed to create ${collection} webhook subscription:`, error);
+        }
+      }
+
+      // Update integration with webhook subscription IDs
+      if (subscriptionIds.length > 0) {
+        await this.updateWebhookSubscriptionsInSupabase(integrationId, subscriptionIds);
+      }
+    } catch (error) {
+      console.error('❌ Error setting up webhook subscriptions:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create a webhook subscription for a specific collection
+   */
+  private async createWebhookSubscription(collection: string, integrationId: string, userId: string): Promise<string | null> {
+    try {
+      const subscriptionId = `${collection}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const endpoint = `/user/-/${collection}/apiSubscriptions/${subscriptionId}.json`;
+      
+      const response = await this.makeApiCall(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          callbackURL: `https://ydbabipbxxleeiiysojv.supabase.co/functions/v1/webhook-handler/fitbit/${userId}`,
+          verificationCode: 'fitbit_webhook_verification'
+        })
+      }, integrationId);
+
+      return subscriptionId;
+    } catch (error) {
+      console.error(`❌ Error creating ${collection} webhook subscription:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Remove all webhook subscriptions for a user
+   */
+  private async removeWebhookSubscriptions(integrationId: string): Promise<void> {
+    try {
+      // Get existing subscription IDs from Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.warn('User not authenticated with Supabase during webhook cleanup');
+        return;
+      }
+
+      const { data: integration, error } = await supabase
+        .from('integrations')
+        .select('configuration')
+        .eq('id', integrationId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (error || !integration?.configuration?.webhook_subscriptions) {
+        console.log('No webhook subscriptions found to remove');
+        return;
+      }
+
+      const subscriptionIds = integration.configuration.webhook_subscriptions;
+      const collections = ['activities', 'sleep', 'body', 'foods'];
+
+      for (const collection of collections) {
+        for (const subscriptionId of subscriptionIds) {
+          if (subscriptionId.startsWith(collection)) {
+            try {
+              await this.deleteWebhookSubscription(collection, subscriptionId, integrationId);
+              console.log(`✅ Removed ${collection} webhook subscription: ${subscriptionId}`);
+            } catch (error) {
+              console.error(`❌ Failed to remove ${collection} webhook subscription ${subscriptionId}:`, error);
+            }
+          }
+        }
+      }
+
+      // Clear webhook subscriptions from database
+      await this.updateWebhookSubscriptionsInSupabase(integrationId, []);
+    } catch (error) {
+      console.error('❌ Error removing webhook subscriptions:', error);
+    }
+  }
+
+  /**
+   * Delete a specific webhook subscription
+   */
+  private async deleteWebhookSubscription(collection: string, subscriptionId: string, integrationId: string): Promise<void> {
+    try {
+      const endpoint = `/user/-/${collection}/apiSubscriptions/${subscriptionId}.json`;
+      
+      await this.makeApiCall(endpoint, {
+        method: 'DELETE'
+      }, integrationId);
+    } catch (error) {
+      console.error(`❌ Error deleting ${collection} webhook subscription ${subscriptionId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update webhook subscription IDs in Supabase
+   */
+  private async updateWebhookSubscriptionsInSupabase(integrationId: string, subscriptionIds: string[]): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated with Supabase');
+      }
+
+      // Get current configuration
+      const { data: integration, error: fetchError } = await supabase
+        .from('integrations')
+        .select('configuration')
+        .eq('id', integrationId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      const updatedConfiguration = {
+        ...integration.configuration,
+        webhook_subscriptions: subscriptionIds
+      };
+
+      const { error } = await supabase
+        .from('integrations')
+        .update({ configuration: updatedConfiguration })
+        .eq('id', integrationId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ Webhook subscription IDs updated in Supabase');
+    } catch (error) {
+      console.error('❌ Error updating webhook subscriptions in Supabase:', error);
+      throw error;
     }
   }
 
