@@ -121,13 +121,13 @@ export class IntegrationService {
         return;
       }
 
-      // Check if integration already exists and is active
+      // Check if integration already exists
       const existingIntegrations = await DatabaseService.getIntegrations(userId);
       const existingIntegration = existingIntegrations.find(
-        (integration: any) => integration.service_id === serviceId && integration.is_active
+        (integration: any) => integration.service_id === serviceId
       );
 
-      if (existingIntegration) {
+      if (existingIntegration && existingIntegration.is_active) {
         Alert.alert(
           'Already Connected',
           `You already have an active ${serviceName} integration. Would you like to reconnect?`,
@@ -142,9 +142,9 @@ export class IntegrationService {
         return;
       }
 
-      // Create a new integration record
+      // Create or update integration record (upsert)
       const integration = await this.createIntegrationRecord(serviceId, userId);
-      console.log(`✅ Integration record created with ID: ${integration.id}`);
+      console.log(`✅ Integration record created/updated with ID: ${integration.id}`);
 
       // Start OAuth flow
       await this.startOAuthFlow(internalServiceName, integration.id);
@@ -160,7 +160,7 @@ export class IntegrationService {
   }
 
   /**
-   * Create integration record in database
+   * Create or update integration record in database (upsert)
    */
   async createIntegrationRecord(serviceId: string, userId: string, isSystemService: boolean = false): Promise<any> {
     try {
@@ -175,17 +175,24 @@ export class IntegrationService {
         updated_at: new Date().toISOString(),
       };
 
+      // Upsert: insert or update on conflict of (user_id, service_id)
       const { data, error } = await supabase
         .from('integrations')
-        .insert(integrationData)
+        .upsert(
+          integrationData,
+          {
+            onConflict: 'user_id,service_id',
+            ignoreDuplicates: false // Update if exists
+          }
+        )
         .select()
         .single();
 
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('❌ Error creating integration record:', error);
-      throw new Error('Failed to create integration record');
+      console.error('❌ Error creating/updating integration record:', error);
+      throw new Error('Failed to create or update integration record');
     }
   }
 
@@ -397,13 +404,13 @@ export class IntegrationService {
     try {
       console.log(`🚀 Starting Twilio integration...`);
 
-      // Check if integration already exists and is active
+      // Check if integration already exists
       const existingIntegrations = await DatabaseService.getIntegrations(userId);
       const existingIntegration = existingIntegrations.find(
-        (integration: any) => integration.service_id === serviceId && integration.is_active
+        (integration: any) => integration.service_id === serviceId
       );
 
-      if (existingIntegration) {
+      if (existingIntegration && existingIntegration.is_active) {
         Alert.alert(
           'Already Connected',
           `You already have an active Twilio integration. Would you like to reconnect?`,
@@ -418,9 +425,9 @@ export class IntegrationService {
         return;
       }
 
-      // Create a new integration record
+      // Create or update integration record (upsert)
       const integration = await this.createIntegrationRecord(serviceId, userId);
-      console.log(`✅ Integration record created with ID: ${integration.id}`);
+      console.log(`✅ Integration record created/updated with ID: ${integration.id}`);
 
       // Start Twilio authentication
       // await this.startTwilioAuth(integration.id, credentials);
@@ -504,13 +511,13 @@ export class IntegrationService {
     try {
       console.log(`🚀 Starting textbelt integration...`);
 
-      // Check if integration already exists and is active
+      // Check if integration already exists
       const existingIntegrations = await DatabaseService.getIntegrations(userId);
       const existingIntegration = existingIntegrations.find(
-        (integration: any) => integration.service_id === serviceId && integration.is_active
+        (integration: any) => integration.service_id === serviceId
       );
 
-      if (existingIntegration) {
+      if (existingIntegration && existingIntegration.is_active) {
         Alert.alert(
           'Already Connected',
           `You already have an active textbelt integration. Would you like to reconnect?`,
@@ -525,9 +532,9 @@ export class IntegrationService {
         return;
       }
 
-      // Create a new integration record
+      // Create or update integration record (upsert)
       const integration = await this.createIntegrationRecord(serviceId, userId);
-      console.log(`✅ Integration record created with ID: ${integration.id}`);
+      console.log(`✅ Integration record created/updated with ID: ${integration.id}`);
 
       // Start textbelt authentication
       await this.startTextbeltAuth(integration.id, credentials);
