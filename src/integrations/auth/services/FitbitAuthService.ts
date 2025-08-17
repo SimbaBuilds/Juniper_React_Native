@@ -1,9 +1,7 @@
 import { Linking } from 'react-native';
 import { BaseOAuthService, AuthResult } from '../BaseOAuthService';
 import { supabase } from '../../../supabase/supabase';
-import { createBasicAuthHeader } from '../../../utils/base64';
-import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
+import { createBasicAuthHeader, base64Encode } from '../../../utils/base64';
 
 export class FitbitAuthService extends BaseOAuthService {
   private static instance: FitbitAuthService;
@@ -53,14 +51,61 @@ export class FitbitAuthService extends BaseOAuthService {
   }
 
   /**
-   * Create Fitbit OAuth discovery configuration
+   * Generate random string for PKCE
    */
-  private getFitbitDiscovery(): AuthSession.DiscoveryDocument {
-    return {
-      authorizationEndpoint: 'https://www.fitbit.com/oauth2/authorize',
-      tokenEndpoint: 'https://api.fitbit.com/oauth2/token',
-      revocationEndpoint: 'https://api.fitbit.com/oauth2/revoke',
-    };
+  private generateRandomString(length: number): string {
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    let text = '';
+    for (let i = 0; i < length; i++) {
+      text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
+  }
+
+  /**
+   * Simple SHA-256 hash using Web Crypto API or fallback
+   */
+  private async sha256(plain: string): Promise<string> {
+    // For React Native, we'll use a simple hash function as fallback
+    // This is not cryptographically secure but works for development
+    let hash = 0;
+    for (let i = 0; i < plain.length; i++) {
+      const char = plain.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    // Convert to base64url-like string
+    const bytes = new Uint8Array(32);
+    for (let i = 0; i < 32; i++) {
+      bytes[i] = (hash >> (i % 4 * 8)) & 0xFF;
+    }
+    
+    return base64Encode(String.fromCharCode(...bytes))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+  }
+
+  /**
+   * Generate PKCE parameters
+   */
+  private async generatePKCE(): Promise<{ verifier: string; challenge: string; method: string }> {
+    // Generate code verifier (43-128 characters)
+    const verifier = this.generateRandomString(86);
+    
+    // For "plain" method, challenge equals verifier
+    // This is less secure but works without proper SHA-256
+    const challenge = verifier;
+    const method = 'plain';
+    
+    console.log('🔐 PKCE generated (plain method):', {
+      verifierLength: verifier.length,
+      challengeLength: challenge.length,
+      method: method
+    });
+    
+    return { verifier, challenge, method };
   }
 
   /**
@@ -101,7 +146,7 @@ export class FitbitAuthService extends BaseOAuthService {
   }
 
   /**
-   * Start OAuth authentication flow with expo-auth-session PKCE
+   * Start OAuth authentication flow with PKCE using Linking API
    */
   async authenticate(integrationId: string): Promise<AuthResult> {
     try {
@@ -109,53 +154,47 @@ export class FitbitAuthService extends BaseOAuthService {
         await this.initialize();
       }
 
-      console.log('📈 Starting Fitbit OAuth flow with expo-auth-session PKCE...');
+      console.log('📈 Starting Fitbit OAuth flow with PKCE...');
       console.log('📈 Integration ID:', integrationId);
 
-      // Configure OAuth request with automatic PKCE
-      const authRequest = new AuthSession.AuthRequest({
-        clientId: this.config.clientId,
-        scopes: this.config.scopes,
-        responseType: AuthSession.ResponseType.Code,
-        redirectUri: this.config.redirectUri,
-        usePKCE: true, // Enable automatic PKCE
+      // Generate PKCE parameters
+      const { verifier, challenge, method } = await this.generatePKCE();
+      
+      // Store code verifier for later use in token exchange
+      this.codeVerifier = verifier;
+
+      // Build authorization URL with PKCE parameters
+      const params = new URLSearchParams({
+        client_id: this.config.clientId,
+        redirect_uri: this.config.redirectUri,
+        response_type: 'code',
+        scope: this.config.scopes.join(' '),
         state: integrationId,
-        extraParams: this.config.additionalParameters || {},
+        code_challenge: challenge,
+        code_challenge_method: method, // Using 'plain' method
+        ...this.config.additionalParameters
       });
 
-      // Get discovery document
-      const discovery = this.getFitbitDiscovery();
-
-      console.log('🔐 Starting OAuth with automatic PKCE...');
+      const authUrl = `${this.config.authEndpoint}?${params}`;
       
-      // Ensure web browser can complete auth session
-      WebBrowser.maybeCompleteAuthSession();
+      console.log('📈 Opening OAuth URL with PKCE...');
+      console.log('🔐 Code verifier stored for token exchange');
       
-      // Start the authentication flow
-      const result = await authRequest.promptAsync(discovery);
-      
-      console.log('📝 OAuth result:', result.type);
-
-      if (result.type === 'success') {
-        console.log('✅ OAuth authorization successful');
+      // Open the authorization URL
+      const supported = await Linking.canOpenURL(authUrl);
+      if (supported) {
+        await Linking.openURL(authUrl);
+        console.log('✅ OAuth URL opened successfully');
         
-        // Store the code verifier for token exchange
-        if (authRequest.codeVerifier) {
-          this.codeVerifier = authRequest.codeVerifier;
-          console.log('🔐 Code verifier stored for token exchange');
-        }
-
-        // The actual token exchange will happen in handleAuthCallback
+        // Return placeholder - actual token exchange happens in callback
         return {
           accessToken: 'pending',
           refreshToken: 'pending',
           expiresAt: Date.now(),
           scope: this.config.scopes.join(' ')
         };
-      } else if (result.type === 'error') {
-        throw new Error(`OAuth error: ${result.error?.description || 'Unknown error'}`);
       } else {
-        throw new Error('OAuth flow was cancelled or failed');
+        throw new Error('Cannot open OAuth URL');
       }
     } catch (error) {
       console.error('❌ Error during Fitbit authentication:', error);

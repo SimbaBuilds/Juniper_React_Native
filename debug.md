@@ -1,4 +1,5 @@
- ERROR  Error: Cannot find native module 'ExpoWebBrowser', js engine: hermes
- ERROR  Invariant Violation: "main" has not been registered. This can happen if:
-* Metro (the local dev server) is run from the wrong folder. Check if Metro is running, stop it and restart it in the current project.
-* A module failed to load due to an error and `AppRegistry.registerComponent` wasn't called., js engine: hermes
+ LOG  🔄 Exchanging code for tokens...
+ LOG  🔄 Making fitbit token exchange request...
+ LOG  📥 fitbit token exchange response: {"status": 400, "statusText": ""}
+ ERROR  ❌ fitbit token exchange failed: {"response_body": "{\"errors\":[{\"errorType\":\"invalid_grant\",\"message\":\"Authorization code verifier invalid: 3V5Xjt4q4xZLyUqGWbrF.dxZXJQKvPhOv5vmU41zJxHSlM-hBas6GVVD9daM5OpgKpF1GKKybgzT6cHSQh4BxlmAYqEvX-UK2FcbkcPozhYeZJcbYgazqIg3mEHlqykx Visit https://dev.fitbit.com/docs/oauth2 for more information on the Fitbit Web API authorization process.\"}],\"success\":false}", "status": 400, "statusText": ""}
+ ERROR  ❌ Error handling Fitbit auth callback: [Error: token exchange failed: undefined - Unknown error]
