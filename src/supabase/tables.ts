@@ -692,3 +692,57 @@ export type UserProfile = {
   ] as const;
   export type ServiceWebhookConfigField = (typeof serviceWebhookConfigFields)[number];
 
+  export type ServiceApiEndpoint = {
+    id: string;
+    service_name: string;
+    endpoint_name: string;              // e.g., "messages.send"
+    endpoint_group?: string;            // e.g., "messages" for grouping
+    description?: string;
+    url_template: string;               // e.g., "https://api.service.com/v1/{userId}/messages"
+    http_method: string;                // GET, POST, PUT, DELETE, PATCH
+    
+    // Full parameter specifications
+    path_parameters?: Record<string, any>;      // URL path params
+    query_parameters?: Record<string, any>;     // Query string params
+    body_schema?: Record<string, any>;          // Request body schema
+    headers_required?: Record<string, any>;     // Required headers
+    
+    // Response information
+    response_schema?: Record<string, any>;      // Expected response format
+    error_codes?: Record<string, any>;          // Common error codes and meanings
+    
+    // Examples and documentation
+    example_request?: Record<string, any>;      // Full example request
+    example_response?: Record<string, any>;     // Full example response
+    documentation_url?: string;                 // Link to official docs
+    
+    // Operational metadata
+    rate_limit_weight: number;                  // Cost against rate limit
+    requires_auth: boolean;
+    auth_type?: string;                         // 'oauth2', 'api_key', 'basic'
+    scopes_required?: string[];                 // OAuth scopes needed
+    
+    // Optimization hints
+    supports_batch: boolean;
+    max_batch_size?: number;
+    pagination_type?: string;                   // 'cursor', 'offset', 'token'
+    
+    // Management fields
+    is_active: boolean;
+    deprecated: boolean;
+    deprecation_notice?: string;
+    version?: string;                           // API version
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const serviceApiEndpointFields = [
+    'id', 'service_name', 'endpoint_name', 'endpoint_group', 'description', 'url_template', 'http_method',
+    'path_parameters', 'query_parameters', 'body_schema', 'headers_required',
+    'response_schema', 'error_codes', 'example_request', 'example_response', 'documentation_url',
+    'rate_limit_weight', 'requires_auth', 'auth_type', 'scopes_required',
+    'supports_batch', 'max_batch_size', 'pagination_type',
+    'is_active', 'deprecated', 'deprecation_notice', 'version', 'created_at', 'updated_at'
+  ] as const;
+  export type ServiceApiEndpointField = (typeof serviceApiEndpointFields)[number];
+
