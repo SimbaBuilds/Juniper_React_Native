@@ -164,9 +164,8 @@ export type UserProfile = {
     'is_active', 'execution_count', 'last_executed', 'notes', 'created_at'
   ] as const;
   export type AutomationField = (typeof automationFields)[number];
-  
-  
-  
+
+ 
   export type Integration = {
     id: string;
     user_id: string;
@@ -745,4 +744,49 @@ export type UserProfile = {
     'is_active', 'deprecated', 'deprecation_notice', 'version', 'created_at', 'updated_at'
   ] as const;
   export type ServiceApiEndpointField = (typeof serviceApiEndpointFields)[number];
+
+
+  // Health & Wellness Dashboard Tables
+
+  export type WearablesData = {
+    id: string;
+    user_id: string;
+    integration_id: string; // FK to integrations table
+    metric_type: string; // enum: sleep, activity, heart_rate, hrv, readiness, stress, etc.
+    metric_value: Record<string, any>; // JSONB - flexible for different data structures
+    recorded_at: Date;
+    sync_date: Date; // for daily aggregations
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const wearablesDataFields = [
+    'id', 'user_id', 'integration_id', 'metric_type', 'metric_value',
+    'recorded_at', 'sync_date', 'created_at', 'updated_at'
+  ] as const;
+  export type WearablesDataField = (typeof wearablesDataFields)[number];
+
+  export type HealthMetricsDaily = {
+    id: string;
+    user_id: string;
+    date: Date;
+    sleep_score?: number;
+    activity_score?: number;
+    readiness_score?: number;
+    stress_level?: number;
+    recovery_score?: number;
+    total_steps?: number;
+    calories_burned?: number;
+    heart_rate_avg?: number;
+    hrv_avg?: number;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const healthMetricsDailyFields = [
+    'id', 'user_id', 'date', 'sleep_score', 'activity_score', 'readiness_score',
+    'stress_level', 'recovery_score', 'total_steps', 'calories_burned',
+    'heart_rate_avg', 'hrv_avg', 'created_at', 'updated_at'
+  ] as const;
+  export type HealthMetricsDailyField = (typeof healthMetricsDailyFields)[number];
 
