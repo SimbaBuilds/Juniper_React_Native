@@ -146,26 +146,7 @@ export type UserProfile = {
   ] as const;
   export type TagField = (typeof tagFields)[number];
   
-  export type Automation = {
-    id: string;
-    user_id: string;
-    name: string;
-    trigger_conditions: Record<string, any>;
-    actions: Record<string, any>;
-    is_active: boolean;
-    execution_count: number;
-    last_executed?: Date;
-    notes?: string;
-    created_at: Date;
-  };
-  
-  export const automationFields = [
-    'id', 'user_id', 'name', 'trigger_conditions', 'actions',
-    'is_active', 'execution_count', 'last_executed', 'notes', 'created_at'
-  ] as const;
-  export type AutomationField = (typeof automationFields)[number];
 
- 
   export type Integration = {
     id: string;
     user_id: string;
@@ -214,7 +195,6 @@ export type UserProfile = {
     created_at: Date;
     service_name: string;
     num_users: number;
-    config_form_id?: string; // Foreign key to ConfigForm.id
     refresh_script?: string;
     tools?: string[];
     integration_method?: string; // e.g. OAuth, External App, Internal App etc.
@@ -234,7 +214,7 @@ export type UserProfile = {
   };
 
   export const serviceFields = [
-    'id', 'created_at', 'service_name', 'num_users', 'config_form_id',
+    'id', 'created_at', 'service_name', 'num_users',
     'refresh_script', 'tools', 'integration_method',
     'description', 'type', 'tag_1_id', 'tag_2_id', 'tag_3_id', 'tag_4_id', 'tag_5_id',
     'interactions_day', 'interactions_week', 'interactions_month', 'public'
@@ -767,7 +747,6 @@ export type UserProfile = {
   export type WearablesDataField = (typeof wearablesDataFields)[number];
 
   export type HealthMetricsDaily = {
-    id: string;
     user_id: string;
     date: Date;
     sleep_score?: number;
@@ -779,14 +758,16 @@ export type UserProfile = {
     calories_burned?: number;
     heart_rate_avg?: number;
     hrv_avg?: number;
+    native_scores: Record<string, any>;
+    normalized_scores: Record<string, any>;
     created_at: Date;
     updated_at: Date;
   };
 
   export const healthMetricsDailyFields = [
-    'id', 'user_id', 'date', 'sleep_score', 'activity_score', 'readiness_score',
+    'user_id', 'date', 'sleep_score', 'activity_score', 'readiness_score',
     'stress_level', 'recovery_score', 'total_steps', 'calories_burned',
-    'heart_rate_avg', 'hrv_avg', 'created_at', 'updated_at'
+    'heart_rate_avg', 'hrv_avg', 'native_scores', 'normalized_scores', 'created_at', 'updated_at'
   ] as const;
   export type HealthMetricsDailyField = (typeof healthMetricsDailyFields)[number];
 
