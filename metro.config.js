@@ -16,8 +16,21 @@ config.server = {
   },
 };
 
-// For better hot reloading
-config.watchFolders = [__dirname];
+// Reduce file watchers by excluding heavy directories
+config.resolver = {
+  ...config.resolver,
+  blockList: [
+    /ios\/Pods\/.*/,
+    /android\/app\/build\/.*/,
+    /android\/build\/.*/,
+    /\.gradle\/.*/,
+    /node_modules\/.*\/test\/.*/,
+    /node_modules\/.*\/tests\/.*/,
+    /.*\.test\.js$/,
+    /.*\.spec\.js$/,
+    /\.git\/.*/,
+  ],
+};
 
 // Export the modified config
 module.exports = config; 
