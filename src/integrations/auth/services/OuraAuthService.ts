@@ -105,6 +105,16 @@ export class OuraAuthService extends BaseOAuthService {
       // Store tokens using base class method
       await this.storeTokens(tokenData, integrationId);
       await this.saveIntegrationToSupabase(tokenData, integrationId);
+      
+      // Trigger immediate health data sync after successful OAuth
+      try {
+        console.log('🔄 Initiating Oura health data backfill...');
+        await this.triggerHealthDataSync(integrationId);
+        console.log('✅ Health data sync initiated successfully');
+      } catch (syncError) {
+        console.error('⚠️ Failed to initiate health data sync (authentication still successful):', syncError);
+      }
+      
       await this.completeIntegration(tokenData, integrationId);
       
       console.log('✅ Oura authentication successful');
@@ -315,6 +325,42 @@ export class OuraAuthService extends BaseOAuthService {
     }
 
     return response.json();
+  }
+
+  /**
+   * Trigger health data sync after successful OAuth
+   */
+  private async triggerHealthDataSync(integrationId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated with Supabase');
+      }
+
+      const response = await fetch('https://ydbabipbxxleeiiysojv.supabase.co/functions/v1/health-data-sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+        body: JSON.stringify({
+          action: 'backfill',
+          user_id: user.id,
+          service_name: 'Oura',
+          days: 7
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Health data sync request failed: ${response.status} ${response.statusText}`);
+      }
+
+      console.log('✅ Health data sync request sent successfully');
+    } catch (error) {
+      console.error('❌ Error triggering health data sync:', error);
+      throw error;
+    }
   }
 
   /**
