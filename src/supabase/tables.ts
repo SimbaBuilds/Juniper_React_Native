@@ -755,6 +755,7 @@ export type UserProfile = {
     stress_level?: number;
     recovery_score?: number;
     total_steps?: number;
+    resilience_score?: number;
     calories_burned?: number;
     heart_rate_avg?: number;
     hrv_avg?: number;
