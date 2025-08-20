@@ -390,7 +390,8 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
       'workout',
       'tag',
       'session',
-      'spo2'
+      'spo2',
+      'stress',
     ],
     redirectUri: generateRedirectUri('oura'),
     authEndpoint: 'https://cloud.ouraring.com/oauth/authorize',
