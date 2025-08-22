@@ -145,10 +145,15 @@ export const IntegrationsScreen: React.FC = () => {
     const categories: ServiceCategory[] = [];
     categoryOrder.forEach(categoryName => {
       if (categoryMap[categoryName] && categoryMap[categoryName].length > 0) {
-        // Sort services within each category alphabetically
-        const sortedServices = categoryMap[categoryName].sort((a, b) => 
-          a.service_name.localeCompare(b.service_name)
-        );
+        // Sort services within each category
+        const sortedServices = categoryMap[categoryName].sort((a, b) => {
+          // Use reverse alphabetical order for Health and Wellness category
+          if (categoryName === 'Health and Wellness') {
+            return b.service_name.localeCompare(a.service_name);
+          }
+          // Use regular alphabetical order for all other categories
+          return a.service_name.localeCompare(b.service_name);
+        });
         categories.push({
           name: categoryName,
           services: sortedServices
