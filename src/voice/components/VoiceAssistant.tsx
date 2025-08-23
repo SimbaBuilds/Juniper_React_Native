@@ -15,6 +15,7 @@ import { MarkdownMessage } from './MarkdownMessage';
 import { ChatMessageContent } from './ChatMessageContent';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { colors } from '../../shared/theme/colors';
+import { conversationService } from '../../services/conversationService';
 
 const { VoiceModule } = NativeModules;
 
@@ -84,11 +85,15 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     isRequestInProgress,
     startContinuousConversation,
     startListening,
-    requestStatus
+    requestStatus,
+    settingsLoading
   } = useVoice();
 
   // State for conversation history modal
   const [showConversationHistory, setShowConversationHistory] = React.useState(false);
+  
+  // State for onboarding - use ref to prevent re-evaluation on re-renders
+  const hasEvaluatedOnboarding = React.useRef(false);
 
   // Handle opening conversation history and loading data
   const handleOpenConversationHistory = () => {
@@ -122,6 +127,76 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
       Alert.alert('Error', 'Failed to copy chat to clipboard.');
     }
   };
+
+  // Check for onboarding when user is available and we haven't evaluated yet
+  React.useEffect(() => {
+    const checkForOnboarding = async () => {
+      // Skip if no user or already evaluated
+      if (!user?.id || hasEvaluatedOnboarding.current) {
+        return;
+      }
+
+      // Wait for settings to finish loading to ensure component is fully initialized
+      if (settingsLoading) {
+        console.log('🔍 ONBOARDING: Settings still loading, waiting...');
+        return;
+      }
+
+      // Skip if there are real user messages (not onboarding)
+      const hasUserMessages = chatHistory.some(msg => msg.role === 'user');
+      if (hasUserMessages) {
+        hasEvaluatedOnboarding.current = true;
+        return;
+      }
+
+      // Skip if onboarding message is already in chat
+      const hasOnboardingMessage = chatHistory.some(msg => 
+        msg.role === 'assistant' && msg.content.includes('Welcome to Juniper!')
+      );
+      if (hasOnboardingMessage) {
+        hasEvaluatedOnboarding.current = true;
+        return;
+      }
+
+      try {
+        console.log('🔍 ONBOARDING: Checking if user needs onboarding message');
+        
+        // Add a small delay to ensure any existing conversation history has loaded
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Check database for existing conversations
+        const hasConversations = await conversationService.hasUserConversations();
+        
+        if (hasConversations) {
+          console.log('📝 ONBOARDING: User has conversations in database, skipping onboarding');
+          hasEvaluatedOnboarding.current = true;
+          return;
+        }
+        
+        // User is new - show onboarding message
+        console.log('👋 ONBOARDING: New user detected (no conversations in database), showing onboarding message');
+        const onboardingMessage = {
+          role: 'assistant' as const,
+          content: `Welcome to Juniper! 🎉
+
+Hi there! I'm Juniper. We're honored to be part of your journey toward greater wellbeing and productivity. Together with my specialized agent team, we can help optimize your daily life - from tracking your health metrics to drafting and sending emails in your unique voice, to creating smart automations that keep everything running smoothly.
+
+What would you like to get started with today? If you aren't sure, starting with an integration is a great way to learn about what we can accomplish together.`,
+          timestamp: Date.now()
+        };
+        
+        continuePreviousChat([onboardingMessage]);
+        hasEvaluatedOnboarding.current = true;
+        
+      } catch (error) {
+        console.error('❌ ONBOARDING: Error checking for onboarding:', error);
+        // On error, just mark as evaluated to avoid infinite loops
+        hasEvaluatedOnboarding.current = true;
+      }
+    };
+
+    checkForOnboarding();
+  }, [user?.id, continuePreviousChat, settingsLoading]);
 
   // When a speech result is received, call the callback
   React.useEffect(() => {
@@ -158,6 +233,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         return 'Integrating... This can take up to 2 minutes.';
       case 'pinging':
         return 'Pinging... This can take a few moments.';
+      case 'automating':
+        return 'Automating... This can take a few moments.';
       case 'failed':
         return 'Request failed';
       case 'cancelled':
@@ -197,6 +274,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
 
     try {
       console.log('📷 Sending message:', { text, imageUrl });
+      
       
       // Send the text message with image URL
       await sendTextMessage(text || (imageUrl ? 'Image attached' : ''), false, imageUrl);

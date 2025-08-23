@@ -12,6 +12,7 @@ import { isCancellationError } from '../utils/cancellationUtils';
 import { useRequestStatusPolling } from '../hooks/useRequestStatusPolling';
 import { DEFAULT_WAKE_PHRASE } from '../wakeword/constants';
 import requestMapping from '../utils/requestMapping';
+import Storage from '../utils/storage';
 
 const { VoiceModule } = NativeModules;
 
@@ -422,6 +423,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         // Switch to voice mode when processing voice input
         setInputMode('voice');
         
+        
         // Create new message
         const newMessage: ChatMessage = {
           role: 'user',
@@ -686,6 +688,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       
       // Switch to text mode when user sends a text message
       setInputMode('text');
+      
       
       // Create new user message
       const newMessage: ChatMessage = {

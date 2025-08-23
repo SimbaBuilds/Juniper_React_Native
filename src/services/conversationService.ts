@@ -78,6 +78,29 @@ export const conversationService = {
   },
 
   /**
+   * Check if user has any conversations in the database
+   */
+  hasUserConversations: async (): Promise<boolean> => {
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) throw new Error('User not authenticated');
+
+    try {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('user_id', user.user.id)
+        .limit(1);
+
+      if (error) throw error;
+
+      return data ? data.length > 0 : false;
+    } catch (error) {
+      console.error('❌ Error checking for user conversations:', error);
+      return false; // Default to false on error to show onboarding
+    }
+  },
+
+  /**
    * Get conversation summaries from the past week
    */
   getRecentConversations: async (): Promise<ConversationSummary[]> => {

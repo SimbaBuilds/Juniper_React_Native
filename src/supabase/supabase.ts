@@ -55,7 +55,8 @@ export const DatabaseService = {
           textbelt: true,
           xai_live_search: true
         },
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        
       };
       
       const { data, error } = await supabase
