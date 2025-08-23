@@ -97,7 +97,7 @@ const ForgotPasswordScreen: React.FC = () => {
           <Button
             title="Back to Login"
             onPress={() => navigation.goBack()}
-            variant="outline"
+            variant="outlined"
             style={styles.backButton}
             disabled={isLoading}
           />

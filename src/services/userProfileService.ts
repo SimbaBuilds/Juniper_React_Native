@@ -21,7 +21,7 @@ export class UserProfileService {
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         // Add missing properties
         requests_today: 0,
-        requests_week: 0,
+        requests_week: 0, // deprecated
         requests_month: 0,
         // System integrations defaults
         enabled_system_integrations: {

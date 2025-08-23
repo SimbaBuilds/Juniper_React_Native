@@ -106,6 +106,7 @@ export const MarkdownMessage: React.FC<MarkdownMessageProps> = ({
         Linking.openURL(url).catch((err) => 
           console.error('Failed to open URL:', err)
         );
+        return true;
       }}
     >
       {processedContent}
