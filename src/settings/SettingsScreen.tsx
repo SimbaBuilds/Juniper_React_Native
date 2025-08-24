@@ -653,7 +653,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             />
           </ExpandableSettingsToggle>
 
-          <SettingsDropdown
+          {/* <SettingsDropdown
             label="Model Selection"
             value={settings.baseLanguageModel}
             options={Object.entries(MODEL_DISPLAY_NAMES).map(([value, label]) => ({
@@ -664,7 +664,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               await handleVoiceSettingsUpdate({ baseLanguageModel });
             }}
             description="The model used for chat; other models are used for complex backend tasks."
-          />
+          /> */}
 
         </View>
 
