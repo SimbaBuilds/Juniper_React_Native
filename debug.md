@@ -1,14 +1,6 @@
-› Packaging expo-file-system Pods/ExpoFileSystem » libExpoFileSystem.a
-› Executing expo-file-system Pods/ExpoFileSystem » Copy generated compatibility header
-
-❌  (node_modules/expo-dev-menu/ios/DevMenuViewController.swift:64:23)
-
-  62 | 
-  63 |   private func initialProps() -> [String: Any] {
-> 64 |     let isSimulator = TARGET_IPHONE_SIMULATOR > 0
-     |                       ^ cannot find 'TARGET_IPHONE_SIMULATOR' in scope
-  65 |     
-  66 |     return [
-  67 |       "showOnboardingView": manager.shouldShowOnboarding(),
-
-› Compiling expo-crypto Pods/ExpoCrypto » ExpoCrypto-dummy.m
+ ERROR  WARNING: WakeWordModule not found on Android platform!
+ ERROR  Available modules: []
+ ERROR  Invariant Violation: TurboModuleRegistry.getEnforcing(...): 'RNCClipboard' could not be found. Verify that a module by this name is registered in the native binary.Bridgeless mode: false. TurboModule interop: false. Modules loaded: {"NativeModules":["PlatformConstants","LogBox","SourceCode","Timing","AppState","BlobModule","WebSocketModule","DevSettings","DevToolsSettingsManager","Networking","Appearance","DevLoadingView","HeadlessJsTaskSupport","DeviceInfo","UIManager","DeviceEventManager","NativeAnimatedModule","SoundManager","I18nManager","RNC_AsyncSQLiteDBStorage","ImageLoader"],"TurboModules":[],"NotFound":["NativePerformanceCxx","NativePerformanceObserverCxx","RedBox","BugReporting","RNCSafeAreaContext","PlatformLocalStorage","RNCClipboard"]}, js engine: hermes
+ ERROR  Invariant Violation: "main" has not been registered. This can happen if:
+* Metro (the local dev server) is run from the wrong folder. Check if Metro is running, stop it and restart it in the current project.
+* A module failed to load due to an error and `AppRegistry.registerComponent` wasn't called., js engine: hermes

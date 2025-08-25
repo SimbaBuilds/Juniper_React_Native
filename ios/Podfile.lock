@@ -16,78 +16,8 @@ PODS:
   - EXImageLoader (4.6.0):
     - ExpoModulesCore
     - React-Core
-  - EXJSONUtils (0.12.3)
-  - EXManifests (0.13.2):
-    - ExpoModulesCore
   - Expo (50.0.21):
     - ExpoModulesCore
-  - expo-dev-client (3.3.12):
-    - EXManifests
-    - expo-dev-launcher
-    - expo-dev-menu
-    - expo-dev-menu-interface
-    - EXUpdatesInterface
-  - expo-dev-launcher (3.6.10):
-    - EXManifests
-    - expo-dev-launcher/Main (= 3.6.10)
-    - expo-dev-menu
-    - expo-dev-menu-interface
-    - ExpoModulesCore
-    - EXUpdatesInterface
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - React-RCTAppDelegate
-  - expo-dev-launcher/Main (3.6.10):
-    - EXManifests
-    - expo-dev-launcher/Unsafe
-    - expo-dev-menu
-    - expo-dev-menu-interface
-    - ExpoModulesCore
-    - EXUpdatesInterface
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - React-RCTAppDelegate
-  - expo-dev-launcher/Unsafe (3.6.10):
-    - EXManifests
-    - expo-dev-menu
-    - expo-dev-menu-interface
-    - ExpoModulesCore
-    - EXUpdatesInterface
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - React-RCTAppDelegate
-  - expo-dev-menu (4.5.8):
-    - expo-dev-menu/Main (= 4.5.8)
-    - expo-dev-menu/ReactNativeCompatibles (= 4.5.8)
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-  - expo-dev-menu-interface (1.7.2)
-  - expo-dev-menu/Main (4.5.8):
-    - EXManifests
-    - expo-dev-menu-interface
-    - expo-dev-menu/Vendored
-    - ExpoModulesCore
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-  - expo-dev-menu/ReactNativeCompatibles (4.5.8):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-  - expo-dev-menu/SafeAreaView (4.5.8):
-    - ExpoModulesCore
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-  - expo-dev-menu/Vendored (4.5.8):
-    - expo-dev-menu/SafeAreaView
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
   - ExpoCrypto (12.8.1):
     - ExpoModulesCore
   - ExpoFileSystem (16.0.9):
@@ -107,7 +37,6 @@ PODS:
     - ExpoModulesCore
   - ExpoWebBrowser (12.8.2):
     - ExpoModulesCore
-  - EXUpdatesInterface (0.15.3)
   - FBLazyVector (0.73.11)
   - FBReactNativeSpec (0.73.11):
     - RCT-Folly (= 2022.05.16.00)
@@ -1189,13 +1118,7 @@ DEPENDENCIES:
   - EXConstants (from `../node_modules/expo-constants/ios`)
   - EXFont (from `../node_modules/expo-font/ios`)
   - EXImageLoader (from `../node_modules/expo-image-loader/ios`)
-  - EXJSONUtils (from `../node_modules/expo-json-utils/ios`)
-  - EXManifests (from `../node_modules/expo-manifests/ios`)
   - Expo (from `../node_modules/expo`)
-  - expo-dev-client (from `../node_modules/expo-dev-client/ios`)
-  - expo-dev-launcher (from `../node_modules/expo-dev-launcher`)
-  - expo-dev-menu (from `../node_modules/expo-dev-menu`)
-  - expo-dev-menu-interface (from `../node_modules/expo-dev-menu-interface/ios`)
   - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
   - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
   - ExpoImagePicker (from `../node_modules/expo-image-picker/ios`)
@@ -1203,7 +1126,6 @@ DEPENDENCIES:
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
-  - EXUpdatesInterface (from `../node_modules/expo-updates-interface/ios`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
@@ -1282,20 +1204,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-font/ios"
   EXImageLoader:
     :path: "../node_modules/expo-image-loader/ios"
-  EXJSONUtils:
-    :path: "../node_modules/expo-json-utils/ios"
-  EXManifests:
-    :path: "../node_modules/expo-manifests/ios"
   Expo:
     :path: "../node_modules/expo"
-  expo-dev-client:
-    :path: "../node_modules/expo-dev-client/ios"
-  expo-dev-launcher:
-    :path: "../node_modules/expo-dev-launcher"
-  expo-dev-menu:
-    :path: "../node_modules/expo-dev-menu"
-  expo-dev-menu-interface:
-    :path: "../node_modules/expo-dev-menu-interface/ios"
   ExpoCrypto:
     :path: "../node_modules/expo-crypto/ios"
   ExpoFileSystem:
@@ -1310,8 +1220,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-secure-store/ios"
   ExpoWebBrowser:
     :path: "../node_modules/expo-web-browser/ios"
-  EXUpdatesInterface:
-    :path: "../node_modules/expo-updates-interface/ios"
   FBLazyVector:
     :path: "../node_modules/react-native/Libraries/FBLazyVector"
   FBReactNativeSpec:
@@ -1430,13 +1338,7 @@ SPEC CHECKSUMS:
   EXConstants: c82ef9280044accc91fb6082047afdc9a408f61a
   EXFont: 64e653a110eee050ad80dfcd676c4bada0a1ff92
   EXImageLoader: ba2506b443b9656e93167c104406a2c265924823
-  EXJSONUtils: 5c42959e87be238b045ef37cc5268b16a6c0ad4a
-  EXManifests: 429136cffa3ae82d1ba3b60b7243fb186615562e
   Expo: 1b33cb8ab60cff9abf805ed6020af3d1846e457c
-  expo-dev-client: 775a683302570193a7ba71032d0b1b82f6ad1454
-  expo-dev-launcher: 4b9190f0879290b57ed89cc5c24592d4ce981f85
-  expo-dev-menu: efe7323e7f918e437a02f20063eb2b55c13dfe99
-  expo-dev-menu-interface: 44e69ddff62bbc6c5418c200e657635720b5a480
   ExpoCrypto: 9be8806e896380cb18e5d3d2c13a89ce2f36946a
   ExpoFileSystem: df58e1eb2a4d6f1006a1ca70bddfbbf63e52fa4f
   ExpoImagePicker: d06822d74f1f0e7fe7cb070ece0fff6e678fa3eb
@@ -1444,7 +1346,6 @@ SPEC CHECKSUMS:
   ExpoModulesCore: 43ebd65adf2c0e6ffb0de24a41f8f7de12829331
   ExpoSecureStore: 4cec57fd2c40dcff05ce2186c39afc1af39d213c
   ExpoWebBrowser: c5d027f58a0b2c1926c86ce3596c94490a639fa2
-  EXUpdatesInterface: 3e444e2093e25b7ca0999a7d8c16e8392dee70c3
   FBLazyVector: b46891061bfe0a9b07f601813114c8653a72a45c
   FBReactNativeSpec: 9a01850c21d81027fa7b20b9dcc25d9bfae083da
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
