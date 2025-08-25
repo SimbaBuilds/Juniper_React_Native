@@ -1,5 +1,5 @@
 import { Platform, Linking } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Storage } from '../utils/storage';
 import Constants from 'expo-constants';
 import { supabase } from '../supabase/supabase';
 
@@ -252,7 +252,7 @@ export class GoogleAuthService {
       await this.deactivateIntegrationInSupabase();
       
       this.authData = null;
-      await AsyncStorage.removeItem('google_unified_auth');
+      await Storage.remove('google_unified_auth');
       
       console.log('✅ Google signed out completely');
       this.notifyAuthCallbacks();
@@ -261,7 +261,7 @@ export class GoogleAuthService {
       
       this.authData = null;
       try {
-        await AsyncStorage.removeItem('google_unified_auth');
+        await Storage.remove('google_unified_auth');
       } catch (storageError) {
         console.error('❌ Error clearing local storage:', storageError);
       }
@@ -349,9 +349,9 @@ export class GoogleAuthService {
 
   private async loadAuthData(): Promise<void> {
     try {
-      const stored = await AsyncStorage.getItem('google_unified_auth');
+      const stored = await Storage.get<any>('google_unified_auth');
       if (stored) {
-        this.authData = JSON.parse(stored);
+        this.authData = stored;
       }
     } catch (error) {
       console.error('Error loading auth data:', error);
@@ -361,7 +361,7 @@ export class GoogleAuthService {
   private async saveAuthData(): Promise<void> {
     try {
       if (this.authData) {
-        await AsyncStorage.setItem('google_unified_auth', JSON.stringify(this.authData));
+        await Storage.set('google_unified_auth', this.authData);
       }
     } catch (error) {
       console.error('Error saving auth data:', error);

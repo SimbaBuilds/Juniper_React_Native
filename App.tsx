@@ -10,7 +10,7 @@ import { GoogleAuthService } from './src/auth/GoogleAuthService';
 import { HomeScreen } from './src/HomeScreen';
 import { SettingsScreen } from './src/settings/SettingsScreen';
 import { IntegrationsScreen } from './src/integrations/IntegrationsScreen';
-import { AutomationsScreen } from './src/automations/AutomationsScreen';
+
 import { RepoScreen } from './src/repo/RepoScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { Session } from '@supabase/supabase-js';
@@ -26,13 +26,13 @@ import { DatabaseService } from './src/supabase/supabase';
 import { colors } from './src/shared/theme/colors';
 import { AppErrorBoundary } from './src/error/AppErrorBoundary';
 import { VoiceErrorBoundary } from './src/voice/ErrorBoundary/VoiceErrorBoundary';
+import { Storage } from './src/utils/storage';
 
 type RootStackParamList = {
   MainTabs: undefined;
   Home: undefined;
   Settings: undefined;
   Integrations: undefined;
-  Automations: undefined;
   Memories: undefined;
   Login: undefined;
   SignUp: undefined;
@@ -45,7 +45,6 @@ type RootStackParamList = {
 type TabParamList = {
   Juniper: undefined;
   Integrations: undefined;
-  Automations: undefined;
   Repo: undefined;
   Settings: undefined;
 };
@@ -56,6 +55,7 @@ const Tab = createBottomTabNavigator<TabParamList>();
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [storageReady, setStorageReady] = useState(false);
   const navigationRef = useRef<any>(null);
 
   // Initialize any needed configurations here
@@ -63,11 +63,26 @@ export default function App() {
     // Initialize app settings
     const initializeApp = async () => {
       try {
-        // Check if wake word detection is available
+        console.log('🚀 App: Starting initialization...');
+
+        // CRITICAL: Initialize storage first to prevent crashes
+        console.log('📁 App: Initializing storage...');
+        const storageInitialized = await Storage.initialize();
+        setStorageReady(storageInitialized);
+        
+        if (!storageInitialized) {
+          console.warn('⚠️ App: Storage initialization failed, continuing with limited functionality');
+        } else {
+          console.log('✅ App: Storage initialized successfully');
+        }
+
+        // Only proceed with other initializations after storage is ready or failed safely
+        console.log('🔊 App: Checking wake word detection...');
         const isAvailable = await WakeWordService.getInstance().isWakeWordEnabled();
         console.log(`Wake word detection available: ${isAvailable}`);
         
-        // Get the initial session
+        // Get the initial session (this might use storage internally)
+        console.log('🔐 App: Getting initial auth session...');
         const { data } = await supabase.auth.getSession();
         setSession(data.session);
         
@@ -79,12 +94,15 @@ export default function App() {
         );
         
         setLoading(false);
+        console.log('✅ App: Initialization completed successfully');
 
         // Cleanup subscription
         return () => subscription.unsubscribe();
       } catch (error) {
-        console.error('Error initializing app:', error);
+        console.error('❌ App: Error during initialization:', error);
+        // Don't let initialization errors crash the app
         setLoading(false);
+        setStorageReady(false);
       }
     };
     
@@ -668,8 +686,6 @@ function MainTabNavigator() {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Integrations') {
             iconName = focused ? 'link' : 'link-outline';
-          } else if (route.name === 'Automations') {
-            iconName = focused ? 'cog' : 'cog-outline';
           } else if (route.name === 'Repo') {
             iconName = focused ? 'bookmark' : 'bookmark-outline';
           } else if (route.name === 'Settings') {
@@ -695,13 +711,7 @@ function MainTabNavigator() {
         },
       })}
     >
-      <Tab.Screen 
-        name="Automations" 
-        component={AutomationsScreen}
-        options={{
-          title: 'Automations',
-        }}
-      />
+
       <Tab.Screen 
         name="Integrations" 
         component={IntegrationsScreen}

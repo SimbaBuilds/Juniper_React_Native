@@ -13,19 +13,31 @@ class VoiceModule: RCTEventEmitter {
     private var pendingApiCallbacks: [String: (String) -> Void] = [:]
     private var timeoutTimers: [String: Timer] = [:]
     
+    private var isInitialized = false
+    
     override init() {
         print("🔧 VoiceModule: ===============================================")
         print("🔧 VoiceModule: 🚀 STARTING VoiceModule initialization...")
         print("🔧 VoiceModule: Thread: \(Thread.current)")
         super.init()
-        print("🔧 VoiceModule: ✅ Super init completed")
-        setupVoiceManagerCallbacks()
-        print("🔧 VoiceModule: ✅ Voice manager callbacks set up")
-        setupApiCallback()
-        print("🔧 VoiceModule: ✅ API callbacks set up")
-        print("🔧 VoiceModule: ✅ VoiceModule initialization completed successfully")
-        print("🔧 VoiceModule: Module should now be available in NativeModules")
+        print("🔧 VoiceModule: ✅ Super init completed - deferring setup until first use")
         print("🔧 VoiceModule: ===============================================")
+    }
+    
+    private func ensureInitialized() {
+        guard !isInitialized else { return }
+        
+        print("🔧 VoiceModule: Performing deferred initialization...")
+        do {
+            setupVoiceManagerCallbacks()
+            print("🔧 VoiceModule: ✅ Voice manager callbacks set up")
+            setupApiCallback()
+            print("🔧 VoiceModule: ✅ API callbacks set up")
+            isInitialized = true
+            print("🔧 VoiceModule: ✅ VoiceModule initialization completed successfully")
+        } catch {
+            print("❌ VoiceModule: Error during initialization: \(error)")
+        }
     }
     
     // MARK: - React Native Event Emitter
@@ -42,6 +54,7 @@ class VoiceModule: RCTEventEmitter {
     }
     
     override func startObserving() {
+        ensureInitialized()
         hasListeners = true
     }
     
@@ -119,6 +132,8 @@ class VoiceModule: RCTEventEmitter {
     
     // MARK: - React Native Methods
     @objc func requestPermissions(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+        ensureInitialized()
+        
         NSLog("🔐 VoiceModule: requestPermissions called from React Native")
         print("🔐 VoiceModule: requestPermissions called from React Native")
         
@@ -130,6 +145,8 @@ class VoiceModule: RCTEventEmitter {
     }
     
     @objc func startListening(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+        ensureInitialized()
+        
         print("🎙️ VoiceModule: startListening called from React Native")
         voiceManager.startListening()
         resolve(true)

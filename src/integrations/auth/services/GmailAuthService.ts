@@ -186,20 +186,48 @@ export class GmailAuthService extends BaseOAuthService {
         throw new Error('User not authenticated with Supabase');
       }
 
+      // Fetch user email from Google
+      let emailAddress: string | null = null;
+      try {
+        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: {
+            'Authorization': `Bearer ${tokenData.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (userInfoResponse.ok) {
+          const userInfo = await userInfoResponse.json();
+          emailAddress = userInfo.email;
+          console.log('✅ Retrieved Gmail email address:', emailAddress);
+        } else {
+          console.warn('⚠️ Failed to fetch user email from Google API');
+        }
+      } catch (emailError) {
+        console.warn('⚠️ Error fetching user email:', emailError);
+      }
+
       const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+      
+      const updateData: any = {
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        expires_at: expiresAt.toISOString(),
+        scope: tokenData.scope || this.config.scopes.join(' '),
+        is_active: true,
+        configuration: {
+          scopes: this.config.scopes,
+        },
+      };
+
+      // Add email address if we successfully retrieved it
+      if (emailAddress) {
+        updateData.email_address = emailAddress;
+      }
       
       const { error } = await supabase
         .from('integrations')
-        .update({
-          access_token: tokenData.access_token,
-          refresh_token: tokenData.refresh_token,
-          expires_at: expiresAt.toISOString(),
-          scope: tokenData.scope || this.config.scopes.join(' '),
-          is_active: true,
-          configuration: {
-            scopes: this.config.scopes,
-          },
-        })
+        .update(updateData)
         .eq('id', integrationId)
         .eq('user_id', user.id);
 

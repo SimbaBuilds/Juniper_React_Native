@@ -112,7 +112,7 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     serviceName: 'gmail',
     clientId: getGoogleClientId(),
     clientSecret: getGoogleClientSecret(),
-    scopes: ['https://www.googleapis.com/auth/gmail.send', 'https://www.googleapis.com/auth/gmail.modify'],
+    scopes: ['https://www.googleapis.com/auth/gmail.send', 'https://www.googleapis.com/auth/gmail.modify', 'https://www.googleapis.com/auth/userinfo.email'],
     redirectUri: generateRedirectUri('gmail'),
     authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenEndpoint: 'https://oauth2.googleapis.com/token',

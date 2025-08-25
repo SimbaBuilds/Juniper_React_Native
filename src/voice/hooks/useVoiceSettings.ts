@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Storage } from '../../utils/storage';
 import { VoiceSettings } from '../../settings/SettingsScreen';
 import VoiceService from '../VoiceService';
 import WakeWordService from '../../wakeword/WakeWordService';
@@ -32,11 +32,25 @@ export const useVoiceSettings = () => {
   const loadSettings = useCallback(async () => {
     try {
       setLoading(true);
-      const storedSettings = await AsyncStorage.getItem(VOICE_SETTINGS_KEY);
+      console.log('📱 VOICE_SETTINGS: Loading settings from storage...');
+      
+      // Wait for storage to be ready before attempting to load
+      if (!Storage.isReady()) {
+        console.log('📱 VOICE_SETTINGS: Storage not ready, initializing...');
+        const initialized = await Storage.initialize();
+        if (!initialized) {
+          console.warn('⚠️ VOICE_SETTINGS: Storage initialization failed, using defaults');
+          setSettings(defaultVoiceSettings);
+          setLoading(false);
+          return;
+        }
+      }
+      
+      const storedSettings = await Storage.get<VoiceSettings>(VOICE_SETTINGS_KEY);
       
       let parsedSettings: Partial<VoiceSettings> = {};
       if (storedSettings) {
-        parsedSettings = JSON.parse(storedSettings);
+        parsedSettings = storedSettings;
       }
 
       // Merge with defaults to ensure all properties exist
@@ -69,11 +83,14 @@ export const useVoiceSettings = () => {
   // Save settings to storage
   const saveSettings = useCallback(async (newSettings: VoiceSettings) => {
     try {
-      await AsyncStorage.setItem(VOICE_SETTINGS_KEY, JSON.stringify(newSettings));
-
+      console.log('📱 VOICE_SETTINGS: Saving settings to storage...');
+      await Storage.set(VOICE_SETTINGS_KEY, newSettings);
       setSettings(newSettings);
+      console.log('✅ VOICE_SETTINGS: Settings saved successfully');
     } catch (error) {
-      console.error('📱 VOICE_SETTINGS: Error saving settings:', error);
+      console.error('❌ VOICE_SETTINGS: Error saving settings:', error);
+      // Still update local state even if storage fails
+      setSettings(newSettings);
     }
   }, []);
 
