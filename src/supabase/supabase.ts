@@ -874,7 +874,7 @@ export const DatabaseService = {
     
     const { data, error } = await supabase
       .from('requests')
-      .select('status, id, created_at, updated_at')
+      .select('status, id, created_at, updated_at, total_turns, user_message')
       .eq('request_id', requestId)
       .single();
     
@@ -892,6 +892,8 @@ export const DatabaseService = {
       status: data?.status,
       created_at: data?.created_at,
       updated_at: data?.updated_at,
+      total_turns: data?.total_turns,
+      user_message: data?.user_message,
       requestId
     });
     
@@ -906,6 +908,8 @@ export const DatabaseService = {
     status?: string;
     metadata?: Record<string, any>;
     image_url?: string;
+    total_turns?: number;
+    user_message?: string;
   }): Promise<Request> {
     const { data, error } = await supabase
       .from('requests')
@@ -916,6 +920,8 @@ export const DatabaseService = {
         status: requestData.status || 'pending',
         metadata: requestData.metadata || {},
         image_url: requestData.image_url,
+        total_turns: requestData.total_turns || 0,
+        user_message: requestData.user_message || '',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -926,7 +932,7 @@ export const DatabaseService = {
     return data;
   },
 
-  async updateRequestStatus(requestId: string, status: string, metadata?: Record<string, any>): Promise<Request> {
+  async updateRequestStatus(requestId: string, status: string, metadata?: Record<string, any>, total_turns?: number, user_message?: string): Promise<Request> {
     const updateData: any = {
       status,
       updated_at: new Date().toISOString()
@@ -934,6 +940,14 @@ export const DatabaseService = {
     
     if (metadata) {
       updateData.metadata = metadata;
+    }
+    
+    if (total_turns !== undefined) {
+      updateData.total_turns = total_turns;
+    }
+    
+    if (user_message !== undefined) {
+      updateData.user_message = user_message;
     }
     
     const { data, error } = await supabase
