@@ -6,7 +6,7 @@ echo ""
 
 # Check AASA file accessibility
 echo "1. Checking Apple App Site Association file..."
-AASA_URL="https://hightower-ai.com/.well-known/apple-app-site-association"
+AASA_URL="https://juniperassistant.com/.well-known/apple-app-site-association"
 echo "   Testing: $AASA_URL"
 
 # Test with curl
@@ -43,7 +43,7 @@ echo "4. Testing OAuth redirect URLs..."
 SERVICES=("gmail" "google-calendar" "google-docs" "google-sheets" "google-meet")
 
 for SERVICE in "${SERVICES[@]}"; do
-    URL="https://hightower-ai.com/oauth/$SERVICE/callback"
+    URL="https://juniperassistant.com/oauth/$SERVICE/callback"
     STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
     echo "   $URL - HTTP $STATUS"
 done

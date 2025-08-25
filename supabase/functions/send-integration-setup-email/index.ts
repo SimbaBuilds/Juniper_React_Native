@@ -4,7 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-const SITE_URL = Deno.env.get('EXPO_PUBLIC_SITE_URL') || Deno.env.get('SITE_URL') || 'https://hightower-ai.com'
+const SITE_URL = Deno.env.get('EXPO_PUBLIC_SITE_URL') || Deno.env.get('SITE_URL') || 'https://juniperassistant.com'
 
 interface IntegrationSetupEmailRequest {
   user_id: string
@@ -160,7 +160,7 @@ serve(async (req) => {
     // Send email using Resend
     console.log('Sending email via Resend...')
     const emailPayload = {
-      from: 'Juniper <integrations@hightower-ai.com>',
+      from: 'Juniper <integrations@juniperassistant.com>',
       to: [user_email],
       subject: emailContent.subject,
       html: emailContent.html,

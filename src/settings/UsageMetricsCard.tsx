@@ -114,7 +114,7 @@ export const UsageMetricsCard: React.FC<UsageMetricsCardProps> = ({ userProfile 
       </View>
       <TouchableOpacity 
         style={styles.manageLink}
-        onPress={() => Linking.openURL('https://hightower-ai.com')} 
+        onPress={() => Linking.openURL('https://juniperassistant.com')} 
       >
         <Text style={styles.manageLinkText}>
           You can manage your account in our web app in your account page.

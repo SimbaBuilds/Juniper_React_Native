@@ -17,7 +17,7 @@ const GOOGLE_CONFIG = {
     const siteUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_SITE_URL;
     if (!siteUrl) {
       console.warn('EXPO_PUBLIC_SITE_URL not found in environment variables');
-      return 'https://hightower-ai.com/oauth/google/callback';
+      return 'https://juniperassistant.com/oauth/google/callback';
     }
     return `${siteUrl}/oauth/google/callback`;
   },

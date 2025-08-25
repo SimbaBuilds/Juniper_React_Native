@@ -43,7 +43,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="https"
-              android:host="hightower-ai.com"
+              android:host="juniperassistant.com"
               android:pathPrefix="/oauth/"/>
       </intent-filter>
       

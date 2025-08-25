@@ -79,11 +79,11 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ navigation }) => {
   };
 
   const openTermsOfUse = () => {
-    Linking.openURL('https://www.hightower-ai.com/terms-of-use');
+    Linking.openURL('https://www.juniperassistant.com/terms-of-use');
   };
 
   const openPrivacyPolicy = () => {
-    Linking.openURL('https://www.hightower-ai.com/privacy-policy');
+    Linking.openURL('https://www.juniperassistant.com/privacy-policy');
   };
 
   return (

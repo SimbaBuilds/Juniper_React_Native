@@ -22,7 +22,7 @@ const getSiteUrl = (): string => {
   const siteUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_SITE_URL || process.env.EXPO_PUBLIC_SITE_URL;
   if (!siteUrl) {
     console.warn('EXPO_PUBLIC_SITE_URL not configured, using placeholder');
-    return 'https://hightower-ai.com';
+    return 'https://juniperassistant.com';
   }
   return siteUrl;
 };
