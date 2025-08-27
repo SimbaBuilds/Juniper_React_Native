@@ -64,17 +64,6 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
                 
                 Log.d(TAG, "🔵 VOICE_MODULE: ✅ Successfully sent processTextFromNative event")
                 
-                // Set timeout for the request
-                val timeoutHandler = Runnable {
-                    pendingApiCallbacks.remove(requestId)?.let { callback ->
-                        Log.w(TAG, "🔵 VOICE_MODULE: Timeout for request: $requestId")
-                        callback("I'm sorry, there was a timeout processing your request. Please try again.")
-                    }
-                    pendingTimeoutHandlers.remove(requestId)
-                }
-                pendingTimeoutHandlers[requestId] = timeoutHandler
-                Handler(Looper.getMainLooper()).postDelayed(timeoutHandler, 30000)
-                
             } catch (e: Exception) {
                 Log.e(TAG, "🔵 VOICE_MODULE: ❌ Error emitting processTextFromNative event", e)
                 pendingApiCallbacks.remove(requestId)
@@ -655,12 +644,7 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
             
             Log.d(TAG, "🟢 NATIVE: ✅ VoiceResponseUpdate event emitted successfully")
             
-            // First, cancel the timeout and handle the pending callback if it exists
-            pendingTimeoutHandlers.remove(requestId)?.let { timeoutHandler ->
-                Handler(Looper.getMainLooper()).removeCallbacks(timeoutHandler)
-                Log.d(TAG, "🟢 NATIVE: ✅ Cancelled timeout for requestId: $requestId")
-            }
-            
+            // Handle the pending callback if it exists
             pendingApiCallbacks.remove(requestId)?.let { callback ->
                 Log.i(TAG, "🟢 NATIVE: Found pending callback for requestId: $requestId")
                 
@@ -804,9 +788,8 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         return true
     }
 
-    // Store pending callbacks and timeout handlers
+    // Store pending callbacks
     private val pendingApiCallbacks = mutableMapOf<String, (String) -> Unit>()
-    private val pendingTimeoutHandlers = mutableMapOf<String, Runnable>()
 
     /**
      * Process text using React Native API with authentication (called from React Native)
@@ -1405,28 +1388,17 @@ class VoiceModule(private val reactContext: ReactApplicationContext) : ReactCont
         Log.d(TAG, "🚫 CLEAR_NATIVE: clearNativeState called with requestId: $requestId")
         try {
             if (requestId != null) {
-                // Cancel specific request timeout
-                pendingTimeoutHandlers.remove(requestId)?.let { timeoutHandler ->
-                    Handler(Looper.getMainLooper()).removeCallbacks(timeoutHandler)
-                    Log.d(TAG, "🚫 CLEAR_NATIVE: ✅ Cancelled timeout for requestId: $requestId")
-                }
-                
                 // Remove pending callback
                 pendingApiCallbacks.remove(requestId)?.let {
                     Log.d(TAG, "🚫 CLEAR_NATIVE: ✅ Removed pending callback for requestId: $requestId")
                 }
             } else {
-                // Clear all pending timeouts and callbacks
-                val timeoutCount = pendingTimeoutHandlers.size
+                // Clear all pending callbacks
                 val callbackCount = pendingApiCallbacks.size
                 
-                pendingTimeoutHandlers.values.forEach { timeoutHandler ->
-                    Handler(Looper.getMainLooper()).removeCallbacks(timeoutHandler)
-                }
-                pendingTimeoutHandlers.clear()
                 pendingApiCallbacks.clear()
                 
-                Log.d(TAG, "🚫 CLEAR_NATIVE: ✅ Cleared all timeouts ($timeoutCount) and callbacks ($callbackCount)")
+                Log.d(TAG, "🚫 CLEAR_NATIVE: ✅ Cleared all callbacks ($callbackCount)")
             }
             
             // Reset VoiceManager to IDLE state to trigger wake word resume

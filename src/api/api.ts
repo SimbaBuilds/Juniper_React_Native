@@ -5,11 +5,13 @@ import { supabase } from '../supabase/supabase';
 // const supabase = createClient();
 
 // Log the backend URL being used
-console.log('🌐 API: Using backend URL from environment:', process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL);
+const backendUrl = process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL || 'https://mobile-jarvis-backend.onrender.com';
+console.log('🌐 API: Using backend URL:', backendUrl);
+console.log('🔍 Environment variable present:', !!process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL);
 
 const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL,
-  timeout: Platform.OS === 'android' ? 300000 : 300000, // 5 minute timeout for both platforms to match ServerApiService
+  baseURL: backendUrl,
+  timeout: Platform.OS === 'android' ? 300000 : 300000, // 5 minute timeout - sole timeout mechanism (native timeouts removed)
 });
 
 // Add request interceptor to add auth token
@@ -111,6 +113,12 @@ api.interceptors.response.use(
   },
   async (error) => {
     console.error('❌ API Response Error:', error.response?.status, error.config?.url);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.data,
+      isNetworkError: !error.response && error.message === 'Network Error'
+    });
     
     if (Platform.OS === 'android') {
       console.error('📱 Android: API request failed with status:', error.response?.status);
@@ -125,13 +133,17 @@ api.interceptors.response.use(
     } else if (error.response?.status === 403) {
       console.error('🚫 403 Forbidden - Auth token may be invalid or missing');
       console.error('Request headers:', error.config?.headers);
+      console.error('Full error response:', error.response?.data);
       
       if (Platform.OS === 'android') {
         console.error('📱 Android: 403 error detected - this is the main issue we\'re trying to fix');
         console.error('📱 Android: Request details:', {
           url: error.config?.url,
+          baseURL: error.config?.baseURL,
+          fullUrl: `${error.config?.baseURL}${error.config?.url}`,
           method: error.config?.method,
-          hasAuth: !!error.config?.headers?.Authorization
+          hasAuth: !!error.config?.headers?.Authorization,
+          authLength: error.config?.headers?.Authorization?.length
         });
       }
       

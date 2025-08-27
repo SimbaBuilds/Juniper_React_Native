@@ -1,4 +1,4 @@
-const { withProjectBuildGradle, withAppBuildGradle, withMainApplication } = require('@expo/config-plugins');
+const { withProjectBuildGradle, withAppBuildGradle, withMainApplication, withGradleProperties } = require('@expo/config-plugins');
 
 // Plugin to configure native modules for Expo
 const withNativeModules = (config) => {
@@ -68,6 +68,16 @@ import com.hightowerai.MobileJarvisNative.permissions.PermissionsPackage`;
       }
     }
     
+    return config;
+  });
+
+  // Add gradle properties needed for expo-updates
+  config = withGradleProperties(config, (config) => {
+    config.modResults.push({
+      type: 'property',
+      key: 'expo.updates.enabled',
+      value: 'true'
+    });
     return config;
   });
 

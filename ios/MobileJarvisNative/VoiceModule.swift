@@ -11,7 +11,6 @@ class VoiceModule: RCTEventEmitter {
     
     // MARK: - API Callback Tracking (matching Android pattern)
     private var pendingApiCallbacks: [String: (String) -> Void] = [:]
-    private var timeoutTimers: [String: Timer] = [:]
     
     private var isInitialized = false
     
@@ -116,17 +115,6 @@ class VoiceModule: RCTEventEmitter {
             ])
             
             NSLog("🔵 VoiceModule: processTextFromNative event emitted successfully")
-            
-            // Set timeout for the request
-            let timeoutTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: false) { _ in
-                self?.timeoutTimers.removeValue(forKey: requestId)
-                if self?.pendingApiCallbacks.removeValue(forKey: requestId) != nil {
-                    print("⏰ VoiceModule: Timeout for request: \(requestId)")
-                    // VoiceManager will handle the timeout response
-                }
-            }
-            
-            self?.timeoutTimers[requestId] = timeoutTimer
         }
     }
     
@@ -208,8 +196,6 @@ class VoiceModule: RCTEventEmitter {
         sendEvent(withName: "VoiceResponseUpdate", body: responseParams)
         print("🟢 VoiceModule: ✅ VoiceResponseUpdate event emitted successfully")
         
-        // Cancel timeout timer
-        timeoutTimers.removeValue(forKey: requestId)?.invalidate()
         
         // Remove the callback (VoiceManager handles the actual response processing)
         pendingApiCallbacks.removeValue(forKey: requestId)
@@ -276,7 +262,7 @@ class VoiceModule: RCTEventEmitter {
     }
     
     /**
-     * Clear native state and cancel pending timeouts (for request cancellation)
+     * Clear native state and cancel pending callbacks (for request cancellation)
      * Optional requestId parameter allows clearing specific request state
      */
     @objc func clearNativeState(_ requestId: NSString?, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
@@ -286,20 +272,14 @@ class VoiceModule: RCTEventEmitter {
         if let specificRequestId = requestIdStr {
             // Clear specific request state
             pendingApiCallbacks.removeValue(forKey: specificRequestId)
-            if let timer = timeoutTimers.removeValue(forKey: specificRequestId) {
-                timer.invalidate()
-                print("🧹 VoiceModule: ✅ Cancelled timeout timer for request: \(specificRequestId)")
-            }
+
         } else {
-            // Clear all pending callbacks and timeouts
+            // Clear all pending callbacks
             let callbackCount = pendingApiCallbacks.count
-            let timeoutCount = timeoutTimers.count
             
-            timeoutTimers.values.forEach { $0.invalidate() }
-            timeoutTimers.removeAll()
             pendingApiCallbacks.removeAll()
             
-            print("🧹 VoiceModule: ✅ Cleared all timeouts (\(timeoutCount)) and callbacks (\(callbackCount))")
+            print("🧹 VoiceModule: ✅ Cleared all callbacks (\(callbackCount))")
             
             // Stop any current TTS
             TTSManager.shared.stopSpeaking()

@@ -72,7 +72,6 @@ cat > "${TEMP_DIR}/.env.example" << 'EOF'
 MODE=DEV
 EXPO_PUBLIC_SITE_URL='https://your-site.com'
 EXPO_PUBLIC_PYTHON_BACKEND_URL='https://your-backend.com'
-PROD_API_URL='https://your-production-api.com'
 
 # Supabase Configuration (use your own values)
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co

@@ -12,6 +12,15 @@ export default {
       "./expo-plugins/withNativeModules",
       "expo-secure-store"
     ],
+    updates: {
+      url: "https://u.expo.dev/a1ca031e-4068-49f1-84f5-ab872bc450dc",
+      enabled: true,
+      checkAutomatically: "ON_LOAD",
+      fallbackToCacheTimeout: 10000
+    },
+    runtimeVersion: {
+      policy: "appVersion"
+    },
     splash: {
       image: "./assets/splash-icon.png",
       resizeMode: "contain",

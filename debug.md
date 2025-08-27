@@ -1,6 +1,2 @@
- ERROR  WARNING: WakeWordModule not found on Android platform!
- ERROR  Available modules: []
- ERROR  Invariant Violation: TurboModuleRegistry.getEnforcing(...): 'RNCClipboard' could not be found. Verify that a module by this name is registered in the native binary.Bridgeless mode: false. TurboModule interop: false. Modules loaded: {"NativeModules":["PlatformConstants","LogBox","SourceCode","Timing","AppState","BlobModule","WebSocketModule","DevSettings","DevToolsSettingsManager","Networking","Appearance","DevLoadingView","HeadlessJsTaskSupport","DeviceInfo","UIManager","DeviceEventManager","NativeAnimatedModule","SoundManager","I18nManager","RNC_AsyncSQLiteDBStorage","ImageLoader"],"TurboModules":[],"NotFound":["NativePerformanceCxx","NativePerformanceObserverCxx","RedBox","BugReporting","RNCSafeAreaContext","PlatformLocalStorage","RNCClipboard"]}, js engine: hermes
- ERROR  Invariant Violation: "main" has not been registered. This can happen if:
-* Metro (the local dev server) is run from the wrong folder. Check if Metro is running, stop it and restart it in the current project.
-* A module failed to load due to an error and `AppRegistry.registerComponent` wasn't called., js engine: hermes
+08-26 14:11:52.835 11288 11409 I ReactNativeJS: '🌐 API: Using backend URL:', 'http://192.168.1.80:8000'
+08-26 14:11:52.835 11288 11409 I ReactNativeJS: '🔍 Environment variable present:', true
