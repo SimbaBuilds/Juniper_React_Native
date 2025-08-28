@@ -292,15 +292,39 @@ class OpenWakeWordEngine(private val context: Context) {
                 return 0f
             }
             
+            // 🔍 AUDIO_DEBUG: Log raw audio characteristics for background vs foreground comparison
+            val audioMin = audioBufferCopy.minOrNull() ?: 0f
+            val audioMax = audioBufferCopy.maxOrNull() ?: 0f
+            val audioAvg = audioBufferCopy.average().toFloat()
+            val audioNonZero = audioBufferCopy.count { it != 0f }
+            Log.d(TAG, "🔍 AUDIO_INPUT: min=${String.format("%.6f", audioMin)}, max=${String.format("%.6f", audioMax)}, avg=${String.format("%.6f", audioAvg)}, nonZero=${audioNonZero}/${audioBufferCopy.size}")
+            
             // Process the audio through the pipeline with detailed logging
             val melSpectrogram = extractMelSpectrogram(audioBufferCopy)
             
+            // 🔍 MEL_DEBUG: Log mel spectrogram characteristics
+            val melMin = melSpectrogram.minOrNull() ?: 0f
+            val melMax = melSpectrogram.maxOrNull() ?: 0f
+            val melAvg = melSpectrogram.average().toFloat()
+            val melNonZero = melSpectrogram.count { it != 0f }
+            Log.d(TAG, "🔍 MEL_OUTPUT: min=${String.format("%.6f", melMin)}, max=${String.format("%.6f", melMax)}, avg=${String.format("%.6f", melAvg)}, nonZero=${melNonZero}/${melSpectrogram.size}")
+            
             val embedding = generateEmbedding(melSpectrogram)
+            
+            // 🔍 EMBED_DEBUG: Log embedding characteristics  
+            val embedMin = embedding.minOrNull() ?: 0f
+            val embedMax = embedding.maxOrNull() ?: 0f
+            val embedAvg = embedding.average().toFloat()
+            val embedNonZero = embedding.count { it != 0f }
+            Log.d(TAG, "🔍 EMBED_OUTPUT: min=${String.format("%.6f", embedMin)}, max=${String.format("%.6f", embedMax)}, avg=${String.format("%.6f", embedAvg)}, nonZero=${embedNonZero}/${embedding.size}")
             
             // Add embedding to rolling window buffer
             addEmbeddingToBuffer(embedding)
             
             val confidence = classifyWakeWordFromBuffer()
+            
+            // 🎯 CONFIDENCE_DEBUG: Log final prediction result
+            Log.d(TAG, "🎯 PREDICTION_RESULT: Confidence=${String.format("%.3f", confidence)} (model: $currentModel)")
             
             // 🚨 CRITICAL: Check for infinite loop condition
             if (confidence == 0.0f) {
@@ -707,7 +731,7 @@ class OpenWakeWordEngine(private val context: Context) {
     }
     
     fun getCurrentWakePhrase(): String {
-        return WAKE_PHRASE_MAPPINGS.entries.find { it.value == currentModel }?.key ?: "Hey Jarvis"
+        return WAKE_PHRASE_MAPPINGS.entries.find { it.value == currentModel }?.key ?: "Juniper"
     }
     
     fun cleanup() {
@@ -814,7 +838,7 @@ class OpenWakeWordEngine(private val context: Context) {
                 if (recovered) {
                     // Restore wake phrase if it was set
                     val restoredPhrase = getCurrentWakePhrase()
-                    if (restoredPhrase != "Hey Jarvis") {
+                    if (restoredPhrase != "Juniper") {
                         setWakePhrase(restoredPhrase)
                     }
                     Log.i(TAG, "🔧 STATE_RECOVERY: ✅ Full engine recovery successful")

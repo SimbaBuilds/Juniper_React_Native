@@ -136,7 +136,7 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
 
     private fun startForegroundWithNotification() {
         try {
-            val selectedWakeWord = prefs.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
+            val selectedWakeWord = prefs.getString("selected_wake_word", "Juniper") ?: "Juniper"
             
             val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setContentTitle("Wake Word Detection Active")
@@ -395,7 +395,7 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
             }
             
             val threshold = getWakeWordThreshold()
-            val selectedWakeWord = prefs.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
+            val selectedWakeWord = prefs.getString("selected_wake_word", "Juniper") ?: "Juniper"
             
             Log.i(TAG, "🎯 WAKEWORD_SETUP: ======= Wake Word Configuration =======")
             Log.i(TAG, "🎯 WAKEWORD_SETUP: Selected wake word: '$selectedWakeWord'")
@@ -640,7 +640,7 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
         val timestamp = System.currentTimeMillis()
         val timeString = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.US).format(java.util.Date(timestamp))
         
-        val selectedWakeWord = prefs.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
+        val selectedWakeWord = prefs.getString("selected_wake_word", "Juniper") ?: "Juniper"
         
         Log.i(TAG, "🔥 WAKEWORD_USE: ================================================")
         Log.i(TAG, "🔥 WAKEWORD_USE: *** WAKE WORD '$selectedWakeWord' ACTIVATED ***")
@@ -720,7 +720,7 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
     }
     
     private fun createNotification(): Notification {
-        val selectedWakeWord = prefs.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
+        val selectedWakeWord = prefs.getString("selected_wake_word", "Juniper") ?: "Juniper"
         
         val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Wake Word Detection Active")
@@ -871,7 +871,7 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
                 val initialized = openWakeWordEngine?.initialize() ?: false
                 
                 if (initialized) {
-                    val selectedWakeWord = prefs.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
+                    val selectedWakeWord = prefs.getString("selected_wake_word", "Juniper") ?: "Juniper"
                     openWakeWordEngine?.setWakePhrase(selectedWakeWord)
                     
                     // Defensive check: Verify engine is ready before proceeding
@@ -935,7 +935,7 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
             
             isPaused = false
             
-            val selectedWakeWord = prefs.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
+            val selectedWakeWord = prefs.getString("selected_wake_word", "Juniper") ?: "Juniper"
             Log.i(TAG, "▶️ PAUSE_RESUME: Wake word threshold: $wakeWordThreshold")
             
             updateNotification("Listening for wake word", "Say '$selectedWakeWord' to activate")
@@ -1011,7 +1011,7 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
             }
             "selected_wake_word" -> {
                 if (isServiceRunning && isRunning) {
-                    val newWakeWord = sharedPreferences?.getString("selected_wake_word", "Hey Jarvis") ?: "Hey Jarvis"
+                    val newWakeWord = sharedPreferences?.getString("selected_wake_word", "Juniper") ?: "Juniper"
                     Log.i(TAG, "🎯 WAKE_WORD_CHANGE: Wake word changed to '$newWakeWord' while service is running")
                     Log.i(TAG, "🎯 WAKE_WORD_CHANGE: ⚠️ Service restart required for wake word change to take effect")
                 }
