@@ -1,6 +1,7 @@
 export const AVAILABLE_WAKE_PHRASES = [
     'Hey Juni',
     'Hey Juniper',
+    'Juniper',
     'Hey',
     'Jarvis',
     'Hey Jarvis',
@@ -13,4 +14,4 @@ export const AVAILABLE_WAKE_PHRASES = [
     'Hey Michael',
 ];
 
-export const DEFAULT_WAKE_PHRASE = 'Jarvis';
+export const DEFAULT_WAKE_PHRASE = 'Juniper';

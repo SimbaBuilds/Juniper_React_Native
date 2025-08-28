@@ -78,7 +78,7 @@ class GlobalErrorHandler {
       global.process.on('unhandledRejection', this.unhandledRejectionHandler);
     }
 
-    if (typeof global !== 'undefined' && global.addEventListener) {
+    if (typeof global !== 'undefined' && (global as any).addEventListener) {
       const rejectionHandler = (event: any) => {
         console.error('🚨 Unhandled Promise Rejection (addEventListener):', event.reason);
         
@@ -95,7 +95,7 @@ class GlobalErrorHandler {
         event.preventDefault?.();
       };
 
-      global.addEventListener('unhandledrejection', rejectionHandler);
+      (global as any).addEventListener('unhandledrejection', rejectionHandler);
     }
   }
 

@@ -33,7 +33,8 @@ class OpenWakeWordEngine(private val context: Context) {
     private val WAKE_PHRASE_MAPPINGS = mapOf(
         "Hey Jarvis" to "hey_jarvis",
         "Hey Juni" to "hey_jarvis",
-        "Hey Juniper" to "hey_jarvis",
+        "Hey Juniper" to "juniper",
+        "Juniper" to "juniper",
         "Hey Jasmine" to "hey_jarvis",
         "Hey Jade" to "hey_jarvis",
         "Hey Jay" to "hey_jarvis",

@@ -40,6 +40,7 @@ export interface VoiceSettings {
 const WAKE_WORD_SENSITIVITY_MAP: Record<string, number> = {
   'Hey Juni': 0.01,
   'Hey Juniper': 0.001,
+  'Juniper': 0.001,
   'Hey': 0.01,
   'Jarvis': 0.4,
   'Hey Jarvis': 0.7,
@@ -54,11 +55,8 @@ const WAKE_WORD_SENSITIVITY_MAP: Record<string, number> = {
 
 // Available wake words from OpenWakeWord (native Android)
 const AVAILABLE_WAKE_WORDS = [
-  { label: `Hey Juni (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Hey Juni'] * 100)}%)`, value: 'Hey Juni' },
+  { label: `Juniper (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Juniper'] * 100)}%)`, value: 'Juniper' },
   { label: `Jarvis (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Jarvis'] * 100)}%)`, value: 'Jarvis' },
-  { label: `Hey Jasper (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Hey Jasper'] * 100)}%)`, value: 'Hey Jasper' },
-  { label: `Aloe (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Aloe'] * 100)}%)`, value: 'Aloe' },
-  { label: `Hey Michael (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Hey Michael'] * 100)}%)`, value: 'Hey Michael' },
 ];
 
 // Available timezones (common ones)

@@ -132,7 +132,7 @@ export class ImageStorageService {
       if (error) {
         console.error('❌ ImageStorageService: Supabase upload error:', {
           error: error.message,
-          statusCode: error.statusCode,
+          statusCode: (error as any).statusCode || 'unknown',
           name: error.name
         });
         return { success: false, error: error.message };

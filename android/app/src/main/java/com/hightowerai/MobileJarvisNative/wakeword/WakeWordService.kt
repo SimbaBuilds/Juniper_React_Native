@@ -86,7 +86,7 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
         // Available wake words from OpenWakeWord
         val AVAILABLE_WAKE_WORDS: Set<String>
             get() = setOf(
-                "Hey Jarvis", "Hey Juni", "Hey Juniper", "Jarvis", "Hey Jasmine", "Hey Jade", "Hey Jay", "Hey Jasper", "Hey Jerry", "Jasmine", "Hey",
+                "Hey Jarvis", "Hey Juni", "Hey Juniper", "Juniper", "Jarvis", "Hey Jasmine", "Hey Jade", "Hey Jay", "Hey Jasper", "Hey Jerry", "Jasmine", "Hey",
                 "Alex", "Aloe",
                 "Hey Mycroft", "Hey Michael", "Hey Mulberry", "Hey Myrillis", "Hey Marigold"
             )

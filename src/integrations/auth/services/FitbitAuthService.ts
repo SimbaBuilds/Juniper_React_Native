@@ -115,8 +115,8 @@ export class FitbitAuthService extends BaseOAuthService {
     const config = this.config;
     
     // Generate PKCE challenge (we'll store the verifier for later)
-    this.generatePKCE().then(({ codeVerifier, codeChallenge }) => {
-      this.codeVerifier = codeVerifier;
+    this.generatePKCE().then(({ verifier, challenge }) => {
+      this.codeVerifier = verifier;
       
       const params = new URLSearchParams({
         client_id: config.clientId,
@@ -124,7 +124,7 @@ export class FitbitAuthService extends BaseOAuthService {
         response_type: 'code',
         scope: config.scopes.join(' '),
         state: integrationId,
-        code_challenge: codeChallenge,
+        code_challenge: challenge,
         code_challenge_method: 'S256',
         ...config.additionalParameters
       });

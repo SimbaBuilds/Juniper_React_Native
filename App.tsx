@@ -60,53 +60,107 @@ export default function App() {
 
   // Initialize any needed configurations here
   useEffect(() => {
-    // Initialize app settings
+    // Enhanced initialization with better error handling
     const initializeApp = async () => {
       try {
         console.log('🚀 App: Starting initialization...');
-
-        // CRITICAL: Initialize storage first to prevent crashes
-        console.log('📁 App: Initializing storage...');
-        const storageInitialized = await Storage.initialize();
-        setStorageReady(storageInitialized);
         
-        if (!storageInitialized) {
-          console.warn('⚠️ App: Storage initialization failed, continuing with limited functionality');
-        } else {
-          console.log('✅ App: Storage initialized successfully');
-        }
-
-        // Only proceed with other initializations after storage is ready or failed safely
-        console.log('🔊 App: Checking wake word detection...');
-        const isAvailable = await WakeWordService.getInstance().isWakeWordEnabled();
-        console.log(`Wake word detection available: ${isAvailable}`);
+        // Wrap each initialization step in try-catch using Promise.allSettled
+        const results = await Promise.allSettled([
+          // Storage initialization (critical)
+          (async () => {
+            try {
+              console.log('📁 App: Initializing storage...');
+              const storageResult = await Storage.initialize();
+              setStorageReady(storageResult);
+              return { component: 'storage', success: storageResult };
+            } catch (error) {
+              console.error('❌ Storage initialization failed:', error);
+              setStorageReady(false);
+              return { component: 'storage', success: false, error };
+            }
+          })(),
+          
+          // Wake word initialization (non-critical)
+          (async () => {
+            try {
+              console.log('🔊 App: Checking wake word detection...');
+              const isAvailable = await WakeWordService.getInstance().isWakeWordEnabled();
+              console.log(`Wake word detection available: ${isAvailable}`);
+              return { component: 'wakeword', success: true };
+            } catch (error) {
+              console.warn('⚠️ Wake word initialization failed:', error);
+              return { component: 'wakeword', success: false, error };
+            }
+          })(),
+          
+          // Auth session initialization (critical)
+          (async () => {
+            try {
+              console.log('🔐 App: Getting initial auth session...');
+              const { data } = await supabase.auth.getSession();
+              setSession(data.session);
+              return { component: 'auth', success: true, session: data.session };
+            } catch (error) {
+              console.error('❌ Auth initialization failed:', error);
+              setSession(null);
+              return { component: 'auth', success: false, error };
+            }
+          })()
+        ]);
         
-        // Get the initial session (this might use storage internally)
-        console.log('🔐 App: Getting initial auth session...');
-        const { data } = await supabase.auth.getSession();
-        setSession(data.session);
-        
-        // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, currentSession) => {
-            setSession(currentSession);
+        // Log results without crashing
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            console.log(`✅ Component ${result.value.component} initialized: success=${result.value.success}`);
+          } else {
+            console.error(`❌ Component initialization failed:`, result.reason);
           }
-        );
+        });
         
-        setLoading(false);
-        console.log('✅ App: Initialization completed successfully');
-
-        // Cleanup subscription
-        return () => subscription.unsubscribe();
+        // Set up auth listener only if initial auth succeeded
+        const authResult = results[2];
+        if (authResult.status === 'fulfilled' && authResult.value.success) {
+          try {
+            const { data: { subscription } } = supabase.auth.onAuthStateChange(
+              (event, currentSession) => {
+                console.log('🔐 Auth state changed:', event, !!currentSession);
+                setSession(currentSession);
+              }
+            );
+            
+            // Return cleanup function
+            return () => {
+              console.log('🧹 Cleaning up auth subscription');
+              subscription.unsubscribe();
+            };
+          } catch (error) {
+            console.error('❌ Auth listener setup failed:', error);
+          }
+        }
+        
       } catch (error) {
-        console.error('❌ App: Error during initialization:', error);
-        // Don't let initialization errors crash the app
+        console.error('❌ App: Critical initialization error:', error);
+        // Don't crash - just log the error
+      } finally {
+        // Always stop loading, even if initialization fails
         setLoading(false);
-        setStorageReady(false);
+        console.log('✅ App: Initialization sequence completed');
       }
     };
     
-    initializeApp();
+    const cleanup = initializeApp();
+    
+    // Return cleanup function
+    return () => {
+      if (cleanup && typeof cleanup.then === 'function') {
+        cleanup.then(cleanupFn => {
+          if (typeof cleanupFn === 'function') {
+            cleanupFn();
+          }
+        });
+      }
+    };
   }, []);
 
   // OAuth callback handlers for each service type
@@ -319,16 +373,18 @@ export default function App() {
     
     console.log(`✅ Processing ${serviceName} HTTPS callback with code and state`);
     
-    // Route to appropriate service handler based on service name
-    // To add a new service, add a new case below with the correct import path
-    try {
-      switch (serviceName) {
-        case 'google-calendar':
-          require('./src/integrations/auth/services/GoogleCalendarAuthService').default.getInstance().handleAuthCallback(code, state);
-          break;
-        case 'gmail':
-          require('./src/integrations/auth/services/GmailAuthService').default.getInstance().handleAuthCallback(code, state);
-          break;
+          // Route to appropriate service handler based on service name
+      // Enhanced error handling for each service callback
+      try {
+        console.log(`📞 Routing ${serviceName} callback...`);
+        
+        switch (serviceName) {
+          case 'google-calendar':
+            require('./src/integrations/auth/services/GoogleCalendarAuthService').default.getInstance().handleAuthCallback(code, state);
+            break;
+          case 'gmail':
+            require('./src/integrations/auth/services/GmailAuthService').default.getInstance().handleAuthCallback(code, state);
+            break;
         case 'google-docs':
           require('./src/integrations/auth/services/GoogleDocsAuthService').default.getInstance().handleAuthCallback(code, state);
           break;
@@ -382,13 +438,31 @@ export default function App() {
             navigationRef.current.navigate('OAuthCallback', { url });
           }
       }
-    } catch (serviceError) {
-      console.error(`❌ Error handling ${serviceName} service callback:`, serviceError);
-      // Fall back to legacy handler on service error
-      if (navigationRef.current && session) {
-        navigationRef.current.navigate('OAuthCallback', { url });
+            console.log(`✅ ${serviceName} callback processed successfully`);
+      } catch (serviceError) {
+        console.error(`❌ Error handling ${serviceName} service callback:`, serviceError);
+        
+        // Don't crash - report error and fallback gracefully
+        try {
+          const { ErrorReportingService } = require('./src/error/ErrorReportingService');
+          ErrorReportingService.getInstance().reportError(
+            serviceError instanceof Error ? serviceError : new Error(String(serviceError)),
+            'OAuthCallbackError',
+            { serviceName, url: url.substring(0, 100) + '...' }
+          );
+        } catch (reportingError) {
+          console.error('❌ Error reporting OAuth callback failure:', reportingError);
+        }
+        
+        // Fall back to legacy handler on service error
+        try {
+          if (navigationRef.current && session) {
+            navigationRef.current.navigate('OAuthCallback', { url });
+          }
+        } catch (navigationError) {
+          console.error('❌ Error in OAuth callback navigation fallback:', navigationError);
+        }
       }
-    }
   };
 
   // Handle OAuth deep links with new callback routing system

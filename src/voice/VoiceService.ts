@@ -3,12 +3,30 @@ import { DeviceEventEmitter } from 'react-native';
 
 const { VoiceModule } = NativeModules;
 
-// Check if VoiceModule is available on startup
-if (!VoiceModule) {
-    console.error('VoiceModule not found in NativeModules. Ensure native module is properly linked.');
-    console.log('Available NativeModules:', Object.keys(NativeModules).filter(key => key.toLowerCase().includes('voice')));
-    console.log('All NativeModules:', Object.keys(NativeModules));
-}
+// Create safe module accessor with defensive checks
+const getSafeSafeVoiceModule = () => {
+    if (!VoiceModule) {
+        console.error('SafeVoiceModule not found in NativeModules. Falling back to mock implementation.');
+        console.log('Available Voice-related modules:', Object.keys(NativeModules).filter(key => key.toLowerCase().includes('voice')));
+        console.log('All available NativeModules:', Object.keys(NativeModules));
+        
+        // Return mock implementation to prevent crashes
+        return {
+            startListening: () => Promise.resolve({ success: false, error: 'SafeVoiceModule not available' }),
+            stopListening: () => Promise.resolve({ success: false, error: 'SafeVoiceModule not available' }),
+            getCurrentState: () => Promise.resolve({ state: 'IDLE' }),
+            isListening: () => Promise.resolve({ listening: false }),
+            handleApiResponse: () => Promise.resolve({ success: false, error: 'SafeVoiceModule not available' }),
+            updateVoiceSettings: () => Promise.resolve({ success: false, error: 'SafeVoiceModule not available' }),
+            cleanupResources: () => Promise.resolve({ success: false, error: 'SafeVoiceModule not available' }),
+            // Add other methods as needed with safe defaults
+        };
+    }
+    return VoiceModule;
+};
+
+// Use the safe module accessor
+const SafeSafeVoiceModule = getSafeSafeVoiceModule();
 
 // Voice state enum that matches the native implementation
 export enum VoiceState {

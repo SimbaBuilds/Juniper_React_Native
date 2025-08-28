@@ -36,38 +36,76 @@ export class AppErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('🚨 App Error Boundary Caught Error:', error, errorInfo);
     
-    this.setState(prevState => ({
-      errorCount: prevState.errorCount + 1
-    }));
-
-    ErrorReportingService.getInstance().reportError(
-      error,
-      'AppErrorBoundary',
-      {
-        componentStack: errorInfo.componentStack,
-        errorCount: this.state.errorCount + 1,
-        appState: AppState.currentState,
-        timeSinceLastError: Date.now() - this.state.lastErrorTime
-      }
-    );
-
-    if (this.state.errorCount >= 3) {
-      Alert.alert(
-        'Critical Error',
-        'The app has encountered multiple errors. Please restart the app or contact support if the problem persists.',
-        [
-          {
-            text: 'Restart App',
-            onPress: this.handleForceRestart,
-            style: 'destructive'
-          },
-          {
-            text: 'Try Again',
-            onPress: this.handleRetry
-          }
-        ]
-      );
+    // Prevent cascade crashes with defensive setState
+    try {
+      this.setState(prevState => ({
+        errorCount: prevState.errorCount + 1,
+        lastErrorTime: Date.now()
+      }));
+    } catch (setStateError) {
+      console.error('❌ Error in setState during error handling:', setStateError);
     }
+
+    // Report error safely without throwing
+    try {
+      ErrorReportingService.getInstance().reportError(
+        error,
+        'AppErrorBoundary',
+        {
+          componentStack: errorInfo.componentStack,
+          errorCount: this.state.errorCount + 1,
+          appState: AppState.currentState,
+          timeSinceLastError: Date.now() - this.state.lastErrorTime,
+          errorMessage: error.message,
+          errorStack: error.stack
+        }
+      ).catch(reportError => {
+        console.error('❌ Error reporting failed in AppErrorBoundary:', reportError);
+      });
+    } catch (reportingError) {
+      console.error('❌ Critical error in error reporting:', reportingError);
+    }
+
+    // Show user-friendly error with delay to prevent cascade
+    const showErrorAlert = () => {
+      try {
+        if (this.state.errorCount >= 3) {
+          Alert.alert(
+            'Critical Error',
+            'The app has encountered multiple errors. Please restart the app or contact support if the problem persists.',
+            [
+              {
+                text: 'Restart App',
+                onPress: () => {
+                  try {
+                    this.handleForceRestart();
+                  } catch (restartError) {
+                    console.error('❌ Error during force restart:', restartError);
+                  }
+                },
+                style: 'destructive'
+              },
+              {
+                text: 'Try Again',
+                onPress: () => {
+                  try {
+                    this.handleRetry();
+                  } catch (retryError) {
+                    console.error('❌ Error during retry:', retryError);
+                  }
+                }
+              }
+            ],
+            { cancelable: false }
+          );
+        }
+      } catch (alertError) {
+        console.error('❌ Error showing alert:', alertError);
+      }
+    };
+
+    // Delay alert to prevent immediate cascade
+    setTimeout(showErrorAlert, 100);
   }
 
   private handleRetry = () => {
