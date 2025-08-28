@@ -38,11 +38,11 @@ export interface VoiceSettings {
 
 // Wake word threshold mapping
 const WAKE_WORD_SENSITIVITY_MAP: Record<string, number> = {
-  'Hey Juni': 0.01,
-  'Hey Juniper': 0.001,
-  'Juniper': 0.001,
+  'Hey Juni': 0.5,
+  'Hey Juniper': 0.5,
+  'Juniper': 0.5,
   'Hey': 0.01,
-  'Jarvis': 0.4,
+  'Jarvis': 0.5,
   'Hey Jarvis': 0.7,
   'Jasmine': 0.001,
   'Hey Jade': 0.001,
@@ -53,7 +53,7 @@ const WAKE_WORD_SENSITIVITY_MAP: Record<string, number> = {
   'Hey Michael': 0.4,
 };
 
-// Available wake words from OpenWakeWord (native Android)
+// ACTUAL OPTIONS DISPLAYED IN SETTINGS SCREEN
 const AVAILABLE_WAKE_WORDS = [
   { label: `Juniper (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Juniper'] * 100)}%)`, value: 'Juniper' },
   { label: `Jarvis (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Jarvis'] * 100)}%)`, value: 'Jarvis' },
