@@ -78,7 +78,7 @@ class NativeApiClient(private val context: Context) {
                 Log.i(TAG, "📡 CONTEXT_DEBUG: ========== API CALL CONTEXT ==========")
                 Log.i(TAG, "📡 CONTEXT_DEBUG: User ID: ${userId.take(12)}...")
                 Log.i(TAG, "📡 CONTEXT_DEBUG: Message: '$message'")
-                Log.i(TAG, "📡 CONTEXT_DEBUG: History entries: ${history.size}")
+                Log.i(TAG, "📡 CONTEXT_DEBUG: Original history entries: ${history.size}")
                 if (history.isNotEmpty()) {
                     history.forEachIndexed { index, historyItem ->
                         Log.d(TAG, "📡 CONTEXT_DEBUG:   History[$index]: ${historyItem.role} - '${historyItem.content.take(60)}...'")
@@ -92,11 +92,24 @@ class NativeApiClient(private val context: Context) {
                 Log.i(TAG, "📡 CONTEXT_DEBUG:   - Instructions: '${voiceSettings.generalInstructions.take(50)}${if(voiceSettings.generalInstructions.length > 50) "..." else ""}'")
                 Log.i(TAG, "📡 CONTEXT_DEBUG: =======================================")
                 
+                // Add current message to history to maintain conversation context
+                val currentTimestamp = System.currentTimeMillis()
+                val currentUserMessage = HistoryMessage(
+                    role = "user",
+                    content = message,
+                    timestamp = currentTimestamp,
+                    type = "text"
+                )
+                
+                // Include current message in history for proper context
+                val updatedHistory = history + currentUserMessage
+                Log.i(TAG, "📡 CONTEXT_DEBUG: Updated history entries (with current message): ${updatedHistory.size}")
+                
                 // Build chat request matching React Native format exactly
                 val chatRequest = ChatRequest(
                     message = message,
-                    timestamp = System.currentTimeMillis(),
-                    history = history,
+                    timestamp = currentTimestamp,
+                    history = updatedHistory,  // History now includes current message
                     requestId = requestId,
                     userId = userId,
                     deepgramEnabled = voiceSettings.deepgramEnabled,
