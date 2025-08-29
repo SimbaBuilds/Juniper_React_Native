@@ -132,8 +132,7 @@ class BackgroundConversationManager private constructor(private val context: Con
                 role = "assistant",
                 content = assistantResponse,
                 timestamp = timestamp,
-                type = "text",
-                voiceMetadata = voiceMetadata
+                type = "text"
             )
         )
         

@@ -54,9 +54,7 @@ data class HistoryMessage(
     val role: String, // "user" or "assistant"
     val content: String,
     val timestamp: Long,
-    val type: String = "text",
-    @SerializedName("voice_metadata")
-    val voiceMetadata: VoiceMetadata? = null
+    val type: String = "text"
 )
 
 // Voice Metadata

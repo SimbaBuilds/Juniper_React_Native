@@ -120,20 +120,11 @@ class ConversationSyncModule(reactContext: ReactApplicationContext) : ReactConte
             for (i in 0 until historyArray.size()) {
                 val historyItem = historyArray.getMap(i)
                 
-                val voiceMetadata = historyItem.getMap("voiceMetadata")?.let { metadata ->
-                    VoiceMetadata(
-                        deepgramEnabled = metadata.getBoolean("deepgramEnabled"),
-                        voiceUsed = metadata.getString("voiceUsed") ?: "aura-2-pandora-en",
-                        ttsProvider = metadata.getString("ttsProvider") ?: "system"
-                    )
-                }
-                
                 val message = HistoryMessage(
                     role = historyItem.getString("role") ?: "user",
                     content = historyItem.getString("content") ?: "",
                     timestamp = historyItem.getDouble("timestamp").toLong(),
-                    type = historyItem.getString("type") ?: "text",
-                    voiceMetadata = voiceMetadata
+                    type = historyItem.getString("type") ?: "text"
                 )
                 
                 history.add(message)
