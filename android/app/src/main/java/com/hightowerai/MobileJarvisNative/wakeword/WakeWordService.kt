@@ -913,7 +913,7 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
             val autoResumeJob = serviceScope.launch {
                 try {
                     Log.i(TAG, "⏸️ PAUSE_RESUME: 🕐 Starting 30 second auto-resume timer (coroutine: ${coroutineContext[Job]})")
-                    delay(0.5 * 60 * 1000L) // 30 seconds
+                    delay((0.5 * 60 * 1000).toLong()) // 30 seconds
                     if (isPaused) {
                         Log.w(TAG, "⏸️ PAUSE_RESUME: ⚠️ Auto-resume triggered after 30 seconds")
                         resumeWakeWordDetectionFromPaused()

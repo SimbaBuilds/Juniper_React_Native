@@ -29,7 +29,7 @@ object Constants {
         const val SERVER_API_BASE_URL = "server_api_base_url"
         const val SERVER_API_ENDPOINT = "server_api_endpoint"
         
-        // Speech recognition config keys
+        // Speech recognition config keys - ALL UNUSED
         const val SPEECH_RECOGNITION_MINIMUM_LENGTH_MS = "speech_recognition_minimum_length_ms"
         const val SPEECH_RECOGNITION_COMPLETE_SILENCE_MS = "speech_recognition_complete_silence_ms"
         const val SPEECH_RECOGNITION_POSSIBLE_SILENCE_MS = "speech_recognition_possible_silence_ms"
