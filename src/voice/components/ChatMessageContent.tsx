@@ -15,7 +15,7 @@ export const ChatMessageContent: React.FC<ChatMessageContentProps> = ({ message 
   const [imageLoadError, setImageLoadError] = useState(false);
 
   const hasImage = !!message.imageUrl;
-  const hasText = !!message.content.trim();
+  const hasText = !!message.content?.trim();
 
   const handleImagePress = () => {
     console.log('🔄 ChatMessageContent: Image pressed', { 

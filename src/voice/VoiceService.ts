@@ -64,7 +64,9 @@ export class VoiceService {
     private cachedVoiceState: VoiceState = VoiceState.IDLE;
 
     private constructor() {
-        this.eventEmitter = VoiceModule ? new NativeEventEmitter(VoiceModule) : null;
+        this.eventEmitter = (VoiceModule && VoiceModule.addListener && VoiceModule.removeListeners) 
+            ? new NativeEventEmitter(VoiceModule) 
+            : null;
         this.listeners = [];
     }
 

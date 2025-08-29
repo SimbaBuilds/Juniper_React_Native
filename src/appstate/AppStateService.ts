@@ -1,4 +1,4 @@
-import { NativeModules, NativeEventEmitter, AppState as RNAppState } from 'react-native';
+import { NativeModules, NativeEventEmitter, AppState as RNAppState, Platform } from 'react-native';
 
 interface AppStateModule {
   getCurrentAppState(): Promise<{ currentState: string; isInForeground: boolean }>;
@@ -24,14 +24,21 @@ class AppStateService {
   private listeners: Set<(state: string) => void> = new Set();
 
   private constructor() {
-    this.appStateModule = NativeModules.AppStateModule;
-    this.eventEmitter = new NativeEventEmitter(NativeModules.AppStateModule);
-    
-    if (!this.appStateModule) {
-      console.warn('[AppStateService] Native AppStateModule not available');
+    if (Platform.OS === 'android') {
+      this.appStateModule = NativeModules.AppStateModule;
+      const module = NativeModules.AppStateModule;
+      this.eventEmitter = (module && module.addListener && module.removeListeners) 
+        ? new NativeEventEmitter(module) 
+        : new NativeEventEmitter();
+      
+      if (!this.appStateModule) {
+        console.warn('[AppStateService] Native AppStateModule not available');
+      }
+      
+      this.setupEventListeners();
+    } else {
+      console.log('[AppStateService] iOS platform - using React Native AppState only');
     }
-    
-    this.setupEventListeners();
   }
 
   static getInstance(): AppStateService {
@@ -45,6 +52,10 @@ class AppStateService {
    * Setup event listeners for native app state changes
    */
   private setupEventListeners(): void {
+    if (Platform.OS !== 'android') {
+      return;
+    }
+
     if (!this.eventEmitter) {
       console.warn('[AppStateService] Event emitter not available');
       return;
@@ -75,9 +86,12 @@ class AppStateService {
    * Get current app state from native layer
    */
   async getCurrentAppState(): Promise<{ currentState: string; isInForeground: boolean } | null> {
-    if (!this.appStateModule) {
-      console.warn('[AppStateService] Native module not available');
-      return null;
+    if (Platform.OS !== 'android' || !this.appStateModule) {
+      console.warn('[AppStateService] Native module not available or not on Android');
+      return {
+        currentState: RNAppState.currentState,
+        isInForeground: RNAppState.currentState === 'active'
+      };
     }
 
     try {
@@ -86,7 +100,10 @@ class AppStateService {
       return result;
     } catch (error) {
       console.error('[AppStateService] Error getting current app state:', error);
-      return null;
+      return {
+        currentState: RNAppState.currentState,
+        isInForeground: RNAppState.currentState === 'active'
+      };
     }
   }
 
@@ -94,8 +111,8 @@ class AppStateService {
    * Bring app to foreground using native functionality
    */
   async bringToForeground(): Promise<boolean> {
-    if (!this.appStateModule) {
-      console.warn('[AppStateService] Native module not available');
+    if (Platform.OS !== 'android' || !this.appStateModule) {
+      console.warn('[AppStateService] Native module not available or not on Android - bring to foreground not supported');
       return false;
     }
 

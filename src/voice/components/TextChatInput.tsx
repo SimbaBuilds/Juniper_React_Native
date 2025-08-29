@@ -26,7 +26,7 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const handleSend = async () => {
-    const trimmedMessage = message.trim();
+    const trimmedMessage = message?.trim() || '';
     console.log('🔄 TextChatInput: handleSend called', {
       hasMessage: !!trimmedMessage,
       hasImage: !!selectedImage,
@@ -257,7 +257,7 @@ export const TextChatInput: React.FC<TextChatInputProps> = ({
     console.log('✅ TextChatInput: Image removed');
   };
 
-  const isDisabled = disabled || isSending || (!message.trim() && !selectedImage);
+  const isDisabled = disabled || isSending || (!message?.trim() && !selectedImage);
 
   return (
     <View style={styles.container}>

@@ -6,9 +6,16 @@ const { ConversationSyncModule } = NativeModules;
 interface BackgroundConversation {
   id: string;
   userMessage: string;
-  assistantMessage: string;
-  timestamp: number;
-  processed: boolean;
+  assistantResponse: string;
+  userTimestamp: number;
+  responseTimestamp: number;
+  synced: boolean;
+  voiceMetadata?: {
+    deepgramEnabled: boolean;
+    voiceUsed: string;
+    ttsProvider: string;
+  };
+  error?: string;
 }
 
 class ConversationSyncService {
@@ -43,7 +50,7 @@ class ConversationSyncService {
       const nativeHistory = history.map(msg => ({
         role: msg.role,
         content: msg.content,
-        timestamp: msg.timestamp
+        timestamp: isNaN(msg.timestamp) ? Date.now() : msg.timestamp
       }));
 
       await ConversationSyncModule.syncHistoryFromReactNative(nativeHistory);
@@ -97,19 +104,38 @@ class ConversationSyncService {
     const backgroundMessages: ChatMessage[] = [];
     
     backgroundConversations.forEach(conv => {
-      backgroundMessages.push({
-        role: 'user',
-        content: conv.userMessage,
-        timestamp: conv.timestamp,
-        type: 'text'
+      // Normalize timestamps - if they look like seconds (< 10 billion), convert to milliseconds
+      const normalizeTimestamp = (ts: number) => {
+        return ts < 10000000000 ? ts * 1000 : ts;
+      };
+      
+      const userTimestamp = normalizeTimestamp(conv.userTimestamp);
+      const responseTimestamp = normalizeTimestamp(conv.responseTimestamp);
+      
+      console.log(`[ConversationSyncService] Processing background conversation:`, {
+        userMessage: conv.userMessage,
+        assistantResponse: conv.assistantResponse,
+        userTimestamp: userTimestamp,
+        responseTimestamp: responseTimestamp,
+        originalUserTs: conv.userTimestamp,
+        originalResponseTs: conv.responseTimestamp
       });
       
       backgroundMessages.push({
-        role: 'assistant', 
-        content: conv.assistantMessage,
-        timestamp: conv.timestamp + 1,
-        type: 'text'
+        role: 'user',
+        content: conv.userMessage,
+        timestamp: userTimestamp
       });
+      
+      if (conv.assistantResponse && conv.assistantResponse.trim()) {
+        backgroundMessages.push({
+          role: 'assistant', 
+          content: conv.assistantResponse,
+          timestamp: responseTimestamp
+        });
+      } else {
+        console.warn(`[ConversationSyncService] Skipping empty assistant response for user timestamp ${userTimestamp}`);
+      }
     });
 
     const allMessages = [...currentHistory, ...backgroundMessages];
@@ -117,6 +143,10 @@ class ConversationSyncService {
     allMessages.sort((a, b) => a.timestamp - b.timestamp);
     
     console.log(`✅ [ConversationSyncService] Merged history: ${currentHistory.length} existing + ${backgroundMessages.length} background = ${allMessages.length} total`);
+    console.log('[ConversationSyncService] Final sorted message order:');
+    allMessages.forEach((msg, index) => {
+      console.log(`  ${index + 1}. [${msg.role}] ${msg.content.substring(0, 50)}... (ts: ${msg.timestamp})`);
+    });
     
     return allMessages;
   }
