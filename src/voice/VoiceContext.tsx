@@ -14,6 +14,7 @@ import { DEFAULT_WAKE_PHRASE } from '../wakeword/constants';
 import requestMapping from '../utils/requestMapping';
 import Storage from '../utils/storage';
 import AppStateService from '../appstate/AppStateService';
+import conversationSyncService from '../services/conversationSyncService';
 
 const { VoiceModule } = NativeModules;
 
@@ -167,6 +168,15 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       } catch (error) {
         console.error('❌ Auto-refresh: Error saving conversation:', error);
         // Continue with clearing even if save fails
+      }
+      
+      // Clear native conversation history
+      try {
+        console.log('🧹 AUTO_REFRESH: Clearing native conversation history...');
+        await conversationSyncService.clearNativeHistory();
+        console.log('🧹 AUTO_REFRESH: ✅ Native conversation history cleared');
+      } catch (error) {
+        console.warn('🧹 AUTO_REFRESH: ⚠️ Failed to clear native conversation history:', error);
       }
       
       // Clear chat history
@@ -354,6 +364,51 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
   }, [user?.id, refreshSettings]);
 
+  // Check for background conversations on app load
+  const checkAndMergeBackgroundConversations = useCallback(async () => {
+    try {
+      console.log('🔄 CONVERSATION_SYNC: Checking for background conversations...');
+      const backgroundConversations = await conversationSyncService.getBackgroundConversations();
+      
+      if (backgroundConversations.length > 0) {
+        console.log(`📱 CONVERSATION_SYNC: Found ${backgroundConversations.length} background conversations, merging...`);
+        
+        setChatHistory(currentHistory => {
+          const mergedHistory = conversationSyncService.mergeBackgroundHistory(currentHistory, backgroundConversations);
+          
+          // Mark conversations as synced
+          const conversationIds = backgroundConversations.map(conv => conv.id);
+          conversationSyncService.markConversationsAsSynced(conversationIds);
+          
+          return mergedHistory;
+        });
+        
+        console.log('✅ CONVERSATION_SYNC: Background conversations merged successfully');
+      } else {
+        console.log('📱 CONVERSATION_SYNC: No background conversations found');
+      }
+    } catch (error) {
+      console.error('❌ CONVERSATION_SYNC: Error checking background conversations:', error);
+    }
+  }, []);
+
+  // Sync current history to native
+  const syncCurrentHistoryToNative = useCallback(async () => {
+    try {
+      await conversationSyncService.syncHistoryToNative(chatHistory);
+    } catch (error) {
+      console.error('❌ CONVERSATION_SYNC: Error syncing history to native:', error);
+    }
+  }, [chatHistory]);
+
+  // Check for background conversations on app load
+  useEffect(() => {
+    if (user?.id) {
+      console.log('🔄 CONVERSATION_SYNC: User loaded, checking for background conversations...');
+      checkAndMergeBackgroundConversations();
+    }
+  }, [user?.id, checkAndMergeBackgroundConversations]);
+
   // Set up event listeners once
   useEffect(() => {
     if (listenersSetupRef.current) return;
@@ -486,6 +541,19 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               // Send response back to native for TTS (only in voice mode)
               await voiceService.handleApiResponse(requestId, response.response);
               
+              // Sync updated history to native after API response
+              try {
+                const updatedHistoryAfterResponse = [...updatedHistory, {
+                  role: 'assistant' as const,
+                  content: response.response,
+                  timestamp: Date.now()
+                }];
+                await conversationSyncService.syncHistoryToNative(updatedHistoryAfterResponse);
+                console.log('✅ VOICE_BRIDGE: History synced to native after API response');
+              } catch (syncError) {
+                console.warn('⚠️ VOICE_BRIDGE: Failed to sync history to native:', syncError);
+              }
+              
               // Clean up request mapping since request completed successfully
               if (currentRequestId) {
                 requestMapping.removeMapping(currentRequestId);
@@ -559,13 +627,27 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     const appStateService = AppStateService.getInstance();
     
     // Listen for app state changes from native layer
-    const appStateListener = appStateService.addListener((state: string) => {
+    const appStateListener = appStateService.addListener(async (state: string) => {
       console.log('📱 VOICE_CONTEXT: App state changed to:', state);
       
       // Log synchronization status
       const rnState = AppState.currentState;
       if (rnState !== state) {
         console.log(`📱 VOICE_CONTEXT: State sync - Native: ${state}, RN: ${rnState}`);
+      }
+      
+      // Handle conversation sync on state transitions
+      try {
+        if (state === 'active') {
+          console.log('📱 CONVERSATION_SYNC: App became active - checking background conversations and syncing current history');
+          await checkAndMergeBackgroundConversations();
+          await syncCurrentHistoryToNative();
+        } else if (state === 'background') {
+          console.log('📱 CONVERSATION_SYNC: App going to background - syncing current history to native');
+          await syncCurrentHistoryToNative();
+        }
+      } catch (error) {
+        console.error('❌ CONVERSATION_SYNC: Error handling app state transition:', error);
       }
     });
     
@@ -657,17 +739,6 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const clearChatHistory = useCallback(async () => {
     console.log('🗑️ Clearing chat history (manual)');
     
-    // Clear native state to ensure clean slate
-    if (Platform.OS === 'android' && VoiceModule?.clearNativeState) {
-      try {
-        console.log('🧹 CLEAR_CHAT: Clearing native state...');
-        await VoiceModule.clearNativeState(null);
-        console.log('🧹 CLEAR_CHAT: ✅ Native state cleared');
-      } catch (nativeError) {
-        console.warn('🧹 CLEAR_CHAT: ⚠️ Failed to clear native state:', nativeError);
-      }
-    }
-    
     // Save conversation to Supabase before clearing if there are messages
     if (chatHistory.length > 0) {
       try {
@@ -679,6 +750,26 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       } catch (error) {
         console.error('❌ Error saving conversation:', error);
         // Continue with clearing even if save fails
+      }
+    }
+    
+    // Clear native conversation history
+    try {
+      console.log('🧹 CLEAR_CHAT: Clearing native conversation history...');
+      await conversationSyncService.clearNativeHistory();
+      console.log('🧹 CLEAR_CHAT: ✅ Native conversation history cleared');
+    } catch (error) {
+      console.warn('🧹 CLEAR_CHAT: ⚠️ Failed to clear native conversation history:', error);
+    }
+    
+    // Clear native voice state to ensure clean slate
+    if (Platform.OS === 'android' && VoiceModule?.clearNativeState) {
+      try {
+        console.log('🧹 CLEAR_CHAT: Clearing native voice state...');
+        await VoiceModule.clearNativeState(null);
+        console.log('🧹 CLEAR_CHAT: ✅ Native voice state cleared');
+      } catch (nativeError) {
+        console.warn('🧹 CLEAR_CHAT: ⚠️ Failed to clear native voice state:', nativeError);
       }
     }
     
@@ -835,7 +926,21 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               timestamp: Date.now()
             };
             
-            setChatHistory(prevHistory => [...prevHistory, assistantMessage]);
+            setChatHistory(prevHistory => {
+              const updatedHistoryWithResponse = [...prevHistory, assistantMessage];
+              
+              // Sync updated history to native after API response
+              setTimeout(async () => {
+                try {
+                  await conversationSyncService.syncHistoryToNative(updatedHistoryWithResponse);
+                  console.log('✅ TEXT_INPUT: History synced to native after API response');
+                } catch (syncError) {
+                  console.warn('⚠️ TEXT_INPUT: Failed to sync history to native:', syncError);
+                }
+              }, 0);
+              
+              return updatedHistoryWithResponse;
+            });
             
             // Note: No TTS playback because we're in text mode
             console.log('📝 TEXT_INPUT: Response added to chat (no TTS in text mode)');
