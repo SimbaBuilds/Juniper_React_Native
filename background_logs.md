@@ -1,368 +1,311 @@
-08-28 13:27:02.835 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 8ms
-08-28 13:27:02.842 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-39.768478, max=39.073078, avg=1.833525, nonZero=96/96
-08-28 13:27:02.844 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:02.845 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 31ms
-08-28 13:27:02.851 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:02.851 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:02.965 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.006591797), applying 10.0x gain
-08-28 13:27:02.972 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.06591797
-08-28 13:27:02.974 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:02.975 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.065918, max=0.051880, avg=-0.005521, nonZero=23845/24000
-08-28 13:27:02.985 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 10ms
-08-28 13:27:02.987 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-3.545351, max=1.462567, avg=-1.766207, nonZero=4704/4704
-08-28 13:27:03.013 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 26ms
-08-28 13:27:03.014 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-43.091103, max=41.301842, avg=1.997543, nonZero=96/96
-08-28 13:27:03.016 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:03.017 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 42ms
-08-28 13:27:03.020 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:03.020 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:03.138 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.006591797), applying 10.0x gain
-08-28 13:27:03.140 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.06591797
-08-28 13:27:03.142 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:03.143 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.065918, max=0.051880, avg=-0.005552, nonZero=23848/24000
-08-28 13:27:03.156 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 13ms
-08-28 13:27:03.162 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-3.545351, max=1.462567, avg=-1.766473, nonZero=4704/4704
-08-28 13:27:03.174 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 11ms
-08-28 13:27:03.175 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-41.887058, max=40.576138, avg=2.195024, nonZero=96/96
-08-28 13:27:03.176 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:03.177 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 35ms
-08-28 13:27:03.179 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:03.180 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:03.280 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.006591797), applying 10.0x gain
-08-28 13:27:03.329 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.06591797
-08-28 13:27:03.331 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:03.332 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.065918, max=0.051880, avg=-0.005589, nonZero=23847/24000
-08-28 13:27:03.336 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 4ms
-08-28 13:27:03.338 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-3.544736, max=1.462567, avg=-1.763455, nonZero=4704/4704
-08-28 13:27:03.359 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 21ms
-08-28 13:27:03.360 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-42.690063, max=43.864063, avg=1.873239, nonZero=96/96
-08-28 13:27:03.362 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:03.363 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 31ms
-08-28 13:27:03.365 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:03.365 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:03.477 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.006591797), applying 10.0x gain
-08-28 13:27:03.479 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.06591797
-08-28 13:27:03.481 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:03.482 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.065918, max=0.051880, avg=-0.005596, nonZero=23851/24000
-08-28 13:27:03.501 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 17ms
-08-28 13:27:03.506 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-3.539436, max=1.462567, avg=-1.755998, nonZero=4704/4704
-08-28 13:27:03.524 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 18ms
-08-28 13:27:03.525 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-42.535942, max=45.457302, avg=2.146345, nonZero=96/96
-08-28 13:27:03.527 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:03.528 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 45ms
-08-28 13:27:03.532 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:03.532 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:03.689 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.006591797), applying 10.0x gain
-08-28 13:27:03.691 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.06591797
-08-28 13:27:03.693 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:03.693 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.065918, max=0.051880, avg=-0.005535, nonZero=23855/24000
-08-28 13:27:03.698 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 4ms
-08-28 13:27:03.704 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-3.539436, max=1.462567, avg=-1.745317, nonZero=4704/4704
-08-28 13:27:03.710 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 5ms
-08-28 13:27:03.711 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-41.740089, max=44.659679, avg=2.554003, nonZero=96/96
-08-28 13:27:03.716 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:03.716 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 23ms
-08-28 13:27:03.717 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:03.717 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:03.822 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.006591797), applying 10.0x gain
-08-28 13:27:03.824 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.06591797
-08-28 13:27:03.827 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:03.827 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.065918, max=0.051880, avg=-0.005615, nonZero=23861/24000
-08-28 13:27:03.843 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 14ms
-08-28 13:27:03.847 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-3.524711, max=1.462567, avg=-1.746286, nonZero=4704/4704
-08-28 13:27:03.857 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 9ms
-08-28 13:27:03.858 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-39.931896, max=42.940414, avg=2.344321, nonZero=96/96
-08-28 13:27:03.860 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:03.861 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 33ms
-08-28 13:27:03.863 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:03.864 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:04.029 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.006591797), applying 10.0x gain
-08-28 13:27:04.031 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.06591797
-08-28 13:27:04.036 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:04.037 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.065918, max=0.051880, avg=-0.005465, nonZero=23860/24000
-08-28 13:27:04.042 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 4ms
-08-28 13:27:04.060 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-3.524711, max=1.462567, avg=-1.745668, nonZero=4704/4704
-08-28 13:27:04.080 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 18ms
-08-28 13:27:04.081 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-39.359894, max=40.987080, avg=2.066792, nonZero=96/96
-08-28 13:27:04.082 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:04.083 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 47ms
-08-28 13:27:04.085 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:04.085 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:04.188 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.006591797), applying 10.0x gain
-08-28 13:27:04.191 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.06591797
-08-28 13:27:04.192 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:04.193 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.065918, max=0.051880, avg=-0.005559, nonZero=23859/24000
-08-28 13:27:04.207 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 12ms
-08-28 13:27:04.209 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-3.648088, max=1.462567, avg=-1.746902, nonZero=4704/4704
-08-28 13:27:04.225 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 16ms
-08-28 13:27:04.226 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-38.946831, max=42.446766, avg=1.869901, nonZero=96/96
-08-28 13:27:04.228 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:04.229 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 36ms
-08-28 13:27:04.232 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:04.232 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:04.352 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.006591797), applying 10.0x gain
-08-28 13:27:04.355 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.06591797
-08-28 13:27:04.356 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:04.356 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.065918, max=0.051880, avg=-0.005515, nonZero=23856/24000
-08-28 13:27:04.371 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 14ms
-08-28 13:27:04.373 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-3.648088, max=1.462567, avg=-1.744084, nonZero=4704/4704
-08-28 13:27:04.389 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 16ms
-08-28 13:27:04.390 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-39.930527, max=41.234451, avg=1.867021, nonZero=96/96
-08-28 13:27:04.390 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:04.390 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 34ms
-08-28 13:27:04.395 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:04.395 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:04.571 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.006591797), applying 10.0x gain
-08-28 13:27:04.577 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.06591797
-08-28 13:27:04.579 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:04.580 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.065918, max=0.051880, avg=-0.005515, nonZero=23861/24000
-08-28 13:27:04.586 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 5ms
-08-28 13:27:04.587 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-3.648088, max=1.462567, avg=-1.742261, nonZero=4704/4704
-08-28 13:27:04.603 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 11ms
-08-28 13:27:04.605 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-39.762993, max=40.789413, avg=1.867431, nonZero=96/96
-08-28 13:27:04.606 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:04.607 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 28ms
-08-28 13:27:04.610 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:04.611 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:04.712 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.006591797), applying 10.0x gain
-08-28 13:27:04.714 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.06591797
-08-28 13:27:04.715 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:04.718 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.065918, max=0.051880, avg=-0.005459, nonZero=23864/24000
-08-28 13:27:04.727 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 7ms
-08-28 13:27:04.735 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-3.648088, max=1.462567, avg=-1.738578, nonZero=4704/4704
-08-28 13:27:04.756 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 21ms
-08-28 13:27:04.757 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-41.100754, max=40.715111, avg=1.937729, nonZero=96/96
-08-28 13:27:04.758 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:04.758 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 43ms
-08-28 13:27:04.759 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:04.759 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:04.895 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.006591797), applying 10.0x gain
-08-28 13:27:04.901 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.06591797
-08-28 13:27:04.903 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:04.904 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.065918, max=0.043640, avg=-0.005428, nonZero=23866/24000
-08-28 13:27:04.909 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 4ms
-08-28 13:27:04.911 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-3.648088, max=1.462567, avg=-1.753204, nonZero=4704/4704
-08-28 13:27:04.935 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 19ms
-08-28 13:27:04.936 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-41.172020, max=42.890869, avg=1.913668, nonZero=96/96
-08-28 13:27:04.938 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:04.938 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 35ms
-08-28 13:27:04.944 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:04.944 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:05.096 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.006591797), applying 10.0x gain
-08-28 13:27:05.105 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.06591797
-08-28 13:27:05.107 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:05.108 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.065918, max=0.043640, avg=-0.005441, nonZero=23866/24000
-08-28 13:27:05.113 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 5ms
-08-28 13:27:05.123 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-3.648088, max=1.462567, avg=-1.756858, nonZero=4704/4704
-08-28 13:27:05.130 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 6ms
-08-28 13:27:05.130 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-42.230827, max=42.827759, avg=1.752085, nonZero=96/96
-08-28 13:27:05.131 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:05.131 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 24ms
-08-28 13:27:05.136 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:05.136 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:05.235 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.029266357), applying 10.0x gain
-08-28 13:27:05.238 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.29266357
-08-28 13:27:05.239 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:05.240 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.287476, max=0.292664, avg=-0.005523, nonZero=23871/24000
-08-28 13:27:05.263 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 23ms
-08-28 13:27:05.269 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-3.648088, max=1.996818, avg=-1.727688, nonZero=4704/4704
-08-28 13:27:05.291 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 22ms
-08-28 13:27:05.291 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-42.103329, max=42.637047, avg=1.972028, nonZero=96/96
-08-28 13:27:05.296 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:05.297 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 57ms
-08-28 13:27:05.299 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:05.299 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:05.474 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.06942749), applying 5.0412307x gain
-08-28 13:27:05.476 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:05.477 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:05.478 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.235385, max=0.350000, avg=-0.002774, nonZero=23877/24000
-08-28 13:27:05.497 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 19ms
-08-28 13:27:05.504 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.243016, max=2.246353, avg=-2.207667, nonZero=4704/4704
-08-28 13:27:05.515 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 11ms
-08-28 13:27:05.516 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-43.501549, max=42.100143, avg=2.082558, nonZero=96/96
-08-28 13:27:05.518 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:05.518 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 41ms
-08-28 13:27:05.524 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:05.524 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:05.668 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:05.670 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:05.671 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:05.672 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002557, nonZero=23883/24000
-08-28 13:27:05.677 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 5ms
-08-28 13:27:05.678 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.285485, max=2.676118, avg=-2.138767, nonZero=4704/4704
-08-28 13:27:05.689 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 11ms
-08-28 13:27:05.689 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-44.472878, max=43.490101, avg=2.126946, nonZero=96/96
-08-28 13:27:05.690 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:05.690 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 19ms
-08-28 13:27:05.695 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:05.695 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:05.812 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:05.815 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:05.815 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:05.817 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002543, nonZero=23886/24000
-08-28 13:27:05.833 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 16ms
-08-28 13:27:05.839 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.285485, max=2.676118, avg=-2.060566, nonZero=4704/4704
-08-28 13:27:05.852 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 12ms
-08-28 13:27:05.853 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-41.665298, max=42.675732, avg=2.146810, nonZero=96/96
-08-28 13:27:05.854 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:05.855 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 40ms
-08-28 13:27:05.857 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:05.857 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:06.019 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:06.021 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:06.023 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:06.024 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002536, nonZero=23889/24000
-08-28 13:27:06.029 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 4ms
-08-28 13:27:06.031 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.285485, max=2.676118, avg=-2.042266, nonZero=4704/4704
-08-28 13:27:06.046 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 15ms
-08-28 13:27:06.047 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-41.666996, max=44.056358, avg=2.080752, nonZero=96/96
-08-28 13:27:06.049 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:06.049 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 26ms
-08-28 13:27:06.053 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:06.054 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:06.195 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:06.197 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:06.199 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:06.200 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002507, nonZero=23886/24000
-08-28 13:27:06.218 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 18ms
-08-28 13:27:06.220 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.285485, max=2.676118, avg=-2.040865, nonZero=4704/4704
-08-28 13:27:06.242 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 22ms
-08-28 13:27:06.243 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-39.182308, max=41.688160, avg=2.141880, nonZero=96/96
-08-28 13:27:06.245 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:06.246 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 47ms
-08-28 13:27:06.251 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:06.252 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:06.354 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:06.359 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:06.361 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:06.362 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002502, nonZero=23885/24000
-08-28 13:27:06.367 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 5ms
-08-28 13:27:06.373 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.285485, max=2.676118, avg=-2.039319, nonZero=4704/4704
-08-28 13:27:06.394 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 20ms
-08-28 13:27:06.395 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-40.496452, max=43.365852, avg=2.181439, nonZero=96/96
-08-28 13:27:06.396 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:06.397 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 35ms
-08-28 13:27:06.397 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:06.398 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:06.488 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:06.490 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:06.491 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:06.492 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002480, nonZero=23887/24000
-08-28 13:27:06.506 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 14ms
-08-28 13:27:06.516 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.285485, max=2.676118, avg=-2.039749, nonZero=4704/4704
-08-28 13:27:06.529 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 13ms
-08-28 13:27:06.530 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-40.984570, max=42.478477, avg=2.142392, nonZero=96/96
-08-28 13:27:06.530 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:06.530 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 39ms
-08-28 13:27:06.535 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:06.536 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:06.710 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:06.716 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:06.718 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:06.719 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002475, nonZero=23886/24000
-08-28 13:27:06.724 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 4ms
-08-28 13:27:06.731 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.285485, max=2.676118, avg=-2.045668, nonZero=4704/4704
-08-28 13:27:06.742 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 11ms
-08-28 13:27:06.742 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-40.569000, max=41.154160, avg=2.018894, nonZero=96/96
-08-28 13:27:06.743 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:06.743 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 25ms
-08-28 13:27:06.744 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:06.744 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:06.894 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:06.900 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:06.902 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:06.903 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002478, nonZero=23872/24000
-08-28 13:27:06.918 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 15ms
-08-28 13:27:06.923 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.285485, max=2.676118, avg=-2.061950, nonZero=4704/4704
-08-28 13:27:06.929 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 6ms
-08-28 13:27:06.930 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-42.313995, max=50.676952, avg=1.652866, nonZero=96/96
-08-28 13:27:06.930 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:06.930 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 28ms
-08-28 13:27:06.936 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:06.936 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:07.045 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:07.047 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:07.049 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:07.049 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002493, nonZero=23866/24000
-08-28 13:27:07.056 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 6ms
-08-28 13:27:07.063 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.285485, max=2.676118, avg=-2.061487, nonZero=4704/4704
-08-28 13:27:07.075 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 11ms
-08-28 13:27:07.077 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-36.660389, max=59.384838, avg=1.185937, nonZero=96/96
-08-28 13:27:07.079 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:07.080 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 30ms
-08-28 13:27:07.082 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:07.082 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:07.241 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:07.244 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:07.245 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:07.246 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002482, nonZero=23853/24000
-08-28 13:27:07.256 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 10ms
-08-28 13:27:07.262 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.285485, max=2.676118, avg=-2.061108, nonZero=4704/4704
-08-28 13:27:07.273 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 10ms
-08-28 13:27:07.273 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-40.462456, max=60.178776, avg=0.760971, nonZero=96/96
-08-28 13:27:07.274 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:07.274 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 29ms
-08-28 13:27:07.283 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:07.283 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:07.397 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:07.403 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:07.406 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:07.411 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002509, nonZero=23844/24000
-08-28 13:27:07.423 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 10ms
-08-28 13:27:07.430 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.285485, max=2.676118, avg=-2.062023, nonZero=4704/4704
-08-28 13:27:07.450 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 20ms
-08-28 13:27:07.451 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-47.647511, max=60.611588, avg=-0.108733, nonZero=96/96
-08-28 13:27:07.452 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:07.452 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 45ms
-08-28 13:27:07.453 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:07.453 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:07.545 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:07.551 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:07.553 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:07.554 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002532, nonZero=23842/24000
-08-28 13:27:07.559 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 5ms
-08-28 13:27:07.568 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.181118, max=2.676118, avg=-2.060551, nonZero=4704/4704
-08-28 13:27:07.580 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 10ms
-08-28 13:27:07.581 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-33.750019, max=46.787968, avg=-0.407600, nonZero=96/96
-08-28 13:27:07.582 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:07.583 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 30ms
-08-28 13:27:07.588 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:07.588 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:07.754 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:07.760 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:07.762 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:07.763 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002552, nonZero=23846/24000
-08-28 13:27:07.778 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 14ms
-08-28 13:27:07.784 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.181118, max=2.676118, avg=-2.054878, nonZero=4704/4704
-08-28 13:27:07.802 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 18ms
-08-28 13:27:07.804 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-30.533817, max=49.709679, avg=1.500198, nonZero=96/96
-08-28 13:27:07.806 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:07.806 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 44ms
-08-28 13:27:07.810 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:07.811 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:07.980 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:07.982 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:07.984 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:07.984 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002543, nonZero=23840/24000
-08-28 13:27:08.004 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 19ms
-08-28 13:27:08.006 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.181118, max=2.676118, avg=-2.054283, nonZero=4704/4704
-08-28 13:27:08.023 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 17ms
-08-28 13:27:08.025 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-31.172373, max=40.549465, avg=1.340941, nonZero=96/96
-08-28 13:27:08.026 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 0ms
-08-28 13:27:08.027 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 43ms
-08-28 13:27:08.029 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:08.030 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-08-28 13:27:08.152 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: Low audio detected (range: 0.072906494), applying 4.8006697x gain
-08-28 13:27:08.154 17937 18675 D OpenWakeWordEngine: 🔊 AUDIO_BOOST: After gain - new range: 0.35
-08-28 13:27:08.159 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Acquired CPU wake lock for ML inference
-08-28 13:27:08.160 17937 18675 D OpenWakeWordEngine: 🔍 AUDIO_INPUT: min=-0.305756, max=0.350000, avg=-0.002556, nonZero=23839/24000
-08-28 13:27:08.181 17937 18675 D OpenWakeWordEngine: 🎯 MEL_INFERENCE: Mel spectrogram inference completed in 19ms
-08-28 13:27:08.188 17937 18675 D OpenWakeWordEngine: 🔍 MEL_OUTPUT: min=-4.1818, max=2.676118, avg=-2.057524, nonZero=4704/4704
-08-28 13:27:08.202 17937 18675 D OpenWakeWordEngine: 🎯 EMBED_INFERENCE: Embedding inference completed in 13ms
-08-28 13:27:08.204 17937 18675 D OpenWakeWordEngine: 🔍 EMBED_OUTPUT: min=-32.605598, max=40.608906, avg=0.923390, nonZero=96/96
-08-28 13:27:08.206 17937 18675 D OpenWakeWordEngine: 🎯 CLASSIFY_INFERENCE: ONNX inference completed successfully in 1ms
-08-28 13:27:08.206 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_RESULT: Confidence=0.001 (model: juniper) - Total pipeline: 47ms
-08-28 13:27:08.209 17937 18675 D OpenWakeWordEngine: 🔋 WAKE_LOCK: Released CPU wake lock after ML inference
-08-28 13:27:08.209 17937 18675 D OpenWakeWordEngine: 🎯 PREDICTION_ATTEMPT: Processing audio chunk (1280 samples)
-^C
-cameronhightower@Mac Mobile_Jarvis_React_Native % 
+08-29 09:42:45.967 18625 18734 D AppStateModule: 📱 APP_STATE_MODULE: getCurrentAppState called - returning: active
+08-29 09:42:46.519 18625 18625 I AppStateModule: 📱 APP_STATE_MODULE: App state changed to: background
+08-29 09:42:46.519 18625 18625 D AppStateModule: 📡 SEND_EVENT: Attempting to send event 'appStateChanged' to React Native
+08-29 09:42:46.519 18625 18625 D AppStateModule: 📡 SEND_EVENT: ReactApplicationContext available: true
+08-29 09:42:46.520 18625 18625 D AppStateModule: 📡 SEND_EVENT: ✅ Event 'appStateChanged' sent successfully
+08-29 09:42:51.390 18625 18824 I WakeWordService: 🎯 WAKEWORD_TRIGGER: ⚡ WAKE WORD DETECTED! Confidence: 0.2297 (threshold: 0.05)
+08-29 09:42:51.391 18625 18824 I WakeWordService: 🔥 WAKEWORD_USE: ================================================
+08-29 09:42:51.391 18625 18824 I WakeWordService: 🔥 WAKEWORD_USE: *** WAKE WORD 'Juniper' ACTIVATED ***
+08-29 09:42:51.391 18625 18824 I WakeWordService: 🔥 WAKEWORD_USE: Time: 09:42:51.390
+08-29 09:42:51.392 18625 18824 I WakeWordService: 🔥 WAKEWORD_USE: Confidence: 0.22974652
+08-29 09:42:51.392 18625 18824 I WakeWordService: 🔥 WAKEWORD_USE: Threshold: 0.05
+08-29 09:42:51.392 18625 18824 I WakeWordService: 🔥 WAKEWORD_USE: Timestamp: 1756478571390
+08-29 09:42:51.392 18625 18824 I WakeWordService: 🔥 WAKEWORD_USE: ================================================
+08-29 09:42:51.392 18625 18824 I WakeWordService: 📱 BACKGROUND_CHECK: ========== CHECKING APP STATE ==========
+08-29 09:42:51.392 18625 18824 I WakeWordService: 📱 BACKGROUND_CHECK: App currently in foreground: false
+08-29 09:42:51.392 18625 18824 I WakeWordService: 📱 BACKGROUND_CHECK: App is backgrounded - storing event and bringing to foreground
+08-29 09:42:51.617 18625 18824 W WakeWordService: 📱 BACKGROUND_CHECK: ⚠️ Failed to bring app to foreground - sending event anyway
+08-29 09:42:51.617 18625 18824 I WakeWordService: 📡 BROADCAST_SEND: ========== SENDING WAKE WORD BROADCAST ==========
+08-29 09:42:51.617 18625 18824 I WakeWordService: 📡 BROADCAST_SEND: Send timestamp: 1756478571617
+08-29 09:42:51.617 18625 18824 I WakeWordService: 📡 BROADCAST_SEND: Action: com.hightowerai.MobileJarvisNative.WAKE_WORD_DETECTED_RN
+08-29 09:42:51.617 18625 18824 I WakeWordService: 📡 BROADCAST_SEND: Wake word: 'Juniper'
+08-29 09:42:51.617 18625 18824 I WakeWordService: 📡 BROADCAST_SEND: Confidence: 0.22974652
+08-29 09:42:51.618 18625 18824 I WakeWordService: 📡 BROADCAST_SEND: ✅ Broadcast sent successfully
+08-29 09:42:51.618 18625 18824 I WakeWordService: 🔥 WAKEWORD_USE: ✅ Sent wake word detected broadcast to React Native
+08-29 09:42:51.618 18625 18824 I WakeWordService: 📡 BROADCAST_SEND: ====================================================
+08-29 09:42:51.618 18625 18824 I VoiceManager: 📱 VOICE_MANAGER: ========== WAKE WORD PROCESSING ==========
+08-29 09:42:51.618 18625 18824 I VoiceManager: 📱 VOICE_MANAGER: App in foreground: false
+08-29 09:42:51.618 18625 18824 I VoiceManager: 📱 VOICE_MANAGER: Current voice state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@fc293e0
+08-29 09:42:51.618 18625 18824 I VoiceManager: 📱 VOICE_MANAGER: Timestamp: 1756478571618
+08-29 09:42:51.618 18625 18824 I VoiceManager: Wake word detected, stopping wake word detection but keeping listening on...
+08-29 09:42:51.618 18625 18824 D VoiceManager: Voice state transition: IDLE -> WAKE_WORD_DETECTED
+08-29 09:42:51.618 18625 18824 D VoiceManager: Active conversation state (WAKE_WORD_DETECTED), pausing wake word detection
+08-29 09:42:51.618 18625 18824 D TextToSpeechManager: 🎵 TTS QUEUE: Stopping TTS and clearing queue
+08-29 09:42:51.622 18625 18824 D VoiceManager: Sent broadcast to pause wake word detection but keep mic active
+08-29 09:42:51.622 18625 18824 I VoiceManager: Initializing OpenAI Whisper client
+08-29 09:42:51.623 18625 18824 D VoiceManager: Whisper client initialized successfully
+08-29 09:42:51.623 18625 18824 I WakeWordService: 🔥 WAKEWORD_USE: ✅ Notified VoiceManager of wake word detection
+08-29 09:42:51.623 18625 18824 I WakeWordService: 🔥 WAKEWORD_USE: Pausing wake word detection to prevent interruption during voice session
+08-29 09:42:51.623 18625 18824 I WakeWordService: ⏸️ PAUSE_RESUME: ========== PAUSING WAKE WORD DETECTION ==========
+08-29 09:42:51.623 18625 18824 I WakeWordService: ⏸️ PAUSE_RESUME: Timestamp: 1756478571623
+08-29 09:42:51.623 18625 18824 I WakeWordService: ⏸️ PAUSE_RESUME: Reason: Voice session active - releasing mic for speech recognition
+08-29 09:42:51.623 18625 18824 I WakeWordService: ⏸️ PAUSE_RESUME: Stopping recording thread...
+08-29 09:42:51.623 18625 18824 I WakeWordService: ⏸️ PAUSE_RESUME: Stopping and releasing AudioRecord for mic handoff
+08-29 09:42:51.626 18625 18625 D VoiceManager: Deepgram client initialized for future use
+08-29 09:42:51.626 18625 18625 D VoiceManager: Starting speech recognition on main thread after wake word
+08-29 09:42:51.627 18625 18625 D VoiceManager: startListening() called. Attempting to start speech recognition...
+08-29 09:42:51.628 18625 18625 D VoiceManager: Sent broadcast to pause wake word detection during listening
+08-29 09:42:51.628 18625 18625 I VoiceManager: 🎵 SPEECH_RECOGNITION: Requesting HIGH PRIORITY audio focus for speech recognition
+08-29 09:42:51.628 18625 18625 D AudioManager: Requesting audio focus: SPEECH_RECOGNITION (ID: speech_recognition_1756478571628)
+08-29 09:42:51.628 18625 18625 I AudioManager: Higher priority request (SPEECH_RECOGNITION) interrupting current (BACKGROUND_AUDIO)
+08-29 09:42:51.628 18625 18625 I AudioManager: Interrupting current request BACKGROUND_AUDIO (ID: wake_word_detection) for higher priority
+08-29 09:42:51.629 18625 18625 W WakeWordService: 🎵 WAKE_WORD_SETUP: Audio focus LOST for wake word detection
+08-29 09:42:51.629 18625 18625 I AudioManager: Abandoning audio focus: BACKGROUND_AUDIO (ID: wake_word_detection)
+08-29 09:42:51.632 18625 18625 I AudioManager: Audio focus granted: SPEECH_RECOGNITION (ID: speech_recognition_1756478571628)
+08-29 09:42:51.632 18625 18625 I VoiceManager: 🎵 SPEECH_RECOGNITION: HIGH PRIORITY audio focus gained for speech recognition
+08-29 09:42:51.632 18625 18625 I VoiceManager: 🎵 SPEECH_RECOGNITION: HIGH PRIORITY audio focus granted - starting SpeechRecognizer on main thread
+08-29 09:42:51.632 18625 18625 D VoiceManager: Voice state transition: WAKE_WORD_DETECTED -> LISTENING
+08-29 09:42:51.633 18625 18625 D VoiceManager: Active conversation state (LISTENING), pausing wake word detection
+08-29 09:42:51.633 18625 18625 D TextToSpeechManager: 🎵 TTS QUEUE: Stopping TTS and clearing queue
+08-29 09:42:51.633 18625 18625 D VoiceManager: LISTENING state detected but isListening=false, reactivating speech recognizer
+08-29 09:42:51.634 18625 18625 D VoiceManager: Speech recognition parameters: minLength=4000, completeSilence=3500, possibleSilence=2500
+08-29 09:42:51.634 18625 18625 I VoiceManager: Using Android default timing parameters for SpeechRecognizer
+08-29 09:42:51.643 18625 18625 I VoiceManager: SpeechRecognizer started listening.
+08-29 09:42:51.646 18625 18625 I WakeWordService: 🔥 WAKEWORD_USE: ✅ Displayed detection toast to user
+08-29 09:42:51.684 18625 18824 I WakeWordService: ⏸️ PAUSE_RESUME: ✅ AudioRecord released - mic available for speech recognition
+08-29 09:42:51.686 18625 18824 E WakeWordService: ⏸️ PAUSE_RESUME: Error stopping recording thread/AudioRecord: null
+08-29 09:42:51.686 18625 18824 E WakeWordService: java.lang.InterruptedException
+08-29 09:42:51.686 18625 18824 E WakeWordService:       at java.lang.Object.wait(Native Method)
+08-29 09:42:51.686 18625 18824 E WakeWordService:       at java.lang.Object.wait(Object.java:405)
+08-29 09:42:51.686 18625 18824 E WakeWordService:       at java.lang.Thread.join(Thread.java:1643)
+08-29 09:42:51.686 18625 18824 E WakeWordService:       at com.hightowerai.MobileJarvisNative.wakeword.WakeWordService.pauseWakeWordButKeepMicActive(WakeWordService.kt:885)
+08-29 09:42:51.686 18625 18824 E WakeWordService:       at com.hightowerai.MobileJarvisNative.wakeword.WakeWordService.sendWakeWordEvent(WakeWordService.kt:793)
+08-29 09:42:51.686 18625 18824 E WakeWordService:       at com.hightowerai.MobileJarvisNative.wakeword.WakeWordService.onWakeWordDetected(WakeWordService.kt:727)
+08-29 09:42:51.686 18625 18824 E WakeWordService:       at com.hightowerai.MobileJarvisNative.wakeword.WakeWordService.processAudioLoop(WakeWordService.kt:624)
+08-29 09:42:51.686 18625 18824 E WakeWordService:       at com.hightowerai.MobileJarvisNative.wakeword.WakeWordService.setupAudioRecording$lambda$2(WakeWordService.kt:511)
+08-29 09:42:51.686 18625 18824 E WakeWordService:       at com.hightowerai.MobileJarvisNative.wakeword.WakeWordService.$r8$lambda$6ZHPvXDNU07w3NDWY4IQ-Q0EWEs(Unknown Source:0)
+08-29 09:42:51.686 18625 18824 E WakeWordService:       at com.hightowerai.MobileJarvisNative.wakeword.WakeWordService$$ExternalSyntheticLambda7.run(Unknown Source:2)
+08-29 09:42:51.686 18625 18824 E WakeWordService:       at java.lang.Thread.run(Thread.java:1119)
+08-29 09:42:51.686 18625 18824 D WakeWordService: ⏸️ PAUSE_RESUME: No wake word audio focus to release (current: speech_recognition_1756478571628)
+08-29 09:42:51.690 18625 18824 I WakeWordService: ⏸️ PAUSE_RESUME: ✅ Wake word detection paused (mic released for speech recognition)
+08-29 09:42:51.690 18625 18824 I WakeWordService: ⏸️ PAUSE_RESUME: Setting 2-minute auto-resume timer...
+08-29 09:42:51.691 18625 18824 I WakeWordService: ⏸️ PAUSE_RESUME: Auto-resume timer job created: StandaloneCoroutine{Active}@bab9161
+08-29 09:42:51.691 18625 18625 I WakeWordService: ⏸️ PAUSE_RESUME: 🕐 Starting 2-minute auto-resume timer (coroutine: StandaloneCoroutine{Active}@bab9161)
+08-29 09:42:51.691 18625 18824 I WakeWordService: ⏸️ PAUSE_RESUME: ====================================================
+08-29 09:42:51.691 18625 18824 I WakeWordService: 📱 BACKGROUND_CHECK: ================================================
+08-29 09:42:51.691 18625 18824 I WakeWordService: 🎙️ AUDIO_LOOP: Audio processing loop ended (isRunning: false, interrupted: false)
+08-29 09:42:51.698 18625 18625 D AudioManager: dispatching onAudioFocusChange(-2) to android.media.AudioManager@9919338com.hightowerai.MobileJarvisNative.utils.AudioManager$$ExternalSyntheticLambda13@9101be5
+08-29 09:42:51.699 18625 18625 I AudioManager: Transient focus loss for SPEECH_RECOGNITION
+08-29 09:42:51.700 18625 18625 W VoiceManager: 🎵 SPEECH_RECOGNITION: Audio focus lost for speech recognition
+08-29 09:42:51.700 18625 18625 D VoiceManager: 🎵 SPEECH_RECOGNITION: Transient audio focus loss - will wait for recovery
+08-29 09:42:51.734 18625 18625 D VoiceManager: Restarting speech recognition for continuous conversation
+08-29 09:42:51.734 18625 18625 D VoiceManager: startListening() called. Attempting to start speech recognition...
+08-29 09:42:51.736 18625 18625 D VoiceManager: Sent broadcast to pause wake word detection during listening
+08-29 09:42:51.736 18625 18625 I VoiceManager: 🎵 SPEECH_RECOGNITION: Requesting HIGH PRIORITY audio focus for speech recognition
+08-29 09:42:51.736 18625 18625 D AudioManager: Requesting audio focus: SPEECH_RECOGNITION (ID: speech_recognition_1756478571736)
+08-29 09:42:51.736 18625 18625 D AudioManager: Same type request detected (SPEECH_RECOGNITION), ensuring proper cleanup before new request
+08-29 09:42:51.736 18625 18625 I AudioManager: Abandoning audio focus: SPEECH_RECOGNITION (ID: speech_recognition_1756478571628)
+08-29 09:42:51.851 10156 10156 D AudioManager: dispatching onAudioFocusChange(-2) to android.media.AudioManager@1dacdb2epk@f307277
+08-29 09:42:51.852 18625 18625 I AudioManager: Audio focus granted: SPEECH_RECOGNITION (ID: speech_recognition_1756478571736)
+08-29 09:42:51.852 18625 18625 I VoiceManager: 🎵 SPEECH_RECOGNITION: HIGH PRIORITY audio focus gained for speech recognition
+08-29 09:42:51.852 18625 18625 I VoiceManager: 🎵 SPEECH_RECOGNITION: HIGH PRIORITY audio focus granted - starting SpeechRecognizer on main thread
+08-29 09:42:51.853 18625 18625 D VoiceManager: Ignoring duplicate state change: LISTENING
+08-29 09:42:51.853 18625 18625 D VoiceManager: Speech recognition parameters: minLength=4000, completeSilence=3500, possibleSilence=2500
+08-29 09:42:51.853 18625 18625 I VoiceManager: Using Android default timing parameters for SpeechRecognizer
+08-29 09:42:51.853 18625 18625 I VoiceManager: SpeechRecognizer started listening.
+08-29 09:42:51.853 18625 18625 D VoiceManager: Ready for speech
+08-29 09:42:51.859 18625 18625 E VoiceManager: Speech recognition error: Client error
+08-29 09:42:52.119 18625 18625 I WakeWordModule: 📻 RECEIVER_TRIGGER: ========== BROADCAST RECEIVED ==========
+08-29 09:42:52.119 18625 18625 I WakeWordModule: 📻 RECEIVER_TRIGGER: Receive timestamp: 1756478572119
+08-29 09:42:52.119 18625 18625 I WakeWordModule: 📻 RECEIVER_TRIGGER: Intent action: com.hightowerai.MobileJarvisNative.WAKE_WORD_DETECTED_RN
+08-29 09:42:52.119 18625 18625 I WakeWordModule: 📻 RECEIVER_TRIGGER: Expected action: com.hightowerai.MobileJarvisNative.WAKE_WORD_DETECTED_RN
+08-29 09:42:52.119 18625 18625 I WakeWordModule: 📻 RECEIVER_TRIGGER: Action matches: true
+08-29 09:42:52.119 18625 18625 I WakeWordModule: 📡 RN_BRIDGE: ========== WAKE WORD BROADCAST RECEIVED ==========
+08-29 09:42:52.119 18625 18625 I WakeWordModule: 📡 RN_BRIDGE: 👂 WAKE WORD DETECTED EVENT FROM NATIVE SERVICE
+08-29 09:42:52.120 18625 18625 I WakeWordModule: 📡 RN_BRIDGE: 🕒 Time: 09:42:51.390
+08-29 09:42:52.120 18625 18625 I WakeWordModule: 📡 RN_BRIDGE: 🎯 Wake word: 'Juniper'
+08-29 09:42:52.120 18625 18625 I WakeWordModule: 📡 RN_BRIDGE: 📊 Confidence: 0.2297
+08-29 09:42:52.120 18625 18625 I WakeWordModule: 📡 RN_BRIDGE: 🚀 Forwarding to JavaScript...
+08-29 09:42:52.120 18625 18625 D WakeWordModule: 📡 SEND_EVENT: About to emit event 'wakeWordDetected' to React Native
+08-29 09:42:52.122 18625 18625 D WakeWordModule: 📡 SEND_EVENT: Params: {"wakeWord":"Juniper","confidence":0.2297465205192566,"timestamp":1756478571390}
+08-29 09:42:52.123 18625 18625 D WakeWordModule: 📡 SEND_EVENT: ReactApplicationContext available: true
+08-29 09:42:52.124 18625 18625 D WakeWordModule: 📡 SEND_EVENT: ✅ Event 'wakeWordDetected' emitted successfully to React Native
+08-29 09:42:52.124 18625 18625 I WakeWordModule: 📡 RN_BRIDGE: ✅ Wake word event sent to React Native successfully
+08-29 09:42:52.124 18625 18625 I WakeWordModule: 📡 RN_BRIDGE: =======================================================
+08-29 09:42:54.293 18625 18625 D VoiceManager: Beginning of speech
+08-29 09:42:54.469 18625 18625 D VoiceManager: Partial results: ''
+08-29 09:42:54.520 18625 18625 D VoiceManager: Partial results: ''
+08-29 09:42:54.740 18625 18625 D VoiceManager: Partial results: ''
+08-29 09:42:55.077 18625 18625 D VoiceManager: Partial results: 'how'
+08-29 09:42:55.142 18625 18625 D VoiceManager: Partial results: 'how are'
+08-29 09:42:55.216 18625 18625 D VoiceManager: Partial results: 'how are you'
+08-29 09:42:55.527 18625 18625 D VoiceManager: End of speech
+08-29 09:42:55.533 18625 18625 D VoiceManager: Speech recognition results received: 1 matches
+08-29 09:42:55.533 18625 18625 D VoiceManager: Match 0: 'how are you'
+08-29 09:42:55.533 18625 18625 I VoiceManager: Speech recognized: 'how are you'
+08-29 09:42:55.533 18625 18625 I VoiceManager: Speech recognized: "how are you"
+08-29 09:42:55.533 18625 18625 D VoiceManager: 🎵 SPEECH_RECOGNITION: Stopping speech recognition to release audio focus for TTS
+08-29 09:42:55.534 18625 18625 D AudioManager: Releasing audio focus for ID: speech_recognition_1756478571736
+08-29 09:42:55.534 18625 18625 I AudioManager: Releasing current focus holder SPEECH_RECOGNITION (ID: speech_recognition_1756478571736)
+08-29 09:42:55.534 18625 18625 I AudioManager: Abandoning audio focus: SPEECH_RECOGNITION (ID: speech_recognition_1756478571736)
+08-29 09:42:55.536 18625 18625 D VoiceManager: 🎵 SPEECH_RECOGNITION: Released audio focus for speech recognition
+08-29 09:42:55.536 18625 18625 D VoiceManager: Voice state transition: LISTENING -> PROCESSING
+08-29 09:42:55.537 18625 18625 I VoiceManager: Speech recognition completed successfully, processing command
+08-29 09:42:55.537 18625 18625 D VoiceManager: Active conversation state (PROCESSING), pausing wake word detection
+08-29 09:42:55.537 18625 18625 D TextToSpeechManager: 🎵 TTS QUEUE: Stopping TTS and clearing queue
+08-29 09:42:55.538 18625 18625 D VoiceManager: 📱 PROCESSING_DECISION: ========== PROCESSING DECISION ==========
+08-29 09:42:55.538 18625 18625 D VoiceManager: 📱 PROCESSING_DECISION: App in foreground: false
+08-29 09:42:55.541 18625 18625 D VoiceManager: 📱 PROCESSING_DECISION: Decision: Process natively in background
+08-29 09:42:55.541 18625 18625 D VoiceManager: 📱 PROCESSING_DECISION: ================================================
+08-29 09:42:55.541 18625 18625 I VoiceManager: 📱 NATIVE_FLOW: ========== PROCESSING TEXT IN BACKGROUND ==========
+08-29 09:42:55.542 18625 18625 I VoiceManager: 📱 NATIVE_FLOW: Text: 'how are you'
+08-29 09:42:55.542 18625 18625 I VoiceManager: 📱 NATIVE_FLOW: Using native API client for background processing
+08-29 09:42:55.543 18625 18643 D VoiceManager: 📱 NATIVE_FLOW: Current history length: 0
+08-29 09:42:55.543 18625 18643 D SupabaseTokenManager: 🔐 AUTH: Attempting to retrieve Supabase access token
+08-29 09:42:55.543 18625 18643 D SupabaseTokenManager: 🔐 AUTH_DEBUG: Total SharedPreferences keys: 0
+08-29 09:42:55.543 18625 18643 D SupabaseTokenManager: 🔐 AUTH_DEBUG: Checking AsyncStorage SQLite databases...
+08-29 09:42:55.544 18625 18643 D SupabaseTokenManager: 🔐 AUTH_DEBUG: RKStorage exists: true
+08-29 09:42:55.544 18625 18643 D SupabaseTokenManager: 🔐 AUTH_DEBUG: CatalystStorage exists: false
+08-29 09:42:55.547 18625 18643 D SupabaseTokenManager: 🔐 AUTH_DEBUG: Total AsyncStorage database keys: 2
+08-29 09:42:55.548 18625 18643 D SupabaseTokenManager: 🔐 AUTH_DEBUG: Auth-related keys in database (1):
+08-29 09:42:55.549 18625 18643 D SupabaseTokenManager: 🔐 AUTH: Querying AsyncStorage database for key: sb-ydbabipbxxleeiiysojv-auth-token
+08-29 09:42:55.549 18625 18625 E VoiceManager: Speech recognition error: Client error
+08-29 09:42:55.549 18625 18625 D VoiceManager: Ignoring speech recognition error during PROCESSING/RESPONDING state
+08-29 09:42:55.550 18625 18625 D AudioManager: Releasing audio focus for ID: speech_recognition_1756478571736
+08-29 09:42:55.550 18625 18625 W AudioManager: No active request found with ID speech_recognition_1756478571736
+08-29 09:42:55.550 18625 18625 D VoiceManager: 🎵 Released audio focus for speech recognition (ID: speech_recognition_1756478571736)
+08-29 09:42:55.551 18625 18643 D SupabaseTokenManager: 🔐 AUTH: ✅ Found value in AsyncStorage database
+08-29 09:42:55.551 18625 18643 D SupabaseTokenManager: 🔐 AUTH_DEBUG:   sb-ydbabipbxxleeiiysojv-auth-token = {"access_token":"eyJhbGciOiJIUzI1NiIsImtpZCI6InFQa0xWaTNhZWM3M3dpNysiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJo...
+08-29 09:42:55.551 18625 18643 D SupabaseTokenManager: 🔐 AUTH: Searching for Supabase v2 session in AsyncStorage database...
+08-29 09:42:55.552 18625 18643 D SupabaseTokenManager: 🔐 AUTH: Found Supabase v2 session key in database: sb-ydbabipbxxleeiiysojv-auth-token
+08-29 09:42:55.552 18625 18643 D SupabaseTokenManager: 🔐 AUTH: Parsing session JSON...
+08-29 09:42:55.553 18625 18643 D SupabaseTokenManager: 🔐 AUTH: ✅ Found access token in v2 session
+08-29 09:42:55.553 18625 18643 I SupabaseTokenManager: 🔐 AUTH: ✅ Successfully retrieved valid Supabase v2 access token
+08-29 09:42:55.553 18625 18643 I SupabaseTokenManager: 🔐 AUTH: ✅ Found valid Supabase v2 session
+08-29 09:42:55.553 18625 18643 D VoiceManager: 📱 NATIVE_FLOW: Making API call...
+08-29 09:42:55.554 18625 18643 I NativeApiClient: 📡 NATIVE_API: ========== SENDING CHAT MESSAGE ==========
+08-29 09:42:55.555 18625 18643 I NativeApiClient: 📡 NATIVE_API: Message: 'how are you'
+08-29 09:42:55.555 18625 18643 I NativeApiClient: 📡 NATIVE_API: History length: 0
+08-29 09:42:55.555 18625 18643 I NativeApiClient: 📡 NATIVE_API: Request ID: 1756478575553-bbdb18de-
+08-29 09:42:55.555 18625 18643 D SupabaseTokenManager: 🔐 AUTH: Attempting to retrieve user ID
+08-29 09:42:55.555 18625 18643 D SupabaseTokenManager: 🔐 AUTH: Getting user ID from Supabase v2 session...
+08-29 09:42:55.557 18625 18643 D SupabaseTokenManager: 🔐 AUTH: ✅ Found user ID from v2 session
+08-29 09:42:55.557 18625 18643 I SupabaseTokenManager: 🔐 AUTH: ✅ Found user ID from v2 session: f8ac1669...
+08-29 09:42:55.562 18625 18643 D NativeApiClient: 📡 NATIVE_API: User ID: f8ac1669...
+08-29 09:42:55.562 18625 18643 D NativeApiClient: 📡 NATIVE_API: Deepgram enabled: false
+08-29 09:42:55.562 18625 18643 D NativeApiClient: 📡 NATIVE_API: Selected voice: aura-2-pandora-en
+08-29 09:42:55.572 18625 18643 D NativeApiClient: 📡 NATIVE_API: Creating multipart request body
+08-29 09:42:55.572 18625 18643 D NativeApiClient: 📡 NATIVE_API: JSON payload: {"base_language_model":"claude-sonnet-4-20250514","deepgram_enabled":false,"general_instructions":"","history":[],"message":"how are you","request_id":"1756478575553-bbdb18de-","selected_deepgram_voice":"aura-2-pandora-en","timestamp":1756478575564,"timezone":"UTC","user_id":"f8ac1669-7e9e-4d9e-bb9d...
+08-29 09:42:55.573 18625 18643 D NativeApiClient: 📡 NATIVE_API: Making HTTP request to https://mobile-jarvis-backend.onrender.com/api/chat
+08-29 09:42:55.573 18625 18643 D NativeApiClient: 📡 HTTP: --> POST https://mobile-jarvis-backend.onrender.com/api/chat
+08-29 09:42:55.573 18625 18643 D SupabaseTokenManager: 🔐 AUTH: Attempting to retrieve Supabase access token
+08-29 09:42:55.573 18625 18643 D SupabaseTokenManager: 🔐 AUTH_DEBUG: Total SharedPreferences keys: 0
+08-29 09:42:55.573 18625 18643 D SupabaseTokenManager: 🔐 AUTH_DEBUG: Checking AsyncStorage SQLite databases...
+08-29 09:42:55.573 18625 18643 D SupabaseTokenManager: 🔐 AUTH_DEBUG: RKStorage exists: true
+08-29 09:42:55.573 18625 18643 D SupabaseTokenManager: 🔐 AUTH_DEBUG: CatalystStorage exists: false
+08-29 09:42:55.574 18625 18643 D SupabaseTokenManager: 🔐 AUTH_DEBUG: Total AsyncStorage database keys: 2
+08-29 09:42:55.574 18625 18643 D SupabaseTokenManager: 🔐 AUTH_DEBUG: Auth-related keys in database (1):
+08-29 09:42:55.574 18625 18643 D SupabaseTokenManager: 🔐 AUTH: Querying AsyncStorage database for key: sb-ydbabipbxxleeiiysojv-auth-token
+08-29 09:42:55.575 18625 18643 D SupabaseTokenManager: 🔐 AUTH: ✅ Found value in AsyncStorage database
+08-29 09:42:55.575 18625 18643 D SupabaseTokenManager: 🔐 AUTH_DEBUG:   sb-ydbabipbxxleeiiysojv-auth-token = {"access_token":"eyJhbGciOiJIUzI1NiIsImtpZCI6InFQa0xWaTNhZWM3M3dpNysiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJo...
+08-29 09:42:55.575 18625 18643 D SupabaseTokenManager: 🔐 AUTH: Searching for Supabase v2 session in AsyncStorage database...
+08-29 09:42:55.575 18625 18643 D SupabaseTokenManager: 🔐 AUTH: Found Supabase v2 session key in database: sb-ydbabipbxxleeiiysojv-auth-token
+08-29 09:42:55.575 18625 18643 D SupabaseTokenManager: 🔐 AUTH: Parsing session JSON...
+08-29 09:42:55.575 18625 18643 D SupabaseTokenManager: 🔐 AUTH: ✅ Found access token in v2 session
+08-29 09:42:55.575 18625 18643 I SupabaseTokenManager: 🔐 AUTH: ✅ Successfully retrieved valid Supabase v2 access token
+08-29 09:42:55.575 18625 18643 I SupabaseTokenManager: 🔐 AUTH: ✅ Found valid Supabase v2 session
+08-29 09:42:55.576 18625 18643 D NativeApiClient: 📡 AUTH: Added authorization header
+08-29 09:43:42.010 18625 18643 D NativeApiClient: 📡 HTTP: <-- 200 https://mobile-jarvis-backend.onrender.com/api/chat (46437ms)
+08-29 09:43:42.010 18625 18643 D NativeApiClient: 📡 NATIVE_API: Response code: 200
+08-29 09:43:42.016 18625 18643 I NativeApiClient: 📡 NATIVE_API: ✅ Chat API call successful
+08-29 09:43:42.016 18625 18643 D NativeApiClient: 📡 NATIVE_API: Response length: 403
+08-29 09:43:42.017 18625 18643 I VoiceManager: 📱 NATIVE_FLOW: ✅ API call successful
+08-29 09:43:42.017 18625 18643 D VoiceManager: 📱 NATIVE_FLOW: Response length: 403
+08-29 09:43:42.026 18625 18625 I VoiceManager: 📱 NATIVE_FLOW: Processing complete, responding to user
+08-29 09:43:42.026 18625 18625 D VoiceManager: 📱 NATIVE_FLOW: Starting TTS with voice settings
+08-29 09:43:42.026 18625 18625 D VoiceManager: 📱 NATIVE_FLOW: Deepgram enabled: false
+08-29 09:43:42.026 18625 18625 D VoiceManager: 📱 NATIVE_FLOW: Selected voice: aura-2-pandora-en
+08-29 09:43:42.031 18625 18625 D TextToSpeechManager: 🎵 TTS QUEUE: speak() called with text: 'We found detailed instructions for tying a tie! The search results cover two popular methods: the **Four-in-Hand Knot** (simple and versatile for everyday wear) and the **Windsor Knot** (formal and symmetrical for special occasions). Both methods include step-by-step instructions, and there are also links to visual guides on sites like wikiHow and YouTube videos if you prefer watching demonstrations.', queueMode: 0
+08-29 09:43:42.031 18625 18625 D TextToSpeechManager: 🎵 TTS QUEUE: QUEUE_FLUSH - clearing queue and stopping current speech
+08-29 09:43:42.034 18625 18625 D TextToSpeechManager: 🎵 TTS QUEUE: Added request to queue. Queue size: 1
+08-29 09:43:42.035 18625 18625 D TextToSpeechManager: 🎵 TTS QUEUE: Processing request: 'We found detailed instructions for tying a tie! The search results cover two popular methods: the **Four-in-Hand Knot** (simple and versatile for everyday wear) and the **Windsor Knot** (formal and symmetrical for special occasions). Both methods include step-by-step instructions, and there are also links to visual guides on sites like wikiHow and YouTube videos if you prefer watching demonstrations.'
+08-29 09:43:42.038 18625 18625 D TextToSpeechManager: 🎵 TTS TIMING: speakImmediately() called at 1756478622037 with text: 'We found detailed instructions for tying a tie! The search results cover two popular methods: the **Four-in-Hand Knot** (simple and versatile for everyday wear) and the **Windsor Knot** (formal and symmetrical for special occasions). Both methods include step-by-step instructions, and there are also links to visual guides on sites like wikiHow and YouTube videos if you prefer watching demonstrations.'
+08-29 09:43:42.039 18625 18625 D TextToSpeechManager: 🎵 TTS: Requesting audio focus (ID: tts_52139416-4923-49d1-b94d-d263b10a6f8d)
+08-29 09:43:42.041 18625 18625 D AudioManager: Requesting audio focus: TTS (ID: tts_52139416-4923-49d1-b94d-d263b10a6f8d)
+08-29 09:43:42.049 18625 18625 I AudioManager: Audio focus granted: TTS (ID: tts_52139416-4923-49d1-b94d-d263b10a6f8d)
+08-29 09:43:42.049 18625 18625 D TextToSpeechManager: 🎵 TTS audio focus gained
+08-29 09:43:42.050 18625 18625 D TextToSpeechManager: 🎵 TTS audio focus request result: true
+08-29 09:43:42.050 18625 18625 D TextToSpeechManager: 🎵 TTS TIMING: Audio focus handling took 11ms - granted: true
+08-29 09:43:42.051 18625 18625 D TextToSpeechManager: Generated utterance ID: 7ccf0594-daa4-4570-a86b-0a7ee58c24af
+08-29 09:43:42.052 18625 18625 D TextToSpeechManager: 🎵 TTS TIMING: Calling textToSpeech.speak() at 15ms
+08-29 09:43:42.057 18625 18625 D TextToSpeechManager: 🎵 TTS TIMING: textToSpeech.speak() returned at 20ms: 0
+08-29 09:43:42.057 18625 18625 I TextToSpeechManager: TTS speak() call successful
+08-29 09:43:42.400 18625 19142 D TextToSpeechManager: 🎵 TTS TIMING: Speech ACTUALLY started for utterance: 7ccf0594-daa4-4570-a86b-0a7ee58c24af at 363ms
+08-29 09:44:03.759 18625 19142 D TextToSpeechManager: 🎵 TTS TIMING: Speech completed for utterance: 7ccf0594-daa4-4570-a86b-0a7ee58c24af at 21721ms
+08-29 09:44:03.759 18625 19142 D AudioManager: Releasing audio focus for ID: tts_52139416-4923-49d1-b94d-d263b10a6f8d
+08-29 09:44:03.760 18625 19142 I AudioManager: Releasing current focus holder TTS (ID: tts_52139416-4923-49d1-b94d-d263b10a6f8d)
+08-29 09:44:03.760 18625 19142 I AudioManager: Abandoning audio focus: TTS (ID: tts_52139416-4923-49d1-b94d-d263b10a6f8d)
+08-29 09:44:03.764 18625 19142 D TextToSpeechManager: 🎵 TTS audio focus released
+08-29 09:44:03.764 18625 19142 D TextToSpeechManager: 🎵 TTS QUEUE: Request completed, processing next
+08-29 09:44:03.764 18625 19142 I VoiceManager: 📱 NATIVE_FLOW: TTS complete, setting state to LISTENING for continued conversation
+08-29 09:44:04.067 18625 18625 D VoiceManager: Voice state transition: RESPONDING -> LISTENING
+08-29 09:44:04.068 18625 18625 D VoiceManager: Active conversation state (LISTENING), pausing wake word detection
+08-29 09:44:04.069 18625 18625 D TextToSpeechManager: 🎵 TTS QUEUE: Stopping TTS and clearing queue
+08-29 09:44:04.072 18625 18625 D VoiceManager: LISTENING state detected but isListening=false, reactivating speech recognizer
+08-29 09:44:04.173 18625 18625 D VoiceManager: Restarting speech recognition for continuous conversation
+08-29 09:44:04.173 18625 18625 D VoiceManager: startListening() called. Attempting to start speech recognition...
+08-29 09:44:04.178 18625 18625 D VoiceManager: Sent broadcast to pause wake word detection during listening
+08-29 09:44:04.179 18625 18625 I VoiceManager: 🎵 SPEECH_RECOGNITION: Requesting HIGH PRIORITY audio focus for speech recognition
+08-29 09:44:04.179 18625 18625 D AudioManager: Requesting audio focus: SPEECH_RECOGNITION (ID: speech_recognition_1756478644179)
+08-29 09:44:04.186 18625 18625 I AudioManager: Audio focus granted: SPEECH_RECOGNITION (ID: speech_recognition_1756478644179)
+08-29 09:44:04.186 18625 18625 I VoiceManager: 🎵 SPEECH_RECOGNITION: HIGH PRIORITY audio focus gained for speech recognition
+08-29 09:44:04.186 18625 18625 I VoiceManager: 🎵 SPEECH_RECOGNITION: HIGH PRIORITY audio focus granted - starting SpeechRecognizer on main thread
+08-29 09:44:04.187 18625 18625 D VoiceManager: Ignoring duplicate state change: LISTENING
+08-29 09:44:04.187 18625 18625 D VoiceManager: Speech recognition parameters: minLength=4000, completeSilence=3500, possibleSilence=2500
+08-29 09:44:04.188 18625 18625 I VoiceManager: Using Android default timing parameters for SpeechRecognizer
+08-29 09:44:04.188 18625 18625 I VoiceManager: SpeechRecognizer started listening.
+08-29 09:44:04.220 18625 18625 D AudioManager: dispatching onAudioFocusChange(-2) to android.media.AudioManager@9919338com.hightowerai.MobileJarvisNative.utils.AudioManager$$ExternalSyntheticLambda13@2e1c017
+08-29 09:44:04.220 18625 18625 I AudioManager: Transient focus loss for SPEECH_RECOGNITION
+08-29 09:44:04.220 18625 18625 W VoiceManager: 🎵 SPEECH_RECOGNITION: Audio focus lost for speech recognition
+08-29 09:44:04.221 18625 18625 D VoiceManager: 🎵 SPEECH_RECOGNITION: Transient audio focus loss - will wait for recovery
+08-29 09:44:04.283 18625 18625 D VoiceManager: Ready for speech
+08-29 09:44:09.288 18625 18625 D AudioManager: dispatching onAudioFocusChange(1) to android.media.AudioManager@9919338com.hightowerai.MobileJarvisNative.utils.AudioManager$$ExternalSyntheticLambda13@2e1c017
+08-29 09:44:09.288 18625 18625 D AudioManager: Audio focus gained for SPEECH_RECOGNITION
+08-29 09:44:09.288 18625 18625 I VoiceManager: 🎵 SPEECH_RECOGNITION: HIGH PRIORITY audio focus gained for speech recognition
+08-29 09:44:09.358 18625 18625 E VoiceManager: Speech recognition error: No recognition match
+08-29 09:44:09.360 18625 18625 D VoiceManager: 🎵 SPEECH_RECOGNITION: Releasing audio focus before retry
+08-29 09:44:09.360 18625 18625 D AudioManager: Releasing audio focus for ID: speech_recognition_1756478644179
+08-29 09:44:09.361 18625 18625 I AudioManager: Releasing current focus holder SPEECH_RECOGNITION (ID: speech_recognition_1756478644179)
+08-29 09:44:09.364 18625 18625 I AudioManager: Abandoning audio focus: SPEECH_RECOGNITION (ID: speech_recognition_1756478644179)
+08-29 09:44:09.366 18625 18625 D VoiceManager: 🎵 Released audio focus for speech recognition (ID: speech_recognition_1756478644179)
+08-29 09:44:09.367 18625 18625 D VoiceManager: No speech detected
+08-29 09:44:09.367 18625 18625 D VoiceManager: Maximum retry attempts reached (1), resetting to idle
+08-29 09:44:09.367 18625 18625 I VoiceManager: Message: I didn't hear anything. Please try saying the wake word again when you're ready.
+08-29 09:44:11.871 18625 18625 D VoiceManager: Voice state transition: RESPONDING -> IDLE
+08-29 09:44:11.872 18625 18625 D VoiceManager: Conversation completed, re-enabling wake word detection
+08-29 09:44:11.876 18625 18625 I VoiceManager: 🔄 WAKE_WORD_RESUME: Sent broadcast to resume wake word detection
+08-29 09:44:11.877 18625 18625 D VoiceManager: 🔄 WAKE_WORD_RESUME: Broadcast action: com.hightowerai.MobileJarvisNative.RESUME_WAKE_WORD
+08-29 09:44:11.877 18625 18625 D VoiceManager: 🔄 WAKE_WORD_RESUME: Package name: com.hightowerai.MobileJarvisNative
+08-29 09:44:12.378 18625 18625 I WakeWordService: 🔄 WAKE_WORD_RESUME: ========== RESUME BROADCAST RECEIVED ==========
+08-29 09:44:12.379 18625 18625 I WakeWordService: 🔄 WAKE_WORD_RESUME: Action: com.hightowerai.MobileJarvisNative.RESUME_WAKE_WORD
+08-29 09:44:12.379 18625 18625 I WakeWordService: 🔄 WAKE_WORD_RESUME: Package: com.hightowerai.MobileJarvisNative
+08-29 09:44:12.380 18625 18625 I WakeWordService: 🔄 WAKE_WORD_RESUME: Calling resumeWakeWordDetectionFromPaused()
+08-29 09:44:12.381 18625 18625 I WakeWordService: ▶️ PAUSE_RESUME: ========== RESUMING WAKE WORD DETECTION ==========
+08-29 09:44:12.381 18625 18625 I WakeWordService: ▶️ PAUSE_RESUME: Timestamp: 1756478652381
+08-29 09:44:12.382 18625 18625 I WakeWordService: ▶️ PAUSE_RESUME: Previous state: Paused
+08-29 09:44:12.382 18625 18625 I WakeWordService: ▶️ PAUSE_RESUME: Resetting openWakeWordEngine singleton state...
+08-29 09:44:12.412 18625 18625 I WakeWordService: ▶️ PAUSE_RESUME: ✅ OpenWakeWordEngine singleton reset successfully
+08-29 09:44:12.513 18625 18625 I WakeWordService: ▶️ PAUSE_RESUME: ✅ Fresh OpenWakeWordEngine instance initialized and ready
+08-29 09:44:12.513 18625 18625 I WakeWordService: ▶️ PAUSE_RESUME: Active wake phrase: 'Juniper'
+08-29 09:44:12.513 18625 18625 I WakeWordService: ▶️ PAUSE_RESUME: ✅ Detection state variables reset
+08-29 09:44:12.513 18625 18625 I WakeWordService: ▶️ PAUSE_RESUME: Resume cooldown active for 2000ms to prevent false detections
+08-29 09:44:12.513 18625 18625 I WakeWordService: ▶️ PAUSE_RESUME: Reinitializing AudioRecord and recording thread for wake word detection
+08-29 09:44:12.513 18625 18625 D AudioManager: Setting up Bluetooth audio route monitoring...
+08-29 09:44:12.513 18625 18625 I AudioManager: AudioManager initialized with Bluetooth monitoring
+08-29 09:44:12.513 18625 18625 I WakeWordService: 🎵 WAKE_WORD_SETUP: Requesting audio focus for wake word detection...
+08-29 09:44:12.513 18625 18625 D AudioManager: Requesting audio focus: BACKGROUND_AUDIO (ID: wake_word_detection)
+08-29 09:44:12.514 18625 18625 I AudioManager: Audio focus granted: BACKGROUND_AUDIO (ID: wake_word_detection)
+08-29 09:44:12.514 18625 18625 I WakeWordService: 🎵 WAKE_WORD_SETUP: Audio focus GAINED for wake word detection
+08-29 09:44:12.514 18625 18625 I WakeWordService: 🎵 WAKE_WORD_SETUP: ✅ Audio focus acquired for wake word detection
+08-29 09:44:12.571 18625 18625 D WakeWordService: Audio recording started successfully
+08-29 09:44:12.571 18625 18625 I WakeWordService: ▶️ PAUSE_RESUME: ✅ AudioRecord and recording thread reinitialized and started
+08-29 09:44:12.571 18625 18625 I WakeWordService: ▶️ PAUSE_RESUME: Wake word threshold: 0.05
+08-29 09:44:12.572 18625 19293 I WakeWordService: 🎙️ AUDIO_LOOP: ========== STARTING AUDIO PROCESSING LOOP ==========
+08-29 09:44:12.572 18625 19293 I WakeWordService: 🎙️ AUDIO_LOOP: Buffer size: 1280 samples (80ms)
+08-29 09:44:12.572 18625 19293 I WakeWordService: 🎙️ AUDIO_LOOP: Sample rate: 16000Hz
+08-29 09:44:12.572 18625 19293 I WakeWordService: 🎙️ AUDIO_LOOP: Wake word threshold: 0.05
+08-29 09:44:12.572 18625 19293 I WakeWordService: 🎙️ AUDIO_LOOP: =====================================================
+08-29 09:44:12.576 18625 18625 I WakeWordService: ▶️ PAUSE_RESUME: ✅ Wake word detection resumed successfully
+08-29 09:44:12.576 18625 18625 I WakeWordService: ▶️ PAUSE_RESUME: ====================================================
+08-29 09:44:12.576 18625 18625 I WakeWordService: 🔄 WAKE_WORD_RESUME: ======================================
+08-29 09:44:12.576 18625 18625 D VoiceManager: 🔄 WAKE_WORD_RESUME: Broadcast sent, WakeWordService should have resumed by now

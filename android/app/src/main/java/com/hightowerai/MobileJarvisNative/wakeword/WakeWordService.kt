@@ -23,6 +23,7 @@ import com.hightowerai.MobileJarvisNative.utils.PermissionUtils
 import com.hightowerai.MobileJarvisNative.voice.VoiceManager
 import com.hightowerai.MobileJarvisNative.ConfigManager
 import com.hightowerai.MobileJarvisNative.utils.Constants
+import com.hightowerai.MobileJarvisNative.utils.AppStateManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -31,6 +32,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withTimeout
 import kotlin.coroutines.coroutineContext
 
 class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeListener {
@@ -74,6 +76,16 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
     // Notification constants
     private val NOTIFICATION_CHANNEL_ID = "wake_word_channel"
     private val NOTIFICATION_ID = 1001
+    
+    // Background state management
+    private var pendingWakeWordEvent: PendingWakeWordEvent? = null
+    private val FOREGROUND_WAIT_TIMEOUT_MS = 5000L // 5 seconds timeout
+    
+    data class PendingWakeWordEvent(
+        val confidence: Float,
+        val timestamp: Long,
+        val selectedWakeWord: String
+    )
 
     companion object {
         fun isRunning(): Boolean {
@@ -120,6 +132,14 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
         isServiceRunning = true
         prefs = getSharedPreferences("wakeword_prefs", Context.MODE_PRIVATE)
         prefs.registerOnSharedPreferenceChangeListener(this)
+        
+        // Initialize AppStateManager if not already initialized
+        try {
+            AppStateManager.getInstance().initialize(application)
+            Log.i(TAG, "🚀 SERVICE_LIFECYCLE: AppStateManager initialized")
+        } catch (e: Exception) {
+            Log.e(TAG, "🚀 SERVICE_LIFECYCLE: Error initializing AppStateManager: ${e.message}", e)
+        }
         
         createNotificationChannel()
         
@@ -649,6 +669,77 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
         Log.i(TAG, "🔥 WAKEWORD_USE: Threshold: $wakeWordThreshold")
         Log.i(TAG, "🔥 WAKEWORD_USE: Timestamp: $timestamp")
         Log.i(TAG, "🔥 WAKEWORD_USE: ================================================")
+        
+        // Check app state before proceeding
+        val appStateManager = AppStateManager.getInstance()
+        val isAppInForeground = appStateManager.isAppCurrentlyInForeground()
+        
+        Log.i(TAG, "📱 BACKGROUND_CHECK: ========== CHECKING APP STATE ==========")
+        Log.i(TAG, "📱 BACKGROUND_CHECK: App currently in foreground: $isAppInForeground")
+        
+        if (!isAppInForeground) {
+            // App is in background - store event and bring to foreground
+            Log.i(TAG, "📱 BACKGROUND_CHECK: App is backgrounded - storing event and bringing to foreground")
+            
+            pendingWakeWordEvent = PendingWakeWordEvent(confidence, timestamp, selectedWakeWord)
+            
+            // Bring app to foreground
+            val foregroundSuccess = appStateManager.bringAppToForeground()
+            
+            if (foregroundSuccess) {
+                Log.i(TAG, "📱 BACKGROUND_CHECK: ✅ App brought to foreground, waiting for activation...")
+                
+                // Wait for app to become active, then send the event
+                serviceScope.launch {
+                    try {
+                        withTimeout(FOREGROUND_WAIT_TIMEOUT_MS) {
+                            // Poll for foreground state
+                            var attempts = 0
+                            while (!appStateManager.isAppCurrentlyInForeground() && attempts < 50) {
+                                delay(100) // Check every 100ms
+                                attempts++
+                            }
+                            
+                            if (appStateManager.isAppCurrentlyInForeground()) {
+                                Log.i(TAG, "📱 BACKGROUND_CHECK: ✅ App is now in foreground - sending pending event")
+                                pendingWakeWordEvent?.let { pendingEvent ->
+                                    sendWakeWordEvent(pendingEvent.confidence, pendingEvent.timestamp, pendingEvent.selectedWakeWord)
+                                    pendingWakeWordEvent = null
+                                }
+                            } else {
+                                Log.w(TAG, "📱 BACKGROUND_CHECK: ⚠️ App did not reach foreground in time - sending event anyway")
+                                pendingWakeWordEvent?.let { pendingEvent ->
+                                    sendWakeWordEvent(pendingEvent.confidence, pendingEvent.timestamp, pendingEvent.selectedWakeWord)
+                                    pendingWakeWordEvent = null
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "📱 BACKGROUND_CHECK: ❌ Timeout waiting for foreground - sending event anyway: ${e.message}")
+                        pendingWakeWordEvent?.let { pendingEvent ->
+                            sendWakeWordEvent(pendingEvent.confidence, pendingEvent.timestamp, pendingEvent.selectedWakeWord)
+                            pendingWakeWordEvent = null
+                        }
+                    }
+                }
+            } else {
+                Log.w(TAG, "📱 BACKGROUND_CHECK: ⚠️ Failed to bring app to foreground - sending event anyway")
+                sendWakeWordEvent(confidence, timestamp, selectedWakeWord)
+            }
+        } else {
+            // App is already in foreground - proceed normally
+            Log.i(TAG, "📱 BACKGROUND_CHECK: App already in foreground - proceeding normally")
+            sendWakeWordEvent(confidence, timestamp, selectedWakeWord)
+        }
+        
+        Log.i(TAG, "📱 BACKGROUND_CHECK: ================================================")
+    }
+    
+    /**
+     * Send wake word event to React Native and voice manager
+     */
+    private fun sendWakeWordEvent(confidence: Float, timestamp: Long, selectedWakeWord: String) {
+        val timeString = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.US).format(java.util.Date(timestamp))
         
         // Send broadcast to React Native
         try {

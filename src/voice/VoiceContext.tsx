@@ -6,13 +6,14 @@ import { useVoiceState as useVoiceStateHook } from './hooks/useVoiceState';
 import { useVoiceSettings } from './hooks/useVoiceSettings';
 import { DatabaseService } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
-import { DeviceEventEmitter, EmitterSubscription, Platform, NativeModules } from 'react-native';
+import { DeviceEventEmitter, EmitterSubscription, Platform, NativeModules, AppState } from 'react-native';
 import { conversationService } from '../services/conversationService';
 import { isCancellationError } from '../utils/cancellationUtils';
 import { useRequestStatusPolling } from '../hooks/useRequestStatusPolling';
 import { DEFAULT_WAKE_PHRASE } from '../wakeword/constants';
 import requestMapping from '../utils/requestMapping';
 import Storage from '../utils/storage';
+import AppStateService from '../appstate/AppStateService';
 
 const { VoiceModule } = NativeModules;
 
@@ -551,11 +552,51 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     });
     subscriptions.push(nativeSettingsUpdateSub);
     
+    // Setup AppState monitoring for background wake word handling
+    console.log('📱 Setting up AppState monitoring for background wake word handling');
+    
+    // Initialize AppStateService
+    const appStateService = AppStateService.getInstance();
+    
+    // Listen for app state changes from native layer
+    const appStateListener = appStateService.addListener((state: string) => {
+      console.log('📱 VOICE_CONTEXT: App state changed to:', state);
+      
+      // Log synchronization status
+      const rnState = AppState.currentState;
+      if (rnState !== state) {
+        console.log(`📱 VOICE_CONTEXT: State sync - Native: ${state}, RN: ${rnState}`);
+      }
+    });
+    
+    // Monitor React Native AppState changes
+    const handleAppStateChange = (nextAppState: string) => {
+      console.log('📱 VOICE_CONTEXT: React Native AppState changed to:', nextAppState);
+      
+      // Get debug info when state changes
+      appStateService.getDebugInfo().then(debugInfo => {
+        console.log('📱 VOICE_CONTEXT: AppState debug info:', debugInfo);
+      }).catch(error => {
+        console.error('📱 VOICE_CONTEXT: Error getting app state debug info:', error);
+      });
+    };
+    
+    const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    // Cleanup function for AppState listeners
+    const appStateCleanup = () => {
+      console.log('🧹 Cleaning up AppState listeners');
+      appStateListener();
+      appStateSubscription?.remove();
+      appStateService.cleanup();
+    };
+    
     listenersSetupRef.current = true;
     
     return () => {
       console.log('🧹 Cleaning up voice event listeners');
       subscriptions.forEach(sub => sub.remove());
+      appStateCleanup();
       listenersSetupRef.current = false;
     };
   }, [sendMessage, voiceSettings, voiceService]);

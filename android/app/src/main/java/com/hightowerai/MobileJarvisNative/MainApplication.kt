@@ -23,6 +23,9 @@ import com.hightowerai.MobileJarvisNative.wakeword.WakeWordPackage
 import com.hightowerai.MobileJarvisNative.voice.VoicePackage
 import com.hightowerai.MobileJarvisNative.permissions.PermissionsPackage
 import com.hightowerai.MobileJarvisNative.app_config.AppConfigPackage
+import com.hightowerai.MobileJarvisNative.appstate.AppStatePackage
+import com.hightowerai.MobileJarvisNative.api.ConversationSyncPackage
+import com.hightowerai.MobileJarvisNative.debug.DebugBridgePackage
 import android.util.Log
 
 class MainApplication : Application(), ReactApplication {
@@ -53,6 +56,15 @@ class MainApplication : Application(), ReactApplication {
             
             packages.add(AppConfigPackage())
             Log.i(TAG, "📱 MAIN_APP: ✅ Added AppConfigPackage")
+            
+            packages.add(AppStatePackage())
+            Log.i(TAG, "📱 MAIN_APP: ✅ Added AppStatePackage")
+            
+            packages.add(ConversationSyncPackage())
+            Log.i(TAG, "📱 MAIN_APP: ✅ Added ConversationSyncPackage")
+            
+            packages.add(DebugBridgePackage())
+            Log.i(TAG, "📱 MAIN_APP: ✅ Added DebugBridgePackage")
             
             Log.i(TAG, "📱 MAIN_APP: Total packages: ${packages.size}")
             Log.i(TAG, "📱 MAIN_APP: ====================================================")

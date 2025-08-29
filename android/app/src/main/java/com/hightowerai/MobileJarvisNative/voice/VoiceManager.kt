@@ -10,6 +10,12 @@ import android.util.Log
 import android.content.Intent
 import android.os.Bundle
 import com.hightowerai.MobileJarvisNative.utils.TextToSpeechManager
+import com.hightowerai.MobileJarvisNative.utils.AppStateManager
+import com.hightowerai.MobileJarvisNative.api.NativeApiClient
+import com.hightowerai.MobileJarvisNative.api.BackgroundConversationManager
+import com.hightowerai.MobileJarvisNative.api.VoiceSettingsManager
+import com.hightowerai.MobileJarvisNative.api.HistoryMessage
+import com.hightowerai.MobileJarvisNative.api.VoiceMetadata
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -17,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.hightowerai.MobileJarvisNative.utils.Constants
@@ -85,6 +92,11 @@ class VoiceManager private constructor() {
     // Audio focus request ID for speech recognition
     private var speechRecognitionAudioFocusRequestId: String? = null
 
+    // Background API components
+    private lateinit var nativeApiClient: NativeApiClient
+    private lateinit var backgroundConversationManager: BackgroundConversationManager
+    private lateinit var voiceSettingsManager: VoiceSettingsManager
+
     companion object {
         @Volatile
         private var instance: VoiceManager? = null
@@ -139,6 +151,12 @@ class VoiceManager private constructor() {
         
         // Initialize Deepgram client for TTS
         deepgramClient = DeepgramClient.getInstance(context)
+        
+        // Initialize background API components
+        Log.d(TAG, "Initializing background API components")
+        nativeApiClient = NativeApiClient.getInstance(context)
+        backgroundConversationManager = BackgroundConversationManager.getInstance(context)
+        voiceSettingsManager = VoiceSettingsManager.getInstance(context)
     }
     
     /**
@@ -223,6 +241,15 @@ class VoiceManager private constructor() {
      * Returns true if the wake word detection was processed.
      */
     fun onWakeWordDetected(timestamp: Long): Boolean {
+        // Check app state for logging purposes
+        val appStateManager = AppStateManager.getInstance()
+        val isAppInForeground = appStateManager.isAppCurrentlyInForeground()
+        
+        Log.i(TAG, "📱 VOICE_MANAGER: ========== WAKE WORD PROCESSING ==========")
+        Log.i(TAG, "📱 VOICE_MANAGER: App in foreground: $isAppInForeground")
+        Log.i(TAG, "📱 VOICE_MANAGER: Current voice state: ${_voiceState.value}")
+        Log.i(TAG, "📱 VOICE_MANAGER: Timestamp: $timestamp")
+        
         // Only process wake word if we're in IDLE state
         if (_voiceState.value !is VoiceState.IDLE) {
             Log.d(TAG, "Ignoring wake word detection - conversation already in progress")
@@ -695,8 +722,29 @@ class VoiceManager private constructor() {
         // Update state to PROCESSING
         updateState(VoiceState.PROCESSING)
         
-        // Log the start of API processing
-        Log.d(TAG, "Starting API processing for recognized text")
+        // Check if app is in background and route accordingly
+        val appStateManager = AppStateManager.getInstance()
+        val isAppInForeground = appStateManager.isAppCurrentlyInForeground()
+        
+        Log.d(TAG, "📱 PROCESSING_DECISION: ========== PROCESSING DECISION ==========")
+        Log.d(TAG, "📱 PROCESSING_DECISION: App in foreground: $isAppInForeground")
+        Log.d(TAG, "📱 PROCESSING_DECISION: Decision: ${if(isAppInForeground) "Send to React Native" else "Process natively in background"}")
+        Log.d(TAG, "📱 PROCESSING_DECISION: ================================================")
+        
+        if (isAppInForeground) {
+            // App is in foreground - use existing React Native flow
+            processTextViaReactNative(text)
+        } else {
+            // App is in background - use native API flow
+            processTextInBackground(text)
+        }
+    }
+    
+    /**
+     * Process text via React Native (existing flow)
+     */
+    private fun processTextViaReactNative(text: String) {
+        Log.d(TAG, "📱 RN_FLOW: Processing text via React Native")
         
         // Process with voice processor
         try {
@@ -734,6 +782,99 @@ class VoiceManager private constructor() {
             // Log the error and set error state
             Log.e(TAG, "Error processing text with voice processor", e)
             _voiceState.value = VoiceState.ERROR("Processing error: ${e.message}")
+        }
+    }
+    
+    /**
+     * Process text in background using native API (new flow)
+     */
+    private fun processTextInBackground(text: String) {
+        Log.i(TAG, "📱 NATIVE_FLOW: ========== PROCESSING TEXT IN BACKGROUND ==========")
+        Log.i(TAG, "📱 NATIVE_FLOW: Text: '${text.take(100)}${if(text.length > 100) "..." else ""}'")
+        Log.i(TAG, "📱 NATIVE_FLOW: Using native API client for background processing")
+        
+        // Mark as processing in background
+        backgroundConversationManager.setProcessingState(true)
+        
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                // Get current conversation history
+                val history = backgroundConversationManager.getCurrentHistory()
+                Log.d(TAG, "📱 NATIVE_FLOW: Current history length: ${history.size}")
+                
+                // Check authentication
+                if (!nativeApiClient.isAuthenticated()) {
+                    Log.e(TAG, "📱 NATIVE_FLOW: ❌ Not authenticated - cannot make API call")
+                    withContext(Dispatchers.Main) {
+                        updateState(VoiceState.ERROR("Authentication required"))
+                        backgroundConversationManager.setProcessingState(false)
+                    }
+                    return@launch
+                }
+                
+                // Make API call
+                Log.d(TAG, "📱 NATIVE_FLOW: Making API call...")
+                val response = nativeApiClient.sendChatMessage(text, history)
+                
+                Log.i(TAG, "📱 NATIVE_FLOW: ✅ API call successful")
+                Log.d(TAG, "📱 NATIVE_FLOW: Response length: ${response.response.length}")
+                
+                // Get voice settings for metadata
+                val voiceSettings = voiceSettingsManager.getVoiceSettings()
+                val voiceMetadata = VoiceMetadata(
+                    deepgramEnabled = voiceSettings.deepgramEnabled,
+                    voiceUsed = voiceSettings.selectedDeepgramVoice,
+                    ttsProvider = if (voiceSettings.deepgramEnabled) "deepgram" else "system"
+                )
+                
+                // Store the conversation
+                backgroundConversationManager.storeInteraction(text, response, voiceMetadata)
+                
+                // Switch back to main thread for TTS
+                withContext(Dispatchers.Main) {
+                    try {
+                        // Update state to RESPONDING
+                        _voiceState.value = VoiceState.RESPONDING(response.response)
+                        Log.i(TAG, "📱 NATIVE_FLOW: Processing complete, responding to user")
+                        
+                        // Start TTS with appropriate voice settings
+                        Log.d(TAG, "📱 NATIVE_FLOW: Starting TTS with voice settings")
+                        Log.d(TAG, "📱 NATIVE_FLOW: Deepgram enabled: ${voiceSettings.deepgramEnabled}")
+                        Log.d(TAG, "📱 NATIVE_FLOW: Selected voice: ${voiceSettings.selectedDeepgramVoice}")
+                        
+                        // Use voice processor for TTS (it handles Deepgram vs system TTS internally)
+                        voiceProcessor.speak(response.response) {
+                            Log.i(TAG, "📱 NATIVE_FLOW: TTS complete, setting state to LISTENING for continued conversation")
+                            
+                            // Continue listening for more input
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                updateState(VoiceState.LISTENING)
+                            }, 300)
+                        }
+                        
+                        backgroundConversationManager.setProcessingState(false)
+                        
+                    } catch (e: Exception) {
+                        Log.e(TAG, "📱 NATIVE_FLOW: ❌ Error in TTS: ${e.message}", e)
+                        updateState(VoiceState.ERROR("TTS error: ${e.message}"))
+                        backgroundConversationManager.setProcessingState(false)
+                    }
+                }
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "📱 NATIVE_FLOW: ❌ Error in background API processing: ${e.message}", e)
+                
+                withContext(Dispatchers.Main) {
+                    updateState(VoiceState.ERROR("API error: ${e.message}"))
+                    backgroundConversationManager.setProcessingState(false)
+                    
+                    // Optionally fall back to React Native flow if available
+                    if (AppStateManager.getInstance().isAppCurrentlyInForeground()) {
+                        Log.d(TAG, "📱 NATIVE_FLOW: Falling back to React Native flow")
+                        processTextViaReactNative(text)
+                    }
+                }
+            }
         }
     }
     
@@ -1040,7 +1181,7 @@ class VoiceManager private constructor() {
             }
         } else {
             Log.d(TAG, "Maximum retry attempts reached ($MAX_NO_SPEECH_RETRIES), resetting to idle")
-            showMessage("I didn't hear anything. Please try saying 'Jarvis' again when you're ready.")
+            showMessage("I didn't hear anything. Please try saying the wake word again when you're ready.")
             noSpeechRetryCount = 0
             coroutineScope.launch {
                 delay(configManager.getSpeechFinalMessageDelayMs().toLong())

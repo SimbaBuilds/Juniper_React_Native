@@ -12,6 +12,7 @@ import com.facebook.react.ReactApplication
 
 import expo.modules.ReactActivityDelegateWrapper
 import com.hightowerai.MobileJarvisNative.permissions.PermissionsModule
+import com.hightowerai.MobileJarvisNative.utils.AppStateManager
 
 class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,6 +21,14 @@ class MainActivity : ReactActivity() {
     // This is required for expo-splash-screen.
     setTheme(R.style.AppTheme);
     super.onCreate(null)
+    
+    // Initialize AppStateManager for background state tracking
+    try {
+      AppStateManager.getInstance().initialize(application)
+      android.util.Log.i("MainActivity", "📱 AppStateManager initialized in MainActivity")
+    } catch (e: Exception) {
+      android.util.Log.e("MainActivity", "Error initializing AppStateManager: ${e.message}", e)
+    }
   }
 
   /**
