@@ -48,7 +48,7 @@ Android applies aggressive audio pre-processing in background mode that cannot b
 - Battery optimization exemption
 - Audio focus management
 
-The audio processing occurs at the system level before it reaches our AudioRecord, making it impossible to obtain the same quality audio that the wake word model was trained on.
+The audio processing occurs at the system level before it reaches our AudioRecord, making it impossible to obtain the same quality audio that the wake word model was trained on
 
 ## Technical Details
 - **Model**: OpenWakeWord "Juniper" trained on normal audio levels
