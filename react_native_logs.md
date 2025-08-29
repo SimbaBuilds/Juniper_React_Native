@@ -1,125 +1,638 @@
- LOG  ✅ StorageInitializer: AsyncStorage directory already exists
- LOG  No initial URL found
- LOG  ✅ StorageInitializer: Storage read/write test passed
- LOG  ✅ StorageInitializer: AsyncStorage initialized successfully
- ERROR  [AuthApiError: Invalid Refresh Token: Refresh Token Not Found]
- LOG  ✅ Component storage initialized: success=true
- LOG  ✅ Component wakeword initialized: success=true
- LOG  ✅ Component auth initialized: success=true
- LOG  ✅ App: Initialization sequence completed
+ LOG  🎤 VOICE_BUTTON: ========== STARTING LISTENING ==========
+ LOG  🎤 VOICE_BUTTON: Platform: ios
+ LOG  🎤 VOICE_BUTTON: Current voiceState: idle
+ LOG  🎤 VOICE_BUTTON: Current isListening: false
+ LOG  🎤 VOICE_BUTTON: iOS - Starting continuous conversation
+ LOG  🎤 Starting continuous conversation (iOS mode)
+ LOG  🎤 iOS: Starting continuous conversation mode...
+ LOG  🔐 iOS: Requesting permissions...
+ LOG  🔐 iOS: Permissions result: true
+ LOG  📱 iOS: Calling native startContinuousConversation...
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: idle
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: listening
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: idle
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: listening
  LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🚀 WAKE_WORD_CONTEXT: Initializing wake word context...
- LOG  🚀 WAKE_WORD_CONTEXT: Waiting for voice settings to load...
- LOG  🎧 WAKE_WORD_CONTEXT: Setting up wake word event listener...
- LOG  🎧 WAKE_WORD_CONTEXT: Current voice state: IDLE
- LOG  🔊 WAKE_WORD_SERVICE: Adding DeviceEventEmitter listener for event: wakeWordDetected
- LOG  🔊 WAKE_WORD_SERVICE: DeviceEventEmitter available: true
- LOG  🔊 WAKE_WORD_SERVICE: DeviceEventEmitter listener added successfully, subscription: true
- LOG  🎧 WAKE_WORD_CONTEXT: ✅ Wake word listener registered successfully
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  📱 iOS: Continuous conversation started: true
+ LOG  🎤 VOICE_BUTTON: iOS startContinuousConversation result: true
+ LOG  🎤 VOICE_BUTTON: ✅ Start listening completed successfully
+ LOG  🔴 VoiceAssistant: isSpeaking changed: false
+ LOG  🔴 VoiceAssistant: voiceState: listening
+ LOG  🔴 VoiceAssistant: typeof voiceState: string
  LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
  LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
- LOG  🔄 VOICE_CONTEXT: Context voiceState: IDLE
+ LOG  🔄 VOICE_CONTEXT: Context voiceState: listening
+ LOG  🔄 VOICE_CONTEXT: Context isListening: true
+ LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
+ LOG  🔄 VOICE_CONTEXT: Context isError: false
+ LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  📝 Transcript update: Hi
+ LOG  Speech recognized: Hi
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔍 RN_BRIDGE_DEBUG: ========== PROCESS TEXT FROM NATIVE ==========
+ LOG  🔍 RN_BRIDGE_DEBUG: Event received at: 2025-08-29T23:21:09.596Z
+ LOG  🔍 RN_BRIDGE_DEBUG: Event data: {
+  "requestId": "22109188-89C9-4F16-A63D-0A08F0F3E6B6",
+  "text": "Hi"
+}
+ LOG  🔍 RN_BRIDGE_DEBUG: Text to process: Hi
+ LOG  🔍 RN_BRIDGE_DEBUG: Request ID: 22109188-89C9-4F16-A63D-0A08F0F3E6B6
+ LOG  🔍 RN_BRIDGE_DEBUG: Current voice state: idle
+ LOG  🔍 RN_BRIDGE_DEBUG: Chat history length: 0
+ LOG  🔍 RN_BRIDGE_DEBUG: API loading state: false
+ LOG  🔍 RN_BRIDGE_DEBUG: Thread info: {"performanceNow": 201222813.038875, "timestamp": 1756509669597}
+ LOG  🟡 VOICE_SERVICE: Adding user message to chat history
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🕐 Setting auto-refresh timer for 10 minutes
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: listening
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: processing
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: listening
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: processing
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  📝 Transcript update: Hi
+ LOG  🔴 VoiceAssistant: isSpeaking changed: false
+ LOG  🔴 VoiceAssistant: voiceState: processing
+ LOG  🔴 VoiceAssistant: typeof voiceState: string
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
+ LOG  🔄 VOICE_CONTEXT: Context voiceState: processing
  LOG  🔄 VOICE_CONTEXT: Context isListening: false
  LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
  LOG  🔄 VOICE_CONTEXT: Context isError: false
  LOG  🔄 VOICE_CONTEXT: ====================================================
- LOG  📱 VOICE_SETTINGS: Loading settings from storage...
  LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
  LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
- LOG  🎤 Setting up voice event listeners
- LOG  📱 Setting up AppState monitoring for background wake word handling
- ERROR  Invariant Violation: `new NativeEventEmitter()` requires a non-null argument.
-
-This error is located at:
-    in VoiceProvider (at App.tsx:588)
-    in VoiceErrorBoundary (at App.tsx:587)
-    in AuthProvider (at App.tsx:586)
-    in EnsureSingleNavigator (at BaseNavigationContainer.tsx:433)
-    in BaseNavigationContainer (at NavigationContainer.tsx:132)
-    in ThemeProvider (at NavigationContainer.tsx:131)
-    in NavigationContainerInner (at App.tsx:585)
-    in AppErrorBoundary (at App.tsx:584)
-    in App (at withDevTools.ios.js:29)
-    in withDevTools(App) (at renderApplication.js:57)
-    in RCTView (at View.js:116)
-    in View (at AppContainer.js:127)
-    in RCTView (at View.js:116)
-    in View (at AppContainer.js:155)
-    in AppContainer (at renderApplication.js:50)
-    in main(RootComponent) (at renderApplication.js:67), js engine: hermes
- ERROR  🎤 Voice Error Caught: {"componentStack": "
-    in VoiceProvider (at App.tsx:588)
-    in VoiceErrorBoundary (at App.tsx:587)
-    in AuthProvider (at App.tsx:586)
-    in EnsureSingleNavigator (at BaseNavigationContainer.tsx:433)
-    in BaseNavigationContainer (at NavigationContainer.tsx:132)
-    in ThemeProvider (at NavigationContainer.tsx:131)
-    in NavigationContainerInner (at App.tsx:585)
-    in AppErrorBoundary (at App.tsx:584)
-    in App (at withDevTools.ios.js:29)
-    in withDevTools(App) (at renderApplication.js:57)
-    in RCTView (at View.js:116)
-    in View (at AppContainer.js:127)
-    in RCTView (at View.js:116)
-    in View (at AppContainer.js:155)
-    in AppContainer (at renderApplication.js:50)
-    in main(RootComponent) (at renderApplication.js:67)", "crashType": "unknown", "deviceInfo": {"platform": "ios", "version": "18.6.2"}, "error": "`new NativeEventEmitter()` requires a non-null argument.", "errorCount": 1, "stack": "Invariant Violation: `new NativeEventEmitter()` requires a non-null argument.
-    at invariant (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:7896:26)
-    at NativeEventEmitter (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:49909:32)
-    at AppStateService (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:173569:165)
-    at getInstance (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:173724:57)
-    at anonymous (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:150083:65)
-    at commitHookEffectListMount (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:103622:38)
-    at commitPassiveMountOnFiber (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:104823:44)
-    at commitPassiveMountEffects_complete (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:104795:40)
-    at commitPassiveMountEffects_begin (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:104785:47)
-    at commitPassiveMountEffects (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:104775:40)
-    at flushPassiveEffectsImpl (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:106449:34)
-    at flushPassiveEffects (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:106405:43)
-    at anonymous (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:106238:34)"} 
-    at VoiceErrorBoundary (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:233870:36)
-    at AuthProvider (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:171946:24)
-    at EnsureSingleNavigator (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:138709:24)
-    at BaseNavigationContainer (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:137204:28)
-    at ThemeProvider (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:142917:21)
-    at NavigationContainerInner (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:142792:26)
-    at AppErrorBoundary (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:232967:36)
-    at App (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:135758:41)
-    at withDevTools(App) (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:135305:27)
-    at RCTView
-    at View (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:70174:43)
-    at RCTView
-    at View (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:70174:43)
-    at AppContainer (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:69986:36)
-    at main(RootComponent) (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:117426:28)
- LOG  🎧 WAKE_WORD_CONTEXT: Cleaning up wake word event listener
- ERROR  📊 Error Report: {"appState": {"accessibilityEnabled": false, "crashResilienceMode": "normal", "isBackground": false, "locale": "en-US"}, "context": "VoiceErrorBoundary:unknown", "crashContext": {"bridgeState": "normal", "crashType": "voice_processing", "isRecovering": false, "memoryTrend": "unknown", "recoveryAttempts": 0, "relatedCrashes": 0, "severity": "medium"}, "deviceInfo": {"isIPhone14Pro": false, "memoryCapacity": undefined, "model": "iPhone", "platform": "ios", "screenDensity": 3, "version": "18.6.2"}, "localeContext": {"currentLocale": "en-US", "icuCompatible": true, "localeValidationWarnings": [], "safeLocale": "en-US"}, "message": "`new NativeEventEmitter()` requires a non-null argument.", "sessionDuration": 21, "stack": "Invariant Violation: `new NativeEventEmitter()` requires a non-null argument.
-    at invariant (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:7896:26)
-    at NativeEventEmitter (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:49909:32)
-    at AppStateService (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:173569:165)
-    at getInstance (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:173724:57)
-    at anonymous (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:150083:65)
-    at commitHookEffectListMount (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:103622:38)
-    at commitPassiveMountOnFiber (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:104823:44)
-    at commitPassiveMountEffects_complete (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:104795:40)
-    at commitPassiveMountEffects_begin (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:104785:47)
-    at commitPassiveMountEffects (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:104775:40)
-    at flushPassiveEffectsImpl (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:106449:34)
-    at flushPassiveEffects (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:106405:43)
-    at anonymous (http://192.168.1.80:8081/index.bundle//&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&app=com.hightowerai.MobileJarvisNative&transform.routerRoot=app&transform.engine=hermes&transform.bytecode=true:106238:34)", "timestamp": "2025-08-29T22:46:10.195Z"}
- LOG  🔄 VOICE_STATE_HOOK: ========== INITIAL STATE SETUP ==========
- LOG  🔄 VOICE_STATE_HOOK: Initial state from native: idle
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: IDLE
- LOG  🔄 VOICE_STATE_HOOK: Initial setState - Previous state: IDLE
- LOG  🔄 VOICE_STATE_HOOK: Initial setState - New state: idle
- LOG  🔄 VOICE_STATE_HOOK: Initial setVoiceState called with: idle
- LOG  🔄 VOICE_STATE_HOOK: ========== INITIAL STATE SETUP ==========
- LOG  🔄 VOICE_STATE_HOOK: Initial state from native: idle
- LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: IDLE
- LOG  🔄 VOICE_STATE_HOOK: Initial setState - Previous state: IDLE
- LOG  🔄 VOICE_STATE_HOOK: Initial setState - New state: idle
- LOG  🔄 VOICE_STATE_HOOK: Initial setVoiceState called with: idle
- LOG  🎵 VOICE_SETTINGS: Updating voice settings on ios - deepgramEnabled: true, voice: aura-2-pandora-en
- LOG  🔐 Auth state changed: INITIAL_SESSION false
- LOG  🎵 VOICE_SETTINGS: ========== VOICE SETTINGS UPDATE COMPLETED ==========
- LOG  Auth state changed: INITIAL_SESSION
+ LOG  🔄 VOICE_CONTEXT: Sending message with current settings
+ LOG  🔍 RN_BRIDGE_DEBUG: ========== STARTING API CALL ==========
+ LOG  🔍 RN_BRIDGE_DEBUG: API call start time: 1756509669744
+ LOG  🔍 RN_BRIDGE_DEBUG: Text being sent to API: Hi
+ LOG  🔍 RN_BRIDGE_DEBUG: History entries count: 1
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 SERVER_API: sendChatRequest called
+ LOG  🔴 SERVER_API: Message: "Hi"
+ LOG  🔴 SERVER_API: Generated request ID: 1756509669789-67sn9532r
+ LOG  🔴 SERVER_API_CALLBACK: Calling onRequestStart callback with requestId: 1756509669789-67sn9532r
+ LOG  📊 REQUEST_STATUS: Setting request ID for polling: 1756509669789-67sn9532r
+ LOG  🔍 RN_BRIDGE_DEBUG: Request ID assigned: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔗 REQUEST_MAPPING: Mapping RN ID '1756509669789-67sn9532r' to native ID '22109188-89C9-4F16-A63D-0A08F0F3E6B6'
+ LOG  🔴 SERVER_API_CALLBACK_DONE: onRequestStart callback completed for requestId: 1756509669789-67sn9532r
+ LOG  🔴 SERVER_API: Adding delay for Android stability...
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: processing
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: idle
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: processing
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: idle
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
+ LOG  🔴 VoiceAssistant: isSpeaking changed: false
+ LOG  🔴 VoiceAssistant: voiceState: idle
+ LOG  🔴 VoiceAssistant: typeof voiceState: string
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
+ LOG  🔄 VOICE_CONTEXT: Context voiceState: idle
+ LOG  🔄 VOICE_CONTEXT: Context isListening: false
+ LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
+ LOG  🔄 VOICE_CONTEXT: Context isError: false
+ LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: idle
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: error
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: idle
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: error
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
+ LOG  🔴 VoiceAssistant: isSpeaking changed: false
+ LOG  🔴 VoiceAssistant: voiceState: error
+ LOG  🔴 VoiceAssistant: typeof voiceState: string
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
+ LOG  🔄 VOICE_CONTEXT: Context voiceState: error
+ LOG  🔄 VOICE_CONTEXT: Context isListening: false
+ LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
+ LOG  🔄 VOICE_CONTEXT: Context isError: true
+ LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: error
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: idle
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: error
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: idle
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
+ LOG  🔴 VoiceAssistant: isSpeaking changed: false
+ LOG  🔴 VoiceAssistant: voiceState: idle
+ LOG  🔴 VoiceAssistant: typeof voiceState: string
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
+ LOG  🔄 VOICE_CONTEXT: Context voiceState: idle
+ LOG  🔄 VOICE_CONTEXT: Context isListening: false
+ LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
+ LOG  🔄 VOICE_CONTEXT: Context isError: false
+ LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: idle
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: error
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: idle
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: error
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
+ LOG  🔴 VoiceAssistant: isSpeaking changed: false
+ LOG  🔴 VoiceAssistant: voiceState: error
+ LOG  🔴 VoiceAssistant: typeof voiceState: string
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
+ LOG  🔄 VOICE_CONTEXT: Context voiceState: error
+ LOG  🔄 VOICE_CONTEXT: Context isListening: false
+ LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
+ LOG  🔄 VOICE_CONTEXT: Context isError: true
+ LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  🔴 SERVER_API: History[0]: {"content": "Hi", "contentLength": 2, "role": "user", "timestamp": 1756509669597}
+ LOG  🔴 SERVER_API: Full request payload: {
+  "message": "Hi",
+  "timestamp": 1756509669966,
+  "history": [
+    {
+      "role": "user",
+      "content": "Hi",
+      "timestamp": 1756509669597,
+      "type": "text"
+    }
+  ],
+  "request_id": "1756509669789-67sn9532r"
+}
+ LOG  🔍 API Interceptor: Starting auth check for request to: /api/chat
+ LOG  📱 Platform: ios
+ LOG  🔍 DB_QUERY: No request record found for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: null for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: No request record found for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: null for requestId: 1756509669789-67sn9532r
+ LOG  🔍 API Interceptor: User check result: User ID: 56a2c117-6486-4ca5-a57d-6c2e877e7083
+ LOG  🔍 API Interceptor: Session check result: Token exists: true
+ LOG  ✅ API Interceptor: Auth token added to request
+ LOG  🔍 API Interceptor: Final headers: {"Accept": "application/json, text/plain, */*", "Authorization": "[REDACTED]", "Content-Type": "multipart/form-data"}
+ LOG  🔍 DB_QUERY: No request record found for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: null for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: No request record found for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: null for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: No request record found for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: null for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Found request record: {"created_at": "2025-08-29T23:21:10.522642+00:00", "id": "5d9240b1-8543-43ba-b947-43a4d51f11dd", "requestId": "1756509669789-67sn9532r", "status": "thinking", "total_turns": 0, "updated_at": "2025-08-29T23:21:10.573091+00:00", "user_message": "Hi"}
+ LOG  🔍 DB_QUERY: Returning status: thinking for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: thinking for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  📊 POLLING_HOOK_CALLBACK: Calling onStatusChange with status: thinking
+ LOG  📊 REQUEST_STATUS: Status changed to: thinking
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  🔍 DB_QUERY: Found request record: {"created_at": "2025-08-29T23:21:10.522642+00:00", "id": "5d9240b1-8543-43ba-b947-43a4d51f11dd", "requestId": "1756509669789-67sn9532r", "status": "thinking", "total_turns": 0, "updated_at": "2025-08-29T23:21:10.573091+00:00", "user_message": "Hi"}
+ LOG  🔍 DB_QUERY: Returning status: thinking for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: thinking for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CALLBACK: Calling onStatusChange with status: thinking
+ LOG  📊 REQUEST_STATUS: Status changed to: thinking
+ LOG  🔍 DB_QUERY: Found request record: {"created_at": "2025-08-29T23:21:10.522642+00:00", "id": "5d9240b1-8543-43ba-b947-43a4d51f11dd", "requestId": "1756509669789-67sn9532r", "status": "thinking", "total_turns": 0, "updated_at": "2025-08-29T23:21:10.573091+00:00", "user_message": "Hi"}
+ LOG  🔍 DB_QUERY: Returning status: thinking for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: thinking for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CALLBACK: Calling onStatusChange with status: thinking
+ LOG  📊 REQUEST_STATUS: Status changed to: thinking
+ LOG  ✅ API Response Success: 200 /api/chat
+ LOG  🔴 SERVER_API: ✅ Server response received
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  API Response:
+ {"integration_in_progress": false, "request_id": "1756509669789-67sn9532r", "response": "Hi there! How can we help you today?", "settings_updated": false, "timestamp": 1756509676}
+ LOG  🔍 RN_BRIDGE_DEBUG: ========== API CALL COMPLETED ==========
+ LOG  🔍 RN_BRIDGE_DEBUG: API call duration: 6589.691624999046 ms
+ LOG  🔍 RN_BRIDGE_DEBUG: Response received at: 1756509676334
+ LOG  🔍 RN_BRIDGE_DEBUG: Response data: {
+  "response": "Hi there! How can we help you today?",
+  "timestamp": 1756509676,
+  "settings_updated": false,
+  "integration_in_progress": false,
+  "request_id": "1756509669789-67sn9532r"
+}
+ LOG  🟠 VOICE_CONTEXT: Received API response
+ LOG  🔄 VOICE_CONTEXT: Response settings_updated flag: false
+ LOG  ⚙️ VOICE_CONTEXT: No settings update flag - skipping settings refresh
+ LOG  📱 Sending API response back to native: {"requestId": "22109188-89C9-4F16-A63D-0A08F0F3E6B6", "responseLength": 36}
+ LOG  📱 Platform: ios
+ LOG  📱 VoiceModule available: true
+ LOG  📱 handleApiResponse method available: true
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  💬 Response update: Hi there! How can we help you today?
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  🕐 Setting auto-refresh timer for 10 minutes
+ LOG  ✅ VOICE_RESPONSE: Setting request status to completed after voice response
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1756509669789-67sn9532r
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: error
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: speaking
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: error
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: speaking
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔴 VoiceAssistant: isSpeaking changed: true
+ LOG  🔴 VoiceAssistant: voiceState: speaking
+ LOG  🔴 VoiceAssistant: typeof voiceState: string
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
+ LOG  🔄 VOICE_CONTEXT: Context voiceState: speaking
+ LOG  🔄 VOICE_CONTEXT: Context isListening: false
+ LOG  🔄 VOICE_CONTEXT: Context isSpeaking: true
+ LOG  🔄 VOICE_CONTEXT: Context isError: false
+ LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📱 Native handleApiResponse result: true
+ LOG  [ConversationSyncService] Skipping native sync - not available
+ LOG  ✅ VOICE_BRIDGE: History synced to native after API response
+ LOG  ✅ VOICE_BRIDGE: Setting request status to completed after successful API response
+ LOG  🔍 DB_QUERY: Found request record: {"created_at": "2025-08-29T23:21:10.522642+00:00", "id": "5d9240b1-8543-43ba-b947-43a4d51f11dd", "requestId": "1756509669789-67sn9532r", "status": "completed", "total_turns": 0, "updated_at": "2025-08-29T23:21:16.1169+00:00", "user_message": "Hi"}
+ LOG  🔍 DB_QUERY: Returning status: completed for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: completed for requestId: 1756509669789-67sn9532r
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_CALLBACK: Calling onStatusChange with status: completed
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 POLLING_HOOK_FINAL: Final status reached: completed stopping polling
+ LOG  🔍 DB_QUERY: Found request record: {"created_at": "2025-08-29T23:21:10.522642+00:00", "id": "5d9240b1-8543-43ba-b947-43a4d51f11dd", "requestId": "1756509669789-67sn9532r", "status": "completed", "total_turns": 0, "updated_at": "2025-08-29T23:21:16.1169+00:00", "user_message": "Hi"}
+ LOG  🔍 DB_QUERY: Returning status: completed for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: completed for requestId: 1756509669789-67sn9532r
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_CALLBACK: Calling onStatusChange with status: completed
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 POLLING_HOOK_FINAL: Final status reached: completed stopping polling
+ LOG  🔍 DB_QUERY: Found request record: {"created_at": "2025-08-29T23:21:10.522642+00:00", "id": "5d9240b1-8543-43ba-b947-43a4d51f11dd", "requestId": "1756509669789-67sn9532r", "status": "completed", "total_turns": 0, "updated_at": "2025-08-29T23:21:16.1169+00:00", "user_message": "Hi"}
+ LOG  🔍 DB_QUERY: Returning status: completed for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: completed for requestId: 1756509669789-67sn9532r
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_CALLBACK: Calling onStatusChange with status: completed
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 POLLING_HOOK_FINAL: Final status reached: completed stopping polling
+ LOG  🔍 DB_QUERY: Found request record: {"created_at": "2025-08-29T23:21:10.522642+00:00", "id": "5d9240b1-8543-43ba-b947-43a4d51f11dd", "requestId": "1756509669789-67sn9532r", "status": "completed", "total_turns": 0, "updated_at": "2025-08-29T23:21:16.1169+00:00", "user_message": "Hi"}
+ LOG  🔍 DB_QUERY: Returning status: completed for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: completed for requestId: 1756509669789-67sn9532r
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_CALLBACK: Calling onStatusChange with status: completed
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 POLLING_HOOK_FINAL: Final status reached: completed stopping polling
+ LOG  🔍 DB_QUERY: Found request record: {"created_at": "2025-08-29T23:21:10.522642+00:00", "id": "5d9240b1-8543-43ba-b947-43a4d51f11dd", "requestId": "1756509669789-67sn9532r", "status": "completed", "total_turns": 0, "updated_at": "2025-08-29T23:21:16.1169+00:00", "user_message": "Hi"}
+ LOG  🔍 DB_QUERY: Returning status: completed for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: completed for requestId: 1756509669789-67sn9532r
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_CALLBACK: Calling onStatusChange with status: completed
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 POLLING_HOOK_FINAL: Final status reached: completed stopping polling
+ LOG  🔍 DB_QUERY: Found request record: {"created_at": "2025-08-29T23:21:10.522642+00:00", "id": "5d9240b1-8543-43ba-b947-43a4d51f11dd", "requestId": "1756509669789-67sn9532r", "status": "completed", "total_turns": 0, "updated_at": "2025-08-29T23:21:16.1169+00:00", "user_message": "Hi"}
+ LOG  🔍 DB_QUERY: Returning status: completed for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: completed for requestId: 1756509669789-67sn9532r
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_CALLBACK: Calling onStatusChange with status: completed
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 POLLING_HOOK_FINAL: Final status reached: completed stopping polling
+ LOG  🔍 DB_QUERY: Found request record: {"created_at": "2025-08-29T23:21:10.522642+00:00", "id": "5d9240b1-8543-43ba-b947-43a4d51f11dd", "requestId": "1756509669789-67sn9532r", "status": "completed", "total_turns": 0, "updated_at": "2025-08-29T23:21:16.1169+00:00", "user_message": "Hi"}
+ LOG  🔍 DB_QUERY: Returning status: completed for requestId: 1756509669789-67sn9532r
+ LOG  📊 POLLING_HOOK_RESULT: Received status: completed for requestId: 1756509669789-67sn9532r
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_CALLBACK: Calling onStatusChange with status: completed
+ LOG  📊 REQUEST_STATUS: Status changed to: completed
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 REQUEST_STATUS: Request reached final state, clearing request ID
+ LOG  📊 POLLING_HOOK_FINAL: Final status reached: completed stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔴 useVoiceState: SPEAKING state detected!
+ LOG  🔴 useVoiceState: normalizedState: speaking
+ LOG  🔴 useVoiceState: VoiceState.SPEAKING: SPEAKING
+ LOG  🔴 useVoiceState: isSpeaking: true
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: speaking
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: listening
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: speaking
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: listening
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔴 VoiceAssistant: isSpeaking changed: false
+ LOG  🔴 VoiceAssistant: voiceState: listening
+ LOG  🔴 VoiceAssistant: typeof voiceState: string
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
+ LOG  🔄 VOICE_CONTEXT: Context voiceState: listening
+ LOG  🔄 VOICE_CONTEXT: Context isListening: true
+ LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
+ LOG  🔄 VOICE_CONTEXT: Context isError: false
+ LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling

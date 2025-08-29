@@ -290,10 +290,11 @@ class VoiceManager: NSObject {
         print("🎙️ VoiceManager: Current state: \(currentState.description)")
         print("🎙️ VoiceManager: Is already listening: \(isListening)")
         
-        // Safety check: prevent starting if already listening
-        if isListening || currentState == .listening {
-            NSLog("🎙️ VoiceManager: ⚠️ Already listening, ignoring start request")
-            print("🎙️ VoiceManager: ⚠️ Already listening, ignoring start request")
+        // Safety check: prevent starting if already actively listening
+        // Changed from OR to AND to allow restart after API response cycle
+        if isListening && currentState == .listening {
+            NSLog("🎙️ VoiceManager: ⚠️ Already actively listening, ignoring start request")
+            print("🎙️ VoiceManager: ⚠️ Already actively listening, ignoring start request")
             print("🎙️ VoiceManager: Current state: \(currentState.description)")
             print("🎙️ VoiceManager: isListening flag: \(isListening)")
             return
@@ -938,10 +939,9 @@ class VoiceManager: NSObject {
             
             // ANDROID PATTERN: Direct transition to LISTENING (no delays, no async operations)
             // This matches Android's immediate transition in the TTS completion callback
-            NSLog("🟢 VoiceManager: STEP 3 - Direct transition to LISTENING (Android pattern)")
-            self.setState(.listening)
+            NSLog("🟢 VoiceManager: STEP 3 - Start listening immediately (Android pattern)")
             
-            // Start listening immediately (matching Android's pattern)
+            // Start listening immediately (let startListening handle state transition)
             NSLog("🟢 VoiceManager: STEP 4 - Start listening immediately (Android pattern)")
             self.startListening()
             
