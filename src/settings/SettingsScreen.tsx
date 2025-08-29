@@ -442,12 +442,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         )}
         
         {/* Permissions Section */}
-        <PermissionsCard
+        {/* <PermissionsCard
           hasMicrophonePermission={hasMicrophonePermission}
           hasBatteryOptimizationExemption={hasBatteryOptimizationExemption}
           requestMicrophone={requestMicrophone}
           requestBatteryExemption={requestBatteryExemption}
-        />
+        /> */}
 
         {/* Timezone Section */}
         <SettingsDropdown
