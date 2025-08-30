@@ -39,10 +39,10 @@ export interface VoiceSettings {
 // Wake word threshold mapping
 const WAKE_WORD_SENSITIVITY_MAP: Record<string, number> = {
   'Hey Juni': 0.5,
-  'Hey Juniper': 0.5,
-  'Juniper': 0.5,
+  'Hey Juniper': 0.2,
+  'Juniper': 0.05,
   'Hey': 0.01,
-  'Jarvis': 0.5,
+  'Jarvis': 0.2,
   'Hey Jarvis': 0.7,
   'Jasmine': 0.001,
   'Hey Jade': 0.001,
@@ -56,7 +56,6 @@ const WAKE_WORD_SENSITIVITY_MAP: Record<string, number> = {
 // ACTUAL OPTIONS DISPLAYED IN SETTINGS SCREEN
 const AVAILABLE_WAKE_WORDS = [
   { label: `Juniper (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Juniper'] * 100)}%)`, value: 'Juniper' },
-  { label: `Jarvis (${Math.round(WAKE_WORD_SENSITIVITY_MAP['Jarvis'] * 100)}%)`, value: 'Jarvis' },
 ];
 
 // Available timezones (common ones)
@@ -569,7 +568,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                   
                   console.log('🎯 WAKEWORD_SELECTION: ✅ Wake word setting update completed');
                 }}
-                description="The word you say to activate your assistant (minimum required threshold). If wake phrase is failing, try speaking a bit slower."
+                description="The word you say to activate your assistant (maximum threshold for background detection)."
               />
 
               <View style={styles.indentedSetting}>
@@ -615,7 +614,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                   minimumValue={0}
                   maximumValue={1}
                   step={1e-5}
-                  description="The threshold level for wake word detection (0 = more sensitive, 1 = less sensitive)."
+                  description="The threshold level for wake word detection (0 = more sensitive, 1 = less sensitive).  Note: threshold must be set lower for the word to be detected when the app is closed."
                   formatValue={(value) => `${Math.round(value * 100)}%`}
                 />
               </View>
