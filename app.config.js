@@ -7,7 +7,10 @@ export default {
     userInterfaceStyle: "light",
     newArchEnabled: true,
     scheme: "mobilejarvisnative",
-    plugins: ["expo-secure-store"],
+    plugins: [
+      "expo-secure-store",
+      "./expo-plugins/withVoiceModule.js"
+    ],
     platforms: ["ios", "android", "web"],
     extra: {
       GOOGLE_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,

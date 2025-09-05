@@ -1,4 +1,5 @@
 import Foundation
+import React
 
 @objc(StringProcessingWrapper)
 class StringProcessingWrapper: NSObject {
@@ -49,7 +50,7 @@ class StringProcessingWrapper: NSObject {
         return autoreleasepool {
             do {
                 let result = try performWithTimeout(maxProcessingTime) {
-                    return processStringWithLocale(input, locale: safeLocale)
+                    return try processStringWithLocale(input, locale: safeLocale)
                 }
                 return result
             } catch StringProcessingError.localeProcessingFailed {
@@ -198,7 +199,7 @@ class StringProcessingWrapper: NSObject {
     
     /// Monitor memory usage during string operations
     @objc static func getMemoryUsage() -> [String: NSNumber] {
-        let info = mach_task_basic_info()
+        var info = mach_task_basic_info()
         var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size)/4
         
         let result: kern_return_t = withUnsafeMutablePointer(to: &info) {
@@ -267,7 +268,7 @@ extension StringProcessingWrapper {
     
     @objc func getStringProcessingStats(_ callback: @escaping RCTResponseSenderBlock) {
         let memoryInfo = StringProcessingWrapper.getMemoryUsage()
-        let stats = [
+        let stats: [String: Any] = [
             "memory": memoryInfo,
             "max_string_length": NSNumber(value: StringProcessingWrapper.maxStringLength),
             "max_processing_time": NSNumber(value: StringProcessingWrapper.maxProcessingTime)
