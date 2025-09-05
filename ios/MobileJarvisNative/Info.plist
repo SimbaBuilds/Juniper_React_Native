@@ -47,6 +47,10 @@
     </dict>
     <key>NSFaceIDUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your Face ID biometric data.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>This app uses speech recognition to convert your voice to text for voice conversations.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>This app needs microphone access to record your voice for speech recognition.</string>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>

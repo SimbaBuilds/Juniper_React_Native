@@ -82,6 +82,22 @@ export class VoiceService {
     }
 
     /**
+     * Wait for VoiceModule to be ready with proper methods
+     */
+    private async waitForModuleReady(maxAttempts = 10): Promise<boolean> {
+        for (let i = 0; i < maxAttempts; i++) {
+            if (VoiceModule && typeof VoiceModule.updateVoiceSettings === 'function') {
+                console.log(`🎵 VOICE_SETTINGS: VoiceModule ready after ${i + 1} attempts`);
+                return true;
+            }
+            console.log(`🎵 VOICE_SETTINGS: Waiting for VoiceModule (attempt ${i + 1}/${maxAttempts})...`);
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        console.log('🎵 VOICE_SETTINGS: VoiceModule not ready after maximum attempts');
+        return false;
+    }
+
+    /**
      * Check Android permissions before starting voice operations
      */
     private async checkAndroidPermissions(): Promise<boolean> {
@@ -550,6 +566,13 @@ export class VoiceService {
         
         try {
             console.log(`🎵 VOICE_SETTINGS: Updating voice settings on ${Platform.OS} - deepgramEnabled: ${deepgramEnabled}, voice: ${selectedDeepgramVoice}`);
+            
+            // Wait for VoiceModule to be ready
+            const moduleReady = await this.waitForModuleReady();
+            if (!moduleReady) {
+                console.log('🎵 VOICE_SETTINGS: VoiceModule not ready, skipping native update');
+                return true; // Don't treat as error - just skip native update
+            }
 
             const nativeCallStartTime = Date.now();
             const result = await SafeVoiceModule.updateVoiceSettings(deepgramEnabled, selectedDeepgramVoice);
