@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "MobileJarvisNative",
+    "slug": "MobileJarvisNative",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "scheme": "mobilejarvisnative",
+    "platforms": ["ios", "android", "web"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hightowerai.MobileJarvisNative"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.hightowerai.MobileJarvisNative"
+    }
+  }
+}
