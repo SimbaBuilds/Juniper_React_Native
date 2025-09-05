@@ -4,7 +4,7 @@ import { DeviceEventEmitter } from 'react-native';
 const { VoiceModule } = NativeModules;
 
 // Create safe module accessor with defensive checks
-const getSafeSafeVoiceModule = () => {
+const getSafeVoiceModule = () => {
     if (!VoiceModule) {
         console.error('SafeVoiceModule not found in NativeModules. Falling back to mock implementation.');
         console.log('Available Voice-related modules:', Object.keys(NativeModules).filter(key => key.toLowerCase().includes('voice')));
@@ -26,7 +26,7 @@ const getSafeSafeVoiceModule = () => {
 };
 
 // Use the safe module accessor
-const SafeSafeVoiceModule = getSafeSafeVoiceModule();
+const SafeVoiceModule = getSafeVoiceModule();
 
 // Voice state enum that matches the native implementation
 export enum VoiceState {
@@ -151,7 +151,7 @@ export class VoiceService {
             }
             
             console.log(`📱 ${Platform.OS}: Starting native voice module...`);
-            const result = await VoiceModule.startListening();
+            const result = await SafeVoiceModule.startListening();
             console.log(`📱 ${Platform.OS}: Voice module started:`, result);
             
             return result;
@@ -182,7 +182,7 @@ export class VoiceService {
             // Request permissions for iOS (speech recognition and microphone)
             console.log('🔐 iOS: Requesting permissions...');
             try {
-                const permissionsGranted = await VoiceModule.requestPermissions();
+                const permissionsGranted = await SafeVoiceModule.requestPermissions();
                 console.log('🔐 iOS: Permissions result:', permissionsGranted);
                 if (!permissionsGranted) {
                     throw new Error('iOS permissions not granted for speech recognition/microphone');
@@ -193,7 +193,7 @@ export class VoiceService {
             }
             
             console.log('📱 iOS: Calling native startContinuousConversation...');
-            const result = await VoiceModule.startContinuousConversation();
+            const result = await SafeVoiceModule.startContinuousConversation();
             console.log('📱 iOS: Continuous conversation started:', result);
             
             return result;
@@ -206,7 +206,7 @@ export class VoiceService {
     public async stopListening(): Promise<boolean> {
         try {
             console.log(`📱 ${Platform.OS}: Stopping voice recognition...`);
-            const result = await VoiceModule.stopListening();
+            const result = await SafeVoiceModule.stopListening();
             
             // Add delay for Android to ensure proper cleanup
             if (Platform.OS === 'android') {
@@ -223,7 +223,7 @@ export class VoiceService {
     public async interruptSpeech(): Promise<boolean> {
         try {
             console.log('📱 Android: Interrupting speech...');
-            const result = await VoiceModule.interruptSpeech();
+            const result = await SafeVoiceModule.interruptSpeech();
             
             // Add delay for Android to ensure proper state transition
             if (Platform.OS === 'android') {
@@ -244,7 +244,7 @@ export class VoiceService {
         }
 
         try {
-            const nativeState = await VoiceModule.getVoiceState();
+            const nativeState = await SafeVoiceModule.getVoiceState();
             // Update cached state with fresh native state
             this.cachedVoiceState = nativeState as VoiceState;
             return nativeState;
@@ -285,7 +285,7 @@ export class VoiceService {
     public async speakResponse(text: string): Promise<boolean> {
         try {
             console.log('📱 Android: Speaking response...');
-            const result = await VoiceModule.speakResponse(text);
+            const result = await SafeVoiceModule.speakResponse(text);
             
             // Add delay for Android TTS stability
             if (Platform.OS === 'android') {
@@ -304,9 +304,9 @@ export class VoiceService {
             console.log('📱 Sending API response back to native:', { requestId, responseLength: response.length });
             console.log('📱 Platform:', Platform.OS);
             console.log('📱 VoiceModule available:', VoiceModule !== null && VoiceModule !== undefined);
-            console.log('📱 handleApiResponse method available:', typeof VoiceModule.handleApiResponse === 'function');
+            console.log('📱 handleApiResponse method available:', typeof SafeVoiceModule.handleApiResponse === 'function');
             
-            const result = await VoiceModule.handleApiResponse(requestId, response);
+            const result = await SafeVoiceModule.handleApiResponse(requestId, response);
             console.log('📱 Native handleApiResponse result:', result);
             return result;
         } catch (error) {
@@ -436,7 +436,7 @@ export class VoiceService {
             // Send error response back to native
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
             try {
-                await VoiceModule.handleApiResponse(data.requestId, `Error: ${errorMessage}`);
+                await SafeVoiceModule.handleApiResponse(data.requestId, `Error: ${errorMessage}`);
             } catch (responseError) {
             }
         }
@@ -451,7 +451,7 @@ export class VoiceService {
                 return ['aura-2-pandora-en']; // Default for non-Android platforms
             }
             
-            const result = await VoiceModule.getAvailableDeepgramVoices();
+            const result = await SafeVoiceModule.getAvailableDeepgramVoices();
             return result.voices || ['aura-2-pandora-en'];
         } catch (error) {
             console.error('Error getting available Deepgram voices:', error);
@@ -470,8 +470,8 @@ export class VoiceService {
                 return false;
             }
             
-            console.log('🎵 DEEPGRAM_VOICE: Calling native VoiceModule.setSelectedDeepgramVoice...');
-            const result = await VoiceModule.setSelectedDeepgramVoice(voice);
+            console.log('🎵 DEEPGRAM_VOICE: Calling native SafeVoiceModule.setSelectedDeepgramVoice...');
+            const result = await SafeVoiceModule.setSelectedDeepgramVoice(voice);
             console.log('🎵 DEEPGRAM_VOICE: Native call result:', result);
             
             if (result.success) {
@@ -498,8 +498,8 @@ export class VoiceService {
                 return 'aura-2-pandora-en'; // Default for non-Android platforms
             }
             
-            console.log('🎵 DEEPGRAM_VOICE: Calling native VoiceModule.getSelectedDeepgramVoice...');
-            const result = await VoiceModule.getSelectedDeepgramVoice();
+            console.log('🎵 DEEPGRAM_VOICE: Calling native SafeVoiceModule.getSelectedDeepgramVoice...');
+            const result = await SafeVoiceModule.getSelectedDeepgramVoice();
             console.log('🎵 DEEPGRAM_VOICE: Native call result:', result);
             
             const voice = result.voice || 'aura-2-pandora-en';
@@ -525,8 +525,8 @@ export class VoiceService {
                 return false;
             }
             
-            console.log('🎵 DEEPGRAM_PREVIEW: Calling native VoiceModule.previewDeepgramVoice...');
-            const result = await VoiceModule.previewDeepgramVoice(voice, text);
+            console.log('🎵 DEEPGRAM_PREVIEW: Calling native SafeVoiceModule.previewDeepgramVoice...');
+            const result = await SafeVoiceModule.previewDeepgramVoice(voice, text);
             console.log('🎵 DEEPGRAM_PREVIEW: Native call result:', result);
             
             if (result) {
@@ -552,7 +552,7 @@ export class VoiceService {
             console.log(`🎵 VOICE_SETTINGS: Updating voice settings on ${Platform.OS} - deepgramEnabled: ${deepgramEnabled}, voice: ${selectedDeepgramVoice}`);
 
             const nativeCallStartTime = Date.now();
-            const result = await VoiceModule.updateVoiceSettings(deepgramEnabled, selectedDeepgramVoice);
+            const result = await SafeVoiceModule.updateVoiceSettings(deepgramEnabled, selectedDeepgramVoice);
             const nativeCallEndTime = Date.now();
             
 
@@ -596,7 +596,7 @@ export class VoiceService {
             // Reset Deepgram client to pick up new settings
 
             const resetStartTime = Date.now();
-            const resetResult = await VoiceModule.resetDeepgramClient();
+            const resetResult = await SafeVoiceModule.resetDeepgramClient();
             const resetEndTime = Date.now();
             
 

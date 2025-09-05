@@ -18,6 +18,19 @@ import conversationSyncService from '../services/conversationSyncService';
 
 const { VoiceModule } = NativeModules;
 
+// Create safe module accessor with defensive checks
+const getSafeVoiceModule = () => {
+    if (!VoiceModule) {
+        console.warn('VoiceModule not found in NativeModules for VoiceContext');
+        return {
+            clearNativeState: () => Promise.resolve({ success: false, error: 'VoiceModule not available' }),
+        };
+    }
+    return VoiceModule;
+};
+
+const SafeVoiceModule = getSafeVoiceModule();
+
 // Create context with default values
 const VoiceContext = createContext<VoiceContextValue>({
   voiceState: VoiceState.IDLE,
@@ -763,10 +776,10 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
     
     // Clear native voice state to ensure clean slate
-    if (Platform.OS === 'android' && VoiceModule?.clearNativeState) {
+    if (Platform.OS === 'android' && SafeVoiceModule?.clearNativeState) {
       try {
         console.log('🧹 CLEAR_CHAT: Clearing native voice state...');
-        await VoiceModule.clearNativeState(null);
+        await SafeVoiceModule.clearNativeState(null);
         console.log('🧹 CLEAR_CHAT: ✅ Native voice state cleared');
       } catch (nativeError) {
         console.warn('🧹 CLEAR_CHAT: ⚠️ Failed to clear native voice state:', nativeError);
