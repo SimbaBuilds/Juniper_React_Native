@@ -495,9 +495,14 @@ class VoiceManager: NSObject {
         // Cancel recognition task first (most important)
         if let task = recognitionTask {
             print("🎙️ VoiceManager: Cancelling recognition task...")
-            task.cancel()
-            recognitionTask = nil
-            print("🎙️ VoiceManager: ✅ Recognition task cancelled")
+            do {
+                task.cancel()
+                recognitionTask = nil
+                print("🎙️ VoiceManager: ✅ Recognition task cancelled")
+            } catch {
+                print("⚠️ VoiceManager: Error cancelling task: \(error)")
+                recognitionTask = nil
+            }
         } else {
             print("🎙️ VoiceManager: No recognition task to cancel")
         }
@@ -505,9 +510,14 @@ class VoiceManager: NSObject {
         // End recognition request
         if let request = recognitionRequest {
             print("🎙️ VoiceManager: Ending recognition request...")
-            request.endAudio()
-            recognitionRequest = nil
-            print("🎙️ VoiceManager: ✅ Recognition request ended")
+            do {
+                request.endAudio()
+                recognitionRequest = nil
+                print("🎙️ VoiceManager: ✅ Recognition request ended")
+            } catch {
+                print("⚠️ VoiceManager: Error ending request: \(error)")
+                recognitionRequest = nil
+            }
         } else {
             print("🎙️ VoiceManager: No recognition request to end")
         }
@@ -515,8 +525,12 @@ class VoiceManager: NSObject {
         // Stop audio engine if running
         if audioEngine.isRunning {
             print("🎙️ VoiceManager: Stopping audio engine...")
-            audioEngine.stop()
-            print("🎙️ VoiceManager: ✅ Audio engine stopped")
+            do {
+                audioEngine.stop()
+                print("🎙️ VoiceManager: ✅ Audio engine stopped")
+            } catch {
+                print("⚠️ VoiceManager: Error stopping audio engine: \(error)")
+            }
         } else {
             print("🎙️ VoiceManager: Audio engine was not running")
         }

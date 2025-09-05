@@ -1,12 +1,23 @@
-Finally, we need to debug and build out conversation history coordination between React Native and background chat.
+Unable to resolve module @babel/runtime/helpers/interopRequireDefault from /Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/index.tsx: @babel/runtime/helpers/interopRequireDefault could not be found within the project or in these directories:
+  node_modules
+  node_modules
+> 1 | import { registerRootComponent } from 'expo';
+  2 | import App from './App';
+  3 |
+  4 | registerRootComponent(App);
 
-- [ ]  resume chat in foreground
-    - [ ]  is there current logic for persisting history from background to foreground chat?  If there it is not working.
-- [ ]  resume chat in background
-    - [ ]  sync current RN history state on app load?
-    - [ ]  sync RN history to native state each api response - include in any background chats
-- RN clears history clear after 10 minutes
-    - [ ]  propagate to native when this happens to native
-
-
-Please investigate all of the above and create an implementation/fix plan.
+RCTFatal
+__28-[RCTCxxBridge handleError:]_block_invoke
+B62778F7-5827-3A7B-A96D-A24F7BE95416
+B62778F7-5827-3A7B-A96D-A24F7BE95416
+B62778F7-5827-3A7B-A96D-A24F7BE95416
+B62778F7-5827-3A7B-A96D-A24F7BE95416
+_dispatch_main_queue_callback_4CF
+AE3C9338-0166-397A-9643-356B14F6EE58
+AE3C9338-0166-397A-9643-356B14F6EE58
+CFRunLoopRunSpecific
+GSEventRunModal
+5E794CAA-4162-3FF6-861E-45F29F6B8AC0
+UIApplicationMain
+__debug_main_executable_dylib_entry_point
+CD2E758D-E1A2-3B92-AAE7-75D38F66EC54

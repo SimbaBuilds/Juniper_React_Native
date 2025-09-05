@@ -24,8 +24,7 @@ import { AuthProvider, useAuth } from './src/auth/AuthContext';
 import IntegrationCompletionService from './src/integrations/IntegrationCompletionService';
 import { DatabaseService } from './src/supabase/supabase';
 import { colors } from './src/shared/theme/colors';
-import { AppErrorBoundary } from './src/error/AppErrorBoundary';
-import { VoiceErrorBoundary } from './src/voice/ErrorBoundary/VoiceErrorBoundary';
+// Error boundaries removed - let React Native handle errors naturally
 import { Storage } from './src/utils/storage';
 
 type RootStackParamList = {
@@ -442,17 +441,8 @@ export default function App() {
       } catch (serviceError) {
         console.error(`❌ Error handling ${serviceName} service callback:`, serviceError);
         
-        // Don't crash - report error and fallback gracefully
-        try {
-          const { ErrorReportingService } = require('./src/error/ErrorReportingService');
-          ErrorReportingService.getInstance().reportError(
-            serviceError instanceof Error ? serviceError : new Error(String(serviceError)),
-            'OAuthCallbackError',
-            { serviceName, url: url.substring(0, 100) + '...' }
-          );
-        } catch (reportingError) {
-          console.error('❌ Error reporting OAuth callback failure:', reportingError);
-        }
+        // Don't crash - just log the error
+        console.error('OAuth callback error:', serviceError);
         
         // Fall back to legacy handler on service error
         try {
@@ -581,11 +571,9 @@ export default function App() {
   }
 
   return (
-    <AppErrorBoundary>
-      <NavigationContainer ref={navigationRef}>
-        <AuthProvider>
-          <VoiceErrorBoundary>
-            <VoiceProvider>
+    <NavigationContainer ref={navigationRef}>
+      <AuthProvider>
+        <VoiceProvider>
               {Platform.OS === 'android' ? (
                 <WakeWordProvider>
                   <Stack.Navigator
@@ -699,11 +687,9 @@ export default function App() {
               </Stack.Navigator>
               </WakeWordProvider>
             )}
-            </VoiceProvider>
-          </VoiceErrorBoundary>
+          </VoiceProvider>
         </AuthProvider>
       </NavigationContainer>
-    </AppErrorBoundary>
   );
 }
 

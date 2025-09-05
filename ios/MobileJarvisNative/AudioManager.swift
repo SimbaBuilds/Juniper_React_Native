@@ -665,6 +665,9 @@ class AudioManager: NSObject {
         case .routeConfigurationChange:
             print("🔊 AUDIO_MANAGER: ⚙️ Route configuration changed")
             
+        case .unknown:
+            print("🔊 AUDIO_MANAGER: ❓ Unknown route change reason")
+            
         @unknown default:
             print("🔊 AUDIO_MANAGER: ❓ Unknown route change reason: \(reason.rawValue)")
         }

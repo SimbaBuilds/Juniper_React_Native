@@ -125,19 +125,37 @@ class VoiceModule: RCTEventEmitter {
         NSLog("🔐 VoiceModule: requestPermissions called from React Native")
         print("🔐 VoiceModule: requestPermissions called from React Native")
         
-        voiceManager.requestPermissions { granted in
-            NSLog("🔐 VoiceModule: Permissions result: %@", granted ? "GRANTED" : "DENIED")
-            print("🔐 VoiceModule: Permissions result:", granted)
-            resolve(granted)
+        do {
+            voiceManager.requestPermissions { granted in
+                NSLog("🔐 VoiceModule: Permissions result: %@", granted ? "GRANTED" : "DENIED")
+                print("🔐 VoiceModule: Permissions result:", granted)
+                resolve(granted)
+            }
+        } catch {
+            print("❌ VoiceModule: Error requesting permissions: \(error)")
+            reject("PERMISSION_ERROR", "Failed to request permissions: \(error.localizedDescription)", error)
         }
     }
     
     @objc func startListening(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
         ensureInitialized()
         
+        // Check app state before starting
+        guard UIApplication.shared.applicationState == .active else {
+            reject("APP_NOT_ACTIVE", "Cannot start listening when app is not active", nil)
+            return
+        }
+        
         print("🎙️ VoiceModule: startListening called from React Native")
-        voiceManager.startListening()
-        resolve(true)
+        
+        do {
+            // Wrap in a safety check
+            voiceManager.startListening()
+            resolve(true)
+        } catch {
+            print("❌ VoiceModule: Error starting listening: \(error)")
+            reject("START_LISTENING_ERROR", "Failed to start listening: \(error.localizedDescription)", error)
+        }
     }
     
     /**
@@ -145,20 +163,37 @@ class VoiceModule: RCTEventEmitter {
      * Goes directly to listening without wake word simulation
      */
     @objc func startContinuousConversation(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+        // Check app state before starting
+        guard UIApplication.shared.applicationState == .active else {
+            reject("APP_NOT_ACTIVE", "Cannot start conversation when app is not active", nil)
+            return
+        }
+        
         NSLog("🎙️ VoiceModule: startContinuousConversation called - iOS direct listening mode")
         print("🎙️ VoiceModule: startContinuousConversation called - iOS direct listening mode")
         print("🎙️ VoiceModule: iOS flow - going directly to listening state")
         
-        // For iOS, go directly to listening without wake word simulation
-        voiceManager.startListening()
-        
-        resolve(true)
+        do {
+            // For iOS, go directly to listening without wake word simulation
+            voiceManager.startListening()
+            resolve(true)
+        } catch {
+            print("❌ VoiceModule: Error starting conversation: \(error)")
+            reject("START_CONVERSATION_ERROR", "Failed to start conversation: \(error.localizedDescription)", error)
+        }
     }
     
     @objc func stopListening(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
         print("🛑 VoiceModule: stopListening called from React Native")
-        voiceManager.stopListening()
-        resolve(true)
+        
+        do {
+            voiceManager.stopListening()
+            resolve(true)
+        } catch {
+            // Even if stop fails, resolve to prevent app hang
+            print("⚠️ VoiceModule: Error stopping listening: \(error)")
+            resolve(false)
+        }
     }
     
     @objc func getCurrentState(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
@@ -177,35 +212,49 @@ class VoiceModule: RCTEventEmitter {
      * Handle API response from React Native (matching Android handleApiResponse)
      */
     @objc func handleApiResponse(_ requestId: String, response: String, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+        // Validate inputs
+        guard !requestId.isEmpty else {
+            reject("INVALID_REQUEST_ID", "Request ID cannot be empty", nil)
+            return
+        }
+        
+        guard !response.isEmpty else {
+            reject("EMPTY_RESPONSE", "Response cannot be empty", nil)
+            return
+        }
+        
+        // Check app state
+        guard UIApplication.shared.applicationState == .active else {
+            // Still process but don't speak when backgrounded
+            NSLog("⚠️ VoiceModule: App is not active, skipping TTS")
+            resolve(false)
+            return
+        }
+        
         NSLog("🟢 VoiceModule: handleApiResponse called from React Native")
         NSLog("🟢 VoiceModule: RequestId: %@", requestId)
         NSLog("🟢 VoiceModule: Response length: %d", response.count)
-        NSLog("🟢 VoiceModule: Response preview: %@...", String(response.prefix(100)))
-        print("🟢 VoiceModule: handleApiResponse called from React Native")
-        print("🟢 VoiceModule: RequestId: \(requestId)")
-        print("🟢 VoiceModule: Response length: \(response.count)")
-        print("🟢 VoiceModule: Response preview: \(String(response.prefix(100)))...")
         
-        // Emit the response back to React Native for UI display
-        print("🟢 VoiceModule: Emitting VoiceResponseUpdate event to React Native")
-        let responseParams: [String: Any] = [
-            "response": response,
-            "timestamp": Date().timeIntervalSince1970 * 1000 // milliseconds
-        ]
-        
-        sendEvent(withName: "VoiceResponseUpdate", body: responseParams)
-        print("🟢 VoiceModule: ✅ VoiceResponseUpdate event emitted successfully")
-        
-        
-        // Remove the callback (VoiceManager handles the actual response processing)
-        pendingApiCallbacks.removeValue(forKey: requestId)
-        
-        // Forward to VoiceManager to handle TTS and state management
-        NSLog("🟢 VoiceModule: About to call voiceManager.handleApiResponse")
-        voiceManager.handleApiResponse(requestId, response)
-        NSLog("🟢 VoiceModule: Finished calling voiceManager.handleApiResponse")
-        
-        resolve(true)
+        do {
+            // Emit the response back to React Native for UI display
+            let responseParams: [String: Any] = [
+                "response": response,
+                "timestamp": Date().timeIntervalSince1970 * 1000
+            ]
+            
+            sendEvent(withName: "VoiceResponseUpdate", body: responseParams)
+            
+            // Remove the callback
+            pendingApiCallbacks.removeValue(forKey: requestId)
+            
+            // Forward to VoiceManager to handle TTS and state management
+            voiceManager.handleApiResponse(requestId, response)
+            
+            resolve(true)
+        } catch {
+            print("❌ VoiceModule: Error handling API response: \(error)")
+            reject("HANDLE_API_ERROR", "Failed to handle API response: \(error.localizedDescription)", error)
+        }
     }
     
     /**
@@ -222,14 +271,30 @@ class VoiceModule: RCTEventEmitter {
      * Speak response directly (for testing purposes, matching Android)
      */
     @objc func speakResponse(_ text: String, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+        // Check app state
+        guard UIApplication.shared.applicationState == .active else {
+            reject("APP_NOT_ACTIVE", "Cannot speak when app is not active", nil)
+            return
+        }
+        
+        guard !text.isEmpty else {
+            reject("EMPTY_TEXT", "Text to speak cannot be empty", nil)
+            return
+        }
+        
         print("🎵 VoiceModule: speakResponse called from React Native")
         print("🎵 VoiceModule: Text length: \(text.count)")
         
         let ttsManager = TTSManager.shared
         
-        ttsManager.speak(text) {
-            print("🎵 VoiceModule: TTS completed successfully")
-            resolve(true)
+        do {
+            ttsManager.speak(text) {
+                print("🎵 VoiceModule: TTS completed successfully")
+                resolve(true)
+            }
+        } catch {
+            print("❌ VoiceModule: Error speaking response: \(error)")
+            reject("TTS_ERROR", "Failed to speak response: \(error.localizedDescription)", error)
         }
     }
     
