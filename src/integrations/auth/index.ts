@@ -23,6 +23,9 @@ export { default as MicrosoftOutlookMailAuthService } from './services/Microsoft
 export { default as MicrosoftTeamsAuthService } from './services/MicrosoftTeamsAuthService';
 export { default as FitbitAuthService } from './services/FitbitAuthService';
 export { default as OuraAuthService } from './services/OuraAuthService';
+export { default as EpicMyChartAuthService } from './services/EpicMyChartAuthService';
+export { default as AppleHealthKitAuthService } from './services/AppleHealthKitAuthService';
+export { default as GoogleFitAuthService } from './services/GoogleFitAuthService';
 
 // Import services for use in getAuthService
 import NotionAuthService from './services/NotionAuthService';
@@ -43,6 +46,9 @@ import MicrosoftOutlookMailAuthService from './services/MicrosoftOutlookMailAuth
 import MicrosoftTeamsAuthService from './services/MicrosoftTeamsAuthService';
 import FitbitAuthService from './services/FitbitAuthService';
 import OuraAuthService from './services/OuraAuthService';
+import EpicMyChartAuthService from './services/EpicMyChartAuthService';
+import AppleHealthKitAuthService from './services/AppleHealthKitAuthService';
+import GoogleFitAuthService from './services/GoogleFitAuthService';
 
 // Export types for external use
 export type { NotionAuthService as NotionAuthServiceType } from './services/NotionAuthService';
@@ -62,6 +68,9 @@ export type { MicrosoftOutlookMailAuthService as MicrosoftOutlookMailAuthService
 export type { MicrosoftTeamsAuthService as MicrosoftTeamsAuthServiceType } from './services/MicrosoftTeamsAuthService';
 export type { FitbitAuthService as FitbitAuthServiceType } from './services/FitbitAuthService';
 export type { OuraAuthService as OuraAuthServiceType } from './services/OuraAuthService';
+export type { EpicMyChartAuthService as EpicMyChartAuthServiceType } from './services/EpicMyChartAuthService';
+export type { AppleHealthKitAuthService as AppleHealthKitAuthServiceType } from './services/AppleHealthKitAuthService';
+export type { GoogleFitAuthService as GoogleFitAuthServiceType } from './services/GoogleFitAuthService';
 
 // Service factory function for easier access
 export const getAuthService = (serviceName: string) => {
@@ -107,6 +116,18 @@ export const getAuthService = (serviceName: string) => {
       return FitbitAuthService.getInstance();
     case 'oura':
       return OuraAuthService.getInstance();
+    case 'epic-mychart':
+    case 'epic_mychart':
+    case 'mychart':
+      return EpicMyChartAuthService.getInstance();
+    case 'apple-health':
+    case 'apple_health':
+    case 'healthkit':
+      return AppleHealthKitAuthService.getInstance();
+    case 'google-fit':
+    case 'google_fit':
+    case 'googlefit':
+      return GoogleFitAuthService.getInstance();
     default:
       throw new Error(`OAuth service not implemented for: ${serviceName}`);
   }

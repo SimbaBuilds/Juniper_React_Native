@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { DatabaseService } from '../supabase/supabase';
@@ -57,7 +57,7 @@ export const IntegrationsScreen: React.FC = () => {
     const name = serviceName.toLowerCase();
     
      // Health and Wellness
-     if (['oura', 'fitbit'].includes(name)) {
+     if (['oura', 'fitbit', 'mychart', 'apple health', 'google fit'].includes(name)) {
       return 'Health and Wellness';
     }
     
@@ -169,6 +169,26 @@ export const IntegrationsScreen: React.FC = () => {
     return services.filter(service => service.isSystemIntegration && service.public);
   };
 
+  // Filter services based on platform compatibility
+  const filterServicesByPlatform = (services: ServiceWithStatus[]): ServiceWithStatus[] => {
+    return services.filter(service => {
+      const serviceName = service.service_name.toLowerCase();
+      
+      // iOS-only services
+      if (serviceName === 'apple health' || serviceName === 'apple healthkit') {
+        return Platform.OS === 'ios';
+      }
+      
+      // Android-only services
+      if (serviceName === 'google fit') {
+        return Platform.OS === 'android';
+      }
+      
+      // All other services are cross-platform
+      return true;
+    });
+  };
+
   // Helper function to get icon for integration type
   const getIconForIntegrationType = (serviceName: string): keyof typeof Ionicons.glyphMap => {
     switch (serviceName.toLowerCase()) {
@@ -215,6 +235,12 @@ export const IntegrationsScreen: React.FC = () => {
         return 'fitness';
       case 'oura':
         return 'heart';
+      case 'mychart':
+        return 'medical';
+      case 'apple health':
+        return 'heart';
+      case 'google fit':
+        return 'fitness';
       default:
         return 'link';
     }
@@ -691,8 +717,10 @@ export const IntegrationsScreen: React.FC = () => {
     );
   }
 
-  const categorizedServices = organizeServicesByCategory(services);
-  const systemIntegrations = getSystemIntegrations(services);
+  // Filter services by platform compatibility first
+  const platformFilteredServices = filterServicesByPlatform(services);
+  const categorizedServices = organizeServicesByCategory(platformFilteredServices);
+  const systemIntegrations = getSystemIntegrations(platformFilteredServices);
 
   return (
     <SafeAreaView style={styles.container}>

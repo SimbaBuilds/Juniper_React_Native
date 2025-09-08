@@ -53,6 +53,10 @@
     <string>This app needs microphone access to record your voice for speech recognition.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>This app may access your photo library to allow you to share images in conversations or attach photos to your requests.</string>
+    <key>NSHealthShareUsageDescription</key>
+    <string>Allow Juniper to read your health data to provide personalized health insights and track your wellness goals.</string>
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>Allow Juniper to write health data to keep your health information synchronized across apps.</string>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>

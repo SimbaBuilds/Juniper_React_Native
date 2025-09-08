@@ -65,7 +65,10 @@ function mapServiceName(dbServiceName: string): string {
     'Textbelt': 'textbelt',
     'Todoist': 'todoist',
     'Fitbit': 'fitbit',
-    'Oura': 'oura'
+    'Oura': 'oura',
+    'MyChart': 'epic-mychart',
+    'Apple Health': 'apple-health',
+    'Google Fit': 'google-fit'
   };
   
   return serviceMap[dbServiceName] || dbServiceName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
@@ -110,7 +113,10 @@ export class IntegrationService {
         'microsoft-outlook-mail',
         'microsoft-teams',
         'fitbit',
-        'oura'
+        'oura',
+        'epic-mychart',
+        'apple-health',
+        'google-fit'
       ];
       if (!supportedServices.includes(internalServiceName)) {
         Alert.alert(

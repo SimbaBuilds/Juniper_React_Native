@@ -13,6 +13,7 @@ import com.facebook.react.ReactApplication
 import expo.modules.ReactActivityDelegateWrapper
 import com.hightowerai.MobileJarvisNative.permissions.PermissionsModule
 import com.hightowerai.MobileJarvisNative.utils.AppStateManager
+import dev.matinzd.healthconnect.permissions.HealthConnectPermissionDelegate
 
 class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,6 +29,14 @@ class MainActivity : ReactActivity() {
       android.util.Log.i("MainActivity", "📱 AppStateManager initialized in MainActivity")
     } catch (e: Exception) {
       android.util.Log.e("MainActivity", "Error initializing AppStateManager: ${e.message}", e)
+    }
+    
+    // Initialize Health Connect permission delegate
+    try {
+      HealthConnectPermissionDelegate.setPermissionDelegate(this)
+      android.util.Log.i("MainActivity", "🏥 Health Connect permission delegate initialized")
+    } catch (e: Exception) {
+      android.util.Log.e("MainActivity", "Error initializing Health Connect permission delegate: ${e.message}", e)
     }
   }
 

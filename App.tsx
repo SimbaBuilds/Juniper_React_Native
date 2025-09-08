@@ -430,6 +430,15 @@ export default function App() {
         case 'oura':
           require('./src/integrations/auth/services/OuraAuthService').default.getInstance().handleAuthCallback(code, state);
           break;
+        case 'epic-mychart':
+          require('./src/integrations/auth/services/EpicMyChartAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'apple-health':
+          require('./src/integrations/auth/services/AppleHealthKitAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
+        case 'google-fit':
+          require('./src/integrations/auth/services/GoogleFitAuthService').default.getInstance().handleAuthCallback(code, state);
+          break;
         default:
           console.warn(`❌ Unknown service in HTTPS callback: ${serviceName}`);
           // Fall back to legacy handler

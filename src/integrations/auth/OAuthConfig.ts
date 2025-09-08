@@ -399,6 +399,50 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     additionalParameters: {
       prompt: 'consent'
     }
+  },
+
+  'epic-mychart': {
+    serviceName: 'epic-mychart',
+    clientId: getServiceClientId('EPIC_MYCHART'),
+    clientSecret: getServiceClientSecret('EPIC_MYCHART'),
+    scopes: [
+      'patient/Patient.read',
+      'patient/Observation.read',
+      'patient/AllergyIntolerance.read',
+      'patient/MedicationRequest.read',
+      'patient/DiagnosticReport.read',
+      'patient/Condition.read',
+      'patient/Immunization.read',
+      'patient/Procedure.read',
+      'openid',
+      'fhirUser',
+      'launch/patient'
+    ],
+    redirectUri: generateRedirectUri('epic-mychart'),
+    authEndpoint: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize',
+    tokenEndpoint: 'https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token',
+    additionalParameters: {
+      response_type: 'code',
+      aud: 'https://fhir.epic.com/interconnect-fhir-oauth'
+    }
+  },
+
+  'apple-health': {
+    serviceName: 'apple-health',
+    clientId: 'healthkit-permissions', // HealthKit doesn't use OAuth
+    scopes: ['read'],
+    redirectUri: generateRedirectUri('apple-health'),
+    authEndpoint: 'healthkit://permissions',
+    tokenEndpoint: 'healthkit://permissions'
+  },
+
+  'google-fit': {
+    serviceName: 'google-fit',
+    clientId: 'health-connect-permissions', // Health Connect doesn't use OAuth
+    scopes: ['read'],
+    redirectUri: generateRedirectUri('google-fit'),
+    authEndpoint: 'health-connect://permissions',
+    tokenEndpoint: 'health-connect://permissions'
   }
 };
 

@@ -1,23 +1,6 @@
-Unable to resolve module @babel/runtime/helpers/interopRequireDefault from /Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/index.tsx: @babel/runtime/helpers/interopRequireDefault could not be found within the project or in these directories:
-  node_modules
-  node_modules
-> 1 | import { registerRootComponent } from 'expo';
-  2 | import App from './App';
-  3 |
-  4 | registerRootComponent(App);
+A few questions.  Please respond briefly to each.
 
-RCTFatal
-__28-[RCTCxxBridge handleError:]_block_invoke
-B62778F7-5827-3A7B-A96D-A24F7BE95416
-B62778F7-5827-3A7B-A96D-A24F7BE95416
-B62778F7-5827-3A7B-A96D-A24F7BE95416
-B62778F7-5827-3A7B-A96D-A24F7BE95416
-_dispatch_main_queue_callback_4CF
-AE3C9338-0166-397A-9643-356B14F6EE58
-AE3C9338-0166-397A-9643-356B14F6EE58
-CFRunLoopRunSpecific
-GSEventRunModal
-5E794CAA-4162-3FF6-861E-45F29F6B8AC0
-UIApplicationMain
-__debug_main_executable_dylib_entry_point
-CD2E758D-E1A2-3B92-AAE7-75D38F66EC54
+- [ ]  any more permission.health permissions we can add in addition to what you've implemented?
+- [ ]  There are already native voice permissions flows for Android in this app - was it necessary to create a new file for this or can we use existing voice permissions patterns?  How do your most recent changes to AndroidManifest, app.json, and your added PermissionsRationaleActivity integrate with existing permissions handling?
+- [ ] any env vars or project creds need to be obtained and set?
+- [ ] need to update apple provisioning profile or create new to support apple health kit?

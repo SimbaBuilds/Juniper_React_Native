@@ -26,6 +26,8 @@
     "react": "^19.0.0",
     "react-native": "0.79.3",
     "react-native-base64": "^0.2.1",
+    "react-native-health": "^1.19.0",
+    "react-native-health-connect": "^3.4.0",
     "react-native-markdown-display": "^7.0.2",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
