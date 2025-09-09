@@ -57,6 +57,9 @@ export class MicrosoftTeamsAuthService extends BaseOAuthService {
         await this.initialize();
       }
 
+      // Pre-flight check: ensure App Links are enabled
+      await this.checkAppLinksBeforeAuth();
+
       const authUrl = this.buildAuthUrl(integrationId);
       
       console.log('💬 Starting Microsoft Teams OAuth flow...');

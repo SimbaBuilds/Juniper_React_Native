@@ -26,6 +26,8 @@ import { DatabaseService } from './src/supabase/supabase';
 import { colors } from './src/shared/theme/colors';
 // Error boundaries removed - let React Native handle errors naturally
 import { Storage } from './src/utils/storage';
+import AppLinksPrompt from './src/components/AppLinksPrompt';
+import { AppLinksService } from './src/utils/appLinks';
 
 type RootStackParamList = {
   MainTabs: undefined;
@@ -55,6 +57,7 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [storageReady, setStorageReady] = useState(false);
+  const [showAppLinksPrompt, setShowAppLinksPrompt] = useState(false);
   const navigationRef = useRef<any>(null);
 
   // Initialize any needed configurations here
@@ -106,7 +109,39 @@ export default function App() {
               return { component: 'auth', success: false, error };
             }
           })()
-        ]);
+        ]),
+        
+        // App Links check for first launch (non-critical)
+        (async () => {
+          try {
+            if (Platform.OS === 'android') {
+              console.log('🔗 App: Checking App Links first launch status...');
+              const hasShownPrompt = await AppLinksService.hasShownFirstLaunchPrompt();
+              
+              if (!hasShownPrompt) {
+                console.log('🔗 App: First launch - checking if App Links are enabled...');
+                const isEnabled = await AppLinksService.isAppLinksEnabled();
+                
+                if (!isEnabled) {
+                  console.log('🔗 App: App Links not enabled - will show first launch prompt');
+                  // We'll show the prompt after initialization is complete
+                  setTimeout(() => {
+                    setShowAppLinksPrompt(true);
+                  }, 1000); // Small delay to ensure UI is ready
+                } else {
+                  console.log('🔗 App: App Links already enabled on first launch');
+                  await AppLinksService.setFirstLaunchPromptShown();
+                }
+              } else {
+                console.log('🔗 App: First launch prompt already shown previously');
+              }
+            }
+            return { component: 'applinks', success: true };
+          } catch (error) {
+            console.warn('⚠️ App Links check failed:', error);
+            return { component: 'applinks', success: false, error };
+          }
+        })()
         
         // Log results without crashing
         results.forEach((result, index) => {
@@ -579,6 +614,16 @@ export default function App() {
     return null;
   }
 
+  const handleAppLinksPromptDismiss = async () => {
+    setShowAppLinksPrompt(false);
+    await AppLinksService.setFirstLaunchPromptShown();
+  };
+
+  const handleAppLinksSettingsOpened = () => {
+    // User opened settings - we can assume they'll enable it
+    console.log('🔗 App: User opened App Links settings');
+  };
+
   return (
     <NavigationContainer ref={navigationRef}>
       <AuthProvider>
@@ -698,6 +743,14 @@ export default function App() {
             )}
           </VoiceProvider>
         </AuthProvider>
+        
+        {/* App Links Prompt - First Launch */}
+        <AppLinksPrompt
+          visible={showAppLinksPrompt}
+          onDismiss={handleAppLinksPromptDismiss}
+          onSettingsOpened={handleAppLinksSettingsOpened}
+          isFirstLaunch={true}
+        />
       </NavigationContainer>
   );
 }

@@ -10,6 +10,8 @@ import TwilioCredentialsModal from './components/TwilioCredentialsModal';
 import TextbeltCredentialsModal from './components/TextbeltCredentialsModal';
 import { SettingsToggle } from '../settings/components/SettingsToggle';
 import { colors } from '../shared/theme/colors';
+import AppLinksPrompt from '../components/AppLinksPrompt';
+import { checkAppLinksBeforeOAuth } from '../utils/appLinks';
 
 interface ServiceWithStatus {
   id: string;
@@ -51,6 +53,8 @@ export const IntegrationsScreen: React.FC = () => {
   const [textbeltModalVisible, setTextbeltModalVisible] = useState(false);
   const [selectedService, setSelectedService] = useState<ServiceWithStatus | null>(null);
   const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set());
+  const [showAppLinksPrompt, setShowAppLinksPrompt] = useState(false);
+  const [pendingOAuthService, setPendingOAuthService] = useState<ServiceWithStatus | null>(null);
 
   // Define service categories
   const getServiceCategory = (serviceName: string): string => {
@@ -446,7 +450,19 @@ export const IntegrationsScreen: React.FC = () => {
         return;
       }
       
-      // All other services use OAuth - the IntegrationService will handle the supported check
+      // All other services use OAuth - Check App Links first
+      console.log('🔗 Checking App Links before OAuth for:', service.service_name);
+      const appLinksEnabled = await checkAppLinksBeforeOAuth();
+      
+      if (!appLinksEnabled) {
+        console.log('🔗 App Links not enabled - showing prompt');
+        setPendingOAuthService(service);
+        setShowAppLinksPrompt(true);
+        return;
+      }
+
+      console.log('🔗 App Links enabled - proceeding with OAuth');
+      
       // Start the integration flow
       await integrationService.startIntegration({
         serviceId: service.id,
@@ -463,6 +479,40 @@ export const IntegrationsScreen: React.FC = () => {
     }
   };
 
+  // Handle App Links prompt dismissal
+  const handleAppLinksPromptDismiss = () => {
+    setShowAppLinksPrompt(false);
+    setPendingOAuthService(null);
+  };
+
+  // Handle App Links settings opened - continue with OAuth
+  const handleAppLinksSettingsOpened = async () => {
+    setShowAppLinksPrompt(false);
+    
+    if (pendingOAuthService) {
+      console.log('🔗 Continuing with OAuth after settings opened:', pendingOAuthService.service_name);
+      
+      // Small delay to allow user to configure settings
+      setTimeout(async () => {
+        try {
+          const integrationService = IntegrationService.getInstance();
+          await integrationService.startIntegration({
+            serviceId: pendingOAuthService.id,
+            serviceName: pendingOAuthService.service_name,
+            userId: user!.id
+          });
+
+          // Refresh the services list to show updated status
+          await loadServicesWithStatus();
+        } catch (error) {
+          console.error('Error continuing with OAuth after App Links setup:', error);
+          Alert.alert('Error', 'Failed to connect service. Please try again.');
+        }
+        
+        setPendingOAuthService(null);
+      }, 2000); // 2 second delay
+    }
+  };
 
   // Handle Twilio credentials submission
   const handleTwilioCredentialsSubmit = async (credentials: TwilioCredentials) => {
@@ -964,6 +1014,16 @@ export const IntegrationsScreen: React.FC = () => {
           setSelectedService(null);
         }}
         onSubmit={handleTextbeltCredentialsSubmit}
+      />
+
+      {/* App Links Prompt - OAuth Blocking */}
+      <AppLinksPrompt
+        visible={showAppLinksPrompt}
+        onDismiss={handleAppLinksPromptDismiss}
+        onSettingsOpened={handleAppLinksSettingsOpened}
+        isBlocking={true}
+        title="App Links Required for Integration"
+        message={`To connect ${pendingOAuthService?.service_name || 'this service'}, you must enable app links.\n\nWithout this setting, OAuth authentication will fail and you won't be able to connect your account.`}
       />
     </SafeAreaView>
   );

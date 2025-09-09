@@ -65,6 +65,9 @@ export class NotionAuthService extends BaseOAuthService {
         configClientSecret: this.config.clientSecret ? '***PRESENT***' : 'MISSING'
       });
 
+      // Pre-flight check: ensure App Links are enabled
+      await this.checkAppLinksBeforeAuth();
+
       const authUrl = this.buildAuthUrl(integrationId);
       
       console.log('📝 Starting Notion OAuth flow...');

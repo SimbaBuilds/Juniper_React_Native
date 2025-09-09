@@ -22,6 +22,7 @@ import expo.modules.ReactNativeHostWrapper
 import com.hightowerai.MobileJarvisNative.wakeword.WakeWordPackage
 import com.hightowerai.MobileJarvisNative.voice.VoicePackage
 import com.hightowerai.MobileJarvisNative.permissions.PermissionsPackage
+import com.hightowerai.MobileJarvisNative.permissions.AppLinksPackage
 import com.hightowerai.MobileJarvisNative.app_config.AppConfigPackage
 import com.hightowerai.MobileJarvisNative.appstate.AppStatePackage
 import com.hightowerai.MobileJarvisNative.api.ConversationSyncPackage
@@ -53,6 +54,9 @@ class MainApplication : Application(), ReactApplication {
             
             packages.add(PermissionsPackage())
             Log.i(TAG, "📱 MAIN_APP: ✅ Added PermissionsPackage")
+            
+            packages.add(AppLinksPackage())
+            Log.i(TAG, "📱 MAIN_APP: ✅ Added AppLinksPackage")
             
             packages.add(AppConfigPackage())
             Log.i(TAG, "📱 MAIN_APP: ✅ Added AppConfigPackage")

@@ -5,6 +5,7 @@ import { getOAuthConfig, getRedirectUri, buildAuthUrl, OAuthServiceConfig } from
 import { calculateExpirationDate, safeToISOString, safeParseDateString, isValidDate } from './DateUtils';
 import { createBasicAuthHeader } from '../../utils/base64';
 import IntegrationCompletionService from '../IntegrationCompletionService';
+import { checkAppLinksBeforeOAuth } from '../../utils/appLinks';
 
 export interface AuthResult {
   accessToken: string;
@@ -86,6 +87,28 @@ export abstract class BaseOAuthService {
    */
   protected buildAuthUrl(integrationId: string): string {
     return buildAuthUrl(this.config.serviceName, integrationId);
+  }
+
+  /**
+   * Pre-flight check for App Links before starting OAuth flow
+   * Should be called by all OAuth services before initiating authentication
+   */
+  protected async checkAppLinksBeforeAuth(): Promise<boolean> {
+    try {
+      console.log(`🔗 ${this.config.serviceName}: Checking App Links before OAuth...`);
+      const isEnabled = await checkAppLinksBeforeOAuth();
+      
+      if (!isEnabled) {
+        console.warn(`🔗 ${this.config.serviceName}: App Links not enabled - OAuth will fail`);
+        throw new Error('App Links must be enabled for OAuth authentication to work. Please enable "Open by default" for juniperassistant.com in your device settings.');
+      }
+      
+      console.log(`🔗 ${this.config.serviceName}: App Links enabled - proceeding with OAuth`);
+      return true;
+    } catch (error) {
+      console.error(`🔗 ${this.config.serviceName}: App Links check failed:`, error);
+      throw error;
+    }
   }
 
   /**

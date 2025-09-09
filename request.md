@@ -1,6 +1,7 @@
-A few questions.  Please respond briefly to each.
+Oauth breaks when juniperassistant.com open by default is not set so we are going to have to check it before any Oauth flows and force the flow if not set.  
 
-- [ ]  any more permission.health permissions we can add in addition to what you've implemented?
-- [ ]  There are already native voice permissions flows for Android in this app - was it necessary to create a new file for this or can we use existing voice permissions patterns?  How do your most recent changes to AndroidManifest, app.json, and your added PermissionsRationaleActivity integrate with existing permissions handling?
-- [ ] any env vars or project creds need to be obtained and set?
-- [ ] need to update apple provisioning profile or create new to support apple health kit?
+Let's prompt it on first launch as well with clear wording that it must be done to do any integrations.
+
+No need for settings screen UI.
+
+Please update your plan accordingly.
