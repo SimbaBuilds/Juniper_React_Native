@@ -108,11 +108,10 @@ export default function App() {
               setSession(null);
               return { component: 'auth', success: false, error };
             }
-          })()
-        ]),
-        
-        // App Links check for first launch (non-critical)
-        (async () => {
+          })(),
+          
+          // App Links check for first launch (non-critical)
+          (async () => {
           try {
             if (Platform.OS === 'android') {
               console.log('🔗 App: Checking App Links first launch status...');
@@ -142,6 +141,7 @@ export default function App() {
             return { component: 'applinks', success: false, error };
           }
         })()
+        ]);
         
         // Log results without crashing
         results.forEach((result, index) => {

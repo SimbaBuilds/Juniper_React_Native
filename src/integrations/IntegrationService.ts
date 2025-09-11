@@ -170,6 +170,16 @@ export class IntegrationService {
    */
   async createIntegrationRecord(serviceId: string, userId: string, isSystemService: boolean = false): Promise<any> {
     try {
+      // Get service name to check if it's MyChart
+      const serviceQuery = await supabase
+        .from('services')
+        .select('service_name')
+        .eq('id', serviceId)
+        .single();
+
+      const serviceName = serviceQuery.data?.service_name;
+      const isMyChart = serviceName === 'MyChart';
+
       const integrationData = {
         user_id: userId,
         service_id: serviceId,
@@ -181,21 +191,39 @@ export class IntegrationService {
         updated_at: new Date().toISOString(),
       };
 
-      // Upsert: insert or update on conflict of (user_id, service_id)
-      const { data, error } = await supabase
-        .from('integrations')
-        .upsert(
-          integrationData,
-          {
-            onConflict: 'user_id,service_id',
-            ignoreDuplicates: false // Update if exists
-          }
-        )
-        .select()
-        .single();
+      // For MyChart, use raw insert instead of upsert to bypass deduplication
+      if (isMyChart) {
+        // Generate unique integration ID for MyChart
+        const integrationId = `mychart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        
+        const { data, error } = await supabase
+          .from('integrations')
+          .insert({
+            ...integrationData,
+            id: integrationId
+          })
+          .select()
+          .single();
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return data;
+      } else {
+        // Upsert: insert or update on conflict of (user_id, service_id)
+        const { data, error } = await supabase
+          .from('integrations')
+          .upsert(
+            integrationData,
+            {
+              onConflict: 'user_id,service_id',
+              ignoreDuplicates: false // Update if exists
+            }
+          )
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
     } catch (error) {
       console.error('❌ Error creating/updating integration record:', error);
       throw new Error('Failed to create or update integration record');

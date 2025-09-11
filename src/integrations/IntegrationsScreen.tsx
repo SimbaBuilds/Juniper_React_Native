@@ -8,10 +8,13 @@ import IntegrationService from './IntegrationService';
 import IntegrationEmailService from '../services/IntegrationEmailService';
 import TwilioCredentialsModal from './components/TwilioCredentialsModal';
 import TextbeltCredentialsModal from './components/TextbeltCredentialsModal';
+import EpicProviderPickerModal from './components/EpicProviderPickerModal';
 import { SettingsToggle } from '../settings/components/SettingsToggle';
 import { colors } from '../shared/theme/colors';
 import AppLinksPrompt from '../components/AppLinksPrompt';
 import { checkAppLinksBeforeOAuth } from '../utils/appLinks';
+import { MultiIssuerEpicAuthService, EpicIssuer, UserEpicConnection } from './auth/services/MultiIssuerEpicAuthService';
+import { supabase } from '../supabase/supabase';
 
 interface ServiceWithStatus {
   id: string;
@@ -44,6 +47,91 @@ interface ServiceCategory {
   services: ServiceWithStatus[];
 }
 
+// Epic Provider Item Component
+interface EpicProviderItemProps {
+  connection: UserEpicConnection & { issuer: EpicIssuer };
+  onConnect: (connection: UserEpicConnection & { issuer: EpicIssuer }) => void;
+  onReconnect: (connection: UserEpicConnection & { issuer: EpicIssuer }) => void;
+  onDisconnect: (connection: UserEpicConnection & { issuer: EpicIssuer }) => void;
+  isAuthenticated: boolean;
+}
+
+const EpicProviderItem: React.FC<EpicProviderItemProps> = ({
+  connection,
+  onConnect,
+  onReconnect,
+  onDisconnect,
+  isAuthenticated
+}) => {
+  const [authStatus, setAuthStatus] = useState<boolean>(isAuthenticated);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const epicService = MultiIssuerEpicAuthService.getInstance();
+        const authenticated = await epicService.isAuthenticated(connection.integration_id);
+        setAuthStatus(authenticated);
+      } catch (error) {
+        console.error('Error checking Epic auth status:', error);
+        setAuthStatus(false);
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    checkAuthStatus();
+  }, [connection.integration_id]);
+
+  return (
+    <View style={styles.epicProviderItem}>
+      <View style={styles.epicProviderInfo}>
+        <Text style={styles.epicProviderName}>{connection.issuer.organization_name}</Text>
+        {connection.issuer.city && connection.issuer.state && (
+          <Text style={styles.epicProviderLocation}>
+            {connection.issuer.city}, {connection.issuer.state}
+          </Text>
+        )}
+      </View>
+      
+      <View style={styles.epicProviderActions}>
+        {checking ? (
+          <ActivityIndicator size="small" color="#4A90E2" />
+        ) : authStatus ? (
+          <>
+            <View style={styles.epicConnectedIndicator}>
+              <Ionicons name="checkmark-circle" size={14} color="#4CAF50" />
+              <Text style={styles.epicConnectedText}>Connected</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.epicReconnectButton}
+              onPress={() => onReconnect(connection)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.epicReconnectButtonText}>Reconnect</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.epicDisconnectButton}
+              onPress={() => onDisconnect(connection)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.epicDisconnectButtonText}>Disconnect</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <TouchableOpacity
+            style={styles.epicConnectButton}
+            onPress={() => onConnect(connection)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.epicConnectButtonText}>Connect</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+};
+
 export const IntegrationsScreen: React.FC = () => {
   const { user } = useAuth();
   const [services, setServices] = useState<ServiceWithStatus[]>([]);
@@ -55,6 +143,9 @@ export const IntegrationsScreen: React.FC = () => {
   const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set());
   const [showAppLinksPrompt, setShowAppLinksPrompt] = useState(false);
   const [pendingOAuthService, setPendingOAuthService] = useState<ServiceWithStatus | null>(null);
+  const [epicProviderModalVisible, setEpicProviderModalVisible] = useState(false);
+  const [epicConnections, setEpicConnections] = useState<(UserEpicConnection & { issuer: EpicIssuer })[]>([]);
+  const [myChartService, setMyChartService] = useState<ServiceWithStatus | null>(null);
 
   // Define service categories
   const getServiceCategory = (serviceName: string): string => {
@@ -293,10 +384,25 @@ export const IntegrationsScreen: React.FC = () => {
         DatabaseService.getSystemIntegrations(user.id)
       ]);
       
+      // Load Epic connections for current user
+      let epicConnectionsData: (UserEpicConnection & { issuer: EpicIssuer })[] = [];
+      try {
+        const epicService = MultiIssuerEpicAuthService.getInstance();
+        epicConnectionsData = await epicService.getUserEpicConnections(user.id);
+        setEpicConnections(epicConnectionsData);
+      } catch (error) {
+        console.error('Error loading Epic connections:', error);
+      }
+      
       // Map services to their status
       const serviceResults = await Promise.all(
         allServices.map(async (service: any) => {
           const serviceName = service.service_name.toLowerCase();
+          
+          // Store MyChart service reference for special handling
+          if (serviceName === 'mychart') {
+            setMyChartService(service);
+          }
           
           // Check if this is a system integration (based on service type from database)
           if (service.type === 'system') {
@@ -328,6 +434,23 @@ export const IntegrationsScreen: React.FC = () => {
               isSystemIntegration: true, // Flag to identify system integrations
               public: service.public, // Use the public field from database
               type: service.type, // Use the type field from database
+            };
+          }
+          
+          // Special handling for MyChart
+          if (serviceName === 'mychart') {
+            const hasActiveConnections = epicConnectionsData.length > 0;
+            
+            return {
+              ...service,
+              isActive: hasActiveConnections,
+              isConnected: hasActiveConnections,
+              integration_id: hasActiveConnections ? epicConnectionsData[0].integration_id : undefined,
+              status: hasActiveConnections ? 'active' : 'inactive',
+              isPendingSetup: false,
+              isSystemIntegration: false,
+              public: service.public,
+              type: service.type,
             };
           }
           
@@ -447,6 +570,12 @@ export const IntegrationsScreen: React.FC = () => {
         }
         setSelectedService(service);
         setTextbeltModalVisible(true);
+        return;
+      }
+
+      // Special handling for MyChart - show provider picker
+      if (internalServiceName === 'epic-mychart') {
+        setEpicProviderModalVisible(true);
         return;
       }
       
@@ -625,7 +754,139 @@ export const IntegrationsScreen: React.FC = () => {
     });
   };
 
-  // Handle system integration toggle
+  // Handle Epic provider selection
+  const handleEpicProviderSelection = async (selectedIssuers: EpicIssuer[]) => {
+    try {
+      if (!user?.id) {
+        Alert.alert('Error', 'User not authenticated. Please log in again.');
+        return;
+      }
+
+      console.log('🏥 Creating Epic connections for selected providers:', selectedIssuers.length);
+      
+      const epicService = MultiIssuerEpicAuthService.getInstance();
+      const issuerIds = selectedIssuers.map(issuer => issuer.id);
+      
+      // Create user Epic connections
+      await epicService.createUserEpicConnections(user.id, issuerIds);
+      
+      // Refresh the services list to show updated status
+      await loadServicesWithStatus();
+      
+      Alert.alert(
+        'Providers Selected',
+        `${selectedIssuers.length} healthcare provider(s) added. You can now connect to each one individually.`,
+        [{ text: 'OK' }]
+      );
+      
+    } catch (error) {
+      console.error('Error selecting Epic providers:', error);
+      Alert.alert('Error', 'Failed to select providers. Please try again.');
+    }
+  };
+
+  // Handle individual Epic connection
+  const handleEpicConnect = async (connection: UserEpicConnection & { issuer: EpicIssuer }) => {
+    try {
+      console.log('🏥 Connecting to Epic issuer:', connection.issuer.organization_name);
+      
+      // Check App Links first
+      const appLinksEnabled = await checkAppLinksBeforeOAuth();
+      
+      if (!appLinksEnabled) {
+        console.log('🔗 App Links not enabled - showing prompt');
+        setShowAppLinksPrompt(true);
+        return;
+      }
+
+      const epicService = MultiIssuerEpicAuthService.getInstance();
+      await epicService.authenticate(connection.integration_id);
+      
+      // Refresh the services list
+      await loadServicesWithStatus();
+      
+    } catch (error) {
+      console.error('Error connecting Epic provider:', error);
+      Alert.alert('Error', 'Failed to connect to provider. Please try again.');
+    }
+  };
+
+  // Handle individual Epic disconnection
+  const handleEpicDisconnect = async (connection: UserEpicConnection & { issuer: EpicIssuer }) => {
+    try {
+      Alert.alert(
+        'Disconnect Provider',
+        `Are you sure you want to disconnect from ${connection.issuer.organization_name}?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Disconnect', 
+            style: 'destructive',
+            onPress: async () => {
+              console.log('🏥 Disconnecting Epic issuer:', connection.issuer.organization_name);
+              
+              const epicService = MultiIssuerEpicAuthService.getInstance();
+              await epicService.disconnect(connection.integration_id);
+              
+              // Refresh the services list
+              await loadServicesWithStatus();
+              
+              Alert.alert(
+                'Provider Disconnected',
+                `${connection.issuer.organization_name} has been disconnected.`,
+                [{ text: 'OK' }]
+              );
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error disconnecting Epic provider:', error);
+      Alert.alert('Error', 'Failed to disconnect provider. Please try again.');
+    }
+  };
+
+  // Handle individual Epic reconnection
+  const handleEpicReconnect = async (connection: UserEpicConnection & { issuer: EpicIssuer }) => {
+    try {
+      Alert.alert(
+        'Reconnect Provider',
+        `Reconnect to ${connection.issuer.organization_name}?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Reconnect', 
+            onPress: async () => {
+              console.log('🏥 Reconnecting Epic issuer:', connection.issuer.organization_name);
+              
+              const epicService = MultiIssuerEpicAuthService.getInstance();
+              epicService.setIsReconnection(true, connection.integration_id);
+              await epicService.authenticate(connection.integration_id);
+              
+              // Refresh the services list
+              await loadServicesWithStatus();
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error reconnecting Epic provider:', error);
+      Alert.alert('Error', 'Failed to reconnect provider. Please try again.');
+    }
+  };
+
+  // Check if Epic connection is authenticated
+  const isEpicConnectionAuthenticated = async (integrationId: string): Promise<boolean> => {
+    try {
+      const epicService = MultiIssuerEpicAuthService.getInstance();
+      return await epicService.isAuthenticated(integrationId);
+    } catch (error) {
+      console.error('Error checking Epic authentication:', error);
+      return false;
+    }
+  };
+
+  // System integration toggle
   const handleSystemIntegrationToggle = async (service: ServiceWithStatus, enabled: boolean) => {
     try {
       if (!user?.id) {
@@ -820,53 +1081,103 @@ export const IntegrationsScreen: React.FC = () => {
                       </View>
                       
                       <View style={styles.serviceRight}>
-                        {service.isConnected ? (
-                          <View style={styles.connectedContainer}>
-                            <View style={styles.connectedIndicator}>
-                              <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-                              <Text style={styles.connectedText}>Connected</Text>
-                            </View>
-                            <TouchableOpacity
-                              style={styles.reconnectButton}
-                              onPress={() => handleReconnect(service)}
-                              activeOpacity={0.7}
-                            >
-                              <Text style={styles.reconnectButtonText}>Reconnect</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                              style={styles.disconnectButton}
-                              onPress={() => handleDisconnect(service)}
-                              activeOpacity={0.7}
-                            >
-                              <Text style={styles.disconnectButtonText}>Disconnect</Text>
-                            </TouchableOpacity>
-                          </View>
-                        ) : service.isPendingSetup ? (
-                          <View style={styles.pendingContainer}>
-                            <View style={styles.pendingIndicator}>
-                              <Ionicons name="hourglass" size={16} color="#FF9800" />
-                              <Text style={styles.pendingText}>Setup In Progress</Text>
-                            </View>
-                            <TouchableOpacity
-                              style={styles.finalizeButton}
-                              onPress={() => handleFinalizeIntegration(service)}
-                              activeOpacity={0.7}
-                            >
-                              <Text style={styles.finalizeButtonText}>Finalize Integration</Text>
-                            </TouchableOpacity>
-                          </View>
-                        ) : (
+                        {/* Special handling for MyChart */}
+                        {service.service_name.toLowerCase() === 'mychart' ? (
                           <TouchableOpacity
                             style={styles.connectButton}
                             onPress={() => handleConnect(service)}
                             activeOpacity={0.7}
                           >
-                            <Text style={styles.connectButtonText}>Connect</Text>
+                            <Text style={styles.connectButtonText}>
+                              {epicConnections.length > 0 ? 'Select Care Provider(s)' : 'Select Care Provider(s)'}
+                            </Text>
                           </TouchableOpacity>
+                        ) : (
+                          <>
+                            {service.isConnected ? (
+                              <View style={styles.connectedContainer}>
+                                <View style={styles.connectedIndicator}>
+                                  <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                                  <Text style={styles.connectedText}>Connected</Text>
+                                </View>
+                                <TouchableOpacity
+                                  style={styles.reconnectButton}
+                                  onPress={() => handleReconnect(service)}
+                                  activeOpacity={0.7}
+                                >
+                                  <Text style={styles.reconnectButtonText}>Reconnect</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                  style={styles.disconnectButton}
+                                  onPress={() => handleDisconnect(service)}
+                                  activeOpacity={0.7}
+                                >
+                                  <Text style={styles.disconnectButtonText}>Disconnect</Text>
+                                </TouchableOpacity>
+                              </View>
+                            ) : service.isPendingSetup ? (
+                              <View style={styles.pendingContainer}>
+                                <View style={styles.pendingIndicator}>
+                                  <Ionicons name="hourglass" size={16} color="#FF9800" />
+                                  <Text style={styles.pendingText}>Setup In Progress</Text>
+                                </View>
+                                <TouchableOpacity
+                                  style={styles.finalizeButton}
+                                  onPress={() => handleFinalizeIntegration(service)}
+                                  activeOpacity={0.7}
+                                >
+                                  <Text style={styles.finalizeButtonText}>Finalize Integration</Text>
+                                </TouchableOpacity>
+                              </View>
+                            ) : (
+                              <TouchableOpacity
+                                style={styles.connectButton}
+                                onPress={() => handleConnect(service)}
+                                activeOpacity={0.7}
+                              >
+                                <Text style={styles.connectButtonText}>Connect</Text>
+                              </TouchableOpacity>
+                            )}
+                          </>
                         )}
                       </View>
                     </View>
                     
+                    {/* Epic Connections expandable section - only for MyChart */}
+                    {service.service_name.toLowerCase() === 'mychart' && epicConnections.length > 0 && (
+                      <View style={styles.epicConnectionsSection}>
+                        <TouchableOpacity
+                          style={styles.descriptionToggle}
+                          onPress={() => toggleDescriptionExpansion(service.id)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.descriptionToggleText}>
+                            {expandedServices.has(service.id) ? 'Hide Providers' : `Show Providers (${epicConnections.length})`}
+                          </Text>
+                          <Ionicons 
+                            name={expandedServices.has(service.id) ? 'chevron-up' : 'chevron-down'} 
+                            size={16} 
+                            color="#4A90E2" 
+                          />
+                        </TouchableOpacity>
+                        
+                        {expandedServices.has(service.id) && (
+                          <View style={styles.epicProvidersContent}>
+                            {epicConnections.map((connection) => (
+                              <EpicProviderItem
+                                key={connection.id}
+                                connection={connection}
+                                onConnect={handleEpicConnect}
+                                onReconnect={handleEpicReconnect}
+                                onDisconnect={handleEpicDisconnect}
+                                isAuthenticated={false} // We'll need to check this async
+                              />
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                    )}
+
                     {/* Description section - expandable */}
                     {service.description && (
                       <View style={styles.descriptionSection}>
@@ -1014,6 +1325,14 @@ export const IntegrationsScreen: React.FC = () => {
           setSelectedService(null);
         }}
         onSubmit={handleTextbeltCredentialsSubmit}
+      />
+
+      {/* Epic Provider Picker Modal */}
+      <EpicProviderPickerModal
+        visible={epicProviderModalVisible}
+        onClose={() => setEpicProviderModalVisible(false)}
+        onSave={handleEpicProviderSelection}
+        existingConnections={epicConnections.map(conn => conn.issuer_id)}
       />
 
       {/* App Links Prompt - OAuth Blocking */}
@@ -1335,5 +1654,87 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#B0B0B0',
     lineHeight: 20,
+  },
+  // Epic provider styles
+  epicConnectionsSection: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#2A2A2A',
+  },
+  epicProvidersContent: {
+    marginTop: 8,
+    gap: 8,
+  },
+  epicProviderItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#262626',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
+  },
+  epicProviderInfo: {
+    flex: 1,
+  },
+  epicProviderName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text.primary,
+    marginBottom: 2,
+  },
+  epicProviderLocation: {
+    fontSize: 12,
+    color: '#B0B0B0',
+  },
+  epicProviderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  epicConnectedIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  epicConnectedText: {
+    fontSize: 12,
+    color: '#4CAF50',
+    fontWeight: '500',
+  },
+  epicConnectButton: {
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  epicConnectButtonText: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  epicReconnectButton: {
+    backgroundColor: '#FF9800',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 5,
+  },
+  epicReconnectButtonText: {
+    fontSize: 11,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  epicDisconnectButton: {
+    backgroundColor: '#F44336',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 5,
+  },
+  epicDisconnectButtonText: {
+    fontSize: 11,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
 }); 
