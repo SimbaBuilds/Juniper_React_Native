@@ -1342,7 +1342,7 @@ export const IntegrationsScreen: React.FC = () => {
         onSettingsOpened={handleAppLinksSettingsOpened}
         isBlocking={true}
         title="App Links Required for Integration"
-        message={`To connect ${pendingOAuthService?.service_name || 'this service'}, you must enable app links.\n\nWithout this setting, OAuth authentication will fail and you won't be able to connect your account.`}
+        message={`To connect ${pendingOAuthService?.service_name || 'this service'}, you must enable app links.\n\nPlease toggle on "Open Supported Links", tap "Add Links", check the box next to juniperassistant.com, tap "Add", and come back to the app.  This is a one-time Android security requirement.`}
       />
     </SafeAreaView>
   );

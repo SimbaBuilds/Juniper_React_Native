@@ -33,31 +33,11 @@ const AppLinksPrompt: React.FC<AppLinksPromptProps> = ({
   const handleOpenSettings = async () => {
     try {
       const success = await openAppLinksSettings();
-      
-      if (success) {
-        onSettingsOpened?.();
-        
-        // Show instruction dialog after opening settings
-        Alert.alert(
-          'Enable App Links',
-          `In the settings page that just opened:\n\n1. Find "Open by default" section\n2. Tap the toggle next to "Open supported links"\n3. Make sure juniperassistant.com is checked\n4. Press back to return to the app`,
-          [{ text: 'Got it', onPress: onDismiss }],
-          { cancelable: false }
-        );
-      } else {
-        Alert.alert(
-          'Settings Not Available',
-          'Unable to open app settings. Please manually go to Settings > Apps > Juniper > Open by default and enable "Open supported links".',
-          [{ text: 'OK' }]
-        );
-      }
+      onSettingsOpened?.();
+      // Don't auto-dismiss - let user use "Done" or "Maybe Later" buttons
     } catch (error) {
       console.error('❌ Error opening app links settings:', error);
-      Alert.alert(
-        'Error',
-        'Failed to open settings. Please try again or manually configure app links in your device settings.',
-        [{ text: 'OK' }]
-      );
+      // Don't auto-dismiss - let user use "Done" or "Maybe Later" buttons
     }
   };
 
@@ -73,7 +53,7 @@ const AppLinksPrompt: React.FC<AppLinksPromptProps> = ({
 
   const getDefaultMessage = () => {
     if (isFirstLaunch) {
-      return 'To connect your accounts and use integrations (Google, Microsoft, Slack, etc.), you need to enable app links.\n\nThis is a one-time Android security requirement that allows Juniper to handle authentication redirects properly.';
+      return 'To connect your accounts and use integrations (Oura, MyChart, Gmail, etc.), please toggle on "Open Supported Links", tap "Add Links", check the box next to juniperassistant.com, tap "Add", and come back to the app.  This is a one-time Android security requirement.';
     }
     if (isBlocking) {
       return 'You must enable "Open by default" for juniperassistant.com to complete authentication.\n\nWithout this setting, OAuth authentication will fail and you won\'t be able to connect your accounts.';
@@ -105,15 +85,7 @@ const AppLinksPrompt: React.FC<AppLinksPromptProps> = ({
             <Text style={styles.message}>
               {message || getDefaultMessage()}
             </Text>
-            
-            <View style={styles.instructions}>
-              <Text style={styles.instructionsTitle}>What this does:</Text>
-              <Text style={styles.instructionsText}>
-                • Enables Juniper to automatically handle authentication links{'\n'}
-                • Allows seamless connection to your accounts{'\n'}
-                • Required for OAuth integrations to work properly
-              </Text>
-            </View>
+          
           </View>
           
           <View style={styles.buttons}>
@@ -124,7 +96,16 @@ const AppLinksPrompt: React.FC<AppLinksPromptProps> = ({
               style={styles.primaryButton}
             />
             
-            {!isBlocking && (
+            {isFirstLaunch && (
+              <Button
+                title="Done"
+                variant="outlined"
+                onPress={onDismiss}
+                style={styles.secondaryButton}
+              />
+            )}
+            
+            {!isBlocking && !isFirstLaunch && (
               <Button
                 title="Maybe Later"
                 variant="outlined"

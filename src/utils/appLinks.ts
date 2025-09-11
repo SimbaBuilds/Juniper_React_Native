@@ -1,4 +1,4 @@
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules, Platform, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AppLinksModule {
@@ -34,6 +34,7 @@ const { AppLinksModule: NativeAppLinksModule } = NativeModules as {
 
 const STORAGE_KEYS = {
   FIRST_LAUNCH_PROMPT_SHOWN: 'app_links_first_launch_prompt_shown',
+  LAUNCH_COUNT: 'app_links_launch_count',
   LAST_CHECK_TIMESTAMP: 'app_links_last_check_timestamp',
 } as const;
 
@@ -178,6 +179,50 @@ class AppLinksServiceImpl implements AppLinksService {
   }
 
   /**
+   * Get current launch count
+   */
+  async getLaunchCount(): Promise<number> {
+    try {
+      const count = await AsyncStorage.getItem(STORAGE_KEYS.LAUNCH_COUNT);
+      return count ? parseInt(count, 10) : 0;
+    } catch (error) {
+      console.error('❌ Error getting launch count:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Increment launch count
+   */
+  async incrementLaunchCount(): Promise<number> {
+    try {
+      const currentCount = await this.getLaunchCount();
+      const newCount = currentCount + 1;
+      await AsyncStorage.setItem(STORAGE_KEYS.LAUNCH_COUNT, newCount.toString());
+      return newCount;
+    } catch (error) {
+      console.error('❌ Error incrementing launch count:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Check if we should show the first launch prompt (first two launches)
+   */
+  async shouldShowFirstLaunchPrompt(): Promise<boolean> {
+    try {
+      const launchCount = await this.getLaunchCount();
+      const hasShown = await this.hasShownFirstLaunchPrompt();
+      
+      // Show for first two launches, unless user explicitly dismissed it
+      return launchCount <= 2 && !hasShown;
+    } catch (error) {
+      console.error('❌ Error checking if should show first launch prompt:', error);
+      return false;
+    }
+  }
+
+  /**
    * Mark that we've shown the first launch prompt
    */
   async setFirstLaunchPromptShown(): Promise<void> {
@@ -230,6 +275,45 @@ class AppLinksServiceImpl implements AppLinksService {
       };
     }
   }
+
+  /**
+   * Show blocking prompt for App Links requirement during OAuth
+   */
+  async showAppLinksBlockingPrompt(): Promise<void> {
+    return new Promise((resolve) => {
+      if (Platform.OS === 'ios') {
+        // No-op on iOS
+        resolve();
+        return;
+      }
+
+      Alert.alert(
+        'App Links Required',
+        'You must enable "Open by default" and add juniperassistant.com to complete authentication.\n\nWithout this setting, OAuth authentication will fail and you won\'t be able to connect your accounts.',
+        [
+          {
+            text: 'Open Settings',
+            onPress: async () => {
+              try {
+                await this.openAppLinksSettings();
+                // Just resolve - no additional alert needed
+                resolve();
+              } catch (error) {
+                console.error('❌ Error opening app links settings:', error);
+                // Just resolve - no additional alert needed
+                resolve();
+              }
+            }
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel',
+            onPress: () => resolve()
+          }
+        ]
+      );
+    });
+  }
 }
 
 // Export singleton instance
@@ -245,6 +329,10 @@ export const isAppLinksEnabled = () => AppLinksService.isAppLinksEnabled();
 export const getDomainVerificationStatus = () => AppLinksService.getDomainVerificationStatus();
 export const hasShownFirstLaunchPrompt = () => AppLinksService.hasShownFirstLaunchPrompt();
 export const setFirstLaunchPromptShown = () => AppLinksService.setFirstLaunchPromptShown();
+export const showAppLinksBlockingPrompt = () => AppLinksService.showAppLinksBlockingPrompt();
+export const getLaunchCount = () => AppLinksService.getLaunchCount();
+export const incrementLaunchCount = () => AppLinksService.incrementLaunchCount();
+export const shouldShowFirstLaunchPrompt = () => AppLinksService.shouldShowFirstLaunchPrompt();
 
 // Development helper
 export const resetFirstLaunchPrompt = () => AppLinksService.resetFirstLaunchPrompt();

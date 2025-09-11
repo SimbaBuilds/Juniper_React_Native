@@ -27,7 +27,7 @@ import { colors } from './src/shared/theme/colors';
 // Error boundaries removed - let React Native handle errors naturally
 import { Storage } from './src/utils/storage';
 import AppLinksPrompt from './src/components/AppLinksPrompt';
-import { AppLinksService } from './src/utils/appLinks';
+import { AppLinksService, shouldShowFirstLaunchPrompt, incrementLaunchCount } from './src/utils/appLinks';
 
 type RootStackParamList = {
   MainTabs: undefined;
@@ -114,11 +114,14 @@ export default function App() {
           (async () => {
           try {
             if (Platform.OS === 'android') {
-              console.log('🔗 App: Checking App Links first launch status...');
-              const hasShownPrompt = await AppLinksService.hasShownFirstLaunchPrompt();
+              console.log('🔗 App: Incrementing launch count...');
+              await incrementLaunchCount();
               
-              if (!hasShownPrompt) {
-                console.log('🔗 App: First launch - checking if App Links are enabled...');
+              console.log('🔗 App: Checking if should show first launch prompt...');
+              const shouldShow = await shouldShowFirstLaunchPrompt();
+              
+              if (shouldShow) {
+                console.log('🔗 App: Checking if App Links are enabled...');
                 const isEnabled = await AppLinksService.isAppLinksEnabled();
                 
                 if (!isEnabled) {
@@ -128,11 +131,11 @@ export default function App() {
                     setShowAppLinksPrompt(true);
                   }, 1000); // Small delay to ensure UI is ready
                 } else {
-                  console.log('🔗 App: App Links already enabled on first launch');
+                  console.log('🔗 App: App Links already enabled');
                   await AppLinksService.setFirstLaunchPromptShown();
                 }
               } else {
-                console.log('🔗 App: First launch prompt already shown previously');
+                console.log('🔗 App: First launch prompt not needed');
               }
             }
             return { component: 'applinks', success: true };

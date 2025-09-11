@@ -5,7 +5,7 @@ import { getOAuthConfig, getRedirectUri, buildAuthUrl, OAuthServiceConfig } from
 import { calculateExpirationDate, safeToISOString, safeParseDateString, isValidDate } from './DateUtils';
 import { createBasicAuthHeader } from '../../utils/base64';
 import IntegrationCompletionService from '../IntegrationCompletionService';
-import { checkAppLinksBeforeOAuth } from '../../utils/appLinks';
+import { checkAppLinksBeforeOAuth, showAppLinksBlockingPrompt } from '../../utils/appLinks';
 
 export interface AuthResult {
   accessToken: string;
@@ -99,8 +99,16 @@ export abstract class BaseOAuthService {
       const isEnabled = await checkAppLinksBeforeOAuth();
       
       if (!isEnabled) {
-        console.warn(`🔗 ${this.config.serviceName}: App Links not enabled - OAuth will fail`);
-        throw new Error('App Links must be enabled for OAuth authentication to work. Please enable "Open by default" for juniperassistant.com in your device settings.');
+        console.warn(`🔗 ${this.config.serviceName}: App Links not enabled - showing blocking prompt`);
+        
+        // Show blocking prompt with settings button
+        await showAppLinksBlockingPrompt();
+        
+        // After prompt is dismissed, recheck - user might have enabled it
+        const isEnabledAfterPrompt = await checkAppLinksBeforeOAuth();
+        if (!isEnabledAfterPrompt) {
+          throw new Error('App Links must be enabled for OAuth authentication to work. Please enable "Open by default" for juniperassistant.com in your device settings.');
+        }
       }
       
       console.log(`🔗 ${this.config.serviceName}: App Links enabled - proceeding with OAuth`);
