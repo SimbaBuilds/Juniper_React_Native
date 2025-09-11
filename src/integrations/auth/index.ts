@@ -23,7 +23,8 @@ export { default as MicrosoftOutlookMailAuthService } from './services/Microsoft
 export { default as MicrosoftTeamsAuthService } from './services/MicrosoftTeamsAuthService';
 export { default as FitbitAuthService } from './services/FitbitAuthService';
 export { default as OuraAuthService } from './services/OuraAuthService';
-export { default as EpicMyChartAuthService } from './services/EpicMyChartAuthService';\nexport { MultiIssuerEpicAuthService } from './services/MultiIssuerEpicAuthService';
+export { default as EpicMyChartAuthService } from './services/EpicMyChartAuthService';
+export { MultiIssuerEpicAuthService } from './services/MultiIssuerEpicAuthService';
 export { default as AppleHealthKitAuthService } from './services/AppleHealthKitAuthService';
 export { default as GoogleFitAuthService } from './services/GoogleFitAuthService';
 
@@ -46,7 +47,8 @@ import MicrosoftOutlookMailAuthService from './services/MicrosoftOutlookMailAuth
 import MicrosoftTeamsAuthService from './services/MicrosoftTeamsAuthService';
 import FitbitAuthService from './services/FitbitAuthService';
 import OuraAuthService from './services/OuraAuthService';
-import EpicMyChartAuthService from './services/EpicMyChartAuthService';\nimport { MultiIssuerEpicAuthService } from './services/MultiIssuerEpicAuthService';
+import EpicMyChartAuthService from './services/EpicMyChartAuthService';
+import { MultiIssuerEpicAuthService } from './services/MultiIssuerEpicAuthService';
 import AppleHealthKitAuthService from './services/AppleHealthKitAuthService';
 import GoogleFitAuthService from './services/GoogleFitAuthService';
 

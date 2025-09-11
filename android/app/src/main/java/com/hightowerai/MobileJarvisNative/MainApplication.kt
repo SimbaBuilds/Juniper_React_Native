@@ -9,18 +9,10 @@ import com.facebook.react.ReactApplication
 import com.facebook.react.ReactNativeHost
 import com.facebook.react.ReactPackage
 import com.facebook.react.ReactHost
-import com.facebook.react.config.ReactFeatureFlags
-import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.load
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
-import com.facebook.flipper.android.AndroidFlipperClient
-import com.facebook.flipper.android.utils.FlipperUtils
-import com.facebook.flipper.core.FlipperClient
-import com.facebook.flipper.plugins.inspector.DescriptorMapping
-import com.facebook.flipper.plugins.inspector.InspectorFlipperPlugin
-import com.facebook.flipper.plugins.network.NetworkFlipperPlugin
-import com.facebook.flipper.plugins.network.FlipperOkhttpInterceptor
 import com.facebook.soloader.SoLoader
+import com.facebook.react.soloader.OpenSourceMergedSoMapping
 
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
@@ -33,6 +25,7 @@ import com.hightowerai.MobileJarvisNative.app_config.AppConfigPackage
 import com.hightowerai.MobileJarvisNative.appstate.AppStatePackage
 import com.hightowerai.MobileJarvisNative.api.ConversationSyncPackage
 import com.hightowerai.MobileJarvisNative.debug.DebugBridgePackage
+import com.hightowerai.MobileJarvisNative.ConfigManager
 import android.util.Log
 
 class MainApplication : Application(), ReactApplication {
@@ -97,19 +90,14 @@ class MainApplication : Application(), ReactApplication {
     super.onCreate()
     // Initialize ConfigManager before any other usage
     ConfigManager.init(this)
-    SoLoader.init(this, false)
-    // ReactFeatureFlags.unstable_useRuntimeSchedulerAlways is deprecated in React Native 0.79+
-    // Runtime scheduler is now enabled by default
-    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
-      // If you opted-in for the New Architecture, we load the native entry point for this app.
-      load()
+    
+    try {
+      SoLoader.init(this, OpenSourceMergedSoMapping)
+    } catch (e: Exception) {
+      Log.e(TAG, "📱 MAIN_APP: ❌ SoLoader failed to initialize: ${e.message}")
+      // Continue without SoLoader for feature flags
     }
-    if (BuildConfig.DEBUG && FlipperUtils.shouldEnableFlipper(this)) {
-      val client: FlipperClient = AndroidFlipperClient.getInstance(this)
-      client.addPlugin(InspectorFlipperPlugin(this, DescriptorMapping.withDefaults()))
-      client.addPlugin(NetworkFlipperPlugin())
-      client.start()
-    }
+    // Flipper removed - deprecated in newer React Native versions
     ApplicationLifecycleDispatcher.onApplicationCreate(this)
   }
 

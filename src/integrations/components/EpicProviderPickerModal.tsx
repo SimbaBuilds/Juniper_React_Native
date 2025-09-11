@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../theme/ThemeContext';
+import { colors } from '../../shared/theme/colors';
 import { EpicIssuer, MultiIssuerEpicAuthService } from '../auth/services/MultiIssuerEpicAuthService';
 
 interface EpicProviderPickerModalProps {
@@ -28,7 +28,6 @@ const EpicProviderPickerModal: React.FC<EpicProviderPickerModalProps> = ({
   onSave,
   existingConnections = [],
 }) => {
-  const { theme } = useTheme();
   const [issuers, setIssuers] = useState<EpicIssuer[]>([]);
   const [filteredIssuers, setFilteredIssuers] = useState<EpicIssuer[]>([]);
   const [selectedIssuers, setSelectedIssuers] = useState<Set<string>>(new Set());
@@ -111,8 +110,8 @@ const EpicProviderPickerModal: React.FC<EpicProviderPickerModalProps> = ({
         style={[
           styles.issuerItem,
           { 
-            backgroundColor: theme.surface,
-            borderColor: isSelected ? theme.primary : theme.border,
+            backgroundColor: colors.background.card,
+            borderColor: isSelected ? colors.button.primary : colors.border.primary,
             opacity: isDisabled ? 0.5 : 1,
           }
         ]}
@@ -120,16 +119,16 @@ const EpicProviderPickerModal: React.FC<EpicProviderPickerModalProps> = ({
         disabled={isDisabled}
       >
         <View style={styles.issuerInfo}>
-          <Text style={[styles.issuerName, { color: theme.text }]}>
+          <Text style={[styles.issuerName, { color: colors.text.primary }]}>
             {item.organization_name}
           </Text>
           {(item.city || item.state) && (
-            <Text style={[styles.issuerLocation, { color: theme.textSecondary }]}>
+            <Text style={[styles.issuerLocation, { color: colors.text.secondary }]}>
               {[item.city, item.state].filter(Boolean).join(', ')}
             </Text>
           )}
           {isAlreadyConnected && (
-            <Text style={[styles.connectedLabel, { color: theme.success }]}>
+            <Text style={[styles.connectedLabel, { color: colors.status.mutedGreen }]}>
               Already Connected
             </Text>
           )}
@@ -137,12 +136,12 @@ const EpicProviderPickerModal: React.FC<EpicProviderPickerModalProps> = ({
         <View style={[
           styles.checkbox,
           { 
-            borderColor: isSelected ? theme.primary : theme.border,
-            backgroundColor: isSelected ? theme.primary : 'transparent',
+            borderColor: isSelected ? colors.button.primary : colors.border.primary,
+            backgroundColor: isSelected ? colors.button.primary : 'transparent',
           }
         ]}>
           {isSelected && (
-            <Ionicons name="checkmark" size={16} color={theme.surface} />
+            <Ionicons name="checkmark" size={16} color={colors.common.white} />
           )}
         </View>
       </TouchableOpacity>
@@ -150,19 +149,19 @@ const EpicProviderPickerModal: React.FC<EpicProviderPickerModalProps> = ({
   };
 
   const renderHeader = () => (
-    <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+    <View style={[styles.header, { backgroundColor: colors.background.card, borderBottomColor: colors.border.primary }]}>
       <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-        <Ionicons name="close" size={24} color={theme.text} />
+        <Ionicons name="close" size={24} color={colors.text.primary} />
       </TouchableOpacity>
-      <Text style={[styles.headerTitle, { color: theme.text }]}>
+      <Text style={[styles.headerTitle, { color: colors.text.primary }]}>
         Select Healthcare Providers
       </Text>
       <TouchableOpacity 
         onPress={handleSave} 
-        style={[styles.saveButton, { backgroundColor: theme.primary }]}
+        style={[styles.saveButton, { backgroundColor: colors.button.primary }]}
         disabled={selectedIssuers.size === 0}
       >
-        <Text style={[styles.saveButtonText, { color: theme.surface }]}>
+        <Text style={[styles.saveButtonText, { color: colors.common.white }]}>
           Save ({selectedIssuers.size})
         </Text>
       </TouchableOpacity>
@@ -170,12 +169,12 @@ const EpicProviderPickerModal: React.FC<EpicProviderPickerModalProps> = ({
   );
 
   const renderSearchBar = () => (
-    <View style={[styles.searchContainer, { backgroundColor: theme.surface }]}>
-      <Ionicons name="search" size={20} color={theme.textSecondary} style={styles.searchIcon} />
+    <View style={[styles.searchContainer, { backgroundColor: colors.background.card }]}>
+      <Ionicons name="search" size={20} color={colors.text.secondary} style={styles.searchIcon} />
       <TextInput
-        style={[styles.searchInput, { color: theme.text }]}
+        style={[styles.searchInput, { color: colors.text.primary }]}
         placeholder="Search by name, city, or state..."
-        placeholderTextColor={theme.textSecondary}
+        placeholderTextColor={colors.text.secondary}
         value={searchTerm}
         onChangeText={setSearchTerm}
         autoCapitalize="none"
@@ -183,7 +182,7 @@ const EpicProviderPickerModal: React.FC<EpicProviderPickerModalProps> = ({
       />
       {searchTerm.length > 0 && (
         <TouchableOpacity onPress={() => setSearchTerm('')} style={styles.clearButton}>
-          <Ionicons name="close-circle" size={20} color={theme.textSecondary} />
+          <Ionicons name="close-circle" size={20} color={colors.text.secondary} />
         </TouchableOpacity>
       )}
     </View>
@@ -193,8 +192,8 @@ const EpicProviderPickerModal: React.FC<EpicProviderPickerModalProps> = ({
     if (loading) {
       return (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
+          <ActivityIndicator size="large" color={colors.button.primary} />
+          <Text style={[styles.loadingText, { color: colors.text.secondary }]}>
             Loading healthcare providers...
           </Text>
         </View>
@@ -204,13 +203,13 @@ const EpicProviderPickerModal: React.FC<EpicProviderPickerModalProps> = ({
     if (error) {
       return (
         <View style={styles.centerContainer}>
-          <Ionicons name="alert-circle" size={48} color={theme.error} />
-          <Text style={[styles.errorText, { color: theme.error }]}>{error}</Text>
+          <Ionicons name="alert-circle" size={48} color={colors.button.error} />
+          <Text style={[styles.errorText, { color: colors.button.error }]}>{error}</Text>
           <TouchableOpacity 
             onPress={loadIssuers} 
-            style={[styles.retryButton, { backgroundColor: theme.primary }]}
+            style={[styles.retryButton, { backgroundColor: colors.button.primary }]}
           >
-            <Text style={[styles.retryButtonText, { color: theme.surface }]}>
+            <Text style={[styles.retryButtonText, { color: colors.common.white }]}>
               Try Again
             </Text>
           </TouchableOpacity>
@@ -221,13 +220,13 @@ const EpicProviderPickerModal: React.FC<EpicProviderPickerModalProps> = ({
     if (filteredIssuers.length === 0) {
       return (
         <View style={styles.centerContainer}>
-          <Ionicons name="search" size={48} color={theme.textSecondary} />
-          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+          <Ionicons name="search" size={48} color={colors.text.secondary} />
+          <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
             {searchTerm ? 'No providers found matching your search.' : 'No healthcare providers available.'}
           </Text>
           {searchTerm && (
             <TouchableOpacity onPress={() => setSearchTerm('')} style={styles.clearSearchButton}>
-              <Text style={[styles.clearSearchText, { color: theme.primary }]}>
+              <Text style={[styles.clearSearchText, { color: colors.button.primary }]}>
                 Clear search
               </Text>
             </TouchableOpacity>
@@ -255,7 +254,7 @@ const EpicProviderPickerModal: React.FC<EpicProviderPickerModalProps> = ({
       presentationStyle="fullScreen"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background.primary }]}>
         {renderHeader()}
         {renderSearchBar()}
         {renderContent()}
