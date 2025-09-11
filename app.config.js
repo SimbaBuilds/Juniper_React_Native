@@ -9,13 +9,7 @@ export default {
     scheme: "mobilejarvisnative",
     plugins: [
       "expo-secure-store",
-      "./expo-plugins/withVoiceModule.js",
-      [
-        "expo-health",
-        {
-          isAdsTrackingEnabled: false
-        }
-      ]
+      "./expo-plugins/withVoiceModule.js"
     ],
     platforms: ["ios", "android", "web"],
     extra: {
