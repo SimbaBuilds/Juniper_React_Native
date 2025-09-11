@@ -92,7 +92,7 @@ class ConversationSyncModule(reactContext: ReactApplicationContext) : ReactConte
             
             val ids = mutableListOf<String>()
             for (i in 0 until conversationIds.size()) {
-                ids.add(conversationIds.getString(i))
+                conversationIds.getString(i)?.let { ids.add(it) }
             }
             
             val conversationManager = BackgroundConversationManager.getInstance(reactApplicationContext)
@@ -120,14 +120,15 @@ class ConversationSyncModule(reactContext: ReactApplicationContext) : ReactConte
             for (i in 0 until historyArray.size()) {
                 val historyItem = historyArray.getMap(i)
                 
-                val message = HistoryMessage(
-                    role = historyItem.getString("role") ?: "user",
-                    content = historyItem.getString("content") ?: "",
-                    timestamp = historyItem.getDouble("timestamp").toLong(),
-                    type = historyItem.getString("type") ?: "text"
-                )
-                
-                history.add(message)
+                historyItem?.let { item ->
+                    val message = HistoryMessage(
+                        role = item.getString("role") ?: "user",
+                        content = item.getString("content") ?: "",
+                        timestamp = item.getDouble("timestamp").toLong(),
+                        type = item.getString("type") ?: "text"
+                    )
+                    history.add(message)
+                }
             }
             
             val conversationManager = BackgroundConversationManager.getInstance(reactApplicationContext)
