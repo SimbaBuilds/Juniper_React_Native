@@ -519,10 +519,16 @@ export const IntegrationsScreen: React.FC = () => {
       'Microsoft Outlook Mail': 'microsoft-outlook-mail',
       'Microsoft Teams': 'microsoft-teams',
       'Twilio': 'twilio',
-      'Todoist': 'todoist'
+      'Textbelt': 'textbelt',
+      'Todoist': 'todoist',
+      'Fitbit': 'fitbit',
+      'Oura': 'oura',
+      'MyChart': 'epic-mychart',
+      'Apple Health': 'apple-health',
+      'Google Fit': 'google-fit'
     };
     
-    return serviceMap[dbServiceName] || dbServiceName.toLowerCase().replace(/\s+/g, '-');
+    return serviceMap[dbServiceName] || dbServiceName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
   };
 
   // Handle connect button press
@@ -549,6 +555,13 @@ export const IntegrationsScreen: React.FC = () => {
         return;
       }
 
+      // Check if this service uses custom flows
+      if (internalServiceName === 'epic-mychart') {
+        // MyChart uses Epic provider picker flow
+        setEpicProviderModalVisible(true);
+        return;
+      }
+
       // Check if this service uses Twilio credentials
       if (internalServiceName === 'twilio') {
         // Ensure integration record exists for email functionality
@@ -570,12 +583,6 @@ export const IntegrationsScreen: React.FC = () => {
         }
         setSelectedService(service);
         setTextbeltModalVisible(true);
-        return;
-      }
-
-      // Special handling for MyChart - show provider picker
-      if (internalServiceName === 'epic-mychart') {
-        setEpicProviderModalVisible(true);
         return;
       }
       
@@ -800,7 +807,14 @@ export const IntegrationsScreen: React.FC = () => {
       }
 
       const epicService = MultiIssuerEpicAuthService.getInstance();
-      await epicService.authenticate(connection.integration_id);
+      
+      // Verify integration record exists (should exist from provider selection)
+      if (!connection.integration_id) {
+        throw new Error('Integration record missing. Please reselect providers.');
+      }
+      
+      // Authenticate directly with connection data
+      await epicService.authenticateConnectionDirect(connection);
       
       // Refresh the services list
       await loadServicesWithStatus();

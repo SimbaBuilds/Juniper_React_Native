@@ -1,12 +1,8 @@
- LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
- ERROR  The action 'NAVIGATE' with payload {"name":"Juniper"} was not handled by any navigator.
+ LOG  🔗 Connecting to service: MyChart
+ LOG  🔗 Mapped service name: mychart
+ LOG  🔗 Checking App Links before OAuth for: MyChart
+ LOG  🔗 App Links enabled - proceeding with OAuth
+ LOG  🚀 Starting integration for MyChart...
+ LOG  🔗 Mapped MyChart to epic-mychart
 
-Do you have a screen named 'Juniper'?
-
-If you're trying to navigate to a screen in a nested navigator, see https://reactnavigation.org/docs/nesting-navigators#navigating-to-a-screen-in-a-nested-navigator.
-
-If you're using conditional rendering, navigation will happen automatically and you shouldn't navigate manually, see.
-
-This is a development-only warning and won't be shown in production.
- LOG  ✅ Integration completion flow triggered for gmail
- LOG  ✅ gmail integration completion flow triggered
+ Alert: OAUth integration for MyCHart is not yet implemented
