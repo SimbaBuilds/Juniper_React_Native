@@ -771,7 +771,9 @@ function MainTabNavigator() {
         await sendTextMessage(message, integrationInProgress, imageUrl);
       },
       navigateToHome: () => {
-        navigation.navigate('Juniper' as never);
+        navigation.navigate('MainTabs' as never, { 
+          screen: 'Juniper' 
+        } as never);
       }
     });
   }, [sendTextMessage, navigation]);
