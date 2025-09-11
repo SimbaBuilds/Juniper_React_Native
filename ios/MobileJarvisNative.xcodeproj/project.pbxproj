@@ -7,61 +7,61 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		1CD0E556CC794A31BB373834 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F1709C53F8DF577E5967C6F1 /* PrivacyInfo.xcprivacy */; };
-		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		6CC289BED30AD050D4CD4003 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486EAE1CBD3A89907C3C33F9 /* ExpoModulesProvider.swift */; };
-		8FBBBA6C3ECDB16F4C41953A /* libPods-MobileJarvisNative.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FA274B6CDBA0AB43EA717E4 /* libPods-MobileJarvisNative.a */; };
-		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		CBADF963A8F542EF8E91B791 /* VoiceModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EFF2409EA8E4079A8F2F1DC /* VoiceModule.swift */; };
-		205CCA795A16415BBF92C835 /* VoiceModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 498414C2781B44E382B93CE0 /* VoiceModule.m */; };
-		1B17DB826E0E4CDB825ACD17 /* VoiceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0247C69192400BAFEDF08D /* VoiceManager.swift */; };
-		ED0FF3ED4ACE4CA3AB07C258 /* VoiceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150BD7B32A17469BA7D020DD /* VoiceState.swift */; };
-		95931C1C31014FA5B42920B9 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E742DB004B14B75A4C09CF0 /* AudioManager.swift */; };
-		47240C7517DC45F0AF1E6A46 /* TTSManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 811472427FA14A2699F94589 /* TTSManager.swift */; };
-		3957ECC016D54C7F955C93A7 /* DeepgramAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C8F7442426430996A29F70 /* DeepgramAPI.swift */; };
-		15A836609DB640A6AE312A54 /* DeepgramSTTProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A442555489744DEAA35B822C /* DeepgramSTTProvider.swift */; };
-		61DFF015B14B4625A7BD597E /* DeepgramWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D588FEC60524850A91C00AE /* DeepgramWebSocketClient.swift */; };
-		BEAEFC7CB801499C8882A785 /* WhisperAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5E40372028419C8FB950CC /* WhisperAPI.swift */; };
-		7D96E1D2A3ED4F70BB8FC480 /* STTProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4EB92E8E9A24CDA8C6C5F16 /* STTProvider.swift */; };
-		99817BAD79C7489DB74F3A88 /* ConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D1943945F6142828A1A6BA9 /* ConfigManager.swift */; };
-		57AA8458E5084730B6394BA1 /* AppConfigModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE9A80A4DCB48E5AE0AC050 /* AppConfigModule.swift */; };
 		03966CDD7C3543F980CACB1D /* AppConfigModule.m in Sources */ = {isa = PBXBuildFile; fileRef = AD81D825FCE24BAB909A503B /* AppConfigModule.m */; };
+		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		15A836609DB640A6AE312A54 /* DeepgramSTTProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A442555489744DEAA35B822C /* DeepgramSTTProvider.swift */; };
+		1B17DB826E0E4CDB825ACD17 /* VoiceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0247C69192400BAFEDF08D /* VoiceManager.swift */; };
+		1CD0E556CC794A31BB373834 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F1709C53F8DF577E5967C6F1 /* PrivacyInfo.xcprivacy */; };
+		205CCA795A16415BBF92C835 /* VoiceModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 498414C2781B44E382B93CE0 /* VoiceModule.m */; };
 		2872EC1731274072AC9508CB /* StringProcessingWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18E65A3B816446929AC1585D /* StringProcessingWrapper.swift */; };
+		3957ECC016D54C7F955C93A7 /* DeepgramAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C8F7442426430996A29F70 /* DeepgramAPI.swift */; };
+		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
+		47240C7517DC45F0AF1E6A46 /* TTSManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 811472427FA14A2699F94589 /* TTSManager.swift */; };
+		57AA8458E5084730B6394BA1 /* AppConfigModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE9A80A4DCB48E5AE0AC050 /* AppConfigModule.swift */; };
+		61DFF015B14B4625A7BD597E /* DeepgramWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D588FEC60524850A91C00AE /* DeepgramWebSocketClient.swift */; };
+		6CC289BED30AD050D4CD4003 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486EAE1CBD3A89907C3C33F9 /* ExpoModulesProvider.swift */; };
+		7D96E1D2A3ED4F70BB8FC480 /* STTProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4EB92E8E9A24CDA8C6C5F16 /* STTProvider.swift */; };
+		8FBBBA6C3ECDB16F4C41953A /* libPods-MobileJarvisNative.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FA274B6CDBA0AB43EA717E4 /* libPods-MobileJarvisNative.a */; };
 		91EE7395FF114A0EA48E78D5 /* StringProcessingWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = F11D511BCC6D4C83AE588D60 /* StringProcessingWrapper.m */; };
+		95931C1C31014FA5B42920B9 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E742DB004B14B75A4C09CF0 /* AudioManager.swift */; };
+		99817BAD79C7489DB74F3A88 /* ConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D1943945F6142828A1A6BA9 /* ConfigManager.swift */; };
+		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		BEAEFC7CB801499C8882A785 /* WhisperAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5E40372028419C8FB950CC /* WhisperAPI.swift */; };
+		CBADF963A8F542EF8E91B791 /* VoiceModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EFF2409EA8E4079A8F2F1DC /* VoiceModule.swift */; };
+		ED0FF3ED4ACE4CA3AB07C258 /* VoiceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150BD7B32A17469BA7D020DD /* VoiceState.swift */; };
+		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0D588FEC60524850A91C00AE /* DeepgramWebSocketClient.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = DeepgramWebSocketClient.swift; path = MobileJarvisNative/DeepgramWebSocketClient.swift; sourceTree = "<group>"; };
+		0EFF2409EA8E4079A8F2F1DC /* VoiceModule.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = VoiceModule.swift; path = MobileJarvisNative/VoiceModule.swift; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* MobileJarvisNative.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MobileJarvisNative.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = MobileJarvisNative/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MobileJarvisNative/Info.plist; sourceTree = "<group>"; };
+		150BD7B32A17469BA7D020DD /* VoiceState.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = VoiceState.swift; path = MobileJarvisNative/VoiceState.swift; sourceTree = "<group>"; };
+		18E65A3B816446929AC1585D /* StringProcessingWrapper.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = StringProcessingWrapper.swift; path = MobileJarvisNative/StringProcessingWrapper.swift; sourceTree = "<group>"; };
+		2E742DB004B14B75A4C09CF0 /* AudioManager.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = AudioManager.swift; path = MobileJarvisNative/AudioManager.swift; sourceTree = "<group>"; };
 		486EAE1CBD3A89907C3C33F9 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-MobileJarvisNative/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		498414C2781B44E382B93CE0 /* VoiceModule.m */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.objc; name = VoiceModule.m; path = MobileJarvisNative/VoiceModule.m; sourceTree = "<group>"; };
+		5D1943945F6142828A1A6BA9 /* ConfigManager.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = ConfigManager.swift; path = MobileJarvisNative/ConfigManager.swift; sourceTree = "<group>"; };
+		6EE9A80A4DCB48E5AE0AC050 /* AppConfigModule.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = AppConfigModule.swift; path = MobileJarvisNative/AppConfigModule.swift; sourceTree = "<group>"; };
 		7BEA83D03A4433FCB69D645C /* Pods-MobileJarvisNative.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MobileJarvisNative.debug.xcconfig"; path = "Target Support Files/Pods-MobileJarvisNative/Pods-MobileJarvisNative.debug.xcconfig"; sourceTree = "<group>"; };
+		811472427FA14A2699F94589 /* TTSManager.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = TTSManager.swift; path = MobileJarvisNative/TTSManager.swift; sourceTree = "<group>"; };
 		9FA274B6CDBA0AB43EA717E4 /* libPods-MobileJarvisNative.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MobileJarvisNative.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A442555489744DEAA35B822C /* DeepgramSTTProvider.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = DeepgramSTTProvider.swift; path = MobileJarvisNative/DeepgramSTTProvider.swift; sourceTree = "<group>"; };
+		A9C8F7442426430996A29F70 /* DeepgramAPI.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = DeepgramAPI.swift; path = MobileJarvisNative/DeepgramAPI.swift; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = MobileJarvisNative/SplashScreen.storyboard; sourceTree = "<group>"; };
+		AD81D825FCE24BAB909A503B /* AppConfigModule.m */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.objc; name = AppConfigModule.m; path = MobileJarvisNative/AppConfigModule.m; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		DBCC6B89E0009275C488FF9E /* Pods-MobileJarvisNative.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MobileJarvisNative.release.xcconfig"; path = "Target Support Files/Pods-MobileJarvisNative/Pods-MobileJarvisNative.release.xcconfig"; sourceTree = "<group>"; };
+		E4EB92E8E9A24CDA8C6C5F16 /* STTProvider.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = STTProvider.swift; path = MobileJarvisNative/STTProvider.swift; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = MobileJarvisNative/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* MobileJarvisNative-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "MobileJarvisNative-Bridging-Header.h"; path = "MobileJarvisNative/MobileJarvisNative-Bridging-Header.h"; sourceTree = "<group>"; };
+		F11D511BCC6D4C83AE588D60 /* StringProcessingWrapper.m */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.objc; name = StringProcessingWrapper.m; path = MobileJarvisNative/StringProcessingWrapper.m; sourceTree = "<group>"; };
 		F1709C53F8DF577E5967C6F1 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = MobileJarvisNative/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		0EFF2409EA8E4079A8F2F1DC /* VoiceModule.swift */ = {isa = PBXFileReference; name = "VoiceModule.swift"; path = "MobileJarvisNative/VoiceModule.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		498414C2781B44E382B93CE0 /* VoiceModule.m */ = {isa = PBXFileReference; name = "VoiceModule.m"; path = "MobileJarvisNative/VoiceModule.m"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; explicitFileType = undefined; includeInIndex = 0; };
-		FA0247C69192400BAFEDF08D /* VoiceManager.swift */ = {isa = PBXFileReference; name = "VoiceManager.swift"; path = "MobileJarvisNative/VoiceManager.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		150BD7B32A17469BA7D020DD /* VoiceState.swift */ = {isa = PBXFileReference; name = "VoiceState.swift"; path = "MobileJarvisNative/VoiceState.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		2E742DB004B14B75A4C09CF0 /* AudioManager.swift */ = {isa = PBXFileReference; name = "AudioManager.swift"; path = "MobileJarvisNative/AudioManager.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		811472427FA14A2699F94589 /* TTSManager.swift */ = {isa = PBXFileReference; name = "TTSManager.swift"; path = "MobileJarvisNative/TTSManager.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		A9C8F7442426430996A29F70 /* DeepgramAPI.swift */ = {isa = PBXFileReference; name = "DeepgramAPI.swift"; path = "MobileJarvisNative/DeepgramAPI.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		A442555489744DEAA35B822C /* DeepgramSTTProvider.swift */ = {isa = PBXFileReference; name = "DeepgramSTTProvider.swift"; path = "MobileJarvisNative/DeepgramSTTProvider.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		0D588FEC60524850A91C00AE /* DeepgramWebSocketClient.swift */ = {isa = PBXFileReference; name = "DeepgramWebSocketClient.swift"; path = "MobileJarvisNative/DeepgramWebSocketClient.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		FA5E40372028419C8FB950CC /* WhisperAPI.swift */ = {isa = PBXFileReference; name = "WhisperAPI.swift"; path = "MobileJarvisNative/WhisperAPI.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		E4EB92E8E9A24CDA8C6C5F16 /* STTProvider.swift */ = {isa = PBXFileReference; name = "STTProvider.swift"; path = "MobileJarvisNative/STTProvider.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		5D1943945F6142828A1A6BA9 /* ConfigManager.swift */ = {isa = PBXFileReference; name = "ConfigManager.swift"; path = "MobileJarvisNative/ConfigManager.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		6EE9A80A4DCB48E5AE0AC050 /* AppConfigModule.swift */ = {isa = PBXFileReference; name = "AppConfigModule.swift"; path = "MobileJarvisNative/AppConfigModule.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		AD81D825FCE24BAB909A503B /* AppConfigModule.m */ = {isa = PBXFileReference; name = "AppConfigModule.m"; path = "MobileJarvisNative/AppConfigModule.m"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; explicitFileType = undefined; includeInIndex = 0; };
-		18E65A3B816446929AC1585D /* StringProcessingWrapper.swift */ = {isa = PBXFileReference; name = "StringProcessingWrapper.swift"; path = "MobileJarvisNative/StringProcessingWrapper.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		F11D511BCC6D4C83AE588D60 /* StringProcessingWrapper.m */ = {isa = PBXFileReference; name = "StringProcessingWrapper.m"; path = "MobileJarvisNative/StringProcessingWrapper.m"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; explicitFileType = undefined; includeInIndex = 0; };
+		FA0247C69192400BAFEDF08D /* VoiceManager.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = VoiceManager.swift; path = MobileJarvisNative/VoiceManager.swift; sourceTree = "<group>"; };
+		FA5E40372028419C8FB950CC /* WhisperAPI.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = WhisperAPI.swift; path = MobileJarvisNative/WhisperAPI.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -214,8 +214,8 @@
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
+						DevelopmentTeam = 2D46F842HA;
 						LastSwiftMigration = 1250;
-						DevelopmentTeam = "2D46F842HA";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -417,7 +417,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MobileJarvisNative/MobileJarvisNative.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2D46F842HA;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -437,15 +440,12 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.hightowerai.MobileJarvisNative;
-				PRODUCT_NAME = "MobileJarvisNative";
+				PRODUCT_NAME = MobileJarvisNative;
 				SWIFT_OBJC_BRIDGING_HEADER = "MobileJarvisNative/MobileJarvisNative-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
-				DEVELOPMENT_TEAM = "2D46F842HA";
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
 			};
 			name = Debug;
 		};
@@ -456,7 +456,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MobileJarvisNative/MobileJarvisNative.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2D46F842HA;
 				INFOPLIST_FILE = MobileJarvisNative/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -471,14 +474,11 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.hightowerai.MobileJarvisNative;
-				PRODUCT_NAME = "MobileJarvisNative";
+				PRODUCT_NAME = MobileJarvisNative;
 				SWIFT_OBJC_BRIDGING_HEADER = "MobileJarvisNative/MobileJarvisNative-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
-				DEVELOPMENT_TEAM = "2D46F842HA";
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
 			};
 			name = Release;
 		};
