@@ -110,14 +110,15 @@ export class MultiIssuerEpicAuthService extends BaseOAuthService {
    */
   async getUserEpicConnections(userId: string): Promise<(UserEpicConnection & { issuer: EpicIssuer })[]> {
     try {
+      // Get all connections for user (not just active ones)
+      // We want to show all connections, not just authenticated ones
       const { data, error } = await supabase
         .from('user_epic_connections')
         .select(`
           *,
           issuer:epic_issuers!issuer_id(*)
         `)
-        .eq('user_id', userId)
-        .eq('is_active', true);
+        .eq('user_id', userId);
 
       if (error) {
         throw error;
@@ -261,7 +262,7 @@ export class MultiIssuerEpicAuthService extends BaseOAuthService {
         throw new Error('Epic connection not found');
       }
 
-      return this.authenticateConnection(connection);
+      return this.authenticateConnectionDirect(connection);
     } catch (error) {
       console.error('❌ Error during Epic MyChart authentication:', error);
       throw error;
