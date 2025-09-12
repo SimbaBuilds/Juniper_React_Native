@@ -274,6 +274,9 @@ export class MultiIssuerEpicAuthService extends BaseOAuthService {
    * Build authorization URL for a specific issuer
    */
   private buildIssuerAuthUrl(issuer: EpicIssuer, integrationId: string): string {
+    // Don't include aud from additionalParameters - we set it dynamically per issuer
+    const { aud: _aud, ...otherAdditionalParams } = this.config.additionalParameters || {};
+    
     const params = new URLSearchParams({
       client_id: this.config.clientId,
       redirect_uri: this.config.redirectUri,
@@ -281,7 +284,7 @@ export class MultiIssuerEpicAuthService extends BaseOAuthService {
       scope: this.config.scopes.join(' '),
       state: integrationId,
       aud: issuer.fhir_base_url, // Epic requires the audience parameter to be the FHIR base URL
-      ...this.config.additionalParameters
+      ...otherAdditionalParams
     });
 
     return `${issuer.auth_endpoint}?${params}`;
