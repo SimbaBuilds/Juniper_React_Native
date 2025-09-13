@@ -234,12 +234,18 @@ export class AppleHealthKitDataService {
       endDate: (options?.endDate || new Date()).toISOString()
     };
 
+    console.log('🍎 Activity data date range:', {
+      startDate: healthOptions.startDate,
+      endDate: healthOptions.endDate
+    });
+
     const activity: ActivityData = {};
 
     // Get step count
     try {
       const stepData = await this.fetchHealthData('getStepCount', healthOptions);
-      activity.steps = stepData.value || 0;
+      console.log('🍎 Step data response:', stepData);
+      activity.steps = stepData.value || stepData.sumQuantity?.quantity || 0;
     } catch (error) {
       console.warn('Failed to fetch step count:', error);
     }
@@ -247,7 +253,8 @@ export class AppleHealthKitDataService {
     // Get distance
     try {
       const distanceData = await this.fetchHealthData('getDistanceWalkingRunning', healthOptions);
-      activity.distance = distanceData.value || 0;
+      console.log('🍎 Distance data response:', distanceData);
+      activity.distance = distanceData.value || distanceData.sumQuantity?.quantity || 0;
     } catch (error) {
       console.warn('Failed to fetch distance:', error);
     }
@@ -255,11 +262,8 @@ export class AppleHealthKitDataService {
     // Get active energy
     try {
       const activeEnergyData = await this.fetchHealthData('getActiveEnergyBurned', healthOptions);
-      if (Array.isArray(activeEnergyData) && activeEnergyData.length > 0) {
-        activity.activeEnergyBurned = activeEnergyData.reduce((sum, item) => sum + (item.value || 0), 0);
-      } else if (activeEnergyData.value) {
-        activity.activeEnergyBurned = activeEnergyData.value;
-      }
+      console.log('🍎 Active energy data response:', activeEnergyData);
+      activity.activeEnergyBurned = activeEnergyData.value || activeEnergyData.sumQuantity?.quantity || 0;
     } catch (error) {
       console.warn('Failed to fetch active energy:', error);
     }
@@ -267,11 +271,8 @@ export class AppleHealthKitDataService {
     // Get basal energy
     try {
       const basalEnergyData = await this.fetchHealthData('getBasalEnergyBurned', healthOptions);
-      if (Array.isArray(basalEnergyData) && basalEnergyData.length > 0) {
-        activity.basalEnergyBurned = basalEnergyData.reduce((sum, item) => sum + (item.value || 0), 0);
-      } else if (basalEnergyData.value) {
-        activity.basalEnergyBurned = basalEnergyData.value;
-      }
+      console.log('🍎 Basal energy data response:', basalEnergyData);
+      activity.basalEnergyBurned = basalEnergyData.sumQuantity?.quantity || basalEnergyData.value || 0;
     } catch (error) {
       console.warn('Failed to fetch basal energy:', error);
     }
@@ -279,7 +280,8 @@ export class AppleHealthKitDataService {
     // Get flights climbed
     try {
       const flightsData = await this.fetchHealthData('getFlightsClimbed', healthOptions);
-      activity.flightsClimbed = flightsData.value || 0;
+      console.log('🍎 Flights data response:', flightsData);
+      activity.flightsClimbed = flightsData.sumQuantity?.quantity || flightsData.value || 0;
     } catch (error) {
       console.warn('Failed to fetch flights climbed:', error);
     }
@@ -496,20 +498,32 @@ export class AppleHealthKitDataService {
         case 'getOxygenSaturationSamples':
           return await queryQuantitySamples('HKQuantityTypeIdentifierOxygenSaturation', options);
         case 'getStepCount':
-          return await queryStatisticsForQuantity('HKQuantityTypeIdentifierStepCount', ['cumulativeSum'], {
+          console.log('🍎 Step query params:', { from: options.startDate, to: options.endDate });
+          const stepSamples = await queryQuantitySamples('HKQuantityTypeIdentifierStepCount', {
             from: options.startDate,
             to: options.endDate
           });
+          console.log('🍎 Raw step samples:', stepSamples);
+          const totalSteps = stepSamples.reduce((sum: number, sample: any) => sum + (sample.quantity || 0), 0);
+          return { value: totalSteps };
         case 'getDistanceWalkingRunning':
-          return await queryStatisticsForQuantity('HKQuantityTypeIdentifierDistanceWalkingRunning', ['cumulativeSum'], {
+          console.log('🍎 Distance query params:', { from: options.startDate, to: options.endDate });
+          const distanceSamples = await queryQuantitySamples('HKQuantityTypeIdentifierDistanceWalkingRunning', {
             from: options.startDate,
             to: options.endDate
           });
+          console.log('🍎 Raw distance samples:', distanceSamples);
+          const totalDistance = distanceSamples.reduce((sum: number, sample: any) => sum + (sample.quantity || 0), 0);
+          return { value: totalDistance };
         case 'getActiveEnergyBurned':
-          return await queryStatisticsForQuantity('HKQuantityTypeIdentifierActiveEnergyBurned', ['cumulativeSum'], {
+          console.log('🍎 Active energy query params:', { from: options.startDate, to: options.endDate });
+          const activeEnergySamples = await queryQuantitySamples('HKQuantityTypeIdentifierActiveEnergyBurned', {
             from: options.startDate,
             to: options.endDate
           });
+          console.log('🍎 Raw active energy samples:', activeEnergySamples);
+          const totalActiveEnergy = activeEnergySamples.reduce((sum: number, sample: any) => sum + (sample.quantity || 0), 0);
+          return { value: totalActiveEnergy };
         case 'getBasalEnergyBurned':
           return await queryStatisticsForQuantity('HKQuantityTypeIdentifierBasalEnergyBurned', ['cumulativeSum'], {
             from: options.startDate,
@@ -587,7 +601,9 @@ export class AppleHealthKitDataService {
 
     try {
       // Get most recent vital signs
+      console.log('🍎 AppleHealthKitDataService: Fetching vital signs...');
       const vitals = await this.getVitalSigns(integrationId, { startDate, endDate, limit: 1 });
+      console.log('🍎 AppleHealthKitDataService: Vitals retrieved:', vitals);
       if (vitals.heartRate) realtimeData.heartrate = vitals.heartRate;
       if (vitals.restingHeartRate) realtimeData.restingheartrate = vitals.restingHeartRate;
       if (vitals.bloodPressureSystolic) realtimeData.bloodpressure_systolic = vitals.bloodPressureSystolic;
@@ -597,13 +613,17 @@ export class AppleHealthKitDataService {
       // Get most recent activity data (today's totals)
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
+      console.log('🍎 AppleHealthKitDataService: Fetching activity data...');
       const activity = await this.getActivityData(integrationId, { startDate: todayStart, endDate });
+      console.log('🍎 AppleHealthKitDataService: Activity retrieved:', activity);
       if (activity.steps) realtimeData.steps = activity.steps;
       if (activity.distance) realtimeData.distance = activity.distance;
       if (activity.activeEnergyBurned) realtimeData.activeenergy = activity.activeEnergyBurned;
 
       // Get latest body measurements
+      console.log('🍎 AppleHealthKitDataService: Fetching body measurements...');
       const body = await this.getBodyMeasurements(integrationId);
+      console.log('🍎 AppleHealthKitDataService: Body measurements retrieved:', body);
       if (body.weight) realtimeData.weight = body.weight;
       if (body.height) realtimeData.height = body.height;
       if (body.bmi) realtimeData.bmi = body.bmi;
