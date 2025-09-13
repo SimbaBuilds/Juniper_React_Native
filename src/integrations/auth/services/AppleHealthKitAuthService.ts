@@ -1,5 +1,17 @@
 import { Platform } from 'react-native';
-import { HealthKit as AppleHealthKit, HealthKitPermissions, HealthValue, HealthInputOptions } from 'react-native-health';
+import HealthKit, { 
+  isHealthDataAvailable, 
+  requestAuthorization, 
+  authorizationStatusFor,
+  queryQuantitySamples,
+  getMostRecentQuantitySample
+} from '@kingstinct/react-native-healthkit';
+import type { 
+  ObjectTypeIdentifier, 
+  QuantityTypeIdentifier, 
+  AuthorizationRequestStatus,
+  QuantitySample
+} from '@kingstinct/react-native-healthkit';
 import { BaseOAuthService, AuthResult } from '../BaseOAuthService';
 import { supabase } from '../../../supabase/supabase';
 
@@ -57,16 +69,12 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       return false;
     }
 
-    return new Promise((resolve) => {
-      AppleHealthKit.isAvailable((error: Error | null, results: boolean) => {
-        if (error) {
-          console.error('❌ Error checking HealthKit availability:', error);
-          resolve(false);
-        } else {
-          resolve(results);
-        }
-      });
-    });
+    try {
+      return isHealthDataAvailable();
+    } catch (error) {
+      console.error('❌ Error checking HealthKit availability:', error);
+      return false;
+    }
   }
 
   /**
@@ -124,44 +132,40 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
    * Request specific HealthKit permissions
    */
   private async requestHealthKitPermissions(): Promise<boolean> {
-    const permissions: HealthKitPermissions = {
-      permissions: {
-        read: [
-          AppleHealthKit.Constants.Permissions.Steps,
-          AppleHealthKit.Constants.Permissions.StepCount,
-          AppleHealthKit.Constants.Permissions.HeartRate,
-          AppleHealthKit.Constants.Permissions.Weight,
-          AppleHealthKit.Constants.Permissions.Height,
-          AppleHealthKit.Constants.Permissions.BodyMassIndex,
-          AppleHealthKit.Constants.Permissions.ActiveEnergyBurned,
-          AppleHealthKit.Constants.Permissions.SleepAnalysis,
-          AppleHealthKit.Constants.Permissions.BloodPressureDiastolic,
-          AppleHealthKit.Constants.Permissions.BloodPressureSystolic,
-          AppleHealthKit.Constants.Permissions.DistanceWalkingRunning,
-          AppleHealthKit.Constants.Permissions.FlightsClimbed,
-          AppleHealthKit.Constants.Permissions.RestingHeartRate,
-          AppleHealthKit.Constants.Permissions.HeartRateVariability,
-          AppleHealthKit.Constants.Permissions.BodyFatPercentage,
-          AppleHealthKit.Constants.Permissions.RespiratoryRate,
-          AppleHealthKit.Constants.Permissions.BodyTemperature,
-          AppleHealthKit.Constants.Permissions.BloodGlucose,
-          AppleHealthKit.Constants.Permissions.OxygenSaturation,
-        ],
-        write: [] // Only request write permissions if needed
-      }
-    };
+    const readPermissions: ObjectTypeIdentifier[] = [
+      'HKQuantityTypeIdentifierStepCount',
+      'HKQuantityTypeIdentifierHeartRate',
+      'HKQuantityTypeIdentifierBodyMass',
+      'HKQuantityTypeIdentifierHeight',
+      'HKQuantityTypeIdentifierBodyMassIndex',
+      'HKQuantityTypeIdentifierActiveEnergyBurned',
+      'HKCategoryTypeIdentifierSleepAnalysis',
+      'HKQuantityTypeIdentifierBloodPressureDiastolic',
+      'HKQuantityTypeIdentifierBloodPressureSystolic',
+      'HKQuantityTypeIdentifierDistanceWalkingRunning',
+      'HKQuantityTypeIdentifierFlightsClimbed',
+      'HKQuantityTypeIdentifierRestingHeartRate',
+      'HKQuantityTypeIdentifierHeartRateVariabilitySDNN',
+      'HKQuantityTypeIdentifierBodyFatPercentage',
+      'HKQuantityTypeIdentifierRespiratoryRate',
+      'HKQuantityTypeIdentifierBodyTemperature',
+      'HKQuantityTypeIdentifierBloodGlucose',
+      'HKQuantityTypeIdentifierOxygenSaturation',
+    ];
 
-    return new Promise((resolve) => {
-      AppleHealthKit.initHealthKit(permissions, (error: Error | null) => {
-        if (error) {
-          console.error('❌ Error requesting HealthKit permissions:', error);
-          resolve(false);
-        } else {
-          console.log('✅ HealthKit permissions granted');
-          resolve(true);
-        }
-      });
-    });
+    try {
+      const success = await requestAuthorization([], readPermissions);
+      if (success) {
+        console.log('✅ HealthKit permissions granted');
+        return true;
+      } else {
+        console.error('❌ HealthKit permissions denied');
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error requesting HealthKit permissions:', error);
+      return false;
+    }
   }
 
   /**
@@ -198,23 +202,14 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       return false;
     }
 
-    return new Promise((resolve) => {
-      AppleHealthKit.getAuthStatus(
-        { permissions: { read: [AppleHealthKit.Constants.Permissions.Steps] } },
-        (error: Error | null, results: any) => {
-          if (error) {
-            console.error('❌ Error checking HealthKit permission status:', error);
-            resolve(false);
-          } else {
-            // Check if at least one permission is granted
-            const isAuthorized = results?.permissions?.read?.some(
-              (permission: any) => permission.status === 'SharingAuthorized'
-            );
-            resolve(isAuthorized || false);
-          }
-        }
-      );
-    });
+    try {
+      // Check if at least one basic permission is granted
+      const stepCountStatus = authorizationStatusFor('HKQuantityTypeIdentifierStepCount');
+      return stepCountStatus === 'SharingAuthorized';
+    } catch (error) {
+      console.error('❌ Error checking HealthKit permission status:', error);
+      return false;
+    }
   }
 
   /**
@@ -320,92 +315,41 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       throw new Error('Not authenticated with HealthKit');
     }
 
-    const options: HealthInputOptions = {
-      startDate: (startDate || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).toISOString(),
-      endDate: (endDate || new Date()).toISOString(),
+    // Map common data types to their HealthKit identifiers
+    const typeMapping: Record<string, QuantityTypeIdentifier> = {
+      'steps': 'HKQuantityTypeIdentifierStepCount',
+      'stepcount': 'HKQuantityTypeIdentifierStepCount',
+      'heartrate': 'HKQuantityTypeIdentifierHeartRate',
+      'weight': 'HKQuantityTypeIdentifierBodyMass',
+      'height': 'HKQuantityTypeIdentifierHeight',
+      'bmi': 'HKQuantityTypeIdentifierBodyMassIndex',
+      'activeenergy': 'HKQuantityTypeIdentifierActiveEnergyBurned',
+      'activeenergyburned': 'HKQuantityTypeIdentifierActiveEnergyBurned',
+      'distance': 'HKQuantityTypeIdentifierDistanceWalkingRunning',
+      'distancewalkingrunning': 'HKQuantityTypeIdentifierDistanceWalkingRunning',
+      'bloodglucose': 'HKQuantityTypeIdentifierBloodGlucose',
+      'oxygensaturation': 'HKQuantityTypeIdentifierOxygenSaturation',
     };
 
-    return new Promise((resolve, reject) => {
-      // Map common data types to their HealthKit methods
-      switch (dataType.toLowerCase()) {
-        case 'steps':
-        case 'stepcount':
-          AppleHealthKit.getDailyStepCountSamples(options, (error: Error | null, results: HealthValue[]) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve({ dataType, samples: results });
-            }
-          });
-          break;
+    const quantityTypeIdentifier = typeMapping[dataType.toLowerCase()];
+    if (!quantityTypeIdentifier) {
+      throw new Error(`Unsupported data type: ${dataType}`);
+    }
 
-        case 'heartrate':
-          AppleHealthKit.getHeartRateSamples(options, (error: Error | null, results: HealthValue[]) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve({ dataType, samples: results });
-            }
-          });
-          break;
+    try {
+      const from = startDate || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const to = endDate || new Date();
 
-        case 'weight':
-          AppleHealthKit.getWeightSamples(options, (error: Error | null, results: HealthValue[]) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve({ dataType, samples: results });
-            }
-          });
-          break;
+      const samples = await queryQuantitySamples(quantityTypeIdentifier, {
+        from: from.toISOString(),
+        to: to.toISOString(),
+      });
 
-        case 'sleep':
-        case 'sleepanalysis':
-          AppleHealthKit.getSleepSamples(options, (error: Error | null, results: any[]) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve({ dataType, samples: results });
-            }
-          });
-          break;
-
-        case 'bloodpressure':
-          AppleHealthKit.getBloodPressureSamples(options, (error: Error | null, results: any[]) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve({ dataType, samples: results });
-            }
-          });
-          break;
-
-        case 'activeenergy':
-        case 'activeenergyburned':
-          AppleHealthKit.getActiveEnergyBurned(options, (error: Error | null, results: HealthValue[]) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve({ dataType, samples: results });
-            }
-          });
-          break;
-
-        case 'distance':
-        case 'distancewalkingrunning':
-          AppleHealthKit.getDistanceWalkingRunning(options, (error: Error | null, results: HealthValue[]) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve({ dataType, samples: results });
-            }
-          });
-          break;
-
-        default:
-          reject(new Error(`Unsupported data type: ${dataType}`));
-      }
-    });
+      return { dataType, samples };
+    } catch (error) {
+      console.error(`❌ Error fetching ${dataType} data:`, error);
+      throw error;
+    }
   }
 
   /**
@@ -445,23 +389,20 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       throw new Error('Not authenticated with HealthKit');
     }
 
-    const endDate = new Date();
-    const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // Last 24 hours
-
     const summary: any = {};
 
     // Get latest values for various metrics
-    const metricsToFetch = [
-      { key: 'steps', method: 'getStepCount' },
-      { key: 'heartRate', method: 'getLatestHeartRate' },
-      { key: 'weight', method: 'getLatestWeight' },
-      { key: 'height', method: 'getLatestHeight' },
-      { key: 'bmi', method: 'getLatestBmi' },
+    const metricsToFetch: Array<{key: string, identifier: QuantityTypeIdentifier}> = [
+      { key: 'steps', identifier: 'HKQuantityTypeIdentifierStepCount' },
+      { key: 'heartRate', identifier: 'HKQuantityTypeIdentifierHeartRate' },
+      { key: 'weight', identifier: 'HKQuantityTypeIdentifierBodyMass' },
+      { key: 'height', identifier: 'HKQuantityTypeIdentifierHeight' },
+      { key: 'bmi', identifier: 'HKQuantityTypeIdentifierBodyMassIndex' },
     ];
 
     for (const metric of metricsToFetch) {
       try {
-        const data = await this.getLatestMetric(metric.method, { startDate: startDate.toISOString(), endDate: endDate.toISOString() });
+        const data = await getMostRecentQuantitySample(metric.identifier);
         summary[metric.key] = data;
       } catch (error) {
         console.warn(`Failed to fetch ${metric.key}:`, error);
@@ -470,26 +411,6 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
     }
 
     return summary;
-  }
-
-  /**
-   * Helper method to get latest metric value
-   */
-  private getLatestMetric(method: string, options: any): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const healthKitMethod = (AppleHealthKit as any)[method];
-      if (typeof healthKitMethod === 'function') {
-        healthKitMethod(options, (error: Error | null, results: any) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(results);
-          }
-        });
-      } else {
-        reject(new Error(`Method ${method} not found in AppleHealthKit`));
-      }
-    });
   }
 
   /**
@@ -507,47 +428,31 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
 
     // Check which permissions are actually granted
     const availableTypes: string[] = [];
-    const typesToCheck = [
-      'Steps', 'HeartRate', 'Weight', 'Height', 'BodyMassIndex',
-      'ActiveEnergyBurned', 'SleepAnalysis', 'BloodPressureDiastolic',
-      'BloodPressureSystolic', 'DistanceWalkingRunning'
+    const typesToCheck: Array<{name: string, identifier: ObjectTypeIdentifier}> = [
+      { name: 'Steps', identifier: 'HKQuantityTypeIdentifierStepCount' },
+      { name: 'HeartRate', identifier: 'HKQuantityTypeIdentifierHeartRate' },
+      { name: 'Weight', identifier: 'HKQuantityTypeIdentifierBodyMass' },
+      { name: 'Height', identifier: 'HKQuantityTypeIdentifierHeight' },
+      { name: 'BodyMassIndex', identifier: 'HKQuantityTypeIdentifierBodyMassIndex' },
+      { name: 'ActiveEnergyBurned', identifier: 'HKQuantityTypeIdentifierActiveEnergyBurned' },
+      { name: 'SleepAnalysis', identifier: 'HKCategoryTypeIdentifierSleepAnalysis' },
+      { name: 'BloodPressureDiastolic', identifier: 'HKQuantityTypeIdentifierBloodPressureDiastolic' },
+      { name: 'BloodPressureSystolic', identifier: 'HKQuantityTypeIdentifierBloodPressureSystolic' },
+      { name: 'DistanceWalkingRunning', identifier: 'HKQuantityTypeIdentifierDistanceWalkingRunning' }
     ];
 
     for (const type of typesToCheck) {
-      const isAvailable = await this.checkSpecificPermission(type);
-      if (isAvailable) {
-        availableTypes.push(type);
+      try {
+        const status = authorizationStatusFor(type.identifier);
+        if (status === 'SharingAuthorized') {
+          availableTypes.push(type.name);
+        }
+      } catch (error) {
+        console.warn(`Error checking ${type.name} permission:`, error);
       }
     }
 
     return availableTypes;
-  }
-
-  /**
-   * Check if a specific data type permission is granted
-   */
-  private async checkSpecificPermission(dataType: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      const permission = (AppleHealthKit.Constants.Permissions as any)[dataType];
-      if (!permission) {
-        resolve(false);
-        return;
-      }
-
-      AppleHealthKit.getAuthStatus(
-        { permissions: { read: [permission] } },
-        (error: Error | null, results: any) => {
-          if (error) {
-            resolve(false);
-          } else {
-            const isAuthorized = results?.permissions?.read?.some(
-              (p: any) => p.status === 'SharingAuthorized'
-            );
-            resolve(isAuthorized || false);
-          }
-        }
-      );
-    });
   }
 }
 

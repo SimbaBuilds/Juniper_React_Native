@@ -1,5 +1,14 @@
 import { Platform } from 'react-native';
-import { HealthKit as AppleHealthKit, HealthValue, HealthInputOptions, HealthActivitySummary } from 'react-native-health';
+import HealthKit, { 
+  queryQuantitySamples, 
+  getMostRecentQuantitySample,
+  queryStatisticsForQuantity 
+} from '@kingstinct/react-native-healthkit';
+import type { 
+  QuantityTypeIdentifier, 
+  QuantitySample,
+  StatisticsOptions 
+} from '@kingstinct/react-native-healthkit';
 import AppleHealthKitAuthService from '../auth/services/AppleHealthKitAuthService';
 
 export interface HealthMetric {
@@ -8,6 +17,12 @@ export interface HealthMetric {
   unit: string;
   timestamp: Date;
   source?: string;
+}
+
+export interface HealthDataOptions {
+  from?: string;
+  to?: string;
+  limit?: number;
 }
 
 export interface HealthDataOptions {
