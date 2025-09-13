@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import { DatabaseService } from '../../supabase/supabase';
 import { IntegrationService } from '../IntegrationService';
 import AppleHealthKitDataService from './AppleHealthKitDataService';
+import GoogleHealthConnectDataService from './GoogleHealthConnectDataService';
 import { useAuth } from '../../auth/AuthContext';
 
 interface HealthSyncResult {
@@ -177,7 +178,9 @@ export class HealthSyncService {
       const integrations = await DatabaseService.getIntegrations(userId);
       const googleHealthIntegration = integrations.find(
         (integration: any) => 
-          integration.service?.service_name === 'Google Health Connect' && integration.is_active
+          (integration.service?.service_name === 'Google Health Connect' || 
+           integration.service?.service_name === 'Google Fit') && 
+          integration.is_active
       );
 
       if (!googleHealthIntegration) {
@@ -190,15 +193,48 @@ export class HealthSyncService {
         };
       }
 
-      console.log('🤖 HealthSync: Active integration found, but data service not implemented');
+      console.log('🤖 HealthSync: Active integration found, fetching health data');
 
-      // TODO: Implement Google Health Connect data service
-      console.log('🤖 HealthSync: Google Health Connect data service not yet implemented');
+      // Get current health data
+      const googleHealthDataService = GoogleHealthConnectDataService.getInstance();
+      const healthData = await googleHealthDataService.getCurrentRealtimeData(googleHealthIntegration.id);
+
+      if (!healthData || Object.keys(healthData).length === 0) {
+        console.log('🤖 HealthSync: No health data available');
+        return {
+          success: true,
+          platform: 'android',
+          synced: false,
+          error: 'No health data available'
+        };
+      }
+
+      console.log('🤖 HealthSync: Health data retrieved, filtering valid values');
+
+      // Filter out null/zero/empty values
+      const filteredData = this.filterValidHealthData(healthData);
+
+      if (Object.keys(filteredData).length === 0) {
+        console.log('🤖 HealthSync: No valid health data after filtering');
+        return {
+          success: true,
+          platform: 'android',
+          synced: false,
+          error: 'No valid health data after filtering'
+        };
+      }
+
+      console.log('🤖 HealthSync: Valid data found, upserting to database');
+
+      // Upsert to database
+      await DatabaseService.upsertGoogleHealthRealtime(userId, googleHealthIntegration.id, filteredData);
+
+      console.log('🤖 HealthSync: Successfully synced Google Health data');
       return {
         success: true,
         platform: 'android',
-        synced: false,
-        error: 'Google Health Connect not yet implemented'
+        synced: true,
+        recordsUpdated: 1
       };
 
     } catch (error) {

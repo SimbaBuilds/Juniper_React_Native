@@ -1044,8 +1044,10 @@ export const DatabaseService = {
         .select()
         .single();
 
-      if (error) throw error;
-      
+      if (error) {
+        throw error;
+      }
+
       console.log('📊 DB: Successfully upserted Google Health data');
       return data;
     } catch (error) {

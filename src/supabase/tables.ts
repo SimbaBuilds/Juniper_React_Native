@@ -894,12 +894,16 @@ export type UserProfile = {
     last_sync_at?: Date;
     created_at: Date;
     updated_at: Date;
+    respiratoryrate?: number;
+    timeindaylight?: number;
+    
   };
 
   export const appleHealthRealtimeFields = [
     'user_id', 'integration_id', 'steps', 'heartrate', 'weight', 'height', 'bmi',
     'activeenergy', 'distance', 'bloodglucose', 'oxygensaturation', 'restingheartrate',
-    'bloodpressure_systolic', 'bloodpressure_diastolic', 'last_sync_at', 'created_at', 'updated_at'
+    'bloodpressure_systolic', 'bloodpressure_diastolic', 'respiratoryrate', 'timeindaylight',
+    'last_sync_at', 'created_at', 'updated_at'
   ] as const;
   export type AppleHealthRealtimeField = (typeof appleHealthRealtimeFields)[number];
 

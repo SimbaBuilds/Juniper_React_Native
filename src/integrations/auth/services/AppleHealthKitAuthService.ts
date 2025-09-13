@@ -139,6 +139,7 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       'HKQuantityTypeIdentifierHeight',
       'HKQuantityTypeIdentifierBodyMassIndex',
       'HKQuantityTypeIdentifierActiveEnergyBurned',
+      'HKQuantityTypeIdentifierBasalEnergyBurned',
       'HKCategoryTypeIdentifierSleepAnalysis',
       'HKQuantityTypeIdentifierBloodPressureDiastolic',
       'HKQuantityTypeIdentifierBloodPressureSystolic',
@@ -147,10 +148,12 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       'HKQuantityTypeIdentifierRestingHeartRate',
       'HKQuantityTypeIdentifierHeartRateVariabilitySDNN',
       'HKQuantityTypeIdentifierBodyFatPercentage',
+      'HKQuantityTypeIdentifierLeanBodyMass',
       'HKQuantityTypeIdentifierRespiratoryRate',
       'HKQuantityTypeIdentifierBodyTemperature',
       'HKQuantityTypeIdentifierBloodGlucose',
       'HKQuantityTypeIdentifierOxygenSaturation',
+      'HKQuantityTypeIdentifierTimeInDaylight',
     ];
 
     try {
