@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 import HealthKit, { 
   queryQuantitySamples, 
   getMostRecentQuantitySample,
-  queryStatisticsForQuantity 
+  queryStatisticsForQuantity
 } from '@kingstinct/react-native-healthkit';
 import type { 
   QuantityTypeIdentifier, 
@@ -20,14 +20,15 @@ export interface HealthMetric {
 }
 
 export interface HealthDataOptions {
-  from?: string;
-  to?: string;
-  limit?: number;
-}
-
-export interface HealthDataOptions {
   startDate?: Date;
   endDate?: Date;
+  limit?: number;
+  ascending?: boolean;
+}
+
+interface HealthKitOptions {
+  startDate: string;
+  endDate: string;
   limit?: number;
   ascending?: boolean;
 }
@@ -138,7 +139,7 @@ export class AppleHealthKitDataService {
   async getVitalSigns(integrationId: string, options?: HealthDataOptions): Promise<VitalSigns> {
     await this.ensureAvailable(integrationId);
 
-    const healthOptions: HealthInputOptions = {
+    const healthOptions: HealthKitOptions = {
       startDate: (options?.startDate || new Date(Date.now() - 24 * 60 * 60 * 1000)).toISOString(),
       endDate: (options?.endDate || new Date()).toISOString(),
       limit: options?.limit || 1,
@@ -228,7 +229,7 @@ export class AppleHealthKitDataService {
   async getActivityData(integrationId: string, options?: HealthDataOptions): Promise<ActivityData> {
     await this.ensureAvailable(integrationId);
 
-    const healthOptions: HealthInputOptions = {
+    const healthOptions: HealthKitOptions = {
       startDate: (options?.startDate || new Date(Date.now() - 24 * 60 * 60 * 1000)).toISOString(),
       endDate: (options?.endDate || new Date()).toISOString()
     };
@@ -365,7 +366,7 @@ export class AppleHealthKitDataService {
   async getSleepData(integrationId: string, options?: HealthDataOptions): Promise<any> {
     await this.ensureAvailable(integrationId);
 
-    const healthOptions: HealthInputOptions = {
+    const healthOptions: HealthKitOptions = {
       startDate: (options?.startDate || new Date(Date.now() - 24 * 60 * 60 * 1000)).toISOString(),
       endDate: (options?.endDate || new Date()).toISOString(),
       limit: options?.limit || 50
@@ -431,7 +432,7 @@ export class AppleHealthKitDataService {
   async getWorkouts(integrationId: string, options?: HealthDataOptions): Promise<any[]> {
     await this.ensureAvailable(integrationId);
 
-    const healthOptions: HealthInputOptions = {
+    const healthOptions: HealthKitOptions = {
       startDate: (options?.startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).toISOString(),
       endDate: (options?.endDate || new Date()).toISOString()
     };
@@ -459,7 +460,7 @@ export class AppleHealthKitDataService {
   async getMindfulnessSessions(integrationId: string, options?: HealthDataOptions): Promise<any[]> {
     await this.ensureAvailable(integrationId);
 
-    const healthOptions: HealthInputOptions = {
+    const healthOptions: HealthKitOptions = {
       startDate: (options?.startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).toISOString(),
       endDate: (options?.endDate || new Date()).toISOString()
     };
@@ -474,38 +475,84 @@ export class AppleHealthKitDataService {
   }
 
   /**
-   * Helper method to fetch data from HealthKit
+   * Helper method to fetch data from HealthKit using @kingstinct/react-native-healthkit
    */
-  private fetchHealthData(method: string, options: any): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const healthKitMethod = (AppleHealthKit as any)[method];
-      if (typeof healthKitMethod === 'function') {
-        healthKitMethod(options, (error: Error | null, results: any) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(results);
-          }
-        });
-      } else {
-        reject(new Error(`Method ${method} not found in AppleHealthKit`));
+  private async fetchHealthData(method: string, options: any): Promise<any> {
+    try {
+      // Map old method names to new @kingstinct/react-native-healthkit methods with correct enum values
+      switch (method) {
+        case 'getHeartRateSamples':
+          return await queryQuantitySamples('HKQuantityTypeIdentifierHeartRate', options);
+        case 'getRestingHeartRateSamples':
+          return await queryQuantitySamples('HKQuantityTypeIdentifierRestingHeartRate', options);
+        case 'getHeartRateVariabilitySamples':
+          return await queryQuantitySamples('HKQuantityTypeIdentifierHeartRateVariabilitySDNN', options);
+        case 'getBloodPressureSamples':
+          return await queryQuantitySamples('HKQuantityTypeIdentifierBloodPressureSystolic', options);
+        case 'getRespiratoryRateSamples':
+          return await queryQuantitySamples('HKQuantityTypeIdentifierRespiratoryRate', options);
+        case 'getBodyTemperatureSamples':
+          return await queryQuantitySamples('HKQuantityTypeIdentifierBodyTemperature', options);
+        case 'getOxygenSaturationSamples':
+          return await queryQuantitySamples('HKQuantityTypeIdentifierOxygenSaturation', options);
+        case 'getStepCount':
+          return await queryStatisticsForQuantity('HKQuantityTypeIdentifierStepCount', ['cumulativeSum'], {
+            from: options.startDate,
+            to: options.endDate
+          });
+        case 'getDistanceWalkingRunning':
+          return await queryStatisticsForQuantity('HKQuantityTypeIdentifierDistanceWalkingRunning', ['cumulativeSum'], {
+            from: options.startDate,
+            to: options.endDate
+          });
+        case 'getActiveEnergyBurned':
+          return await queryStatisticsForQuantity('HKQuantityTypeIdentifierActiveEnergyBurned', ['cumulativeSum'], {
+            from: options.startDate,
+            to: options.endDate
+          });
+        case 'getBasalEnergyBurned':
+          return await queryStatisticsForQuantity('HKQuantityTypeIdentifierBasalEnergyBurned', ['cumulativeSum'], {
+            from: options.startDate,
+            to: options.endDate
+          });
+        case 'getFlightsClimbed':
+          return await queryStatisticsForQuantity('HKQuantityTypeIdentifierFlightsClimbed', ['cumulativeSum'], {
+            from: options.startDate,
+            to: options.endDate
+          });
+        case 'getLatestWeight':
+          return await getMostRecentQuantitySample('HKQuantityTypeIdentifierBodyMass');
+        case 'getLatestHeight':
+          return await getMostRecentQuantitySample('HKQuantityTypeIdentifierHeight');
+        case 'getLatestBmi':
+          return await getMostRecentQuantitySample('HKQuantityTypeIdentifierBodyMassIndex');
+        case 'getLatestBodyFatPercentage':
+          return await getMostRecentQuantitySample('HKQuantityTypeIdentifierBodyFatPercentage');
+        case 'getLatestLeanBodyMass':
+          return await getMostRecentQuantitySample('HKQuantityTypeIdentifierLeanBodyMass');
+        case 'getBloodGlucoseSamples':
+          return await queryQuantitySamples('HKQuantityTypeIdentifierBloodGlucose', options);
+        default:
+          throw new Error(`Method ${method} not implemented`);
       }
-    });
+    } catch (error) {
+      throw new Error(`HealthKit method ${method} failed: ${error}`);
+    }
   }
 
   /**
-   * Get activity summary
+   * Get activity summary using @kingstinct/react-native-healthkit
    */
-  private getActivitySummary(options: HealthInputOptions): Promise<HealthActivitySummary | null> {
-    return new Promise((resolve) => {
-      AppleHealthKit.getActivitySummary(options, (error: Error | null, results: HealthActivitySummary[]) => {
-        if (error || !results || results.length === 0) {
-          resolve(null);
-        } else {
-          resolve(results[0]);
-        }
-      });
-    });
+  private async getActivitySummary(options: any): Promise<any | null> {
+    try {
+      // Note: @kingstinct/react-native-healthkit doesn't have direct activity summary
+      // We'll need to query individual activity metrics instead
+      console.warn('Activity summary not directly available in @kingstinct/react-native-healthkit');
+      return null;
+    } catch (error) {
+      console.warn('Failed to get activity summary:', error);
+      return null;
+    }
   }
 
   /**
