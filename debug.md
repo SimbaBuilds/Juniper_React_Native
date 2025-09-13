@@ -1,25 +1,6 @@
- Ok, better.  Steps, active energy, and distance     │
-│   are populating.  But the rest of the metrics are    │
-│   not         
-Have we requested all scopes?
+All of metrics are either incorrect or not present.
 
+The user has data for all of the metrics for the apple health db schema.
 
-export type AppleHealthRealtime = {
-    user_id: string;
-    integration_id?: string;
-    steps?: number;
-    heartrate?: number;
-    weight?: number;
-    height?: number;
-    bmi?: number;
-    activeenergy?: number;
-    distance?: number;
-    bloodglucose?: number;
-    oxygensaturation?: number;
-    restingheartrate?: number;
-    bloodpressure_systolic?: number;
-    bloodpressure_diastolic?: number;
-    last_sync_at?: Date;
-    created_at: Date;
-    updated_at: Date;
-  };
+1. Metric mapping names could be off.
+2. Timezone calucaltion could be off so all of hours of the day may not be counted.  Please debug.

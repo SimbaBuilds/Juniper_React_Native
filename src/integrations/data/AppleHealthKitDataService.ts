@@ -2,7 +2,8 @@ import { Platform } from 'react-native';
 import HealthKit, { 
   queryQuantitySamples, 
   getMostRecentQuantitySample,
-  queryStatisticsForQuantity
+  queryStatisticsForQuantity,
+  authorizationStatusFor
 } from '@kingstinct/react-native-healthkit';
 import type { 
   QuantityTypeIdentifier, 
@@ -281,7 +282,7 @@ export class AppleHealthKitDataService {
     try {
       const flightsData = await this.fetchHealthData('getFlightsClimbed', healthOptions);
       console.log('🍎 Flights data response:', flightsData);
-      activity.flightsClimbed = flightsData.sumQuantity?.quantity || flightsData.value || 0;
+      activity.flightsClimbed = flightsData.value || flightsData.sumQuantity?.quantity || 0;
     } catch (error) {
       console.warn('Failed to fetch flights climbed:', error);
     }
@@ -530,10 +531,14 @@ export class AppleHealthKitDataService {
             to: options.endDate
           });
         case 'getFlightsClimbed':
-          return await queryStatisticsForQuantity('HKQuantityTypeIdentifierFlightsClimbed', ['cumulativeSum'], {
+          console.log('🍎 Flights query params:', { from: options.startDate, to: options.endDate });
+          const flightsSamples = await queryQuantitySamples('HKQuantityTypeIdentifierFlightsClimbed', {
             from: options.startDate,
             to: options.endDate
           });
+          console.log('🍎 Raw flights samples:', flightsSamples);
+          const totalFlights = flightsSamples.reduce((sum: number, sample: any) => sum + (sample.quantity || 0), 0);
+          return { value: totalFlights };
         case 'getLatestWeight':
           return await getMostRecentQuantitySample('HKQuantityTypeIdentifierBodyMass');
         case 'getLatestHeight':
@@ -600,6 +605,20 @@ export class AppleHealthKitDataService {
     const realtimeData: Record<string, any> = {};
 
     try {
+      // Check permissions for vital signs
+      console.log('🍎 AppleHealthKitDataService: Checking vital signs permissions...');
+      const heartRateStatus = authorizationStatusFor('HKQuantityTypeIdentifierHeartRate');
+      const restingHeartRateStatus = authorizationStatusFor('HKQuantityTypeIdentifierRestingHeartRate');
+      const bloodPressureStatus = authorizationStatusFor('HKQuantityTypeIdentifierBloodPressureSystolic');
+      const oxygenSaturationStatus = authorizationStatusFor('HKQuantityTypeIdentifierOxygenSaturation');
+      
+      console.log('🍎 Permissions status:', {
+        heartRate: heartRateStatus,
+        restingHeartRate: restingHeartRateStatus,
+        bloodPressure: bloodPressureStatus,
+        oxygenSaturation: oxygenSaturationStatus
+      });
+
       // Get most recent vital signs
       console.log('🍎 AppleHealthKitDataService: Fetching vital signs...');
       const vitals = await this.getVitalSigns(integrationId, { startDate, endDate, limit: 1 });
@@ -619,6 +638,18 @@ export class AppleHealthKitDataService {
       if (activity.steps) realtimeData.steps = activity.steps;
       if (activity.distance) realtimeData.distance = activity.distance;
       if (activity.activeEnergyBurned) realtimeData.activeenergy = activity.activeEnergyBurned;
+
+      // Check permissions for body measurements
+      console.log('🍎 AppleHealthKitDataService: Checking body measurement permissions...');
+      const weightStatus = authorizationStatusFor('HKQuantityTypeIdentifierBodyMass');
+      const heightStatus = authorizationStatusFor('HKQuantityTypeIdentifierHeight');
+      const bmiStatus = authorizationStatusFor('HKQuantityTypeIdentifierBodyMassIndex');
+      
+      console.log('🍎 Body measurement permissions:', {
+        weight: weightStatus,
+        height: heightStatus,
+        bmi: bmiStatus
+      });
 
       // Get latest body measurements
       console.log('🍎 AppleHealthKitDataService: Fetching body measurements...');
