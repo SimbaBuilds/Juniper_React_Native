@@ -4,9 +4,11 @@ import { getAuthService } from './auth';
 import TwilioAuthService from './auth/services/TwilioAuthService';
 import TextbeltAuthService from './auth/services/TextbeltAuthService';
 // TwitterAuthService removed - Twitter/X is now managed via enabled_system_integrations field
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { supabase } from '../supabase/supabase';
 import { Integration } from '../supabase/tables';
+import AppleHealthKitDataService from './data/AppleHealthKitDataService';
+import AppleHealthKitAuthService from './auth/services/AppleHealthKitAuthService';
 
 interface StartIntegrationParams {
   serviceId: string;
@@ -68,7 +70,7 @@ function mapServiceName(dbServiceName: string): string {
     'Oura': 'oura',
     'MyChart': 'epic-mychart',
     'Apple Health': 'apple-health',
-    'Google Fit': 'google-fit'
+    'Google Health Connect': 'health-connect'
   };
   
   return serviceMap[dbServiceName] || dbServiceName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
@@ -622,6 +624,169 @@ export class IntegrationService {
   }
 
   // System service methods removed - Twitter/X and Perplexity are now managed via enabled_system_integrations field in user_profiles
+
+  /**
+   * Get Apple HealthKit data for a user
+   */
+  async getHealthKitData(userId: string, dataType?: string, options?: any): Promise<any> {
+    try {
+      if (Platform.OS !== 'ios') {
+        throw new Error('HealthKit is only available on iOS devices');
+      }
+
+      // Get the HealthKit integration for the user
+      const integrations = await DatabaseService.getIntegrations(userId);
+      const healthKitIntegration = integrations.find(
+        (integration: Integration) => 
+          integration.service?.name === 'Apple Health' && integration.is_active
+      );
+
+      if (!healthKitIntegration) {
+        throw new Error('Apple Health integration not found or not active');
+      }
+
+      const healthKitDataService = AppleHealthKitDataService.getInstance();
+
+      // If no specific data type is requested, return a comprehensive summary
+      if (!dataType) {
+        return await healthKitDataService.getHealthDataSummary(healthKitIntegration.id, options);
+      }
+
+      // Fetch specific data type
+      const authService = AppleHealthKitAuthService.getInstance();
+      return await authService.getHealthData(dataType, healthKitIntegration.id, options?.startDate, options?.endDate);
+
+    } catch (error) {
+      console.error('❌ Error fetching HealthKit data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get comprehensive health summary from HealthKit
+   */
+  async getHealthSummary(userId: string, days: number = 7): Promise<any> {
+    try {
+      if (Platform.OS !== 'ios') {
+        throw new Error('HealthKit is only available on iOS devices');
+      }
+
+      const endDate = new Date();
+      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+      return await this.getHealthKitData(userId, undefined, { startDate, endDate });
+
+    } catch (error) {
+      console.error('❌ Error fetching health summary:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get available HealthKit data types for the user
+   */
+  async getAvailableHealthDataTypes(userId: string): Promise<string[]> {
+    try {
+      if (Platform.OS !== 'ios') {
+        return [];
+      }
+
+      // Get the HealthKit integration for the user
+      const integrations = await DatabaseService.getIntegrations(userId);
+      const healthKitIntegration = integrations.find(
+        (integration: Integration) => 
+          integration.service?.name === 'Apple Health' && integration.is_active
+      );
+
+      if (!healthKitIntegration) {
+        return [];
+      }
+
+      const authService = AppleHealthKitAuthService.getInstance();
+      return await authService.getAvailableDataTypes(healthKitIntegration.id);
+
+    } catch (error) {
+      console.error('❌ Error fetching available health data types:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Export health data from HealthKit
+   */
+  async exportHealthData(userId: string, options?: any): Promise<any> {
+    try {
+      if (Platform.OS !== 'ios') {
+        throw new Error('HealthKit is only available on iOS devices');
+      }
+
+      // Get the HealthKit integration for the user
+      const integrations = await DatabaseService.getIntegrations(userId);
+      const healthKitIntegration = integrations.find(
+        (integration: Integration) => 
+          integration.service?.name === 'Apple Health' && integration.is_active
+      );
+
+      if (!healthKitIntegration) {
+        throw new Error('Apple Health integration not found or not active');
+      }
+
+      const healthKitDataService = AppleHealthKitDataService.getInstance();
+      return await healthKitDataService.exportHealthData(healthKitIntegration.id, options);
+
+    } catch (error) {
+      console.error('❌ Error exporting health data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if HealthKit is available and authorized
+   */
+  async checkHealthKitStatus(userId: string): Promise<{ available: boolean; authorized: boolean; integrationActive: boolean }> {
+    try {
+      if (Platform.OS !== 'ios') {
+        return { available: false, authorized: false, integrationActive: false };
+      }
+
+      // Get the HealthKit integration for the user
+      const integrations = await DatabaseService.getIntegrations(userId);
+      const healthKitIntegration = integrations.find(
+        (integration: Integration) => 
+          integration.service?.name === 'Apple Health'
+      );
+
+      if (!healthKitIntegration) {
+        return { available: true, authorized: false, integrationActive: false };
+      }
+
+      const authService = AppleHealthKitAuthService.getInstance();
+      const testResult = await authService.testConnection(healthKitIntegration.id);
+
+      return {
+        available: testResult.available,
+        authorized: testResult.authorized,
+        integrationActive: healthKitIntegration.is_active || false
+      };
+
+    } catch (error) {
+      console.error('❌ Error checking HealthKit status:', error);
+      return { available: false, authorized: false, integrationActive: false };
+    }
+  }
+
+  /**
+   * Subscribe to HealthKit data updates (for future implementation)
+   */
+  subscribeToHealthUpdates(
+    userId: string, 
+    dataType: string, 
+    callback: (data: any) => void
+  ): () => void {
+    // This would be implemented when background health updates are needed
+    console.warn('Health data subscriptions are not yet implemented');
+    return () => {};
+  }
 }
 
 export default IntegrationService; 

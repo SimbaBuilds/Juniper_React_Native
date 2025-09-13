@@ -152,7 +152,7 @@ export const IntegrationsScreen: React.FC = () => {
     const name = serviceName.toLowerCase();
     
      // Health and Wellness
-     if (['oura', 'fitbit', 'mychart', 'apple health', 'google fit'].includes(name)) {
+     if (['oura', 'fitbit', 'mychart', 'apple health', 'google health connect'].includes(name)) {
       return 'Health and Wellness';
     }
     
@@ -275,7 +275,7 @@ export const IntegrationsScreen: React.FC = () => {
       }
       
       // Android-only services
-      if (serviceName === 'google fit') {
+      if (serviceName === 'google health connect') {
         return Platform.OS === 'android';
       }
       
@@ -334,7 +334,7 @@ export const IntegrationsScreen: React.FC = () => {
         return 'medical';
       case 'apple health':
         return 'heart';
-      case 'google fit':
+      case 'google health connect':
         return 'fitness';
       default:
         return 'link';
@@ -525,7 +525,7 @@ export const IntegrationsScreen: React.FC = () => {
       'Oura': 'oura',
       'MyChart': 'epic-mychart',
       'Apple Health': 'apple-health',
-      'Google Fit': 'google-fit'
+      'Google Health Connect': 'health-connect'
     };
     
     return serviceMap[dbServiceName] || dbServiceName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');

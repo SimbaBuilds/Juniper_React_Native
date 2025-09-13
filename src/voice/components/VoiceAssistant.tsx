@@ -229,6 +229,8 @@ What would you like to get started with today? If you aren't sure, starting with
         return 'Retrieving...';
       case 'storing':
         return 'Storing...';
+      case 'caring':
+        return 'Caring...';
       case 'integrating':
         return 'Integrating... This can take up to 2 minutes.';
       case 'pinging':

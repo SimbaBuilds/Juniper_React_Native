@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { HealthKit as AppleHealthKit, HealthKitPermissions, HealthValue, HealthInputOptions } from 'react-native-health';
 import { BaseOAuthService, AuthResult } from '../BaseOAuthService';
 import { supabase } from '../../../supabase/supabase';
 
@@ -56,17 +57,16 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       return false;
     }
 
-    try {
-      // This would use react-native-health or @kingstinct/react-native-healthkit
-      // const { isAvailable } = require('react-native-health');
-      // return await isAvailable();
-      
-      // For now, assume available on iOS
-      return true;
-    } catch (error) {
-      console.error('❌ Error checking HealthKit availability:', error);
-      return false;
-    }
+    return new Promise((resolve) => {
+      AppleHealthKit.isAvailable((error: Error | null, results: boolean) => {
+        if (error) {
+          console.error('❌ Error checking HealthKit availability:', error);
+          resolve(false);
+        } else {
+          resolve(results);
+        }
+      });
+    });
   }
 
   /**
@@ -124,37 +124,44 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
    * Request specific HealthKit permissions
    */
   private async requestHealthKitPermissions(): Promise<boolean> {
-    try {
-      // This would integrate with react-native-health or similar library
-      // const permissions = {
-      //   permissions: {
-      //     read: [
-      //       'Steps',
-      //       'HeartRate',
-      //       'Weight',
-      //       'Height',
-      //       'BodyMassIndex',
-      //       'ActiveEnergyBurned',
-      //       'SleepAnalysis',
-      //       'BloodPressure',
-      //     ],
-      //     write: [] // Only request write permissions if needed
-      //   }
-      // };
+    const permissions: HealthKitPermissions = {
+      permissions: {
+        read: [
+          AppleHealthKit.Constants.Permissions.Steps,
+          AppleHealthKit.Constants.Permissions.StepCount,
+          AppleHealthKit.Constants.Permissions.HeartRate,
+          AppleHealthKit.Constants.Permissions.Weight,
+          AppleHealthKit.Constants.Permissions.Height,
+          AppleHealthKit.Constants.Permissions.BodyMassIndex,
+          AppleHealthKit.Constants.Permissions.ActiveEnergyBurned,
+          AppleHealthKit.Constants.Permissions.SleepAnalysis,
+          AppleHealthKit.Constants.Permissions.BloodPressureDiastolic,
+          AppleHealthKit.Constants.Permissions.BloodPressureSystolic,
+          AppleHealthKit.Constants.Permissions.DistanceWalkingRunning,
+          AppleHealthKit.Constants.Permissions.FlightsClimbed,
+          AppleHealthKit.Constants.Permissions.RestingHeartRate,
+          AppleHealthKit.Constants.Permissions.HeartRateVariability,
+          AppleHealthKit.Constants.Permissions.BodyFatPercentage,
+          AppleHealthKit.Constants.Permissions.RespiratoryRate,
+          AppleHealthKit.Constants.Permissions.BodyTemperature,
+          AppleHealthKit.Constants.Permissions.BloodGlucose,
+          AppleHealthKit.Constants.Permissions.OxygenSaturation,
+        ],
+        write: [] // Only request write permissions if needed
+      }
+    };
 
-      // const { initHealthKit, requestPermissions } = require('react-native-health');
-      // await initHealthKit(permissions);
-      // const result = await requestPermissions(permissions);
-      // return result === 'authorized';
-
-      // For now, simulate permission grant
-      console.log('🍎 Simulating HealthKit permission request...');
-      return true;
-      
-    } catch (error) {
-      console.error('❌ Error requesting HealthKit permissions:', error);
-      return false;
-    }
+    return new Promise((resolve) => {
+      AppleHealthKit.initHealthKit(permissions, (error: Error | null) => {
+        if (error) {
+          console.error('❌ Error requesting HealthKit permissions:', error);
+          resolve(false);
+        } else {
+          console.log('✅ HealthKit permissions granted');
+          resolve(true);
+        }
+      });
+    });
   }
 
   /**
@@ -187,22 +194,27 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
    * Check current permission status
    */
   private async checkPermissionStatus(): Promise<boolean> {
-    try {
-      if (Platform.OS !== 'ios') {
-        return false;
-      }
-
-      // This would check actual HealthKit permission status
-      // const { getAuthStatus } = require('react-native-health');
-      // const status = await getAuthStatus('Steps');
-      // return status === 'authorized';
-
-      // For now, assume authorized
-      return true;
-    } catch (error) {
-      console.error('❌ Error checking HealthKit permission status:', error);
+    if (Platform.OS !== 'ios') {
       return false;
     }
+
+    return new Promise((resolve) => {
+      AppleHealthKit.getAuthStatus(
+        { permissions: { read: [AppleHealthKit.Constants.Permissions.Steps] } },
+        (error: Error | null, results: any) => {
+          if (error) {
+            console.error('❌ Error checking HealthKit permission status:', error);
+            resolve(false);
+          } else {
+            // Check if at least one permission is granted
+            const isAuthorized = results?.permissions?.read?.some(
+              (permission: any) => permission.status === 'SharingAuthorized'
+            );
+            resolve(isAuthorized || false);
+          }
+        }
+      );
+    });
   }
 
   /**
@@ -299,36 +311,101 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
    * Get health data from HealthKit
    */
   async getHealthData(dataType: string, integrationId: string, startDate?: Date, endDate?: Date): Promise<any> {
-    try {
-      if (Platform.OS !== 'ios') {
-        throw new Error('HealthKit is only available on iOS');
-      }
-
-      const isAuth = await this.isAuthenticated(integrationId);
-      if (!isAuth) {
-        throw new Error('Not authenticated with HealthKit');
-      }
-
-      // This would use the HealthKit library to fetch data
-      // const options = {
-      //   startDate: startDate?.toISOString(),
-      //   endDate: endDate?.toISOString(),
-      // };
-      // const { getSamples } = require('react-native-health');
-      // return await getSamples(dataType, options);
-
-      // For now, return mock data
-      console.log(`🍎 Fetching ${dataType} data from HealthKit...`);
-      return {
-        dataType,
-        samples: [],
-        message: 'HealthKit integration would provide real data here'
-      };
-
-    } catch (error) {
-      console.error('🔴 Error fetching HealthKit data:', error);
-      throw error;
+    if (Platform.OS !== 'ios') {
+      throw new Error('HealthKit is only available on iOS');
     }
+
+    const isAuth = await this.isAuthenticated(integrationId);
+    if (!isAuth) {
+      throw new Error('Not authenticated with HealthKit');
+    }
+
+    const options: HealthInputOptions = {
+      startDate: (startDate || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).toISOString(),
+      endDate: (endDate || new Date()).toISOString(),
+    };
+
+    return new Promise((resolve, reject) => {
+      // Map common data types to their HealthKit methods
+      switch (dataType.toLowerCase()) {
+        case 'steps':
+        case 'stepcount':
+          AppleHealthKit.getDailyStepCountSamples(options, (error: Error | null, results: HealthValue[]) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve({ dataType, samples: results });
+            }
+          });
+          break;
+
+        case 'heartrate':
+          AppleHealthKit.getHeartRateSamples(options, (error: Error | null, results: HealthValue[]) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve({ dataType, samples: results });
+            }
+          });
+          break;
+
+        case 'weight':
+          AppleHealthKit.getWeightSamples(options, (error: Error | null, results: HealthValue[]) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve({ dataType, samples: results });
+            }
+          });
+          break;
+
+        case 'sleep':
+        case 'sleepanalysis':
+          AppleHealthKit.getSleepSamples(options, (error: Error | null, results: any[]) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve({ dataType, samples: results });
+            }
+          });
+          break;
+
+        case 'bloodpressure':
+          AppleHealthKit.getBloodPressureSamples(options, (error: Error | null, results: any[]) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve({ dataType, samples: results });
+            }
+          });
+          break;
+
+        case 'activeenergy':
+        case 'activeenergyburned':
+          AppleHealthKit.getActiveEnergyBurned(options, (error: Error | null, results: HealthValue[]) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve({ dataType, samples: results });
+            }
+          });
+          break;
+
+        case 'distance':
+        case 'distancewalkingrunning':
+          AppleHealthKit.getDistanceWalkingRunning(options, (error: Error | null, results: HealthValue[]) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve({ dataType, samples: results });
+            }
+          });
+          break;
+
+        default:
+          reject(new Error(`Unsupported data type: ${dataType}`));
+      }
+    });
   }
 
   /**
@@ -353,6 +430,124 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       console.error('🔴 Apple HealthKit connection test failed:', error);
       throw error;
     }
+  }
+
+  /**
+   * Get latest health metrics summary
+   */
+  async getHealthSummary(integrationId: string): Promise<any> {
+    if (Platform.OS !== 'ios') {
+      throw new Error('HealthKit is only available on iOS');
+    }
+
+    const isAuth = await this.isAuthenticated(integrationId);
+    if (!isAuth) {
+      throw new Error('Not authenticated with HealthKit');
+    }
+
+    const endDate = new Date();
+    const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // Last 24 hours
+
+    const summary: any = {};
+
+    // Get latest values for various metrics
+    const metricsToFetch = [
+      { key: 'steps', method: 'getStepCount' },
+      { key: 'heartRate', method: 'getLatestHeartRate' },
+      { key: 'weight', method: 'getLatestWeight' },
+      { key: 'height', method: 'getLatestHeight' },
+      { key: 'bmi', method: 'getLatestBmi' },
+    ];
+
+    for (const metric of metricsToFetch) {
+      try {
+        const data = await this.getLatestMetric(metric.method, { startDate: startDate.toISOString(), endDate: endDate.toISOString() });
+        summary[metric.key] = data;
+      } catch (error) {
+        console.warn(`Failed to fetch ${metric.key}:`, error);
+        summary[metric.key] = null;
+      }
+    }
+
+    return summary;
+  }
+
+  /**
+   * Helper method to get latest metric value
+   */
+  private getLatestMetric(method: string, options: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const healthKitMethod = (AppleHealthKit as any)[method];
+      if (typeof healthKitMethod === 'function') {
+        healthKitMethod(options, (error: Error | null, results: any) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(results);
+          }
+        });
+      } else {
+        reject(new Error(`Method ${method} not found in AppleHealthKit`));
+      }
+    });
+  }
+
+  /**
+   * Get available data types that the user has granted access to
+   */
+  async getAvailableDataTypes(integrationId: string): Promise<string[]> {
+    if (Platform.OS !== 'ios') {
+      throw new Error('HealthKit is only available on iOS');
+    }
+
+    const isAuth = await this.isAuthenticated(integrationId);
+    if (!isAuth) {
+      throw new Error('Not authenticated with HealthKit');
+    }
+
+    // Check which permissions are actually granted
+    const availableTypes: string[] = [];
+    const typesToCheck = [
+      'Steps', 'HeartRate', 'Weight', 'Height', 'BodyMassIndex',
+      'ActiveEnergyBurned', 'SleepAnalysis', 'BloodPressureDiastolic',
+      'BloodPressureSystolic', 'DistanceWalkingRunning'
+    ];
+
+    for (const type of typesToCheck) {
+      const isAvailable = await this.checkSpecificPermission(type);
+      if (isAvailable) {
+        availableTypes.push(type);
+      }
+    }
+
+    return availableTypes;
+  }
+
+  /**
+   * Check if a specific data type permission is granted
+   */
+  private async checkSpecificPermission(dataType: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      const permission = (AppleHealthKit.Constants.Permissions as any)[dataType];
+      if (!permission) {
+        resolve(false);
+        return;
+      }
+
+      AppleHealthKit.getAuthStatus(
+        { permissions: { read: [permission] } },
+        (error: Error | null, results: any) => {
+          if (error) {
+            resolve(false);
+          } else {
+            const isAuthorized = results?.permissions?.read?.some(
+              (p: any) => p.status === 'SharingAuthorized'
+            );
+            resolve(isAuthorized || false);
+          }
+        }
+      );
+    });
   }
 }
 
