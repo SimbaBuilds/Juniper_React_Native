@@ -1,82 +1,71 @@
-Adding four new tables:
+I want user's health data to sync to the database on each app launch/open.  Users will have a maximum of one record in each of the tables below that should be updated on each app launch.  Record fields should not be updated with zero, null, or empty values.
 
-1. **medical_records** - Metadata for uploaded medical record files
-    - id: UUID (Primary Key)
-    - user_id: UUID (Foreign Key)
-    - title: str
-    - original_file_type: str  # pdf, jpg, png, etc.
-    - original_filename: Optional[str] = None
-    - file_size_bytes: Optional[int] = None
-    - num_pages: int
-    - status: str = "processing"  # processing, completed, failed
-    - upload_url: Optional[str] = None  # Storage location
-    - summary: Optional[str] = None  # Overall file summary
-    - metadata: Dict[str, Any] = {}  # Additional file metadata
-    - created_at: datetime
-    - updated_at: datetime
+We could include a platform check and a permissions check then upsert or create an rpc funciton that is called.  Please examine current db infra, come up with a few possibel implementations and provide a recommendation.
 
-2. **record_pages** - Individual pages from processed medical records
-    - id: UUID (Primary Key)
-    - user_id: UUID (Foreign Key)
-    - medical_record_id: UUID (Foreign Key to medical_records)
-    - page_number: int
-    - summary: Optional[str] = None
-    - content: str
-    - embedding: Optional[List[float]] = None 
-    - processed_at: Optional[datetime] = None
-    - created_at: datetime
-    - updated_at: datetime
 
-3. **apple_health_realtime** - Current Apple HealthKit values (one record per user, constantly upserted)
-    - user_id: UUID (Primary Key)
-    - integration_id: Optional[UUID] = None  # FK to integrations
-    
-    # Current metric values (all Optional[float])
-    - steps: Optional[float] = None  
-    - heartrate: Optional[float] = None
-    - weight: Optional[float] = None
-    - height: Optional[float] = None
-    - bmi: Optional[float] = None  
-    - activeenergy: Optional[float] = None 
-    - distance: Optional[float] = None  
-    - bloodglucose: Optional[float] = None  
-    - oxygensaturation: Optional[float] = None  
-    - restingheartrate: Optional[float] = None  
-    - bloodpressure_systolic: Optional[float] = None  
-    - bloodpressure_diastolic: Optional[float] = None  
-    
-    # Metadata and timestamps
-    - last_sync_at: Optional[datetime] = None
-    - created_at: datetime
-    - updated_at: datetime
 
-4. **google_health_realtime** - Current Google Health Connect values (one record per user, constantly upserted)
-    - user_id: UUID (Primary Key)
-    - integration_id: Optional[UUID] = None  # FK to integrations
-    # Current metric values (all Optional[float])
-    - active_calories_burned: Optional[float] = None
-    - basal_metabolic_rate: Optional[float] = None
-    - blood_glucose: Optional[float] = None
-    - blood_pressure_systolic: Optional[float] = None
-    - blood_pressure_diastolic: Optional[float] = None
-    - body_fat: Optional[float] = None
-    - body_temperature: Optional[float] = None
-    - distance: Optional[float] = None
-    - exercise_minutes: Optional[float] = None
-    - heart_rate: Optional[float] = None
-    - height: Optional[float] = None
-    - hydration: Optional[float] = None
-    - menstruation_flow: Optional[float] = None 
-    - nutrition_calories: Optional[float] = None
-    - oxygen_saturation: Optional[float] = None
-    - respiratory_rate: Optional[float] = None
-    - resting_heart_rate: Optional[float] = None
-    - sleep_hours: Optional[float] = None
-    - steps: Optional[float] = None
-    - weight: Optional[float] = None
-    
-    # Metadata and timestamps
-    - last_sync_at: Optional[datetime] = None
-    - created_at: datetime
-    - updated_at: datetime
+Schemas:
 
+export type AppleHealthRealtime = {
+    user_id: string;
+    integration_id?: string;
+    steps?: number;
+    heartrate?: number;
+    weight?: number;
+    height?: number;
+    bmi?: number;
+    activeenergy?: number;
+    distance?: number;
+    bloodglucose?: number;
+    oxygensaturation?: number;
+    restingheartrate?: number;
+    bloodpressure_systolic?: number;
+    bloodpressure_diastolic?: number;
+    last_sync_at?: Date;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const appleHealthRealtimeFields = [
+    'user_id', 'integration_id', 'steps', 'heartrate', 'weight', 'height', 'bmi',
+    'activeenergy', 'distance', 'bloodglucose', 'oxygensaturation', 'restingheartrate',
+    'bloodpressure_systolic', 'bloodpressure_diastolic', 'last_sync_at', 'created_at', 'updated_at'
+  ] as const;
+  export type AppleHealthRealtimeField = (typeof appleHealthRealtimeFields)[number];
+
+  export type GoogleHealthRealtime = {
+    user_id: string;
+    integration_id?: string;
+    active_calories_burned?: number;
+    basal_metabolic_rate?: number;
+    blood_glucose?: number;
+    blood_pressure_systolic?: number;
+    blood_pressure_diastolic?: number;
+    body_fat?: number;
+    body_temperature?: number;
+    distance?: number;
+    exercise_minutes?: number;
+    heart_rate?: number;
+    height?: number;
+    hydration?: number;
+    menstruation_flow?: number;
+    nutrition_calories?: number;
+    oxygen_saturation?: number;
+    respiratory_rate?: number;
+    resting_heart_rate?: number;
+    sleep_hours?: number;
+    steps?: number;
+    weight?: number;
+    last_sync_at?: Date;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const googleHealthRealtimeFields = [
+    'user_id', 'integration_id', 'active_calories_burned', 'basal_metabolic_rate', 'blood_glucose',
+    'blood_pressure_systolic', 'blood_pressure_diastolic', 'body_fat', 'body_temperature',
+    'distance', 'exercise_minutes', 'heart_rate', 'height', 'hydration', 'menstruation_flow',
+    'nutrition_calories', 'oxygen_saturation', 'respiratory_rate', 'resting_heart_rate',
+    'sleep_hours', 'steps', 'weight', 'last_sync_at', 'created_at', 'updated_at'
+  ] as const;
+  export type GoogleHealthRealtimeField = (typeof googleHealthRealtimeFields)[number];

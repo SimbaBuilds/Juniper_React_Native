@@ -525,6 +525,70 @@ export class AppleHealthKitDataService {
   }
 
   /**
+   * Get current realtime health data for syncing to database
+   */
+  async getCurrentRealtimeData(integrationId: string): Promise<Record<string, any>> {
+    await this.ensureAvailable(integrationId);
+
+    console.log('🍎 AppleHealthKitDataService: Fetching current realtime data');
+
+    // Get most recent data from the last 24 hours
+    const endDate = new Date();
+    const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const realtimeData: Record<string, any> = {};
+
+    try {
+      // Get most recent vital signs
+      const vitals = await this.getVitalSigns(integrationId, { startDate, endDate, limit: 1 });
+      if (vitals.heartRate) realtimeData.heartrate = vitals.heartRate;
+      if (vitals.restingHeartRate) realtimeData.restingheartrate = vitals.restingHeartRate;
+      if (vitals.bloodPressureSystolic) realtimeData.bloodpressure_systolic = vitals.bloodPressureSystolic;
+      if (vitals.bloodPressureDiastolic) realtimeData.bloodpressure_diastolic = vitals.bloodPressureDiastolic;
+      if (vitals.oxygenSaturation) realtimeData.oxygensaturation = vitals.oxygenSaturation;
+
+      // Get most recent activity data (today's totals)
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const activity = await this.getActivityData(integrationId, { startDate: todayStart, endDate });
+      if (activity.steps) realtimeData.steps = activity.steps;
+      if (activity.distance) realtimeData.distance = activity.distance;
+      if (activity.activeEnergyBurned) realtimeData.activeenergy = activity.activeEnergyBurned;
+
+      // Get latest body measurements
+      const body = await this.getBodyMeasurements(integrationId);
+      if (body.weight) realtimeData.weight = body.weight;
+      if (body.height) realtimeData.height = body.height;
+      if (body.bmi) realtimeData.bmi = body.bmi;
+
+      // Get blood glucose if available
+      try {
+        const glucoseData = await this.fetchHealthData('getBloodGlucoseSamples', {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          limit: 1,
+          ascending: false
+        });
+        if (glucoseData && glucoseData.length > 0) {
+          realtimeData.bloodglucose = glucoseData[0].value;
+        }
+      } catch (error) {
+        console.warn('Failed to fetch blood glucose:', error);
+      }
+
+      // Set sync timestamp
+      realtimeData.last_sync_at = new Date();
+
+      console.log('🍎 AppleHealthKitDataService: Retrieved realtime data:', Object.keys(realtimeData));
+      return realtimeData;
+
+    } catch (error) {
+      console.error('🍎 AppleHealthKitDataService: Error fetching realtime data:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Export health data in a structured format
    */
   async exportHealthData(

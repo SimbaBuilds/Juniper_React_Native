@@ -28,6 +28,7 @@ import { colors } from './src/shared/theme/colors';
 import { Storage } from './src/utils/storage';
 import AppLinksPrompt from './src/components/AppLinksPrompt';
 import { AppLinksService, shouldShowFirstLaunchPrompt, incrementLaunchCount } from './src/utils/appLinks';
+import HealthSyncService from './src/integrations/data/HealthSyncService';
 
 type RootStackParamList = {
   MainTabs: undefined;
@@ -143,7 +144,27 @@ export default function App() {
             console.warn('⚠️ App Links check failed:', error);
             return { component: 'applinks', success: false, error };
           }
-        })()
+        })(),
+        
+          // Health data sync on app launch (non-critical)
+          (async () => {
+            try {
+              console.log('🏥 App: Starting health data sync...');
+              const { data } = await supabase.auth.getSession();
+              if (data.session?.user?.id) {
+                const healthSync = HealthSyncService.getInstance();
+                const result = await healthSync.syncHealthData(data.session.user.id);
+                console.log('🏥 App: Health sync result:', result.success ? 'success' : 'failed');
+                return { component: 'health', success: result.success, synced: result.synced };
+              } else {
+                console.log('🏥 App: No user session - skipping health sync');
+                return { component: 'health', success: true, synced: false };
+              }
+            } catch (error) {
+              console.warn('⚠️ Health sync failed:', error);
+              return { component: 'health', success: false, error };
+            }
+          })()
         ]);
         
         // Log results without crashing
