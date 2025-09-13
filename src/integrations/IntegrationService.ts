@@ -638,7 +638,7 @@ export class IntegrationService {
       const integrations = await DatabaseService.getIntegrations(userId);
       const healthKitIntegration = integrations.find(
         (integration: Integration) => 
-          integration.service?.name === 'Apple Health' && integration.is_active
+          integration.service?.service_name === 'Apple Health' && integration.is_active
       );
 
       if (!healthKitIntegration) {
@@ -695,7 +695,7 @@ export class IntegrationService {
       const integrations = await DatabaseService.getIntegrations(userId);
       const healthKitIntegration = integrations.find(
         (integration: Integration) => 
-          integration.service?.name === 'Apple Health' && integration.is_active
+          integration.service?.service_name === 'Apple Health' && integration.is_active
       );
 
       if (!healthKitIntegration) {
@@ -724,7 +724,7 @@ export class IntegrationService {
       const integrations = await DatabaseService.getIntegrations(userId);
       const healthKitIntegration = integrations.find(
         (integration: Integration) => 
-          integration.service?.name === 'Apple Health' && integration.is_active
+          integration.service?.service_name === 'Apple Health' && integration.is_active
       );
 
       if (!healthKitIntegration) {
@@ -753,7 +753,7 @@ export class IntegrationService {
       const integrations = await DatabaseService.getIntegrations(userId);
       const healthKitIntegration = integrations.find(
         (integration: Integration) => 
-          integration.service?.name === 'Apple Health'
+          integration.service?.service_name === 'Apple Health'
       );
 
       if (!healthKitIntegration) {

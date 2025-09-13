@@ -179,6 +179,15 @@ export type UserProfile = {
     client_secret_id?: string;
     client_secret_value?: string;
     configuration?: Record<string, any>; // New field for integration configuration
+    // Joined service data (from database query with joins)
+    service?: {
+      id: string;
+      service_name: string;
+      description?: string;
+      type: string;
+      tools?: string[];
+      integration_method?: string;
+    };
   };
   
   export const integrationFields = [
@@ -823,4 +832,111 @@ export type UserProfile = {
     'is_active', 'last_sync_at', 'created_at'
   ] as const;
   export type UserEpicConnectionField = (typeof userEpicConnectionFields)[number];
+
+  // Medical Records Tables
+
+  export type MedicalRecord = {
+    id: string;
+    user_id: string;
+    title: string;
+    original_file_type: string;
+    original_filename?: string;
+    file_size_bytes?: number;
+    num_pages: number;
+    status: string;
+    upload_url?: string;
+    summary?: string;
+    metadata: Record<string, any>;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const medicalRecordFields = [
+    'id', 'user_id', 'title', 'original_file_type', 'original_filename', 'file_size_bytes',
+    'num_pages', 'status', 'upload_url', 'summary', 'metadata', 'created_at', 'updated_at'
+  ] as const;
+  export type MedicalRecordField = (typeof medicalRecordFields)[number];
+
+  export type RecordPage = {
+    id: string;
+    user_id: string;
+    medical_record_id: string;
+    page_number: number;
+    summary?: string;
+    content: string;
+    embedding?: number[];
+    processed_at?: Date;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const recordPageFields = [
+    'id', 'user_id', 'medical_record_id', 'page_number', 'summary', 'content',
+    'embedding', 'processed_at', 'created_at', 'updated_at'
+  ] as const;
+  export type RecordPageField = (typeof recordPageFields)[number];
+
+  export type AppleHealthRealtime = {
+    user_id: string;
+    integration_id?: string;
+    steps?: number;
+    heartrate?: number;
+    weight?: number;
+    height?: number;
+    bmi?: number;
+    activeenergy?: number;
+    distance?: number;
+    bloodglucose?: number;
+    oxygensaturation?: number;
+    restingheartrate?: number;
+    bloodpressure_systolic?: number;
+    bloodpressure_diastolic?: number;
+    last_sync_at?: Date;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const appleHealthRealtimeFields = [
+    'user_id', 'integration_id', 'steps', 'heartrate', 'weight', 'height', 'bmi',
+    'activeenergy', 'distance', 'bloodglucose', 'oxygensaturation', 'restingheartrate',
+    'bloodpressure_systolic', 'bloodpressure_diastolic', 'last_sync_at', 'created_at', 'updated_at'
+  ] as const;
+  export type AppleHealthRealtimeField = (typeof appleHealthRealtimeFields)[number];
+
+  export type GoogleHealthRealtime = {
+    user_id: string;
+    integration_id?: string;
+    active_calories_burned?: number;
+    basal_metabolic_rate?: number;
+    blood_glucose?: number;
+    blood_pressure_systolic?: number;
+    blood_pressure_diastolic?: number;
+    body_fat?: number;
+    body_temperature?: number;
+    distance?: number;
+    exercise_minutes?: number;
+    heart_rate?: number;
+    height?: number;
+    hydration?: number;
+    menstruation_flow?: number;
+    nutrition_calories?: number;
+    oxygen_saturation?: number;
+    respiratory_rate?: number;
+    resting_heart_rate?: number;
+    sleep_hours?: number;
+    steps?: number;
+    weight?: number;
+    last_sync_at?: Date;
+    created_at: Date;
+    updated_at: Date;
+  };
+
+  export const googleHealthRealtimeFields = [
+    'user_id', 'integration_id', 'active_calories_burned', 'basal_metabolic_rate', 'blood_glucose',
+    'blood_pressure_systolic', 'blood_pressure_diastolic', 'body_fat', 'body_temperature',
+    'distance', 'exercise_minutes', 'heart_rate', 'height', 'hydration', 'menstruation_flow',
+    'nutrition_calories', 'oxygen_saturation', 'respiratory_rate', 'resting_heart_rate',
+    'sleep_hours', 'steps', 'weight', 'last_sync_at', 'created_at', 'updated_at'
+  ] as const;
+  export type GoogleHealthRealtimeField = (typeof googleHealthRealtimeFields)[number];
 
