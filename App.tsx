@@ -495,6 +495,7 @@ export default function App() {
         case 'apple-health':
           require('./src/integrations/auth/services/AppleHealthKitAuthService').default.getInstance().handleAuthCallback(code, state);
           break;
+        case 'health-connect':
         case 'google-fit':
           require('./src/integrations/auth/services/GoogleFitAuthService').default.getInstance().handleAuthCallback(code, state);
           break;

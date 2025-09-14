@@ -456,11 +456,11 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     tokenEndpoint: 'healthkit://permissions'
   },
 
-  'google-fit': {
-    serviceName: 'google-fit',
+  'health-connect': {
+    serviceName: 'health-connect',
     clientId: 'health-connect-permissions', // Health Connect doesn't use OAuth
     scopes: ['read'],
-    redirectUri: generateRedirectUri('google-fit'),
+    redirectUri: generateRedirectUri('health-connect'),
     authEndpoint: 'health-connect://permissions',
     tokenEndpoint: 'health-connect://permissions'
   }

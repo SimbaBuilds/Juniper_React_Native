@@ -1,4 +1,13 @@
 import { Platform } from 'react-native';
+import {
+  initialize,
+  requestPermission,
+  readRecords,
+  getSdkStatus,
+  HealthConnectRecord,
+  TimeRangeFilter,
+  SdkAvailabilityStatus
+} from 'react-native-health-connect';
 
 export interface GoogleHealthData {
   active_calories_burned?: number;
@@ -53,6 +62,14 @@ export class GoogleHealthConnectDataService {
     console.log('🤖 GoogleHealthConnectDataService: Fetching current realtime data');
 
     try {
+      // Initialize Health Connect client
+      try {
+        await initialize();
+        console.log('🤖 Health Connect client initialized successfully');
+      } catch (error) {
+        console.error('🤖 Failed to initialize Health Connect client:', error);
+        throw error;
+      }
       // Get today's date range (local timezone)
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
@@ -139,40 +156,76 @@ export class GoogleHealthConnectDataService {
   }
 
   /**
+   * Helper method to read Health Connect records
+   */
+  private async readHealthConnectRecords(recordType: string, timeRangeFilter?: TimeRangeFilter): Promise<HealthConnectRecord[]> {
+    try {
+      const records = await readRecords(recordType, { timeRangeFilter });
+      return records;
+    } catch (error) {
+      console.warn(`Failed to read ${recordType} records:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Get most recent value from records
+   */
+  private getMostRecentValue(records: HealthConnectRecord[], valueField: string): number | undefined {
+    if (records.length === 0) return undefined;
+
+    // Sort by time (most recent first)
+    const sortedRecords = records.sort((a: any, b: any) => {
+      const timeA = new Date(a.time || a.startTime || a.endTime).getTime();
+      const timeB = new Date(b.time || b.startTime || b.endTime).getTime();
+      return timeB - timeA;
+    });
+
+    const mostRecent = sortedRecords[0] as any;
+    return mostRecent?.[valueField];
+  }
+
+  /**
    * Get vital signs data
    */
   private async getVitalSigns(integrationId: string): Promise<GoogleHealthData> {
     const vitals: GoogleHealthData = {};
 
     try {
-      // TODO: Replace with actual native module calls
-      // For now, returning mock data for development
       console.log('🤖 Fetching most recent heart rate sample...');
-      // const heartRateData = await NativeModules.GoogleHealthConnect.getMostRecentHeartRate();
-      // if (heartRateData) vitals.heart_rate = heartRateData;
+      const heartRateRecords = await this.readHealthConnectRecords('HeartRate');
+      const heartRate = this.getMostRecentValue(heartRateRecords, 'beatsPerMinute');
+      if (heartRate) vitals.heart_rate = heartRate;
 
       console.log('🤖 Fetching most recent resting heart rate sample...');
-      // const restingHeartRateData = await NativeModules.GoogleHealthConnect.getMostRecentRestingHeartRate();
-      // if (restingHeartRateData) vitals.resting_heart_rate = restingHeartRateData;
+      const restingHeartRateRecords = await this.readHealthConnectRecords('RestingHeartRate');
+      const restingHeartRate = this.getMostRecentValue(restingHeartRateRecords, 'beatsPerMinute');
+      if (restingHeartRate) vitals.resting_heart_rate = restingHeartRate;
 
       console.log('🤖 Fetching most recent blood pressure sample...');
-      // const bloodPressureData = await NativeModules.GoogleHealthConnect.getMostRecentBloodPressure();
-      // if (bloodPressureData) {
-      //   vitals.blood_pressure_systolic = bloodPressureData.systolic;
-      //   vitals.blood_pressure_diastolic = bloodPressureData.diastolic;
-      // }
+      const bloodPressureRecords = await this.readHealthConnectRecords('BloodPressure');
+      if (bloodPressureRecords.length > 0) {
+        const mostRecent = bloodPressureRecords.sort((a: any, b: any) =>
+          new Date(b.time).getTime() - new Date(a.time).getTime()
+        )[0] as any;
+        if (mostRecent.systolic) vitals.blood_pressure_systolic = mostRecent.systolic.inMillimetersOfMercury;
+        if (mostRecent.diastolic) vitals.blood_pressure_diastolic = mostRecent.diastolic.inMillimetersOfMercury;
+      }
 
       console.log('🤖 Fetching most recent respiratory rate sample...');
-      // const respiratoryRateData = await NativeModules.GoogleHealthConnect.getMostRecentRespiratoryRate();
-      // if (respiratoryRateData) vitals.respiratory_rate = respiratoryRateData;
+      const respiratoryRateRecords = await this.readHealthConnectRecords('RespiratoryRate');
+      const respiratoryRate = this.getMostRecentValue(respiratoryRateRecords, 'rate');
+      if (respiratoryRate) vitals.respiratory_rate = respiratoryRate;
 
       console.log('🤖 Fetching most recent oxygen saturation sample...');
-      // const oxygenSaturationData = await NativeModules.GoogleHealthConnect.getMostRecentOxygenSaturation();
-      // if (oxygenSaturationData) vitals.oxygen_saturation = oxygenSaturationData;
+      const oxygenSaturationRecords = await this.readHealthConnectRecords('OxygenSaturation');
+      const oxygenSaturation = this.getMostRecentValue(oxygenSaturationRecords, 'percentage');
+      if (oxygenSaturation) vitals.oxygen_saturation = oxygenSaturation;
 
       console.log('🤖 Fetching most recent body temperature sample...');
-      // const bodyTemperatureData = await NativeModules.GoogleHealthConnect.getMostRecentBodyTemperature();
-      // if (bodyTemperatureData) vitals.body_temperature = bodyTemperatureData;
+      const bodyTemperatureRecords = await this.readHealthConnectRecords('BodyTemperature');
+      const bodyTemperature = this.getMostRecentValue(bodyTemperatureRecords, 'temperature');
+      if (bodyTemperature) vitals.body_temperature = bodyTemperature;
 
     } catch (error) {
       console.warn('Failed to fetch vital signs:', error);
@@ -188,22 +241,45 @@ export class GoogleHealthConnectDataService {
     const activity: GoogleHealthData = {};
 
     try {
-      // TODO: Replace with actual native module calls
+      const timeRangeFilter: TimeRangeFilter = {
+        operator: 'between',
+        startTime: startDate.toISOString(),
+        endTime: endDate.toISOString(),
+      };
+
       console.log('🤖 Fetching steps for date range...');
-      // const stepsData = await NativeModules.GoogleHealthConnect.getSteps(startDate.toISOString(), endDate.toISOString());
-      // if (stepsData) activity.steps = stepsData;
+      const stepsRecords = await this.readHealthConnectRecords('Steps', timeRangeFilter);
+      if (stepsRecords.length > 0) {
+        const totalSteps = stepsRecords.reduce((sum: number, record: any) => sum + (record.count || 0), 0);
+        activity.steps = totalSteps;
+      }
 
       console.log('🤖 Fetching distance for date range...');
-      // const distanceData = await NativeModules.GoogleHealthConnect.getDistance(startDate.toISOString(), endDate.toISOString());
-      // if (distanceData) activity.distance = distanceData;
+      const distanceRecords = await this.readHealthConnectRecords('Distance', timeRangeFilter);
+      if (distanceRecords.length > 0) {
+        const totalDistance = distanceRecords.reduce((sum: number, record: any) => sum + (record.distance?.inMeters || 0), 0);
+        activity.distance = totalDistance;
+      }
 
       console.log('🤖 Fetching active calories for date range...');
-      // const activeCaloriesData = await NativeModules.GoogleHealthConnect.getActiveCaloriesBurned(startDate.toISOString(), endDate.toISOString());
-      // if (activeCaloriesData) activity.active_calories_burned = activeCaloriesData;
+      const activeCaloriesRecords = await this.readHealthConnectRecords('ActiveCaloriesBurned', timeRangeFilter);
+      if (activeCaloriesRecords.length > 0) {
+        const totalActiveCalories = activeCaloriesRecords.reduce((sum: number, record: any) => sum + (record.energy?.inCalories || 0), 0);
+        activity.active_calories_burned = totalActiveCalories;
+      }
 
-      console.log('🤖 Fetching exercise minutes for date range...');
-      // const exerciseMinutesData = await NativeModules.GoogleHealthConnect.getExerciseMinutes(startDate.toISOString(), endDate.toISOString());
-      // if (exerciseMinutesData) activity.exercise_minutes = exerciseMinutesData;
+      console.log('🤖 Fetching exercise sessions for date range...');
+      const exerciseRecords = await this.readHealthConnectRecords('ExerciseSession', timeRangeFilter);
+      if (exerciseRecords.length > 0) {
+        const totalMinutes = exerciseRecords.reduce((sum: number, record: any) => {
+          if (record.startTime && record.endTime) {
+            const duration = new Date(record.endTime).getTime() - new Date(record.startTime).getTime();
+            return sum + (duration / (1000 * 60)); // Convert to minutes
+          }
+          return sum;
+        }, 0);
+        activity.exercise_minutes = totalMinutes;
+      }
 
     } catch (error) {
       console.warn('Failed to fetch activity data:', error);
@@ -219,18 +295,38 @@ export class GoogleHealthConnectDataService {
     const measurements: GoogleHealthData = {};
 
     try {
-      // TODO: Replace with actual native module calls
       console.log('🤖 Fetching most recent weight sample...');
-      // const weightData = await NativeModules.GoogleHealthConnect.getMostRecentWeight();
-      // if (weightData) measurements.weight = weightData;
+      const weightRecords = await this.readHealthConnectRecords('Weight');
+      if (weightRecords.length > 0) {
+        const mostRecent = weightRecords.sort((a: any, b: any) =>
+          new Date(b.time).getTime() - new Date(a.time).getTime()
+        )[0] as any;
+        if (mostRecent.weight) {
+          measurements.weight = mostRecent.weight.inKilograms;
+        }
+      }
 
       console.log('🤖 Fetching most recent height sample...');
-      // const heightData = await NativeModules.GoogleHealthConnect.getMostRecentHeight();
-      // if (heightData) measurements.height = heightData;
+      const heightRecords = await this.readHealthConnectRecords('Height');
+      if (heightRecords.length > 0) {
+        const mostRecent = heightRecords.sort((a: any, b: any) =>
+          new Date(b.time).getTime() - new Date(a.time).getTime()
+        )[0] as any;
+        if (mostRecent.height) {
+          measurements.height = mostRecent.height.inMeters;
+        }
+      }
 
       console.log('🤖 Fetching most recent body fat sample...');
-      // const bodyFatData = await NativeModules.GoogleHealthConnect.getMostRecentBodyFat();
-      // if (bodyFatData) measurements.body_fat = bodyFatData;
+      const bodyFatRecords = await this.readHealthConnectRecords('BodyFat');
+      if (bodyFatRecords.length > 0) {
+        const mostRecent = bodyFatRecords.sort((a: any, b: any) =>
+          new Date(b.time).getTime() - new Date(a.time).getTime()
+        )[0] as any;
+        if (mostRecent.percentage) {
+          measurements.body_fat = mostRecent.percentage;
+        }
+      }
 
     } catch (error) {
       console.warn('Failed to fetch body measurements:', error);
@@ -313,11 +409,12 @@ export class GoogleHealthConnectDataService {
     }
 
     try {
-      // TODO: Check if Health Connect is installed and permissions granted
-      // const isAvailable = await NativeModules.GoogleHealthConnect.isAvailable();
-      // return isAvailable;
-      console.log('🤖 GoogleHealthConnectDataService: Checking availability');
-      return false; // Return false until native module is implemented
+      await initialize();
+      const sdkStatus = await getSdkStatus();
+      const isAvailable = sdkStatus === SdkAvailabilityStatus.SDK_AVAILABLE;
+      console.log('🤖 GoogleHealthConnectDataService: Health Connect SDK status:', sdkStatus);
+      console.log('🤖 GoogleHealthConnectDataService: Health Connect available:', isAvailable);
+      return isAvailable;
     } catch (error) {
       console.error('🤖 Error checking availability:', error);
       return false;

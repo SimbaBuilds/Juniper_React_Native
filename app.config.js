@@ -9,7 +9,18 @@ export default {
     scheme: "mobilejarvisnative",
     plugins: [
       "expo-secure-store",
-      "./expo-plugins/withVoiceModule.js"
+      "./expo-plugins/withVoiceModule.js",
+      "expo-health-connect",
+      [
+        "expo-build-properties",
+        {
+          android: {
+            compileSdkVersion: 34,
+            targetSdkVersion: 34,
+            minSdkVersion: 26
+          }
+        }
+      ]
     ],
     platforms: ["ios", "android", "web"],
     extra: {

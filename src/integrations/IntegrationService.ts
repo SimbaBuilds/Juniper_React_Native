@@ -118,7 +118,7 @@ export class IntegrationService {
         'oura',
         // 'epic-mychart', // Removed - Epic uses custom flow
         'apple-health',
-        'google-fit'
+        'health-connect'
       ];
       if (!supportedServices.includes(internalServiceName)) {
         Alert.alert(
@@ -154,8 +154,14 @@ export class IntegrationService {
       const integration = await this.createIntegrationRecord(serviceId, userId);
       console.log(`✅ Integration record created/updated with ID: ${integration.id}`);
 
-      // Start OAuth flow
-      await this.startOAuthFlow(internalServiceName, integration.id);
+      // Health Connect uses native permissions, not OAuth
+      if (internalServiceName === 'health-connect') {
+        console.log(`🔗 Starting Health Connect permission flow for ${serviceName}...`);
+        await this.startHealthConnectPermissionFlow(integration.id);
+      } else {
+        // Start OAuth flow for other services
+        await this.startOAuthFlow(internalServiceName, integration.id);
+      }
 
     } catch (error) {
       console.error(`❌ Error starting ${serviceName} integration:`, error);
@@ -204,6 +210,72 @@ export class IntegrationService {
     }
   }
 
+
+  /**
+   * Start Health Connect permission flow (bypasses OAuth)
+   */
+  private async startHealthConnectPermissionFlow(integrationId: string, isReconnect: boolean = false): Promise<void> {
+    try {
+      console.log(`🔗 Starting Health Connect permission flow...`);
+
+      // Get the Health Connect auth service
+      const authService = getAuthService('health-connect');
+
+      // Set reconnection flag if this is a reconnect
+      if ('setIsReconnection' in authService && typeof authService.setIsReconnection === 'function') {
+        authService.setIsReconnection(isReconnect, integrationId);
+      }
+
+      // Check if authenticate method exists and start authentication
+      if ('authenticate' in authService && typeof authService.authenticate === 'function') {
+        const result = await authService.authenticate(integrationId);
+
+        console.log(`✅ Health Connect permission flow completed successfully`);
+
+        // Update integration status to active
+        await this.updateIntegrationStatus(integrationId, 'active', true);
+
+        // Show different message for reconnect vs new connection
+        if (!isReconnect) {
+          Alert.alert(
+            'Health Connect Connected!',
+            `Health data permissions granted. Data sync will begin shortly.`,
+            [{ text: 'OK' }]
+          );
+        }
+      } else {
+        throw new Error(`Health Connect permissions not supported`);
+      }
+
+    } catch (error) {
+      console.error(`❌ Health Connect permission flow failed:`, error);
+
+      // Update integration status to failed
+      await this.updateIntegrationStatus(integrationId, 'failed', false);
+
+      // Handle user cancellation differently from errors
+      const errorMessage = getErrorMessage(error);
+      if (errorMessage.includes('cancel') || errorMessage.includes('dismissed')) {
+        console.log(`ℹ️ User cancelled Health Connect permission flow`);
+        return;
+      }
+
+      // Show different error messages based on error type
+      let userMessage = `Failed to connect Health Connect: ${errorMessage}`;
+
+      if (errorMessage.includes('not available') || errorMessage.includes('install')) {
+        userMessage = 'Health Connect is not available on this device. On Android 14+, check Settings > Privacy > Health Connect. On older versions, install from Google Play Store.';
+      } else if (errorMessage.includes('permissions')) {
+        userMessage = 'Health Connect permissions were not granted. The settings page should have opened - please grant permissions there and try again.';
+      }
+
+      Alert.alert(
+        'Health Connect Connection Failed',
+        userMessage,
+        [{ text: 'OK' }]
+      );
+    }
+  }
 
   /**
    * Start OAuth flow for specific service
@@ -307,8 +379,14 @@ export class IntegrationService {
       // Update status to pending
       await this.updateIntegrationStatus(integrationId, 'pending', false);
 
-      // Start OAuth flow with existing integration ID (skip completion message for reconnect)
-      await this.startOAuthFlow(internalServiceName, integrationId, true);
+      // Health Connect uses native permissions, not OAuth
+      if (internalServiceName === 'health-connect') {
+        console.log(`🔗 Reconnecting Health Connect permission flow...`);
+        await this.startHealthConnectPermissionFlow(integrationId, true);
+      } else {
+        // Start OAuth flow with existing integration ID (skip completion message for reconnect)
+        await this.startOAuthFlow(internalServiceName, integrationId, true);
+      }
 
     } catch (error) {
       console.error(`❌ Error reconnecting ${serviceName}:`, error);

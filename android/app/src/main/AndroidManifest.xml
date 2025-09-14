@@ -85,7 +85,7 @@
         android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
         <intent-filter>
             <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
-            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
         </intent-filter>
     </activity-alias>
     <activity android:name=".MainActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode" android:launchMode="singleTask" android:windowSoftInputMode="adjustResize" android:theme="@style/Theme.App.SplashScreen" android:exported="true" android:screenOrientation="portrait">
