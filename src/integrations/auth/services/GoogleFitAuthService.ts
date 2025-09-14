@@ -209,11 +209,9 @@ export class GoogleFitAuthService extends BaseOAuthService {
 
       console.log('🤖 Permission result:', result);
 
-      // Check if result is an array (for multiple permissions) or a single value
-      // On Android 14, empty array [] means permissions were not granted
-      const isGranted = Array.isArray(result)
-        ? result.length > 0 && result.every(r => r === 'granted')
-        : result === 'granted';
+      // Health Connect returns array of granted permission objects, not strings
+      // Empty array means no permissions granted, non-empty array means success
+      const isGranted = Array.isArray(result) ? result.length > 0 : result === 'granted';
 
       console.log(`🤖 Health Connect permissions ${isGranted ? 'granted' : 'denied'}`);
       console.log(`🤖 Result array length: ${Array.isArray(result) ? result.length : 'not array'}`);
@@ -409,16 +407,6 @@ export class GoogleFitAuthService extends BaseOAuthService {
         throw new Error('Not authenticated with Health Connect');
       }
 
-      // This would use the Health Connect library to fetch data
-      // const { readRecords } = require('react-native-health-connect');
-      // const options = {
-      //   timeRangeFilter: {
-      //     operator: 'between',
-      //     startTime: startTime?.toISOString(),
-      //     endTime: endTime?.toISOString(),
-      //   },
-      // };
-      // return await readRecords(recordType, options);
 
       // For now, return mock data
       console.log(`🤖 Fetching ${recordType} data from Health Connect...`);
@@ -447,18 +435,6 @@ export class GoogleFitAuthService extends BaseOAuthService {
       if (!isAuth) {
         throw new Error('Not authenticated with Health Connect');
       }
-
-      // This would use Health Connect aggregation
-      // const { aggregate } = require('react-native-health-connect');
-      // const options = {
-      //   recordType,
-      //   timeRangeFilter: {
-      //     operator: 'between',
-      //     startTime: startTime?.toISOString(),
-      //     endTime: endTime?.toISOString(),
-      //   },
-      // };
-      // return await aggregate(options);
 
       console.log(`🤖 Fetching aggregated ${recordType} data from Health Connect...`);
       return {

@@ -160,10 +160,25 @@ export class GoogleHealthConnectDataService {
    */
   private async readHealthConnectRecords(recordType: string, timeRangeFilter?: TimeRangeFilter): Promise<HealthConnectRecord[]> {
     try {
-      const records = await readRecords(recordType, { timeRangeFilter });
+      console.log(`🔍 Reading ${recordType} records with filter:`, timeRangeFilter);
+
+      // readRecords returns an object with a 'records' property
+      const result = await readRecords(recordType, { timeRangeFilter });
+      console.log(`📊 ${recordType} result:`, result ? 'object returned' : 'null/undefined');
+
+      // Extract the records array from the result
+      const records = result?.records;
+      console.log(`📊 ${recordType} records:`, records ? `${records.length} records` : 'no records array');
+
+      // Ensure we always return an array
+      if (!records || !Array.isArray(records)) {
+        console.warn(`⚠️ ${recordType} has no records array:`, result);
+        return [];
+      }
+
       return records;
     } catch (error) {
-      console.warn(`Failed to read ${recordType} records:`, error);
+      console.warn(`❌ Failed to read ${recordType} records:`, error);
       return [];
     }
   }
@@ -172,17 +187,31 @@ export class GoogleHealthConnectDataService {
    * Get most recent value from records
    */
   private getMostRecentValue(records: HealthConnectRecord[], valueField: string): number | undefined {
-    if (records.length === 0) return undefined;
+    // Ensure records is a valid array
+    if (!records || !Array.isArray(records) || records.length === 0) {
+      console.log(`🔍 getMostRecentValue: No records for field ${valueField}`);
+      return undefined;
+    }
 
-    // Sort by time (most recent first)
-    const sortedRecords = records.sort((a: any, b: any) => {
-      const timeA = new Date(a.time || a.startTime || a.endTime).getTime();
-      const timeB = new Date(b.time || b.startTime || b.endTime).getTime();
-      return timeB - timeA;
-    });
+    try {
+      // Sort by time (most recent first)
+      const sortedRecords = records.sort((a: any, b: any) => {
+        const timeA = new Date(a.time || a.startTime || a.endTime).getTime();
+        const timeB = new Date(b.time || b.startTime || b.endTime).getTime();
+        return timeB - timeA;
+      });
 
-    const mostRecent = sortedRecords[0] as any;
-    return mostRecent?.[valueField];
+      const mostRecent = sortedRecords[0] as any;
+      const value = mostRecent?.[valueField];
+
+      if (value !== undefined) {
+      }
+
+      return value;
+    } catch (error) {
+      console.warn(`⚠️ getMostRecentValue error for ${valueField}:`, error);
+      return undefined;
+    }
   }
 
   /**
@@ -215,12 +244,18 @@ export class GoogleHealthConnectDataService {
 
       console.log('🤖 Fetching most recent blood pressure sample...');
       const bloodPressureRecords = await this.readHealthConnectRecords('BloodPressure', timeRangeFilter);
-      if (bloodPressureRecords.length > 0) {
+      if (bloodPressureRecords && bloodPressureRecords.length > 0) {
         const mostRecent = bloodPressureRecords.sort((a: any, b: any) =>
           new Date(b.time).getTime() - new Date(a.time).getTime()
         )[0] as any;
-        if (mostRecent.systolic) vitals.blood_pressure_systolic = mostRecent.systolic.inMillimetersOfMercury;
-        if (mostRecent.diastolic) vitals.blood_pressure_diastolic = mostRecent.diastolic.inMillimetersOfMercury;
+        if (mostRecent.systolic) {
+          vitals.blood_pressure_systolic = mostRecent.systolic.inMillimetersOfMercury || mostRecent.systolic;
+          console.log(`✅ Systolic BP: ${vitals.blood_pressure_systolic} mmHg`);
+        }
+        if (mostRecent.diastolic) {
+          vitals.blood_pressure_diastolic = mostRecent.diastolic.inMillimetersOfMercury || mostRecent.diastolic;
+          console.log(`✅ Diastolic BP: ${vitals.blood_pressure_diastolic} mmHg`);
+        }
       }
 
       console.log('🤖 Fetching most recent respiratory rate sample...');
@@ -236,7 +271,11 @@ export class GoogleHealthConnectDataService {
       console.log('🤖 Fetching most recent body temperature sample...');
       const bodyTemperatureRecords = await this.readHealthConnectRecords('BodyTemperature', timeRangeFilter);
       const bodyTemperature = this.getMostRecentValue(bodyTemperatureRecords, 'temperature');
-      if (bodyTemperature) vitals.body_temperature = bodyTemperature;
+      if (bodyTemperature) {
+        // Extract Celsius value from temperature object
+        vitals.body_temperature = bodyTemperature.inCelsius || bodyTemperature;
+        console.log(`✅ Body temperature: ${vitals.body_temperature}°C`);
+      }
 
     } catch (error) {
       console.warn('Failed to fetch vital signs:', error);
@@ -260,28 +299,37 @@ export class GoogleHealthConnectDataService {
 
       console.log('🤖 Fetching steps for date range...');
       const stepsRecords = await this.readHealthConnectRecords('Steps', timeRangeFilter);
-      if (stepsRecords.length > 0) {
+      if (stepsRecords && stepsRecords.length > 0) {
         const totalSteps = stepsRecords.reduce((sum: number, record: any) => sum + (record.count || 0), 0);
         activity.steps = totalSteps;
+        console.log(`✅ Total steps: ${totalSteps}`);
       }
 
       console.log('🤖 Fetching distance for date range...');
       const distanceRecords = await this.readHealthConnectRecords('Distance', timeRangeFilter);
-      if (distanceRecords.length > 0) {
-        const totalDistance = distanceRecords.reduce((sum: number, record: any) => sum + (record.distance?.inMeters || 0), 0);
+      if (distanceRecords && distanceRecords.length > 0) {
+        const totalDistance = distanceRecords.reduce((sum: number, record: any) => {
+          const distance = record.distance?.inMeters || record.distance || 0;
+          return sum + distance;
+        }, 0);
         activity.distance = totalDistance;
+        console.log(`✅ Total distance: ${totalDistance} meters`);
       }
 
       console.log('🤖 Fetching active calories for date range...');
       const activeCaloriesRecords = await this.readHealthConnectRecords('ActiveCaloriesBurned', timeRangeFilter);
-      if (activeCaloriesRecords.length > 0) {
-        const totalActiveCalories = activeCaloriesRecords.reduce((sum: number, record: any) => sum + (record.energy?.inCalories || 0), 0);
+      if (activeCaloriesRecords && activeCaloriesRecords.length > 0) {
+        const totalActiveCalories = activeCaloriesRecords.reduce((sum: number, record: any) => {
+          const energy = record.energy?.inCalories || record.energy || 0;
+          return sum + energy;
+        }, 0);
         activity.active_calories_burned = totalActiveCalories;
+        console.log(`✅ Total active calories: ${totalActiveCalories}`);
       }
 
       console.log('🤖 Fetching exercise sessions for date range...');
       const exerciseRecords = await this.readHealthConnectRecords('ExerciseSession', timeRangeFilter);
-      if (exerciseRecords.length > 0) {
+      if (exerciseRecords && exerciseRecords.length > 0) {
         const totalMinutes = exerciseRecords.reduce((sum: number, record: any) => {
           if (record.startTime && record.endTime) {
             const duration = new Date(record.endTime).getTime() - new Date(record.startTime).getTime();
@@ -290,6 +338,7 @@ export class GoogleHealthConnectDataService {
           return sum;
         }, 0);
         activity.exercise_minutes = totalMinutes;
+        console.log(`✅ Total exercise minutes: ${totalMinutes}`);
       }
 
     } catch (error) {
@@ -319,29 +368,31 @@ export class GoogleHealthConnectDataService {
 
       console.log('🤖 Fetching most recent weight sample...');
       const weightRecords = await this.readHealthConnectRecords('Weight', timeRangeFilter);
-      if (weightRecords.length > 0) {
+      if (weightRecords && weightRecords.length > 0) {
         const mostRecent = weightRecords.sort((a: any, b: any) =>
           new Date(b.time).getTime() - new Date(a.time).getTime()
         )[0] as any;
         if (mostRecent.weight) {
-          measurements.weight = mostRecent.weight.inKilograms;
+          measurements.weight = mostRecent.weight.inKilograms || mostRecent.weight;
+          console.log(`✅ Weight: ${measurements.weight} kg`);
         }
       }
 
       console.log('🤖 Fetching most recent height sample...');
       const heightRecords = await this.readHealthConnectRecords('Height', timeRangeFilter);
-      if (heightRecords.length > 0) {
+      if (heightRecords && heightRecords.length > 0) {
         const mostRecent = heightRecords.sort((a: any, b: any) =>
           new Date(b.time).getTime() - new Date(a.time).getTime()
         )[0] as any;
         if (mostRecent.height) {
-          measurements.height = mostRecent.height.inMeters;
+          measurements.height = mostRecent.height.inMeters || mostRecent.height;
+          console.log(`✅ Height: ${measurements.height} m`);
         }
       }
 
       console.log('🤖 Fetching most recent body fat sample...');
       const bodyFatRecords = await this.readHealthConnectRecords('BodyFat', timeRangeFilter);
-      if (bodyFatRecords.length > 0) {
+      if (bodyFatRecords && bodyFatRecords.length > 0) {
         const mostRecent = bodyFatRecords.sort((a: any, b: any) =>
           new Date(b.time).getTime() - new Date(a.time).getTime()
         )[0] as any;
@@ -372,20 +423,28 @@ export class GoogleHealthConnectDataService {
 
       console.log('🤖 Fetching nutrition calories for date range...');
       const nutritionRecords = await this.readHealthConnectRecords('Nutrition', timeRangeFilter);
-      if (nutritionRecords.length > 0) {
+      if (nutritionRecords && nutritionRecords.length > 0) {
         const totalCalories = nutritionRecords.reduce((sum: number, record: any) => {
-          return sum + (record.energy?.inCalories || 0);
+          const energy = record.energy?.inCalories || record.energy || 0;
+          return sum + energy;
         }, 0);
-        if (totalCalories > 0) nutrition.nutrition_calories = totalCalories;
+        if (totalCalories > 0) {
+          nutrition.nutrition_calories = totalCalories;
+          console.log(`✅ Total nutrition calories: ${totalCalories}`);
+        }
       }
 
       console.log('🤖 Fetching hydration for date range...');
       const hydrationRecords = await this.readHealthConnectRecords('Hydration', timeRangeFilter);
-      if (hydrationRecords.length > 0) {
+      if (hydrationRecords && hydrationRecords.length > 0) {
         const totalHydration = hydrationRecords.reduce((sum: number, record: any) => {
-          return sum + (record.volume?.inMilliliters || 0);
+          const volume = record.volume?.inMilliliters || record.volume || 0;
+          return sum + volume;
         }, 0);
-        if (totalHydration > 0) nutrition.hydration = totalHydration;
+        if (totalHydration > 0) {
+          nutrition.hydration = totalHydration;
+          console.log(`✅ Total hydration: ${totalHydration} ml`);
+        }
       }
 
     } catch (error) {
@@ -410,7 +469,7 @@ export class GoogleHealthConnectDataService {
 
       console.log('🤖 Fetching sleep hours for date range...');
       const sleepRecords = await this.readHealthConnectRecords('SleepSession', timeRangeFilter);
-      if (sleepRecords.length > 0) {
+      if (sleepRecords && sleepRecords.length > 0) {
         const totalSleepHours = sleepRecords.reduce((sum: number, record: any) => {
           if (record.startTime && record.endTime) {
             const duration = new Date(record.endTime).getTime() - new Date(record.startTime).getTime();
@@ -418,7 +477,10 @@ export class GoogleHealthConnectDataService {
           }
           return sum;
         }, 0);
-        if (totalSleepHours > 0) sleep.sleep_hours = totalSleepHours;
+        if (totalSleepHours > 0) {
+          sleep.sleep_hours = totalSleepHours;
+          console.log(`✅ Total sleep hours: ${totalSleepHours}`);
+        }
       }
 
     } catch (error) {
@@ -454,7 +516,11 @@ export class GoogleHealthConnectDataService {
       console.log('🤖 Fetching basal metabolic rate...');
       const bmrRecords = await this.readHealthConnectRecords('BasalMetabolicRate', timeRangeFilter);
       const bmr = this.getMostRecentValue(bmrRecords, 'basalMetabolicRate');
-      if (bmr) other.basal_metabolic_rate = bmr;
+      if (bmr) {
+        // Extract kilocalories per day from BMR object
+        other.basal_metabolic_rate = bmr.inKilocaloriesPerDay || bmr;
+        console.log(`✅ BMR: ${other.basal_metabolic_rate} kcal/day`);
+      }
 
       console.log('🤖 Fetching menstruation flow data...');
       const menstruationRecords = await this.readHealthConnectRecords('MenstruationFlow', timeRangeFilter);
