@@ -1,6 +1,7 @@
 import { Platform, Linking} from 'react-native';
 import { BaseOAuthService, AuthResult } from '../BaseOAuthService';
 import { supabase } from '../../../supabase/supabase';
+import HealthSyncService from '../../data/HealthSyncService';
 import {
   initialize,
   requestPermission,
@@ -136,7 +137,19 @@ export class GoogleFitAuthService extends BaseOAuthService {
         
         console.log('✅ Health Connect permissions granted successfully');
         await this.notifyAuthCallbacks(integrationId);
-        
+
+        // Trigger immediate health data sync after successful authentication
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            console.log('🔄 Health Connect: Triggering immediate health sync after auth...');
+            const syncResult = await HealthSyncService.getInstance().syncHealthData(user.id);
+            console.log('🔄 Health Connect: Post-auth sync result:', syncResult);
+          }
+        } catch (syncError) {
+          console.warn('⚠️ Health Connect: Post-auth sync failed (auth still successful):', syncError);
+        }
+
         return authResult;
       } else {
         throw new Error('Health Connect permissions were not granted');
@@ -166,13 +179,27 @@ export class GoogleFitAuthService extends BaseOAuthService {
    */
   private async requestHealthConnectPermissions(): Promise<boolean> {
     try {
-      // Start with minimal permissions to avoid overwhelming the user
+      // Request comprehensive Health Connect permissions
       const permissions = [
         { accessType: 'read' as const, recordType: 'Steps' as const },
         { accessType: 'read' as const, recordType: 'HeartRate' as const },
+        { accessType: 'read' as const, recordType: 'RestingHeartRate' as const },
         { accessType: 'read' as const, recordType: 'ActiveCaloriesBurned' as const },
+        { accessType: 'read' as const, recordType: 'BasalMetabolicRate' as const },
+        { accessType: 'read' as const, recordType: 'BloodGlucose' as const },
+        { accessType: 'read' as const, recordType: 'BloodPressure' as const },
+        { accessType: 'read' as const, recordType: 'BodyFat' as const },
+        { accessType: 'read' as const, recordType: 'BodyTemperature' as const },
         { accessType: 'read' as const, recordType: 'Distance' as const },
+        { accessType: 'read' as const, recordType: 'ExerciseSession' as const },
+        { accessType: 'read' as const, recordType: 'Height' as const },
+        { accessType: 'read' as const, recordType: 'Hydration' as const },
+        { accessType: 'read' as const, recordType: 'MenstruationFlow' as const },
+        { accessType: 'read' as const, recordType: 'Nutrition' as const },
+        { accessType: 'read' as const, recordType: 'OxygenSaturation' as const },
+        { accessType: 'read' as const, recordType: 'RespiratoryRate' as const },
         { accessType: 'read' as const, recordType: 'SleepSession' as const },
+        { accessType: 'read' as const, recordType: 'Weight' as const },
       ];
 
       console.log('🤖 Requesting Health Connect permissions...');

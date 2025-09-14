@@ -14,6 +14,7 @@ import type {
 } from '@kingstinct/react-native-healthkit';
 import { BaseOAuthService, AuthResult } from '../BaseOAuthService';
 import { supabase } from '../../../supabase/supabase';
+import HealthSyncService from '../../data/HealthSyncService';
 
 export class AppleHealthKitAuthService extends BaseOAuthService {
   private static instance: AppleHealthKitAuthService;
@@ -116,7 +117,19 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
         
         console.log('✅ Apple HealthKit permissions granted successfully');
         await this.notifyAuthCallbacks(integrationId);
-        
+
+        // Trigger immediate health data sync after successful authentication
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            console.log('🔄 Apple Health: Triggering immediate health sync after auth...');
+            const syncResult = await HealthSyncService.getInstance().syncHealthData(user.id);
+            console.log('🔄 Apple Health: Post-auth sync result:', syncResult);
+          }
+        } catch (syncError) {
+          console.warn('⚠️ Apple Health: Post-auth sync failed (auth still successful):', syncError);
+        }
+
         return authResult;
       } else {
         throw new Error('HealthKit permissions were not granted');
