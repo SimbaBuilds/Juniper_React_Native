@@ -1,1 +1,1 @@
-Great, one more thing.  Currently, we only have metrics sync for Apple and Google Health on app launch, but the integration completion flow requires synced metrics.  Please add a sync on callback from the permissions/auth flow for both Google Health Connect and Apple Health so that metrics will be avilable for integration completion.
+Right now, Juniper open by default settings are opened on both first app launch and a check is run before Oauth flows.  This is redundant, please remove the first launch flow and dialog.
