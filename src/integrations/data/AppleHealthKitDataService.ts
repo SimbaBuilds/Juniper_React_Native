@@ -656,21 +656,40 @@ export class AppleHealthKitDataService {
             });
             console.log('🍎 Raw menstruation samples:', menstruationSamples);
 
-            // HealthKit menstrual flow values: 1 = Unspecified, 2 = Light, 3 = Medium, 4 = Heavy, 5 = None
-            // We consider any flow except 'None' (5) as menstruation present
+            // HealthKit menstrual flow values: 0 = NotApplicable, 1 = Unspecified, 2 = Light, 3 = Medium, 4 = Heavy
+            // We consider any flow except 'NotApplicable' (0) as menstruation present
             const activeMenstruationSamples = menstruationSamples.filter((sample: any) =>
-              sample.value && sample.value !== 5
+              sample.value && sample.value !== 0
             );
 
+            // Map numeric values to text
+            const mapFlowValue = (value: number): string => {
+              switch (value) {
+                case 0: return 'NotApplicable';
+                case 1: return 'Unspecified';
+                case 2: return 'Light';
+                case 3: return 'Medium';
+                case 4: return 'Heavy';
+                default: return 'Unknown';
+              }
+            };
+
+            // Get the most recent flow value for today
+            const mostRecentFlow = activeMenstruationSamples.length > 0
+              ? activeMenstruationSamples[activeMenstruationSamples.length - 1].value
+              : 0;
+
             console.log(`🍎 Active menstruation samples found: ${activeMenstruationSamples.length}`);
+            console.log(`🍎 Most recent flow value: ${mostRecentFlow} (${mapFlowValue(mostRecentFlow)})`);
             return {
               samples: activeMenstruationSamples,
               hasActiveMenstruation: activeMenstruationSamples.length > 0,
+              flowValue: mapFlowValue(mostRecentFlow),
               totalSamples: menstruationSamples.length
             };
           } catch (error) {
             console.warn('🍎 Error fetching menstruation data:', error);
-            return { samples: [], hasActiveMenstruation: false, totalSamples: 0 };
+            return { samples: [], hasActiveMenstruation: false, flowValue: 'NotApplicable', totalSamples: 0 };
           }
         case 'getSleepAnalysis':
           console.log('🍎 Sleep analysis query params:', { from: options.startDate, to: options.endDate });
@@ -1066,10 +1085,10 @@ export class AppleHealthKitDataService {
         });
         console.log('🍎 Menstruation data response:', menstruationData);
         if (menstruationData && menstruationData.hasActiveMenstruation) {
-          realtimeData.menstruation = true;
-          console.log('🍎 Active menstruation found for today');
+          realtimeData.menstruation = menstruationData.flowValue;
+          console.log(`🍎 Active menstruation found for today: ${menstruationData.flowValue}`);
         } else {
-          realtimeData.menstruation = false;
+          realtimeData.menstruation = 'NotApplicable';
           console.log('🍎 No active menstruation found for today');
         }
       } catch (error) {
