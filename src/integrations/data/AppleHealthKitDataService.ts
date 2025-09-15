@@ -157,13 +157,44 @@ export class AppleHealthKitDataService {
       console.warn('Failed to fetch heart rate:', error);
     }
 
-    // Fetch resting heart rate - get most recent sample
+    // Fetch resting heart rate - get most recent sample with fallback to minimum heart rate
     try {
       console.log('🍎 Fetching most recent resting heart rate sample...');
       const restingHRData = await getMostRecentQuantitySample('HKQuantityTypeIdentifierRestingHeartRate');
       console.log('🍎 Resting heart rate sample:', restingHRData);
       if (restingHRData && restingHRData.quantity) {
         vitals.restingHeartRate = restingHRData.quantity;
+      } else {
+        // Fallback: If no resting heart rate data, use minimum heart rate from last 24 hours
+        console.log('🍎 No resting heart rate data, falling back to minimum heart rate...');
+        try {
+          const endDate = new Date();
+          const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+          const heartRateSamples = await queryQuantitySamples('HKQuantityTypeIdentifierHeartRate', {
+            filter: {
+              startDate: startDate,
+              endDate: endDate
+            },
+            ascending: true,
+            limit: 0  // Get all samples
+          });
+
+          if (heartRateSamples && heartRateSamples.length > 0) {
+            // Find the minimum heart rate value
+            const minHeartRate = heartRateSamples.reduce((min: number, sample: any) => {
+              const value = sample.quantity || Infinity;
+              return value < min ? value : min;
+            }, Infinity);
+
+            if (minHeartRate !== Infinity && minHeartRate > 0) {
+              console.log(`🍎 Using minimum heart rate (${minHeartRate}) as resting heart rate approximation`);
+              vitals.restingHeartRate = minHeartRate;
+            }
+          }
+        } catch (fallbackError) {
+          console.warn('Failed to get minimum heart rate as fallback:', fallbackError);
+        }
       }
     } catch (error) {
       console.warn('Failed to fetch resting heart rate:', error);
@@ -681,7 +712,12 @@ export class AppleHealthKitDataService {
       const vitals = await this.getVitalSigns(integrationId, { startDate, endDate, limit: 1 });
       console.log('🍎 AppleHealthKitDataService: Vitals retrieved:', vitals);
       if (vitals.heartRate) realtimeData.heartrate = vitals.heartRate;
-      if (vitals.restingHeartRate) realtimeData.restingheartrate = vitals.restingHeartRate;
+
+      // Use resting heart rate (which may include fallback value from getVitalSigns)
+      if (vitals.restingHeartRate) {
+        realtimeData.restingheartrate = vitals.restingHeartRate;
+        console.log('🍎 Using resting heart rate (may be fallback):', vitals.restingHeartRate);
+      }
       if (vitals.bloodPressureSystolic) realtimeData.bloodpressure_systolic = vitals.bloodPressureSystolic;
       if (vitals.bloodPressureDiastolic) realtimeData.bloodpressure_diastolic = vitals.bloodPressureDiastolic;
       if (vitals.oxygenSaturation) realtimeData.oxygensaturation = vitals.oxygenSaturation;
