@@ -685,25 +685,136 @@ export class AppleHealthKitDataService {
             });
             console.log('🍎 Raw sleep analysis samples:', sleepSamples);
 
-            // Calculate total sleep time
+            // Process sleep stages and calculate detailed metrics
+            const sleepStages = {
+              inBed: 0,        // 0 = InBed
+              asleep: 0,       // 1 = Asleep (general)
+              awake: 0,        // 2 = Awake
+              core: 0,         // 3 = Core/Light Sleep
+              deep: 0,         // 4 = Deep Sleep
+              rem: 0           // 5 = REM Sleep
+            };
+
             let totalSleepMinutes = 0;
+            let totalInBedMinutes = 0;
+            let sleepStartTime: Date | null = null;
+            let sleepEndTime: Date | null = null;
+
             sleepSamples.forEach((sample: any) => {
+              const startTime = new Date(sample.startDate);
+              const endTime = new Date(sample.endDate);
+              const durationMinutes = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
+
+              // Track overall sleep window
+              if (!sleepStartTime || startTime < sleepStartTime) sleepStartTime = startTime;
+              if (!sleepEndTime || endTime > sleepEndTime) sleepEndTime = endTime;
+
               // HealthKit sleep values: 0 = InBed, 1 = Asleep, 2 = Awake, 3 = Core, 4 = Deep, 5 = REM
-              // We want to count actual sleep time (values 1, 3, 4, 5)
-              if (sample.value === 1 || sample.value === 3 || sample.value === 4 || sample.value === 5) {
-                const startTime = new Date(sample.startDate).getTime();
-                const endTime = new Date(sample.endDate).getTime();
-                const durationMinutes = (endTime - startTime) / (1000 * 60);
-                totalSleepMinutes += durationMinutes;
+              console.log(`🍎 Sleep sample: value=${sample.value}, duration=${durationMinutes.toFixed(1)}min, start=${sample.startDate}, end=${sample.endDate}`);
+
+              switch (sample.value) {
+                case 0: // In Bed (not sleeping)
+                  sleepStages.inBed += durationMinutes;
+                  totalInBedMinutes += durationMinutes;
+                  break;
+                case 1: // Asleep (general/unspecified sleep)
+                  sleepStages.asleep += durationMinutes;
+                  totalSleepMinutes += durationMinutes;
+                  break;
+                case 2: // Awake (during sleep period)
+                  sleepStages.awake += durationMinutes;
+                  totalInBedMinutes += durationMinutes; // Count as in-bed time
+                  break;
+                case 3: // Core/Light Sleep
+                  sleepStages.core += durationMinutes;
+                  totalSleepMinutes += durationMinutes;
+                  break;
+                case 4: // Deep Sleep
+                  sleepStages.deep += durationMinutes;
+                  totalSleepMinutes += durationMinutes;
+                  break;
+                case 5: // REM Sleep
+                  sleepStages.rem += durationMinutes;
+                  totalSleepMinutes += durationMinutes;
+                  break;
+                default:
+                  console.warn(`🍎 Unknown sleep value: ${sample.value}`);
               }
             });
 
+            // Calculate total in-bed time (all time in the sleep window)
+            const totalInBedMinutesCalculated = sleepStages.inBed + sleepStages.asleep + sleepStages.awake + sleepStages.core + sleepStages.deep + sleepStages.rem;
+
+            // Calculate metrics
             const totalSleepHours = totalSleepMinutes / 60;
-            console.log(`🍎 Total sleep time: ${totalSleepHours.toFixed(2)} hours`);
-            return { totalSleepHours: parseFloat(totalSleepHours.toFixed(2)), samples: sleepSamples };
+            const totalInBedHours = totalInBedMinutesCalculated / 60;
+            const sleepEfficiency = totalInBedMinutesCalculated > 0 ? (totalSleepMinutes / totalInBedMinutesCalculated) * 100 : 0;
+
+            console.log(`🍎 Sleep Calculation Debug:`);
+            console.log(`  Raw totals - Sleep: ${totalSleepMinutes}min, InBed: ${totalInBedMinutes}min`);
+            console.log(`  Calculated InBed: ${totalInBedMinutesCalculated}min`);
+            console.log(`  Stage breakdown:`);
+            console.log(`    InBed (not sleeping): ${sleepStages.inBed}min`);
+            console.log(`    Awake (during sleep): ${sleepStages.awake}min`);
+            console.log(`    Asleep (general): ${sleepStages.asleep}min`);
+            console.log(`    Core/Light: ${sleepStages.core}min`);
+            console.log(`    Deep: ${sleepStages.deep}min`);
+            console.log(`    REM: ${sleepStages.rem}min`);
+
+            const sleepData = {
+              // Summary metrics
+              totalSleepHours: parseFloat(totalSleepHours.toFixed(2)),
+              totalInBedHours: parseFloat(totalInBedHours.toFixed(2)),
+              sleepEfficiency: parseFloat(sleepEfficiency.toFixed(1)),
+
+              // Sleep stages (in minutes)
+              sleepStages: {
+                inBed: parseFloat(sleepStages.inBed.toFixed(1)),
+                asleep: parseFloat(sleepStages.asleep.toFixed(1)),
+                awake: parseFloat(sleepStages.awake.toFixed(1)),
+                core: parseFloat(sleepStages.core.toFixed(1)),
+                deep: parseFloat(sleepStages.deep.toFixed(1)),
+                rem: parseFloat(sleepStages.rem.toFixed(1))
+              },
+
+              // Sleep window
+              sleepStartTime: sleepStartTime?.toISOString(),
+              sleepEndTime: sleepEndTime?.toISOString(),
+
+              // Raw data
+              totalSamples: sleepSamples.length,
+              samples: sleepSamples
+            };
+
+            console.log(`🍎 Sleep Analysis Summary:`);
+            console.log(`  Total Sleep: ${sleepData.totalSleepHours} hours`);
+            console.log(`  Total In Bed: ${sleepData.totalInBedHours} hours`);
+            console.log(`  Sleep Efficiency: ${sleepData.sleepEfficiency}%`);
+            console.log(`  Deep Sleep: ${sleepData.sleepStages.deep} minutes`);
+            console.log(`  REM Sleep: ${sleepData.sleepStages.rem} minutes`);
+            console.log(`  Core Sleep: ${sleepData.sleepStages.core} minutes`);
+            console.log(`  Awake Time: ${sleepData.sleepStages.awake} minutes`);
+
+            return sleepData;
           } catch (error) {
             console.warn('🍎 Error fetching sleep analysis:', error);
-            return { totalSleepHours: 0, samples: [] };
+            return {
+              totalSleepHours: 0,
+              totalInBedHours: 0,
+              sleepEfficiency: 0,
+              sleepStages: {
+                inBed: 0,
+                asleep: 0,
+                awake: 0,
+                core: 0,
+                deep: 0,
+                rem: 0
+              },
+              sleepStartTime: null,
+              sleepEndTime: null,
+              totalSamples: 0,
+              samples: []
+            };
           }
         default:
           throw new Error(`Method ${method} not implemented`);
@@ -906,8 +1017,34 @@ export class AppleHealthKitDataService {
         });
         console.log('🍎 Sleep data response:', sleepData);
         if (sleepData && sleepData.totalSleepHours) {
-          realtimeData.sleep = sleepData.totalSleepHours;
-          console.log('🍎 Using sleep hours:', sleepData.totalSleepHours);
+          // Store sleep data according to new schema
+          const timeInBedHours = sleepData.totalInBedHours;
+          const timeAsleepHours = sleepData.totalSleepHours;
+
+          // Calculate awakenings (time in bed not asleep) in hours
+          const awakeningsHours = timeInBedHours - timeAsleepHours;
+
+          // Store in database schema format
+          realtimeData.time_in_bed = timeInBedHours;
+          realtimeData.time_asleep = timeAsleepHours;
+          realtimeData.awakenings = awakeningsHours;
+
+          // Sleep stages (convert minutes to hours for consistency)
+          // Combine core sleep and general "asleep" time as light sleep
+          const lightSleepMinutes = sleepData.sleepStages.core + sleepData.sleepStages.asleep;
+
+          realtimeData.deep_sleep = sleepData.sleepStages.deep / 60; // minutes to hours
+          realtimeData.rem_sleep = sleepData.sleepStages.rem / 60;   // minutes to hours
+          realtimeData.light_sleep = lightSleepMinutes / 60; // core + asleep = light sleep
+
+          console.log('🍎 Storing sleep data in new schema:');
+          console.log(`  Time in Bed: ${timeInBedHours.toFixed(2)} hours`);
+          console.log(`  Time Asleep: ${timeAsleepHours.toFixed(2)} hours`);
+          console.log(`  Awakenings: ${awakeningsHours.toFixed(2)} hours`);
+          console.log(`  Deep Sleep: ${realtimeData.deep_sleep.toFixed(2)} hours`);
+          console.log(`  REM Sleep: ${realtimeData.rem_sleep.toFixed(2)} hours`);
+          console.log(`  Light Sleep: ${realtimeData.light_sleep.toFixed(2)} hours (core + asleep)`);
+          console.log(`  Stage breakdown: Core=${sleepData.sleepStages.core}min + Asleep=${sleepData.sleepStages.asleep}min = Light=${lightSleepMinutes}min`);
         }
       } catch (error) {
         console.warn('Failed to fetch sleep data:', error);
