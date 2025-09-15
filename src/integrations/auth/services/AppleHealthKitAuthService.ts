@@ -168,6 +168,8 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       'HKQuantityTypeIdentifierBloodGlucose',
       'HKQuantityTypeIdentifierOxygenSaturation',
       'HKQuantityTypeIdentifierTimeInDaylight',
+      'HKQuantityTypeIdentifierVO2Max',
+      'HKCategoryTypeIdentifierMenstrualFlow',
     ];
 
     try {

@@ -1,14 +1,18 @@
 import { Platform } from 'react-native';
-import HealthKit, { 
-  queryQuantitySamples, 
+import HealthKit, {
+  queryQuantitySamples,
   getMostRecentQuantitySample,
   queryStatisticsForQuantity,
-  authorizationStatusFor
+  authorizationStatusFor,
+  queryCategorySamples,
+  getMostRecentCategorySample
 } from '@kingstinct/react-native-healthkit';
-import type { 
-  QuantityTypeIdentifier, 
+import type {
+  QuantityTypeIdentifier,
   QuantitySample,
-  StatisticsOptions 
+  StatisticsOptions,
+  CategoryTypeIdentifier,
+  CategorySampleTyped
 } from '@kingstinct/react-native-healthkit';
 import AppleHealthKitAuthService from '../auth/services/AppleHealthKitAuthService';
 
@@ -639,6 +643,68 @@ export class AppleHealthKitDataService {
           console.log('🍎 Raw time in daylight samples:', timeInDaylightSamples);
           const totalTimeInDaylight = timeInDaylightSamples.reduce((sum: number, sample: any) => sum + (sample.quantity || 0), 0);
           return { value: totalTimeInDaylight };
+        case 'getMenstruationSamples':
+          console.log('🍎 Menstruation query params:', { from: options.startDate, to: options.endDate });
+          try {
+            const menstruationSamples = await queryCategorySamples('HKCategoryTypeIdentifierMenstrualFlow', {
+              filter: {
+                startDate: new Date(options.startDate),
+                endDate: new Date(options.endDate)
+              },
+              ascending: true,
+              limit: 0
+            });
+            console.log('🍎 Raw menstruation samples:', menstruationSamples);
+
+            // HealthKit menstrual flow values: 1 = Unspecified, 2 = Light, 3 = Medium, 4 = Heavy, 5 = None
+            // We consider any flow except 'None' (5) as menstruation present
+            const activeMenstruationSamples = menstruationSamples.filter((sample: any) =>
+              sample.value && sample.value !== 5
+            );
+
+            console.log(`🍎 Active menstruation samples found: ${activeMenstruationSamples.length}`);
+            return {
+              samples: activeMenstruationSamples,
+              hasActiveMenstruation: activeMenstruationSamples.length > 0,
+              totalSamples: menstruationSamples.length
+            };
+          } catch (error) {
+            console.warn('🍎 Error fetching menstruation data:', error);
+            return { samples: [], hasActiveMenstruation: false, totalSamples: 0 };
+          }
+        case 'getSleepAnalysis':
+          console.log('🍎 Sleep analysis query params:', { from: options.startDate, to: options.endDate });
+          try {
+            const sleepSamples = await queryCategorySamples('HKCategoryTypeIdentifierSleepAnalysis', {
+              filter: {
+                startDate: new Date(options.startDate),
+                endDate: new Date(options.endDate)
+              },
+              ascending: true,
+              limit: 0
+            });
+            console.log('🍎 Raw sleep analysis samples:', sleepSamples);
+
+            // Calculate total sleep time
+            let totalSleepMinutes = 0;
+            sleepSamples.forEach((sample: any) => {
+              // HealthKit sleep values: 0 = InBed, 1 = Asleep, 2 = Awake, 3 = Core, 4 = Deep, 5 = REM
+              // We want to count actual sleep time (values 1, 3, 4, 5)
+              if (sample.value === 1 || sample.value === 3 || sample.value === 4 || sample.value === 5) {
+                const startTime = new Date(sample.startDate).getTime();
+                const endTime = new Date(sample.endDate).getTime();
+                const durationMinutes = (endTime - startTime) / (1000 * 60);
+                totalSleepMinutes += durationMinutes;
+              }
+            });
+
+            const totalSleepHours = totalSleepMinutes / 60;
+            console.log(`🍎 Total sleep time: ${totalSleepHours.toFixed(2)} hours`);
+            return { totalSleepHours: parseFloat(totalSleepHours.toFixed(2)), samples: sleepSamples };
+          } catch (error) {
+            console.warn('🍎 Error fetching sleep analysis:', error);
+            return { totalSleepHours: 0, samples: [] };
+          }
         default:
           throw new Error(`Method ${method} not implemented`);
       }
@@ -722,6 +788,10 @@ export class AppleHealthKitDataService {
       if (vitals.bloodPressureDiastolic) realtimeData.bloodpressure_diastolic = vitals.bloodPressureDiastolic;
       if (vitals.oxygenSaturation) realtimeData.oxygensaturation = vitals.oxygenSaturation;
       if (vitals.respiratoryRate) realtimeData.respiratoryrate = vitals.respiratoryRate;
+      if (vitals.heartRateVariability) {
+        realtimeData.hrv = vitals.heartRateVariability;
+        console.log('🍎 Using HRV:', vitals.heartRateVariability);
+      }
 
       // Get most recent activity data (today's totals)
       // Use local midnight for correct date boundaries
@@ -763,6 +833,10 @@ export class AppleHealthKitDataService {
       if (body.weight) realtimeData.weight = body.weight;
       if (body.height) realtimeData.height = body.height;
       if (body.bmi) realtimeData.bmi = body.bmi;
+      if (body.bodyFatPercentage) {
+        realtimeData.body_fat_percentage = body.bodyFatPercentage;
+        console.log('🍎 Using body fat percentage:', body.bodyFatPercentage);
+      }
 
       // Get blood glucose if available - use most recent sample
       try {
@@ -788,6 +862,55 @@ export class AppleHealthKitDataService {
         }
       } catch (error) {
         console.warn('Failed to fetch time in daylight:', error);
+      }
+
+      // Get VO2 Max if available - use most recent sample
+      try {
+        console.log('🍎 Fetching most recent VO2 Max sample...');
+        const vo2MaxData = await getMostRecentQuantitySample('HKQuantityTypeIdentifierVO2Max');
+        console.log('🍎 VO2 Max sample:', vo2MaxData);
+        if (vo2MaxData && vo2MaxData.quantity) {
+          realtimeData.v02_max = vo2MaxData.quantity;
+          console.log('🍎 Using VO2 Max:', vo2MaxData.quantity);
+        }
+      } catch (error) {
+        console.warn('Failed to fetch VO2 Max:', error);
+      }
+
+      // Get menstruation data if available - use most recent sample
+      try {
+        console.log('🍎 Fetching most recent menstruation data...');
+        const menstruationData = await this.fetchHealthData('getMenstruationSamples', {
+          startDate: todayStart.toISOString(),
+          endDate: todayEnd.toISOString()
+        });
+        console.log('🍎 Menstruation data response:', menstruationData);
+        if (menstruationData && menstruationData.hasActiveMenstruation) {
+          realtimeData.menstruation = true;
+          console.log('🍎 Active menstruation found for today');
+        } else {
+          realtimeData.menstruation = false;
+          console.log('🍎 No active menstruation found for today');
+        }
+      } catch (error) {
+        console.warn('Failed to fetch menstruation data:', error);
+      }
+
+      // Get sleep data if available - use data from last night
+      try {
+        console.log('🍎 Fetching sleep analysis data...');
+        const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
+        const sleepData = await this.fetchHealthData('getSleepAnalysis', {
+          startDate: yesterdayStart.toISOString(),
+          endDate: todayEnd.toISOString()
+        });
+        console.log('🍎 Sleep data response:', sleepData);
+        if (sleepData && sleepData.totalSleepHours) {
+          realtimeData.sleep = sleepData.totalSleepHours;
+          console.log('🍎 Using sleep hours:', sleepData.totalSleepHours);
+        }
+      } catch (error) {
+        console.warn('Failed to fetch sleep data:', error);
       }
 
       // Set sync timestamp

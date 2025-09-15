@@ -896,14 +896,24 @@ export type UserProfile = {
     updated_at: Date;
     respiratoryrate?: number;
     timeindaylight?: number;
-    
+    hrv?: number;
+    menstruation?: string;
+    v02_max?: number;
+    body_fat_percentage?: number;
+    time_in_bed?: number;
+    time_asleep?: number;
+    awakenings?: number;
+    light_sleep?: number;
+    deep_sleep?: number;
+    rem_sleep?: number;
   };
 
   export const appleHealthRealtimeFields = [
     'user_id', 'integration_id', 'steps', 'heartrate', 'weight', 'height', 'bmi',
     'activeenergy', 'distance', 'bloodglucose', 'oxygensaturation', 'restingheartrate',
     'bloodpressure_systolic', 'bloodpressure_diastolic', 'respiratoryrate', 'timeindaylight',
-    'last_sync_at', 'created_at', 'updated_at'
+    'hrv', 'menstruation', 'v02_max', 'body_fat_percentage', 'time_in_bed', 'time_asleep',
+    'awakenings', 'light_sleep', 'deep_sleep', 'rem_sleep', 'last_sync_at', 'created_at', 'updated_at'
   ] as const;
   export type AppleHealthRealtimeField = (typeof appleHealthRealtimeFields)[number];
 

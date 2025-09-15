@@ -1,1 +1,2 @@
-Gotcha.  The most important integration will actually be from native Health Connect and Google Watch data not Fitbit -- please make sure heart rate data and other data can be fetched from those sources.
+What was the time window mesasured for sleep?  That number is high.  What information about sleep stages was provided?
+Note: the correct V)2 max number acutally propped to the db
