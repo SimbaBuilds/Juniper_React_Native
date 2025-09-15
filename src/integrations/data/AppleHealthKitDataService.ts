@@ -685,7 +685,113 @@ export class AppleHealthKitDataService {
             });
             console.log('🍎 Raw sleep analysis samples:', sleepSamples);
 
-            // Process sleep stages and calculate detailed metrics
+            // Group sleep samples into distinct sessions and select most recent
+            console.log(`🍎 Processing ${sleepSamples.length} sleep samples - detecting sessions...`);
+
+            // Sort samples by start time
+            const sortedSamples = sleepSamples.sort((a: any, b: any) =>
+              new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+            );
+
+            // Group samples into separate sleep sessions based on gaps
+            const sessions: any[][] = [];
+            let currentSession: any[] = [];
+            const SESSION_GAP_HOURS = 6; // Gap threshold to separate sessions
+
+            for (const sample of sortedSamples) {
+              if (currentSession.length === 0) {
+                // First sample starts new session
+                currentSession.push(sample);
+              } else {
+                // Check gap from last sample in current session
+                const lastSample = currentSession[currentSession.length - 1];
+                const lastEndTime = new Date(lastSample.endDate);
+                const currentStartTime = new Date(sample.startDate);
+                const gapHours = (currentStartTime.getTime() - lastEndTime.getTime()) / (1000 * 60 * 60);
+
+                if (gapHours > SESSION_GAP_HOURS) {
+                  // Large gap detected - start new session
+                  sessions.push(currentSession);
+                  currentSession = [sample];
+                } else {
+                  // Continue current session
+                  currentSession.push(sample);
+                }
+              }
+            }
+
+            // Add the last session
+            if (currentSession.length > 0) {
+              sessions.push(currentSession);
+            }
+
+            console.log(`🍎 Detected ${sessions.length} sleep sessions:`);
+            sessions.forEach((session, index) => {
+              const sessionStart = new Date(session[0].startDate);
+              const sessionEnd = new Date(session[session.length - 1].endDate);
+              const sessionDuration = (sessionEnd.getTime() - sessionStart.getTime()) / (1000 * 60 * 60);
+              console.log(`  Session ${index + 1}: ${sessionStart.toISOString()} to ${sessionEnd.toISOString()} (${sessionDuration.toFixed(1)} hours, ${session.length} samples)`);
+            });
+
+            // Select the most recent session (last in the array)
+            if (sessions.length === 0) {
+              throw new Error('No sleep sessions found');
+            }
+
+            const recentSession = sessions[sessions.length - 1];
+            const sessionStart = new Date(recentSession[0].startDate);
+            const sessionEnd = new Date(recentSession[recentSession.length - 1].endDate);
+
+            console.log(`🍎 Selected most recent session: ${sessionStart.toISOString()} to ${sessionEnd.toISOString()} (${recentSession.length} samples)`);
+
+            // Find sleep window for the selected session only
+            let sleepStartTime: Date | null = null;
+            let sleepEndTime: Date | null = null;
+
+            recentSession.forEach((sample: any) => {
+              const startTime = new Date(sample.startDate);
+              const endTime = new Date(sample.endDate);
+              if (!sleepStartTime || startTime < sleepStartTime) sleepStartTime = startTime;
+              if (!sleepEndTime || endTime > sleepEndTime) sleepEndTime = endTime;
+            });
+
+            if (!sleepStartTime || !sleepEndTime) {
+              throw new Error('No valid sleep window found in recent session');
+            }
+
+            // Create timeline segments (1-minute resolution)
+            const timelineMinutes = Math.ceil((sleepEndTime.getTime() - sleepStartTime.getTime()) / (1000 * 60));
+            const timeline: number[] = new Array(timelineMinutes).fill(0); // Default to InBed (0)
+
+            // Sample priority: higher values override lower values for overlapping periods
+            const samplePriority = { 0: 1, 2: 2, 1: 3, 3: 4, 5: 5, 4: 6 }; // InBed < Awake < Asleep < Core < REM < Deep
+
+            console.log(`🍎 Sleep window: ${sleepStartTime.toISOString()} to ${sleepEndTime.toISOString()} (${timelineMinutes} minutes)`);
+            console.log(`🍎 Processing samples for timeline:`);
+
+            // Apply each sample from recent session to timeline, using priority system for overlaps
+            recentSession.forEach((sample: any, index: number) => {
+              const sampleStart = new Date(sample.startDate);
+              const sampleEnd = new Date(sample.endDate);
+              const startMinute = Math.floor((sampleStart.getTime() - sleepStartTime!.getTime()) / (1000 * 60));
+              const endMinute = Math.ceil((sampleEnd.getTime() - sleepStartTime!.getTime()) / (1000 * 60));
+
+              const durationMinutes = (sampleEnd.getTime() - sampleStart.getTime()) / (1000 * 60);
+              console.log(`  Sample ${index + 1}: value=${sample.value}, duration=${durationMinutes.toFixed(1)}min, timeline=${startMinute}-${endMinute}`);
+
+              // Apply sample to timeline using priority system
+              for (let minute = startMinute; minute < endMinute && minute < timelineMinutes; minute++) {
+                const currentValue = timeline[minute];
+                const currentPriority = samplePriority[currentValue as keyof typeof samplePriority] || 0;
+                const newPriority = samplePriority[sample.value as keyof typeof samplePriority] || 0;
+
+                if (newPriority > currentPriority) {
+                  timeline[minute] = sample.value;
+                }
+              }
+            });
+
+            // Calculate stage durations from processed timeline
             const sleepStages = {
               inBed: 0,        // 0 = InBed
               asleep: 0,       // 1 = Asleep (general)
@@ -695,71 +801,34 @@ export class AppleHealthKitDataService {
               rem: 0           // 5 = REM Sleep
             };
 
-            let totalSleepMinutes = 0;
-            let totalInBedMinutes = 0;
-            let sleepStartTime: Date | null = null;
-            let sleepEndTime: Date | null = null;
-
-            sleepSamples.forEach((sample: any) => {
-              const startTime = new Date(sample.startDate);
-              const endTime = new Date(sample.endDate);
-              const durationMinutes = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
-
-              // Track overall sleep window
-              if (!sleepStartTime || startTime < sleepStartTime) sleepStartTime = startTime;
-              if (!sleepEndTime || endTime > sleepEndTime) sleepEndTime = endTime;
-
-              // HealthKit sleep values: 0 = InBed, 1 = Asleep, 2 = Awake, 3 = Core, 4 = Deep, 5 = REM
-              console.log(`🍎 Sleep sample: value=${sample.value}, duration=${durationMinutes.toFixed(1)}min, start=${sample.startDate}, end=${sample.endDate}`);
-
-              switch (sample.value) {
-                case 0: // In Bed (not sleeping)
-                  sleepStages.inBed += durationMinutes;
-                  totalInBedMinutes += durationMinutes;
-                  break;
-                case 1: // Asleep (general/unspecified sleep)
-                  sleepStages.asleep += durationMinutes;
-                  totalSleepMinutes += durationMinutes;
-                  break;
-                case 2: // Awake (during sleep period)
-                  sleepStages.awake += durationMinutes;
-                  totalInBedMinutes += durationMinutes; // Count as in-bed time
-                  break;
-                case 3: // Core/Light Sleep
-                  sleepStages.core += durationMinutes;
-                  totalSleepMinutes += durationMinutes;
-                  break;
-                case 4: // Deep Sleep
-                  sleepStages.deep += durationMinutes;
-                  totalSleepMinutes += durationMinutes;
-                  break;
-                case 5: // REM Sleep
-                  sleepStages.rem += durationMinutes;
-                  totalSleepMinutes += durationMinutes;
-                  break;
-                default:
-                  console.warn(`🍎 Unknown sleep value: ${sample.value}`);
+            timeline.forEach((value: number) => {
+              switch (value) {
+                case 0: sleepStages.inBed++; break;
+                case 1: sleepStages.asleep++; break;
+                case 2: sleepStages.awake++; break;
+                case 3: sleepStages.core++; break;
+                case 4: sleepStages.deep++; break;
+                case 5: sleepStages.rem++; break;
               }
             });
 
-            // Calculate total in-bed time (all time in the sleep window)
-            const totalInBedMinutesCalculated = sleepStages.inBed + sleepStages.asleep + sleepStages.awake + sleepStages.core + sleepStages.deep + sleepStages.rem;
-
-            // Calculate metrics
+            // Calculate totals from timeline (no overlaps)
+            const totalSleepMinutes = sleepStages.asleep + sleepStages.core + sleepStages.deep + sleepStages.rem;
+            const totalInBedMinutes = timelineMinutes;
             const totalSleepHours = totalSleepMinutes / 60;
-            const totalInBedHours = totalInBedMinutesCalculated / 60;
-            const sleepEfficiency = totalInBedMinutesCalculated > 0 ? (totalSleepMinutes / totalInBedMinutesCalculated) * 100 : 0;
+            const totalInBedHours = totalInBedMinutes / 60;
+            const sleepEfficiency = totalInBedMinutes > 0 ? (totalSleepMinutes / totalInBedMinutes) * 100 : 0;
 
-            console.log(`🍎 Sleep Calculation Debug:`);
-            console.log(`  Raw totals - Sleep: ${totalSleepMinutes}min, InBed: ${totalInBedMinutes}min`);
-            console.log(`  Calculated InBed: ${totalInBedMinutesCalculated}min`);
-            console.log(`  Stage breakdown:`);
+            console.log(`🍎 Timeline Processing Results:`);
+            console.log(`  Total timeline minutes: ${totalInBedMinutes}`);
+            console.log(`  Stage breakdown (no overlaps):`);
             console.log(`    InBed (not sleeping): ${sleepStages.inBed}min`);
             console.log(`    Awake (during sleep): ${sleepStages.awake}min`);
             console.log(`    Asleep (general): ${sleepStages.asleep}min`);
             console.log(`    Core/Light: ${sleepStages.core}min`);
             console.log(`    Deep: ${sleepStages.deep}min`);
             console.log(`    REM: ${sleepStages.rem}min`);
+            console.log(`  Verification: ${sleepStages.inBed + sleepStages.awake + sleepStages.asleep + sleepStages.core + sleepStages.deep + sleepStages.rem} = ${totalInBedMinutes}`);
 
             const sleepData = {
               // Summary metrics

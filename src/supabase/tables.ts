@@ -774,12 +774,42 @@ export type UserProfile = {
     normalized_scores: Record<string, any>;
     created_at: Date;
     updated_at: Date;
+    weight?: number;
+    height?: number;
+    bmi?: number;
+    body_fat_percentage?: number;
+    basal_metabolic_rate?: number;
+    body_temperature?: number;
+    blood_glucose?: number;
+    blood_pressure_systolic?: number;
+    blood_pressure_diastolic?: number;
+    oxygen_saturation?: number;
+    respiratory_rate?: number;
+    time_in_daylight?: number;
+    vo2_max?: number;
+    menstruation_flow?: string;
+    hydration?: number;
+    nutrition_calories?: number;
+    exercise_minutes?: number;
+    active_energy?: number;
+    distance?: number;
+    time_in_bed?: number;
+    time_asleep?: number;
+    awakenings?: number;
+    light_sleep?: number;
+    deep_sleep?: number;
+    rem_sleep?: number;
   };
 
   export const healthMetricsDailyFields = [
     'user_id', 'date', 'sleep_score', 'activity_score', 'readiness_score',
     'stress_level', 'recovery_score', 'total_steps', 'calories_burned',
-    'resting_hr', 'hrv_avg', 'native_scores', 'normalized_scores', 'created_at', 'updated_at'
+    'resting_hr', 'hrv_avg', 'native_scores', 'normalized_scores', 'weight', 'height', 'bmi',
+    'body_fat_percentage', 'basal_metabolic_rate', 'body_temperature', 'blood_glucose',
+    'blood_pressure_systolic', 'blood_pressure_diastolic', 'oxygen_saturation', 'respiratory_rate',
+    'time_in_daylight', 'vo2_max', 'menstruation_flow', 'hydration', 'nutrition_calories',
+    'exercise_minutes', 'active_energy', 'distance', 'time_in_bed', 'time_asleep', 'awakenings',
+    'light_sleep', 'deep_sleep', 'rem_sleep', 'created_at', 'updated_at'
   ] as const;
   export type HealthMetricsDailyField = (typeof healthMetricsDailyFields)[number];
 
