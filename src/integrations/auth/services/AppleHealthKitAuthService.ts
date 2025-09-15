@@ -151,7 +151,6 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       'HKQuantityTypeIdentifierHeartRate',
       'HKQuantityTypeIdentifierBodyMass',
       'HKQuantityTypeIdentifierHeight',
-      'HKQuantityTypeIdentifierBodyMassIndex',
       'HKQuantityTypeIdentifierActiveEnergyBurned',
       'HKQuantityTypeIdentifierBasalEnergyBurned',
       'HKCategoryTypeIdentifierSleepAnalysis',
@@ -341,7 +340,6 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       'heartrate': 'HKQuantityTypeIdentifierHeartRate',
       'weight': 'HKQuantityTypeIdentifierBodyMass',
       'height': 'HKQuantityTypeIdentifierHeight',
-      'bmi': 'HKQuantityTypeIdentifierBodyMassIndex',
       'activeenergy': 'HKQuantityTypeIdentifierActiveEnergyBurned',
       'activeenergyburned': 'HKQuantityTypeIdentifierActiveEnergyBurned',
       'distance': 'HKQuantityTypeIdentifierDistanceWalkingRunning',
@@ -416,7 +414,6 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       { key: 'heartRate', identifier: 'HKQuantityTypeIdentifierHeartRate' },
       { key: 'weight', identifier: 'HKQuantityTypeIdentifierBodyMass' },
       { key: 'height', identifier: 'HKQuantityTypeIdentifierHeight' },
-      { key: 'bmi', identifier: 'HKQuantityTypeIdentifierBodyMassIndex' },
     ];
 
     for (const metric of metricsToFetch) {
@@ -452,7 +449,6 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       { name: 'HeartRate', identifier: 'HKQuantityTypeIdentifierHeartRate' },
       { name: 'Weight', identifier: 'HKQuantityTypeIdentifierBodyMass' },
       { name: 'Height', identifier: 'HKQuantityTypeIdentifierHeight' },
-      { name: 'BodyMassIndex', identifier: 'HKQuantityTypeIdentifierBodyMassIndex' },
       { name: 'ActiveEnergyBurned', identifier: 'HKQuantityTypeIdentifierActiveEnergyBurned' },
       { name: 'SleepAnalysis', identifier: 'HKCategoryTypeIdentifierSleepAnalysis' },
       { name: 'BloodPressureDiastolic', identifier: 'HKQuantityTypeIdentifierBloodPressureDiastolic' },

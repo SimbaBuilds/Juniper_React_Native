@@ -63,7 +63,6 @@ export interface ActivityData {
 export interface BodyMeasurements {
   weight?: number;
   height?: number;
-  bmi?: number;
   bodyFatPercentage?: number;
   leanBodyMass?: number;
   waistCircumference?: number;
@@ -374,17 +373,6 @@ export class AppleHealthKitDataService {
       console.warn('Failed to fetch height:', error);
     }
 
-    // Get latest BMI
-    try {
-      console.log('🍎 Fetching most recent BMI sample...');
-      const bmiData = await getMostRecentQuantitySample('HKQuantityTypeIdentifierBodyMassIndex');
-      console.log('🍎 BMI sample:', bmiData);
-      if (bmiData && bmiData.quantity) {
-        measurements.bmi = bmiData.quantity;
-      }
-    } catch (error) {
-      console.warn('Failed to fetch BMI:', error);
-    }
 
     // Get latest body fat percentage
     try {
@@ -1017,12 +1005,10 @@ export class AppleHealthKitDataService {
       console.log('🍎 AppleHealthKitDataService: Checking body measurement permissions...');
       const weightStatus = authorizationStatusFor('HKQuantityTypeIdentifierBodyMass');
       const heightStatus = authorizationStatusFor('HKQuantityTypeIdentifierHeight');
-      const bmiStatus = authorizationStatusFor('HKQuantityTypeIdentifierBodyMassIndex');
-      
+
       console.log('🍎 Body measurement permissions:', {
         weight: weightStatus,
-        height: heightStatus,
-        bmi: bmiStatus
+        height: heightStatus
       });
 
       // Get latest body measurements
@@ -1031,7 +1017,7 @@ export class AppleHealthKitDataService {
       console.log('🍎 AppleHealthKitDataService: Body measurements retrieved:', body);
       if (body.weight) realtimeData.weight = body.weight;
       if (body.height) realtimeData.height = body.height;
-      if (body.bmi) realtimeData.bmi = body.bmi;
+      if (body.leanBodyMass) realtimeData.leanbodymass = body.leanBodyMass;
       if (body.bodyFatPercentage) {
         realtimeData.body_fat_percentage = body.bodyFatPercentage;
         console.log('🍎 Using body fat percentage:', body.bodyFatPercentage);
@@ -1109,13 +1095,13 @@ export class AppleHealthKitDataService {
           const timeInBedHours = sleepData.totalInBedHours;
           const timeAsleepHours = sleepData.totalSleepHours;
 
-          // Calculate awakenings (time in bed not asleep) in hours
-          const awakeningsHours = timeInBedHours - timeAsleepHours;
+          // Calculate awake time in bed (time in bed not asleep) in hours
+          const awakeInBedHours = timeInBedHours - timeAsleepHours;
 
           // Store in database schema format
           realtimeData.time_in_bed = timeInBedHours;
           realtimeData.time_asleep = timeAsleepHours;
-          realtimeData.awakenings = awakeningsHours;
+          realtimeData.awake_in_bed = awakeInBedHours;
 
           // Sleep stages (convert minutes to hours for consistency)
           // Combine core sleep and general "asleep" time as light sleep
@@ -1128,7 +1114,7 @@ export class AppleHealthKitDataService {
           console.log('🍎 Storing sleep data in new schema:');
           console.log(`  Time in Bed: ${timeInBedHours.toFixed(2)} hours`);
           console.log(`  Time Asleep: ${timeAsleepHours.toFixed(2)} hours`);
-          console.log(`  Awakenings: ${awakeningsHours.toFixed(2)} hours`);
+          console.log(`  Awake in Bed: ${awakeInBedHours.toFixed(2)} hours`);
           console.log(`  Deep Sleep: ${realtimeData.deep_sleep.toFixed(2)} hours`);
           console.log(`  REM Sleep: ${realtimeData.rem_sleep.toFixed(2)} hours`);
           console.log(`  Light Sleep: ${realtimeData.light_sleep.toFixed(2)} hours (core + asleep)`);

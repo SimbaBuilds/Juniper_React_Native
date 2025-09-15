@@ -776,7 +776,7 @@ export type UserProfile = {
     updated_at: Date;
     weight?: number;
     height?: number;
-    bmi?: number;
+    leanbodymass?: number;
     body_fat_percentage?: number;
     basal_metabolic_rate?: number;
     body_temperature?: number;
@@ -795,7 +795,7 @@ export type UserProfile = {
     distance?: number;
     time_in_bed?: number;
     time_asleep?: number;
-    awakenings?: number;
+    awake_in_bed?: number;
     light_sleep?: number;
     deep_sleep?: number;
     rem_sleep?: number;
@@ -804,11 +804,11 @@ export type UserProfile = {
   export const healthMetricsDailyFields = [
     'user_id', 'date', 'sleep_score', 'activity_score', 'readiness_score',
     'stress_level', 'recovery_score', 'total_steps', 'calories_burned',
-    'resting_hr', 'hrv_avg', 'native_scores', 'normalized_scores', 'weight', 'height', 'bmi',
+    'resting_hr', 'hrv_avg', 'native_scores', 'normalized_scores', 'weight', 'height', 'leanbodymass',
     'body_fat_percentage', 'basal_metabolic_rate', 'body_temperature', 'blood_glucose',
     'blood_pressure_systolic', 'blood_pressure_diastolic', 'oxygen_saturation', 'respiratory_rate',
     'time_in_daylight', 'vo2_max', 'menstruation_flow', 'hydration', 'nutrition_calories',
-    'exercise_minutes', 'active_energy', 'distance', 'time_in_bed', 'time_asleep', 'awakenings',
+    'exercise_minutes', 'active_energy', 'distance', 'time_in_bed', 'time_asleep', 'awake_in_bed',
     'light_sleep', 'deep_sleep', 'rem_sleep', 'created_at', 'updated_at'
   ] as const;
   export type HealthMetricsDailyField = (typeof healthMetricsDailyFields)[number];
@@ -913,7 +913,7 @@ export type UserProfile = {
     heartrate?: number;
     weight?: number;
     height?: number;
-    bmi?: number;
+    leanbodymass?: number;
     activeenergy?: number;
     distance?: number;
     bloodglucose?: number;
@@ -932,18 +932,18 @@ export type UserProfile = {
     body_fat_percentage?: number;
     time_in_bed?: number;
     time_asleep?: number;
-    awakenings?: number;
+    awake_in_bed?: number;
     light_sleep?: number;
     deep_sleep?: number;
     rem_sleep?: number;
   };
 
   export const appleHealthRealtimeFields = [
-    'user_id', 'integration_id', 'steps', 'heartrate', 'weight', 'height', 'bmi',
+    'user_id', 'integration_id', 'steps', 'heartrate', 'weight', 'height',
     'activeenergy', 'distance', 'bloodglucose', 'oxygensaturation', 'restingheartrate',
     'bloodpressure_systolic', 'bloodpressure_diastolic', 'respiratoryrate', 'timeindaylight',
-    'hrv', 'menstruation', 'v02_max', 'body_fat_percentage', 'time_in_bed', 'time_asleep',
-    'awakenings', 'light_sleep', 'deep_sleep', 'rem_sleep', 'last_sync_at', 'created_at', 'updated_at'
+    'hrv', 'menstruation', 'v02_max', 'body_fat_percentage', 'leanbodymass', 'time_in_bed', 'time_asleep',
+    'awake_in_bed', 'light_sleep', 'deep_sleep', 'rem_sleep', 'last_sync_at', 'created_at', 'updated_at'
   ] as const;
   export type AppleHealthRealtimeField = (typeof appleHealthRealtimeFields)[number];
 
