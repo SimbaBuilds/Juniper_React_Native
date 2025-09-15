@@ -34,21 +34,27 @@ export class HealthSyncService {
   /**
    * Sync health data for the current user
    */
-  async syncHealthData(userId: string): Promise<HealthSyncResult> {
+  async syncHealthData(userId: string, bypassDebounce: boolean = false): Promise<HealthSyncResult> {
     try {
       console.log('🏥 HealthSync: Starting health data sync for user:', userId);
 
-      // Check debounce
+      // Get current time for sync tracking
       const now = Date.now();
-      const lastSync = this.lastSyncTime[userId] || 0;
-      if (now - lastSync < this.SYNC_DEBOUNCE_MS) {
-        console.log('🏥 HealthSync: Debounced - too soon since last sync');
-        return {
-          success: true,
-          platform: Platform.OS as 'ios' | 'android',
-          synced: false,
-          error: 'Debounced - too soon since last sync'
-        };
+
+      // Check debounce (unless bypassed for critical syncs like post-auth)
+      if (!bypassDebounce) {
+        const lastSync = this.lastSyncTime[userId] || 0;
+        if (now - lastSync < this.SYNC_DEBOUNCE_MS) {
+          console.log('🏥 HealthSync: Debounced - too soon since last sync');
+          return {
+            success: true,
+            platform: Platform.OS as 'ios' | 'android',
+            synced: false,
+            error: 'Debounced - too soon since last sync'
+          };
+        }
+      } else {
+        console.log('🏥 HealthSync: Bypassing debounce for critical sync');
       }
 
       // Update sync time

@@ -1,1 +1,1 @@
-Right now, Juniper open by default settings are opened on both first app launch and a check is run before Oauth flows.  This is redundant, please remove the first launch flow and dialog.
+Gotcha.  The most important integration will actually be from native Health Connect and Google Watch data not Fitbit -- please make sure heart rate data and other data can be fetched from those sources.

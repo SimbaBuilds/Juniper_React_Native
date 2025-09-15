@@ -134,16 +134,17 @@ export class GoogleFitAuthService extends BaseOAuthService {
         await this.storeTokens(authResult, integrationId);
         await this.saveIntegrationToSupabase(authResult, integrationId);
         await this.completeIntegration(authResult, integrationId);
-        
+
         console.log('✅ Health Connect permissions granted successfully');
         await this.notifyAuthCallbacks(integrationId);
 
-        // Trigger immediate health data sync after successful authentication
+        // Trigger immediate health data sync after all database operations complete
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
             console.log('🔄 Health Connect: Triggering immediate health sync after auth...');
-            const syncResult = await HealthSyncService.getInstance().syncHealthData(user.id);
+            // Use bypassDebounce=true for post-auth sync to ensure it runs immediately
+            const syncResult = await HealthSyncService.getInstance().syncHealthData(user.id, true);
             console.log('🔄 Health Connect: Post-auth sync result:', syncResult);
           }
         } catch (syncError) {

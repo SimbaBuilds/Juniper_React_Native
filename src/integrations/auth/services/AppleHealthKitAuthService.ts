@@ -114,16 +114,17 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
         await this.storeTokens(authResult, integrationId);
         await this.saveIntegrationToSupabase(authResult, integrationId);
         await this.completeIntegration(authResult, integrationId);
-        
+
         console.log('✅ Apple HealthKit permissions granted successfully');
         await this.notifyAuthCallbacks(integrationId);
 
-        // Trigger immediate health data sync after successful authentication
+        // Trigger immediate health data sync after all database operations complete
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
             console.log('🔄 Apple Health: Triggering immediate health sync after auth...');
-            const syncResult = await HealthSyncService.getInstance().syncHealthData(user.id);
+            // Use bypassDebounce=true for post-auth sync to ensure it runs immediately
+            const syncResult = await HealthSyncService.getInstance().syncHealthData(user.id, true);
             console.log('🔄 Apple Health: Post-auth sync result:', syncResult);
           }
         } catch (syncError) {
