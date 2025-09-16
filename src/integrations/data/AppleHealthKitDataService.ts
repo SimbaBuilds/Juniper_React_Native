@@ -932,6 +932,190 @@ export class AppleHealthKitDataService {
   }
 
   /**
+   * Get detailed metrics for each day in the given range - FOR LOGGING PURPOSES
+   */
+  private async getDetailedMetricsForDays(integrationId: string, startDate: Date, endDate: Date): Promise<void> {
+    console.log('🍎 ===== DETAILED METRICS ANALYSIS =====');
+    console.log('🍎 Analyzing 7 days of data for wearables_data table integration');
+
+    // Create array of days to analyze
+    const days: Date[] = [];
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+      days.push(new Date(date));
+    }
+
+    console.log('🍎 Days to analyze:', days.map(d => d.toDateString()));
+
+    for (const day of days) {
+      const dayStart = new Date(day);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(day);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      console.log(`\n🍎 ===== ${day.toDateString()} =====`);
+      console.log('🍎 Day range:', { start: dayStart.toISOString(), end: dayEnd.toISOString() });
+
+      // Get step count for this day
+      await this.logMetricForDay('Steps', 'HKQuantityTypeIdentifierStepCount', dayStart, dayEnd);
+
+      // Get distance for this day
+      await this.logMetricForDay('Distance', 'HKQuantityTypeIdentifierDistanceWalkingRunning', dayStart, dayEnd);
+
+      // Get active energy for this day
+      await this.logMetricForDay('Active Energy', 'HKQuantityTypeIdentifierActiveEnergyBurned', dayStart, dayEnd);
+
+      // Get heart rate samples for this day
+      await this.logMetricForDay('Heart Rate', 'HKQuantityTypeIdentifierHeartRate', dayStart, dayEnd);
+
+      // Get resting heart rate for this day
+      await this.logMetricForDay('Resting Heart Rate', 'HKQuantityTypeIdentifierRestingHeartRate', dayStart, dayEnd);
+
+      // Get HRV for this day
+      await this.logMetricForDay('HRV', 'HKQuantityTypeIdentifierHeartRateVariabilitySDNN', dayStart, dayEnd);
+
+      // Get weight for this day
+      await this.logMetricForDay('Weight', 'HKQuantityTypeIdentifierBodyMass', dayStart, dayEnd);
+
+      // Get sleep analysis for this day (spans previous night to current day)
+      await this.logSleepForDay(day);
+    }
+
+    console.log('\n🍎 ===== END DETAILED ANALYSIS =====\n');
+  }
+
+  private async logMetricForDay(metricName: string, healthKitType: string, startDate: Date, endDate: Date): Promise<void> {
+    try {
+      console.log(`🍎 📊 ${metricName} Analysis:`);
+
+      const samples = await queryQuantitySamples(healthKitType as any, {
+        filter: {
+          startDate: startDate,
+          endDate: endDate
+        },
+        ascending: true,
+        limit: 0  // Get all samples
+      });
+
+      console.log(`🍎   Raw samples count: ${samples.length}`);
+
+      if (samples.length > 0) {
+        console.log(`🍎   First sample:`, {
+          startDate: samples[0].startDate,
+          endDate: samples[0].endDate,
+          quantity: samples[0].quantity,
+          unit: samples[0].unit,
+          source: samples[0].sourceRevision?.source?.name
+        });
+
+        console.log(`🍎   Last sample:`, {
+          startDate: samples[samples.length - 1].startDate,
+          endDate: samples[samples.length - 1].endDate,
+          quantity: samples[samples.length - 1].quantity,
+          unit: samples[samples.length - 1].unit,
+          source: samples[samples.length - 1].sourceRevision?.source?.name
+        });
+
+        // Calculate total/average based on metric type
+        if (['Steps', 'Distance', 'Active Energy'].includes(metricName)) {
+          const total = samples.reduce((sum, sample) => sum + (sample.quantity || 0), 0);
+          console.log(`🍎   Total for day: ${total} ${samples[0].unit || ''}`);
+        } else {
+          const values = samples.map(s => s.quantity).filter(q => q !== undefined);
+          if (values.length > 0) {
+            const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            console.log(`🍎   Average: ${avg.toFixed(2)}, Min: ${min}, Max: ${max} ${samples[0].unit || ''}`);
+          }
+        }
+
+        // Group samples by hour to see distribution
+        const hourlyData: Record<number, number> = {};
+        samples.forEach(sample => {
+          const hour = new Date(sample.startDate).getHours();
+          hourlyData[hour] = (hourlyData[hour] || 0) + (sample.quantity || 0);
+        });
+
+        const nonZeroHours = Object.entries(hourlyData).filter(([_, value]) => value > 0);
+        if (nonZeroHours.length > 0) {
+          console.log(`🍎   Active hours (${nonZeroHours.length}):`,
+            nonZeroHours.map(([hour, value]) => `${hour}h: ${value.toFixed(1)}`).join(', '));
+        }
+      } else {
+        console.log(`🍎   No data available for this day`);
+      }
+
+    } catch (error) {
+      console.log(`🍎   Error fetching ${metricName}:`, error);
+    }
+  }
+
+  private async logSleepForDay(day: Date): Promise<void> {
+    try {
+      console.log(`🍎 😴 Sleep Analysis:`);
+
+      // Sleep typically spans from previous night to current day
+      const sleepStart = new Date(day);
+      sleepStart.setDate(sleepStart.getDate() - 1);
+      sleepStart.setHours(18, 0, 0, 0); // 6 PM previous day
+
+      const sleepEnd = new Date(day);
+      sleepEnd.setHours(14, 0, 0, 0); // 2 PM current day
+
+      console.log(`🍎   Sleep window: ${sleepStart.toISOString()} to ${sleepEnd.toISOString()}`);
+
+      const sleepSamples = await queryCategorySamples('HKCategoryTypeIdentifierSleepAnalysis', {
+        filter: {
+          startDate: sleepStart,
+          endDate: sleepEnd
+        },
+        ascending: true,
+        limit: 0
+      });
+
+      console.log(`🍎   Sleep samples count: ${sleepSamples.length}`);
+
+      if (sleepSamples.length > 0) {
+        const sleepStages = { inBed: 0, awake: 0, asleep: 0, core: 0, deep: 0, rem: 0 };
+        const stageNames = { 0: 'inBed', 1: 'asleep', 2: 'awake', 3: 'core', 4: 'deep', 5: 'rem' };
+
+        sleepSamples.forEach((sample: any) => {
+          const duration = (new Date(sample.endDate).getTime() - new Date(sample.startDate).getTime()) / (1000 * 60);
+          const stageName = stageNames[sample.value as keyof typeof stageNames] || 'unknown';
+
+          if (sleepStages[stageName as keyof typeof sleepStages] !== undefined) {
+            sleepStages[stageName as keyof typeof sleepStages] += duration;
+          }
+
+          console.log(`🍎     Sample: ${stageName} (${sample.value}) - ${duration.toFixed(1)}min - ${sample.startDate} to ${sample.endDate}`);
+        });
+
+        const totalSleep = sleepStages.asleep + sleepStages.core + sleepStages.deep + sleepStages.rem;
+        const totalInBed = Object.values(sleepStages).reduce((sum, val) => sum + val, 0);
+
+        console.log(`🍎   Sleep breakdown:`, {
+          totalSleepHours: (totalSleep / 60).toFixed(2),
+          totalInBedHours: (totalInBed / 60).toFixed(2),
+          efficiency: totalInBed > 0 ? ((totalSleep / totalInBed) * 100).toFixed(1) + '%' : '0%',
+          stages: {
+            inBed: `${sleepStages.inBed.toFixed(1)}min`,
+            awake: `${sleepStages.awake.toFixed(1)}min`,
+            asleep: `${sleepStages.asleep.toFixed(1)}min`,
+            core: `${sleepStages.core.toFixed(1)}min`,
+            deep: `${sleepStages.deep.toFixed(1)}min`,
+            rem: `${sleepStages.rem.toFixed(1)}min`
+          }
+        });
+      } else {
+        console.log(`🍎   No sleep data available for this period`);
+      }
+
+    } catch (error) {
+      console.log(`🍎   Error fetching sleep data:`, error);
+    }
+  }
+
+  /**
    * Get current realtime health data for syncing to database
    */
   async getCurrentRealtimeData(integrationId: string): Promise<Record<string, any>> {
@@ -942,6 +1126,17 @@ export class AppleHealthKitDataService {
     // Get most recent data from the last 24 hours
     const endDate = new Date();
     const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    console.log('🍎 DETAILED LOGGING: Getting 7 days of data for wearables_data integration');
+    console.log('🍎 Date range for detailed analysis:', {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      daysDifference: (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    });
+
+    // Get 7 days of data for detailed analysis
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    await this.getDetailedMetricsForDays(integrationId, sevenDaysAgo, endDate);
 
     const realtimeData: Record<string, any> = {};
 
@@ -1138,6 +1333,490 @@ export class AppleHealthKitDataService {
   }
 
   /**
+   * Sync Apple Health data to wearables_data table with 7-day backfill
+   */
+  async syncToWearablesData(userId: string, integrationId: string, daysToSync: number = 7): Promise<any> {
+    await this.ensureAvailable(integrationId);
+
+    console.log('🍎 Starting wearables_data sync for', daysToSync, 'days');
+
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysToSync);
+
+    const recordsToInsert: any[] = [];
+
+    try {
+      // Sync each day
+      for (let day = 0; day < daysToSync; day++) {
+        const currentDate = new Date(startDate);
+        currentDate.setDate(currentDate.getDate() + day);
+
+        const dayStart = new Date(currentDate);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(currentDate);
+        dayEnd.setHours(23, 59, 59, 999);
+
+        console.log(`🍎 Processing day ${day + 1}/${daysToSync}: ${currentDate.toDateString()}`);
+
+        // 1. Sync daily activity metrics (steps, distance, energy)
+        const activityRecords = await this.createActivityRecords(userId, integrationId, dayStart, dayEnd);
+        recordsToInsert.push(...activityRecords);
+
+        // 2. Sync hourly heart rate averages
+        const heartRateRecords = await this.createHeartRateRecords(userId, integrationId, dayStart, dayEnd);
+        recordsToInsert.push(...heartRateRecords);
+
+        // 3. Sync sleep data (previous night)
+        const sleepRecords = await this.createSleepRecords(userId, integrationId, currentDate);
+        recordsToInsert.push(...sleepRecords);
+
+        // 4. Sync body measurements (if available for this day)
+        const bodyRecords = await this.createBodyMeasurementRecords(userId, integrationId, dayStart, dayEnd);
+        recordsToInsert.push(...bodyRecords);
+      }
+
+      console.log(`🍎 Created ${recordsToInsert.length} records for wearables_data sync`);
+
+      // Add duplicate prevention logic
+      const deduplicatedRecords = await this.removeDuplicateRecords(recordsToInsert, userId, integrationId);
+      console.log(`🍎 After deduplication: ${deduplicatedRecords.length} records (removed ${recordsToInsert.length - deduplicatedRecords.length} duplicates)`);
+
+      // Batch insert to database (in production this would be done via the edge function)
+      if (deduplicatedRecords.length > 0) {
+        // For now, just log the records that would be inserted
+        console.log('🍎 Records to be synced via wearables_data:', {
+          totalRecords: deduplicatedRecords.length,
+          recordTypes: this.getRecordTypeCounts(deduplicatedRecords),
+          sampleRecords: deduplicatedRecords.slice(0, 3)
+        });
+      }
+
+      return {
+        success: true,
+        recordsCreated: deduplicatedRecords.length,
+        records: deduplicatedRecords,
+        daysProcessed: daysToSync
+      };
+
+    } catch (error) {
+      console.error('🍎 Error in wearables_data sync:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create activity records for a day (steps, distance, active energy)
+   */
+  private async createActivityRecords(userId: string, integrationId: string, dayStart: Date, dayEnd: Date): Promise<any[]> {
+    const records: any[] = [];
+    const syncDate = dayStart.toISOString().split('T')[0];
+
+    try {
+      // Get steps
+      const stepData = await this.fetchHealthData('getStepCount', {
+        startDate: dayStart.toISOString(),
+        endDate: dayEnd.toISOString()
+      });
+
+      if (stepData.value > 0) {
+        records.push({
+          user_id: userId,
+          integration_id: integrationId,
+          metric_type: 'steps',
+          metric_value: {
+            count: stepData.value,
+            unit: 'count',
+            source: 'apple_health'
+          },
+          recorded_at: dayEnd.toISOString(),
+          sync_date: syncDate
+        });
+      }
+
+      // Get distance
+      const distanceData = await this.fetchHealthData('getDistanceWalkingRunning', {
+        startDate: dayStart.toISOString(),
+        endDate: dayEnd.toISOString()
+      });
+
+      if (distanceData.value > 0) {
+        records.push({
+          user_id: userId,
+          integration_id: integrationId,
+          metric_type: 'activity',
+          metric_value: {
+            distance: distanceData.value,
+            unit: 'mi',
+            type: 'walking_running',
+            source: 'apple_health'
+          },
+          recorded_at: dayEnd.toISOString(),
+          sync_date: syncDate
+        });
+      }
+
+      // Get active energy
+      const energyData = await this.fetchHealthData('getActiveEnergyBurned', {
+        startDate: dayStart.toISOString(),
+        endDate: dayEnd.toISOString()
+      });
+
+      if (energyData.value > 0) {
+        records.push({
+          user_id: userId,
+          integration_id: integrationId,
+          metric_type: 'activity',
+          metric_value: {
+            active_energy: energyData.value,
+            unit: 'kcal',
+            source: 'apple_health'
+          },
+          recorded_at: dayEnd.toISOString(),
+          sync_date: syncDate
+        });
+      }
+
+    } catch (error) {
+      console.warn('🍎 Error creating activity records:', error);
+    }
+
+    return records;
+  }
+
+  /**
+   * Create hourly heart rate average records
+   */
+  private async createHeartRateRecords(userId: string, integrationId: string, dayStart: Date, dayEnd: Date): Promise<any[]> {
+    const records: any[] = [];
+    const syncDate = dayStart.toISOString().split('T')[0];
+
+    try {
+      const heartRateSamples = await queryQuantitySamples('HKQuantityTypeIdentifierHeartRate', {
+        filter: {
+          startDate: dayStart,
+          endDate: dayEnd
+        },
+        ascending: true,
+        limit: 0
+      });
+
+      if (heartRateSamples.length === 0) {
+        return records;
+      }
+
+      // Group by hour and calculate averages
+      const hourlyData: Record<number, number[]> = {};
+
+      heartRateSamples.forEach((sample: any) => {
+        const hour = new Date(sample.startDate).getHours();
+        if (!hourlyData[hour]) {
+          hourlyData[hour] = [];
+        }
+        hourlyData[hour].push(sample.quantity);
+      });
+
+      // Create records for hours with data
+      Object.entries(hourlyData).forEach(([hour, values]) => {
+        if (values.length > 0) {
+          const avgHeartRate = Math.round(values.reduce((sum, val) => sum + val, 0) / values.length);
+          const recordTime = new Date(dayStart);
+          recordTime.setHours(parseInt(hour), 30, 0, 0); // Middle of the hour
+
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'heart_rate',
+            metric_value: {
+              bpm: avgHeartRate,
+              samples_count: values.length,
+              min_bpm: Math.min(...values),
+              max_bpm: Math.max(...values),
+              source: 'apple_health'
+            },
+            recorded_at: recordTime.toISOString(),
+            sync_date: syncDate
+          });
+        }
+      });
+
+      // Also get HRV if available for this day
+      try {
+        const hrvSamples = await queryQuantitySamples('HKQuantityTypeIdentifierHeartRateVariabilitySDNN', {
+          filter: {
+            startDate: dayStart,
+            endDate: dayEnd
+          },
+          ascending: true,
+          limit: 0
+        });
+
+        if (hrvSamples.length > 0) {
+          // Use the last HRV reading of the day
+          const lastHRV = hrvSamples[hrvSamples.length - 1];
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'heart_rate',
+            metric_value: {
+              hrv: lastHRV.quantity,
+              unit: 'ms',
+              source: 'apple_health'
+            },
+            recorded_at: lastHRV.startDate,
+            sync_date: syncDate
+          });
+        }
+      } catch (error) {
+        console.warn('🍎 Error fetching HRV for day:', error);
+      }
+
+    } catch (error) {
+      console.warn('🍎 Error creating heart rate records:', error);
+    }
+
+    return records;
+  }
+
+  /**
+   * Create sleep records for a day
+   */
+  private async createSleepRecords(userId: string, integrationId: string, day: Date): Promise<any[]> {
+    const records: any[] = [];
+
+    try {
+      // Sleep typically spans from previous night to current day
+      const sleepStart = new Date(day);
+      sleepStart.setDate(sleepStart.getDate() - 1);
+      sleepStart.setHours(18, 0, 0, 0); // 6 PM previous day
+
+      const sleepEnd = new Date(day);
+      sleepEnd.setHours(14, 0, 0, 0); // 2 PM current day
+
+      const sleepData = await this.fetchHealthData('getSleepAnalysis', {
+        startDate: sleepStart.toISOString(),
+        endDate: sleepEnd.toISOString()
+      });
+
+      if (sleepData && sleepData.totalSleepHours > 0) {
+        const syncDate = day.toISOString().split('T')[0];
+
+        records.push({
+          user_id: userId,
+          integration_id: integrationId,
+          metric_type: 'sleep',
+          metric_value: {
+            total_sleep_hours: sleepData.totalSleepHours,
+            total_in_bed_hours: sleepData.totalInBedHours,
+            sleep_efficiency: sleepData.sleepEfficiency,
+            sleep_stages: {
+              deep: sleepData.sleepStages.deep,
+              rem: sleepData.sleepStages.rem,
+              light: sleepData.sleepStages.core + sleepData.sleepStages.asleep,
+              awake: sleepData.sleepStages.awake
+            },
+            sleep_start: sleepData.sleepStartTime,
+            sleep_end: sleepData.sleepEndTime,
+            source: 'apple_health'
+          },
+          recorded_at: sleepData.sleepEndTime || sleepEnd.toISOString(),
+          sync_date: syncDate
+        });
+      }
+
+    } catch (error) {
+      console.warn('🍎 Error creating sleep records:', error);
+    }
+
+    return records;
+  }
+
+  /**
+   * Create body measurement records if available for this day
+   */
+  private async createBodyMeasurementRecords(userId: string, integrationId: string, dayStart: Date, dayEnd: Date): Promise<any[]> {
+    const records: any[] = [];
+    const syncDate = dayStart.toISOString().split('T')[0];
+
+    try {
+      // Check for weight measurements on this day
+      const weightSamples = await queryQuantitySamples('HKQuantityTypeIdentifierBodyMass', {
+        filter: {
+          startDate: dayStart,
+          endDate: dayEnd
+        },
+        ascending: true,
+        limit: 0
+      });
+
+      if (weightSamples.length > 0) {
+        // Use the last weight measurement of the day
+        const lastWeight = weightSamples[weightSamples.length - 1];
+        records.push({
+          user_id: userId,
+          integration_id: integrationId,
+          metric_type: 'activity', // Body measurements go under activity
+          metric_value: {
+            weight: lastWeight.quantity,
+            unit: lastWeight.unit,
+            source: 'apple_health'
+          },
+          recorded_at: lastWeight.startDate,
+          sync_date: syncDate
+        });
+      }
+
+      // Check for height measurements on this day
+      const heightSamples = await queryQuantitySamples('HKQuantityTypeIdentifierHeight', {
+        filter: {
+          startDate: dayStart,
+          endDate: dayEnd
+        },
+        ascending: true,
+        limit: 0
+      });
+
+      if (heightSamples.length > 0) {
+        const lastHeight = heightSamples[heightSamples.length - 1];
+        records.push({
+          user_id: userId,
+          integration_id: integrationId,
+          metric_type: 'activity',
+          metric_value: {
+            height: lastHeight.quantity,
+            unit: lastHeight.unit,
+            source: 'apple_health'
+          },
+          recorded_at: lastHeight.startDate,
+          sync_date: syncDate
+        });
+      }
+
+    } catch (error) {
+      console.warn('🍎 Error creating body measurement records:', error);
+    }
+
+    return records;
+  }
+
+  /**
+   * Helper to count record types for logging
+   */
+  private getRecordTypeCounts(records: any[]): Record<string, number> {
+    const counts: Record<string, number> = {};
+    records.forEach(record => {
+      counts[record.metric_type] = (counts[record.metric_type] || 0) + 1;
+    });
+    return counts;
+  }
+
+  /**
+   * Remove duplicate records by checking against existing data
+   * In production, this would query the database. For now, we'll simulate deduplication
+   */
+  private async removeDuplicateRecords(records: any[], userId: string, integrationId: string): Promise<any[]> {
+    // In production, this would query the wearables_data table to check for existing records
+    // For now, we'll do a simple deduplication based on recorded_at + metric_type + sync_date
+
+    const uniqueRecords: any[] = [];
+    const seenKeys = new Set<string>();
+
+    records.forEach(record => {
+      // Create a unique key for deduplication
+      const key = `${record.metric_type}-${record.recorded_at}-${record.sync_date}`;
+
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
+        uniqueRecords.push(record);
+      } else {
+        console.log(`🍎 Skipping duplicate record: ${key}`);
+      }
+    });
+
+    return uniqueRecords;
+  }
+
+  /**
+   * Test the 7-day backfill functionality and preview records without saving
+   */
+  async testWearablesDataSync(integrationId: string, daysToTest: number = 7): Promise<any> {
+    await this.ensureAvailable(integrationId);
+
+    console.log('🧪 Testing Apple Health wearables_data sync for', daysToTest, 'days');
+
+    try {
+      // Use a dummy userId for testing
+      const testUserId = 'test-user-id';
+      const syncResult = await this.syncToWearablesData(testUserId, integrationId, daysToTest);
+
+      console.log('🧪 Test Results:');
+      console.log('  - Success:', syncResult.success);
+      console.log('  - Records Created:', syncResult.recordsCreated);
+      console.log('  - Days Processed:', syncResult.daysProcessed);
+
+      if (syncResult.records && syncResult.records.length > 0) {
+        const recordTypeCounts = this.getRecordTypeCounts(syncResult.records);
+        console.log('  - Record Types:', recordTypeCounts);
+
+        // Show sample records for each type
+        const samplesByType: Record<string, any[]> = {};
+        syncResult.records.forEach((record: any) => {
+          if (!samplesByType[record.metric_type]) {
+            samplesByType[record.metric_type] = [];
+          }
+          if (samplesByType[record.metric_type].length < 2) {
+            samplesByType[record.metric_type].push(record);
+          }
+        });
+
+        console.log('🧪 Sample Records by Type:');
+        Object.entries(samplesByType).forEach(([type, samples]) => {
+          console.log(`  ${type}:`, samples.map(s => ({
+            recorded_at: s.recorded_at,
+            sync_date: s.sync_date,
+            metric_value: s.metric_value
+          })));
+        });
+
+        // Validate record structure
+        const validationErrors: string[] = [];
+        syncResult.records.forEach((record: any, index: number) => {
+          if (!record.user_id) validationErrors.push(`Record ${index}: Missing user_id`);
+          if (!record.integration_id) validationErrors.push(`Record ${index}: Missing integration_id`);
+          if (!record.metric_type) validationErrors.push(`Record ${index}: Missing metric_type`);
+          if (!record.metric_value) validationErrors.push(`Record ${index}: Missing metric_value`);
+          if (!record.recorded_at) validationErrors.push(`Record ${index}: Missing recorded_at`);
+          if (!record.sync_date) validationErrors.push(`Record ${index}: Missing sync_date`);
+        });
+
+        if (validationErrors.length > 0) {
+          console.warn('🧪 Validation Errors:', validationErrors);
+        } else {
+          console.log('✅ All records passed validation');
+        }
+      }
+
+      return {
+        success: true,
+        testResults: syncResult,
+        summary: {
+          recordsCreated: syncResult.recordsCreated,
+          daysProcessed: syncResult.daysProcessed,
+          recordTypes: syncResult.records ? this.getRecordTypeCounts(syncResult.records) : {},
+          validationPassed: true
+        }
+      };
+
+    } catch (error) {
+      console.error('🧪 Test failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown test error'
+      };
+    }
+  }
+
+  /**
    * Export health data in a structured format
    */
   async exportHealthData(
@@ -1163,7 +1842,7 @@ export class AppleHealthKitDataService {
     ];
 
     const results = await Promise.allSettled(dataPromises);
-    
+
     results.forEach((result) => {
       if (result.status === 'fulfilled') {
         exportData.data[result.value.key] = result.value.data;

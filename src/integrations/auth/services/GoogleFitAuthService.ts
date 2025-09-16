@@ -138,17 +138,34 @@ export class GoogleFitAuthService extends BaseOAuthService {
         console.log('✅ Health Connect permissions granted successfully');
         await this.notifyAuthCallbacks(integrationId);
 
-        // Trigger immediate health data sync after all database operations complete
+        // Trigger health-data-sync edge function for 7-day backfill
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            console.log('🔄 Health Connect: Triggering immediate health sync after auth...');
-            // Use bypassDebounce=true for post-auth sync to ensure it runs immediately
-            const syncResult = await HealthSyncService.getInstance().syncHealthData(user.id, true);
-            console.log('🔄 Health Connect: Post-auth sync result:', syncResult);
+            console.log('🔄 Health Connect: Triggering health-data-sync edge function...');
+            const response = await fetch('https://ydbabipbxxleeiiysojv.supabase.co/functions/v1/health-data-sync', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+              },
+              body: JSON.stringify({
+                action: 'backfill',
+                user_id: user.id,
+                service_name: 'Google Health Connect',
+                days: 7
+              })
+            });
+
+            if (!response.ok) {
+              throw new Error(`Health data sync request failed: ${response.status} ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            console.log('✅ Health Connect: Health-data-sync edge function completed:', result);
           }
         } catch (syncError) {
-          console.warn('⚠️ Health Connect: Post-auth sync failed (auth still successful):', syncError);
+          console.warn('⚠️ Health Connect: Health-data-sync edge function failed (auth still successful):', syncError);
         }
 
         return authResult;

@@ -8,6 +8,7 @@ import {
   TimeRangeFilter,
   SdkAvailabilityStatus
 } from 'react-native-health-connect';
+import { supabase } from '../../supabase/supabase';
 
 export interface GoogleHealthData {
   active_calories_burned?: number;
@@ -32,6 +33,15 @@ export interface GoogleHealthData {
   weight?: number;
 }
 
+export interface WearablesDataRecord {
+  user_id: string;
+  integration_id: string;
+  metric_type: string;
+  metric_value: Record<string, any>;
+  recorded_at: string;
+  sync_date: string;
+}
+
 /**
  * Google Health Connect Data Service
  * Handles fetching health data from Google Health Connect on Android
@@ -53,6 +63,7 @@ export class GoogleHealthConnectDataService {
 
   /**
    * Get current realtime health data for syncing to database
+   * DEPRECATED: Use syncToWearablesData instead for better data management
    */
   async getCurrentRealtimeData(integrationId: string): Promise<Record<string, any>> {
     if (Platform.OS !== 'android') {
@@ -70,19 +81,24 @@ export class GoogleHealthConnectDataService {
         console.error('🤖 Failed to initialize Health Connect client:', error);
         throw error;
       }
+
       // Get today's date range (local timezone)
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
       todayStart.setMilliseconds(0);
-      
+
       const todayEnd = new Date();
-      
-      console.log('🤖 Date range (local):', {
-        start: todayStart.toString(),
-        end: todayEnd.toString(),
-        startISO: todayStart.toISOString(),
-        endISO: todayEnd.toISOString()
+
+      console.log('🤖 DETAILED LOGGING: Getting 7 days of data for wearables_data integration');
+      console.log('🤖 Date range for detailed analysis:', {
+        startDate: todayStart.toISOString(),
+        endDate: todayEnd.toISOString(),
+        daysDifference: (todayEnd.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24)
       });
+
+      // Get 7 days of data for detailed analysis
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      await this.getDetailedMetricsForDays(integrationId, sevenDaysAgo, todayEnd);
 
       const realtimeData: Record<string, any> = {};
 
@@ -152,6 +168,892 @@ export class GoogleHealthConnectDataService {
     } catch (error) {
       console.error('🤖 GoogleHealthConnectDataService: Error fetching realtime data:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Sync health data to wearables_data table with 7-day backfill
+   */
+  async syncToWearablesData(userId: string, integrationId: string, daysToSync: number = 7): Promise<void> {
+    if (Platform.OS !== 'android') {
+      throw new Error('Google Health Connect is only available on Android');
+    }
+
+    console.log('🤖 GoogleHealthConnectDataService: Starting wearables_data sync');
+    console.log(`🤖 Syncing ${daysToSync} days of data for user ${userId}, integration ${integrationId}`);
+
+    try {
+      // Initialize Health Connect client
+      try {
+        await initialize();
+        console.log('🤖 Health Connect client initialized successfully for wearables sync');
+      } catch (error) {
+        console.error('🤖 Failed to initialize Health Connect client for wearables sync:', error);
+        throw error;
+      }
+
+      // Calculate date range for sync
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - daysToSync);
+      startDate.setHours(0, 0, 0, 0);
+
+      console.log(`🤖 Syncing data from ${startDate.toISOString()} to ${endDate.toISOString()}`);
+
+      const allRecords: WearablesDataRecord[] = [];
+
+      // Sync different metric types
+      const heartRateRecords = await this.syncHeartRateData(userId, integrationId, startDate, endDate);
+      allRecords.push(...heartRateRecords);
+
+      const activityRecords = await this.syncActivityData(userId, integrationId, startDate, endDate);
+      allRecords.push(...activityRecords);
+
+      const sleepRecords = await this.syncSleepData(userId, integrationId, startDate, endDate);
+      allRecords.push(...sleepRecords);
+
+      const bodyRecords = await this.syncBodyMeasurements(userId, integrationId, startDate, endDate);
+      allRecords.push(...bodyRecords);
+
+      const nutritionRecords = await this.syncNutritionData(userId, integrationId, startDate, endDate);
+      allRecords.push(...nutritionRecords);
+
+      const vitalRecords = await this.syncVitalSigns(userId, integrationId, startDate, endDate);
+      allRecords.push(...vitalRecords);
+
+      console.log(`🤖 Total records to sync: ${allRecords.length}`);
+
+      // Batch insert records with duplicate prevention
+      if (allRecords.length > 0) {
+        await this.batchInsertWearablesData(allRecords);
+      }
+
+      console.log('✅ Wearables data sync completed successfully');
+
+    } catch (error) {
+      console.error('🤖 Error during wearables data sync:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Sync heart rate data (hourly samples)
+   */
+  private async syncHeartRateData(userId: string, integrationId: string, startDate: Date, endDate: Date): Promise<WearablesDataRecord[]> {
+    console.log('🤖 Syncing heart rate data...');
+    const records: WearablesDataRecord[] = [];
+
+    try {
+      const timeRangeFilter: TimeRangeFilter = {
+        operator: 'between',
+        startTime: startDate.toISOString(),
+        endTime: endDate.toISOString(),
+      };
+
+      const heartRateRecords = await this.readHealthConnectRecords('HeartRate', timeRangeFilter);
+
+      if (heartRateRecords && heartRateRecords.length > 0) {
+        // Group by hour and take average
+        const hourlyData = this.groupRecordsByHour(heartRateRecords, 'beatsPerMinute');
+
+        for (const [hourKey, samples] of Object.entries(hourlyData)) {
+          if (samples.length > 0) {
+            const avgBpm = samples.reduce((sum, val) => sum + val.value, 0) / samples.length;
+            const timestamp = new Date(hourKey);
+
+            records.push({
+              user_id: userId,
+              integration_id: integrationId,
+              metric_type: 'heart_rate',
+              metric_value: {
+                bpm: Math.round(avgBpm),
+                source: samples[0].source,
+                sample_count: samples.length,
+                min_bpm: Math.min(...samples.map(s => s.value)),
+                max_bpm: Math.max(...samples.map(s => s.value)),
+                timestamp: timestamp.toISOString()
+              },
+              recorded_at: timestamp.toISOString(),
+              sync_date: timestamp.toISOString().split('T')[0]
+            });
+          }
+        }
+      }
+
+      console.log(`🤖 Created ${records.length} heart rate records`);
+    } catch (error) {
+      console.warn('🤖 Error syncing heart rate data:', error);
+    }
+
+    return records;
+  }
+
+  /**
+   * Sync activity data (daily aggregates)
+   */
+  private async syncActivityData(userId: string, integrationId: string, startDate: Date, endDate: Date): Promise<WearablesDataRecord[]> {
+    console.log('🤖 Syncing activity data...');
+    const records: WearablesDataRecord[] = [];
+
+    try {
+      // Group by day for activity data
+      const days = this.getDaysInRange(startDate, endDate);
+
+      for (const day of days) {
+        const dayStart = new Date(day);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(day);
+        dayEnd.setHours(23, 59, 59, 999);
+
+        const timeRangeFilter: TimeRangeFilter = {
+          operator: 'between',
+          startTime: dayStart.toISOString(),
+          endTime: dayEnd.toISOString(),
+        };
+
+        // Steps
+        const stepsRecords = await this.readHealthConnectRecords('Steps', timeRangeFilter);
+        if (stepsRecords && stepsRecords.length > 0) {
+          const totalSteps = stepsRecords.reduce((sum, record: any) => sum + (record.count || 0), 0);
+          if (totalSteps > 0) {
+            records.push({
+              user_id: userId,
+              integration_id: integrationId,
+              metric_type: 'steps',
+              metric_value: {
+                count: totalSteps,
+                source: this.getMostCommonSource(stepsRecords),
+                timestamp: dayStart.toISOString()
+              },
+              recorded_at: dayStart.toISOString(),
+              sync_date: dayStart.toISOString().split('T')[0]
+            });
+          }
+        }
+
+        // Distance
+        const distanceRecords = await this.readHealthConnectRecords('Distance', timeRangeFilter);
+        if (distanceRecords && distanceRecords.length > 0) {
+          const totalDistance = distanceRecords.reduce((sum, record: any) => {
+            const distance = record.distance?.inMeters || record.distance || 0;
+            return sum + distance;
+          }, 0);
+          if (totalDistance > 0) {
+            records.push({
+              user_id: userId,
+              integration_id: integrationId,
+              metric_type: 'distance',
+              metric_value: {
+                meters: totalDistance,
+                source: this.getMostCommonSource(distanceRecords),
+                timestamp: dayStart.toISOString()
+              },
+              recorded_at: dayStart.toISOString(),
+              sync_date: dayStart.toISOString().split('T')[0]
+            });
+          }
+        }
+
+        // Active calories
+        const caloriesRecords = await this.readHealthConnectRecords('ActiveCaloriesBurned', timeRangeFilter);
+        if (caloriesRecords && caloriesRecords.length > 0) {
+          const totalCalories = caloriesRecords.reduce((sum, record: any) => {
+            const energy = record.energy?.inCalories || record.energy || 0;
+            return sum + energy;
+          }, 0);
+          if (totalCalories > 0) {
+            records.push({
+              user_id: userId,
+              integration_id: integrationId,
+              metric_type: 'active_calories',
+              metric_value: {
+                calories: totalCalories,
+                source: this.getMostCommonSource(caloriesRecords),
+                timestamp: dayStart.toISOString()
+              },
+              recorded_at: dayStart.toISOString(),
+              sync_date: dayStart.toISOString().split('T')[0]
+            });
+          }
+        }
+
+        // Exercise sessions
+        const exerciseRecords = await this.readHealthConnectRecords('ExerciseSession', timeRangeFilter);
+        if (exerciseRecords && exerciseRecords.length > 0) {
+          const totalMinutes = exerciseRecords.reduce((sum, record: any) => {
+            if (record.startTime && record.endTime) {
+              const duration = new Date(record.endTime).getTime() - new Date(record.startTime).getTime();
+              return sum + (duration / (1000 * 60));
+            }
+            return sum;
+          }, 0);
+          if (totalMinutes > 0) {
+            records.push({
+              user_id: userId,
+              integration_id: integrationId,
+              metric_type: 'exercise',
+              metric_value: {
+                minutes: Math.round(totalMinutes),
+                sessions: exerciseRecords.length,
+                source: this.getMostCommonSource(exerciseRecords),
+                timestamp: dayStart.toISOString()
+              },
+              recorded_at: dayStart.toISOString(),
+              sync_date: dayStart.toISOString().split('T')[0]
+            });
+          }
+        }
+      }
+
+      console.log(`🤖 Created ${records.length} activity records`);
+    } catch (error) {
+      console.warn('🤖 Error syncing activity data:', error);
+    }
+
+    return records;
+  }
+
+  /**
+   * Sync sleep data (daily sessions)
+   */
+  private async syncSleepData(userId: string, integrationId: string, startDate: Date, endDate: Date): Promise<WearablesDataRecord[]> {
+    console.log('🤖 Syncing sleep data...');
+    const records: WearablesDataRecord[] = [];
+
+    try {
+      // Extend range slightly for sleep that spans multiple days
+      const extendedStart = new Date(startDate);
+      extendedStart.setDate(extendedStart.getDate() - 1);
+
+      const timeRangeFilter: TimeRangeFilter = {
+        operator: 'between',
+        startTime: extendedStart.toISOString(),
+        endTime: endDate.toISOString(),
+      };
+
+      const sleepRecords = await this.readHealthConnectRecords('SleepSession', timeRangeFilter);
+
+      if (sleepRecords && sleepRecords.length > 0) {
+        for (const record of sleepRecords) {
+          if ((record as any).startTime && (record as any).endTime) {
+            const startTime = new Date((record as any).startTime);
+            const endTime = new Date((record as any).endTime);
+            const duration = endTime.getTime() - startTime.getTime();
+            const hours = duration / (1000 * 60 * 60);
+
+            // Only include if sleep ended within our date range
+            if (endTime >= startDate && endTime <= endDate) {
+              records.push({
+                user_id: userId,
+                integration_id: integrationId,
+                metric_type: 'sleep',
+                metric_value: {
+                  hours: Math.round(hours * 100) / 100,
+                  start_time: startTime.toISOString(),
+                  end_time: endTime.toISOString(),
+                  source: (record as any).metadata?.dataOrigin || 'unknown',
+                  timestamp: endTime.toISOString()
+                },
+                recorded_at: endTime.toISOString(),
+                sync_date: endTime.toISOString().split('T')[0]
+              });
+            }
+          }
+        }
+      }
+
+      console.log(`🤖 Created ${records.length} sleep records`);
+    } catch (error) {
+      console.warn('🤖 Error syncing sleep data:', error);
+    }
+
+    return records;
+  }
+
+  /**
+   * Sync body measurements (most recent values)
+   */
+  private async syncBodyMeasurements(userId: string, integrationId: string, startDate: Date, endDate: Date): Promise<WearablesDataRecord[]> {
+    console.log('🤖 Syncing body measurements...');
+    const records: WearablesDataRecord[] = [];
+
+    try {
+      const timeRangeFilter: TimeRangeFilter = {
+        operator: 'between',
+        startTime: startDate.toISOString(),
+        endTime: endDate.toISOString(),
+      };
+
+      // Weight
+      const weightRecords = await this.readHealthConnectRecords('Weight', timeRangeFilter);
+      if (weightRecords && weightRecords.length > 0) {
+        const mostRecent = weightRecords.sort((a: any, b: any) =>
+          new Date(b.time || b.startTime).getTime() - new Date(a.time || a.startTime).getTime()
+        )[0] as any;
+
+        if (mostRecent.weight) {
+          const weight = mostRecent.weight.inKilograms || mostRecent.weight;
+          const timestamp = new Date(mostRecent.time || mostRecent.startTime);
+
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'weight',
+            metric_value: {
+              kg: weight,
+              source: mostRecent.metadata?.dataOrigin || 'unknown',
+              timestamp: timestamp.toISOString()
+            },
+            recorded_at: timestamp.toISOString(),
+            sync_date: timestamp.toISOString().split('T')[0]
+          });
+        }
+      }
+
+      // Height
+      const heightRecords = await this.readHealthConnectRecords('Height', timeRangeFilter);
+      if (heightRecords && heightRecords.length > 0) {
+        const mostRecent = heightRecords.sort((a: any, b: any) =>
+          new Date(b.time || b.startTime).getTime() - new Date(a.time || a.startTime).getTime()
+        )[0] as any;
+
+        if (mostRecent.height) {
+          const height = mostRecent.height.inMeters || mostRecent.height;
+          const timestamp = new Date(mostRecent.time || mostRecent.startTime);
+
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'height',
+            metric_value: {
+              meters: height,
+              source: mostRecent.metadata?.dataOrigin || 'unknown',
+              timestamp: timestamp.toISOString()
+            },
+            recorded_at: timestamp.toISOString(),
+            sync_date: timestamp.toISOString().split('T')[0]
+          });
+        }
+      }
+
+      console.log(`🤖 Created ${records.length} body measurement records`);
+    } catch (error) {
+      console.warn('🤖 Error syncing body measurements:', error);
+    }
+
+    return records;
+  }
+
+  /**
+   * Sync nutrition data (daily aggregates)
+   */
+  private async syncNutritionData(userId: string, integrationId: string, startDate: Date, endDate: Date): Promise<WearablesDataRecord[]> {
+    console.log('🤖 Syncing nutrition data...');
+    const records: WearablesDataRecord[] = [];
+
+    try {
+      const days = this.getDaysInRange(startDate, endDate);
+
+      for (const day of days) {
+        const dayStart = new Date(day);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(day);
+        dayEnd.setHours(23, 59, 59, 999);
+
+        const timeRangeFilter: TimeRangeFilter = {
+          operator: 'between',
+          startTime: dayStart.toISOString(),
+          endTime: dayEnd.toISOString(),
+        };
+
+        // Nutrition calories
+        const nutritionRecords = await this.readHealthConnectRecords('Nutrition', timeRangeFilter);
+        if (nutritionRecords && nutritionRecords.length > 0) {
+          const totalCalories = nutritionRecords.reduce((sum, record: any) => {
+            let calories = 0;
+            if (record.energy?.inKilocalories) {
+              calories = record.energy.inKilocalories;
+            } else if (record.energy?.inCalories) {
+              calories = record.energy.inCalories;
+            } else if (record.energy) {
+              calories = record.energy;
+            }
+            return sum + calories;
+          }, 0);
+
+          if (totalCalories > 0) {
+            records.push({
+              user_id: userId,
+              integration_id: integrationId,
+              metric_type: 'nutrition',
+              metric_value: {
+                calories: totalCalories,
+                source: this.getMostCommonSource(nutritionRecords),
+                timestamp: dayStart.toISOString()
+              },
+              recorded_at: dayStart.toISOString(),
+              sync_date: dayStart.toISOString().split('T')[0]
+            });
+          }
+        }
+
+        // Hydration
+        const hydrationRecords = await this.readHealthConnectRecords('Hydration', timeRangeFilter);
+        if (hydrationRecords && hydrationRecords.length > 0) {
+          const totalHydration = hydrationRecords.reduce((sum, record: any) => {
+            const volume = record.volume?.inMilliliters || record.volume || 0;
+            return sum + volume;
+          }, 0);
+
+          if (totalHydration > 0) {
+            records.push({
+              user_id: userId,
+              integration_id: integrationId,
+              metric_type: 'hydration',
+              metric_value: {
+                ml: totalHydration,
+                source: this.getMostCommonSource(hydrationRecords),
+                timestamp: dayStart.toISOString()
+              },
+              recorded_at: dayStart.toISOString(),
+              sync_date: dayStart.toISOString().split('T')[0]
+            });
+          }
+        }
+      }
+
+      console.log(`🤖 Created ${records.length} nutrition records`);
+    } catch (error) {
+      console.warn('🤖 Error syncing nutrition data:', error);
+    }
+
+    return records;
+  }
+
+  /**
+   * Sync vital signs data (daily most recent values)
+   */
+  private async syncVitalSigns(userId: string, integrationId: string, startDate: Date, endDate: Date): Promise<WearablesDataRecord[]> {
+    console.log('🤖 Syncing vital signs data...');
+    const records: WearablesDataRecord[] = [];
+
+    try {
+      const timeRangeFilter: TimeRangeFilter = {
+        operator: 'between',
+        startTime: startDate.toISOString(),
+        endTime: endDate.toISOString(),
+      };
+
+      // Blood pressure
+      const bpRecords = await this.readHealthConnectRecords('BloodPressure', timeRangeFilter);
+      if (bpRecords && bpRecords.length > 0) {
+        for (const record of bpRecords) {
+          const timestamp = new Date((record as any).time);
+          if ((record as any).systolic && (record as any).diastolic) {
+            records.push({
+              user_id: userId,
+              integration_id: integrationId,
+              metric_type: 'blood_pressure',
+              metric_value: {
+                systolic: (record as any).systolic.inMillimetersOfMercury || (record as any).systolic,
+                diastolic: (record as any).diastolic.inMillimetersOfMercury || (record as any).diastolic,
+                source: (record as any).metadata?.dataOrigin || 'unknown',
+                timestamp: timestamp.toISOString()
+              },
+              recorded_at: timestamp.toISOString(),
+              sync_date: timestamp.toISOString().split('T')[0]
+            });
+          }
+        }
+      }
+
+      // Other vital signs (blood glucose, oxygen saturation, respiratory rate, body temperature)
+      const vitalTypes = [
+        { type: 'BloodGlucose', metric: 'blood_glucose', field: 'level' },
+        { type: 'OxygenSaturation', metric: 'oxygen_saturation', field: 'percentage' },
+        { type: 'RespiratoryRate', metric: 'respiratory_rate', field: 'rate' },
+        { type: 'BodyTemperature', metric: 'body_temperature', field: 'temperature' }
+      ];
+
+      for (const vital of vitalTypes) {
+        const vitalRecords = await this.readHealthConnectRecords(vital.type, timeRangeFilter);
+        if (vitalRecords && vitalRecords.length > 0) {
+          for (const record of vitalRecords) {
+            const value = this.getMostRecentValue([record], vital.field);
+            if (value !== undefined) {
+              const timestamp = new Date((record as any).time || (record as any).startTime);
+              records.push({
+                user_id: userId,
+                integration_id: integrationId,
+                metric_type: vital.metric,
+                metric_value: {
+                  value: value,
+                  source: (record as any).metadata?.dataOrigin || 'unknown',
+                  timestamp: timestamp.toISOString()
+                },
+                recorded_at: timestamp.toISOString(),
+                sync_date: timestamp.toISOString().split('T')[0]
+              });
+            }
+          }
+        }
+      }
+
+      console.log(`🤖 Created ${records.length} vital signs records`);
+    } catch (error) {
+      console.warn('🤖 Error syncing vital signs data:', error);
+    }
+
+    return records;
+  }
+
+  /**
+   * Helper methods for data processing
+   */
+  private groupRecordsByHour(records: HealthConnectRecord[], valueField: string): Record<string, Array<{value: number, source: string}>> {
+    const grouped: Record<string, Array<{value: number, source: string}>> = {};
+
+    records.forEach((record: any) => {
+      const timestamp = record.startTime || record.time;
+      if (timestamp) {
+        const hour = new Date(timestamp);
+        hour.setMinutes(0, 0, 0);
+        const hourKey = hour.toISOString();
+
+        if (!grouped[hourKey]) {
+          grouped[hourKey] = [];
+        }
+
+        const value = this.extractValueFromRecord(record, valueField);
+        if (value !== undefined) {
+          grouped[hourKey].push({
+            value: value,
+            source: record.metadata?.dataOrigin || 'unknown'
+          });
+        }
+      }
+    });
+
+    return grouped;
+  }
+
+  private getDaysInRange(startDate: Date, endDate: Date): Date[] {
+    const days: Date[] = [];
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+      days.push(new Date(date));
+    }
+    return days;
+  }
+
+  private getMostCommonSource(records: HealthConnectRecord[]): string {
+    const sources: Record<string, number> = {};
+    records.forEach((record: any) => {
+      const source = record.metadata?.dataOrigin || 'unknown';
+      sources[source] = (sources[source] || 0) + 1;
+    });
+
+    return Object.entries(sources).reduce((a, b) => sources[a[0]] > sources[b[0]] ? a : b)[0];
+  }
+
+  /**
+   * Batch insert wearables data with duplicate prevention
+   */
+  private async batchInsertWearablesData(records: WearablesDataRecord[]): Promise<void> {
+    console.log(`🤖 Batch inserting ${records.length} wearables data records...`);
+
+    try {
+      // First, check for existing records to prevent duplicates
+      const existingChecks = records.map(record => ({
+        user_id: record.user_id,
+        integration_id: record.integration_id,
+        metric_type: record.metric_type,
+        recorded_at: record.recorded_at
+      }));
+
+      // Query for existing records in batches
+      const existingRecords = new Set<string>();
+      const batchSize = 100;
+
+      for (let i = 0; i < existingChecks.length; i += batchSize) {
+        const batch = existingChecks.slice(i, i + batchSize);
+
+        const { data: existing } = await supabase
+          .from('wearables_data')
+          .select('user_id,integration_id,metric_type,recorded_at')
+          .in('user_id', [...new Set(batch.map(r => r.user_id))])
+          .in('integration_id', [...new Set(batch.map(r => r.integration_id))])
+          .in('metric_type', [...new Set(batch.map(r => r.metric_type))]);
+
+        if (existing) {
+          existing.forEach((record: any) => {
+            const key = `${record.user_id}-${record.integration_id}-${record.metric_type}-${record.recorded_at}`;
+            existingRecords.add(key);
+          });
+        }
+      }
+
+      // Filter out duplicates
+      const newRecords = records.filter(record => {
+        const key = `${record.user_id}-${record.integration_id}-${record.metric_type}-${record.recorded_at}`;
+        return !existingRecords.has(key);
+      });
+
+      console.log(`🤖 Filtered out ${records.length - newRecords.length} duplicate records`);
+      console.log(`🤖 Inserting ${newRecords.length} new records`);
+
+      if (newRecords.length > 0) {
+        // Insert in batches
+        for (let i = 0; i < newRecords.length; i += batchSize) {
+          const batch = newRecords.slice(i, i + batchSize);
+
+          const { error } = await supabase
+            .from('wearables_data')
+            .insert(batch);
+
+          if (error) {
+            console.error(`🤖 Error inserting batch ${i}-${i + batch.length}:`, error);
+            throw error;
+          }
+        }
+
+        console.log('✅ Successfully inserted all new wearables data records');
+      } else {
+        console.log('✅ No new records to insert (all were duplicates)');
+      }
+
+    } catch (error) {
+      console.error('🤖 Error during batch insert:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get detailed metrics for each day in the given range - FOR LOGGING PURPOSES
+   */
+  private async getDetailedMetricsForDays(integrationId: string, startDate: Date, endDate: Date): Promise<void> {
+    console.log('🤖 ===== DETAILED METRICS ANALYSIS =====');
+    console.log('🤖 Analyzing 7 days of data for wearables_data table integration');
+
+    // Create array of days to analyze
+    const days: Date[] = [];
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+      days.push(new Date(date));
+    }
+
+    console.log('🤖 Days to analyze:', days.map(d => d.toDateString()));
+
+    for (const day of days) {
+      const dayStart = new Date(day);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(day);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      console.log(`\n🤖 ===== ${day.toDateString()} =====`);
+      console.log('🤖 Day range:', { start: dayStart.toISOString(), end: dayEnd.toISOString() });
+
+      const timeRangeFilter: TimeRangeFilter = {
+        operator: 'between',
+        startTime: dayStart.toISOString(),
+        endTime: dayEnd.toISOString(),
+      };
+
+      // Get step count for this day
+      await this.logMetricForDay('Steps', 'Steps', timeRangeFilter);
+
+      // Get distance for this day
+      await this.logMetricForDay('Distance', 'Distance', timeRangeFilter);
+
+      // Get active calories for this day
+      await this.logMetricForDay('Active Calories', 'ActiveCaloriesBurned', timeRangeFilter);
+
+      // Get heart rate samples for this day
+      await this.logMetricForDay('Heart Rate', 'HeartRate', timeRangeFilter);
+
+      // Get resting heart rate for this day
+      await this.logMetricForDay('Resting Heart Rate', 'RestingHeartRate', timeRangeFilter);
+
+      // Get weight for this day
+      await this.logMetricForDay('Weight', 'Weight', timeRangeFilter);
+
+      // Get sleep data for this day
+      await this.logMetricForDay('Sleep Sessions', 'SleepSession', timeRangeFilter);
+
+      // Get exercise sessions for this day
+      await this.logMetricForDay('Exercise Sessions', 'ExerciseSession', timeRangeFilter);
+
+      // Get nutrition for this day
+      await this.logMetricForDay('Nutrition', 'Nutrition', timeRangeFilter);
+
+      // Get hydration for this day
+      await this.logMetricForDay('Hydration', 'Hydration', timeRangeFilter);
+
+      // Get blood glucose for this day
+      await this.logMetricForDay('Blood Glucose', 'BloodGlucose', timeRangeFilter);
+    }
+
+    console.log('\n🤖 ===== END DETAILED ANALYSIS =====\n');
+  }
+
+  private async logMetricForDay(metricName: string, recordType: string, timeRangeFilter: TimeRangeFilter): Promise<void> {
+    try {
+      console.log(`🤖 📊 ${metricName} Analysis:`);
+
+      const records = await this.readHealthConnectRecords(recordType, timeRangeFilter);
+      console.log(`🤖   Raw records count: ${records.length}`);
+
+      if (records.length > 0) {
+        console.log(`🤖   First record:`, {
+          startTime: records[0].startTime || records[0].time,
+          endTime: records[0].endTime,
+          data: this.extractRecordData(records[0]),
+          source: (records[0] as any).metadata?.dataOrigin
+        });
+
+        console.log(`🤖   Last record:`, {
+          startTime: records[records.length - 1].startTime || records[records.length - 1].time,
+          endTime: records[records.length - 1].endTime,
+          data: this.extractRecordData(records[records.length - 1]),
+          source: (records[records.length - 1] as any).metadata?.dataOrigin
+        });
+
+        // Calculate totals/summaries based on metric type
+        if (['Steps', 'Distance', 'Active Calories', 'Nutrition', 'Hydration'].includes(metricName)) {
+          let total = 0;
+          let unit = '';
+
+          records.forEach(record => {
+            const value = this.extractNumericValue(record, recordType);
+            if (value !== undefined) {
+              total += value;
+              if (!unit) unit = this.extractUnit(record, recordType);
+            }
+          });
+
+          console.log(`🤖   Total for day: ${total} ${unit}`);
+        } else if (['Heart Rate', 'Resting Heart Rate'].includes(metricName)) {
+          const values = records.map(record => this.extractNumericValue(record, recordType)).filter(v => v !== undefined);
+          if (values.length > 0) {
+            const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            console.log(`🤖   Average: ${avg.toFixed(2)}, Min: ${min}, Max: ${max} bpm`);
+          }
+        } else if (['Sleep Sessions', 'Exercise Sessions'].includes(metricName)) {
+          let totalMinutes = 0;
+          records.forEach(record => {
+            if ((record as any).startTime && (record as any).endTime) {
+              const duration = new Date((record as any).endTime).getTime() - new Date((record as any).startTime).getTime();
+              const minutes = duration / (1000 * 60);
+              totalMinutes += minutes;
+              console.log(`🤖     Session: ${minutes.toFixed(1)} minutes (${(record as any).startTime} to ${(record as any).endTime})`);
+            }
+          });
+          console.log(`🤖   Total session time: ${totalMinutes.toFixed(1)} minutes (${(totalMinutes / 60).toFixed(2)} hours)`);
+        }
+
+        // Group records by hour to see distribution
+        const hourlyData: Record<number, number> = {};
+        records.forEach(record => {
+          const timestamp = (record as any).startTime || (record as any).time;
+          if (timestamp) {
+            const hour = new Date(timestamp).getHours();
+            const value = this.extractNumericValue(record, recordType) || 1; // For sessions, count as 1
+            hourlyData[hour] = (hourlyData[hour] || 0) + value;
+          }
+        });
+
+        const nonZeroHours = Object.entries(hourlyData).filter(([_, value]) => value > 0);
+        if (nonZeroHours.length > 0) {
+          console.log(`🤖   Active hours (${nonZeroHours.length}):`,
+            nonZeroHours.map(([hour, value]) => `${hour}h: ${value.toFixed(1)}`).join(', '));
+        }
+
+        // Show data source distribution
+        const sources: Record<string, number> = {};
+        records.forEach(record => {
+          const source = (record as any).metadata?.dataOrigin || 'unknown';
+          sources[source] = (sources[source] || 0) + 1;
+        });
+        console.log(`🤖   Data sources:`, Object.entries(sources).map(([source, count]) => `${source}: ${count}`).join(', '));
+
+      } else {
+        console.log(`🤖   No data available for this day`);
+      }
+
+    } catch (error) {
+      console.log(`🤖   Error fetching ${metricName}:`, error);
+    }
+  }
+
+  private extractRecordData(record: any): any {
+    // Extract relevant data fields from the record
+    const data: any = {};
+
+    if (record.count !== undefined) data.count = record.count;
+    if (record.distance !== undefined) data.distance = record.distance;
+    if (record.energy !== undefined) data.energy = record.energy;
+    if (record.beatsPerMinute !== undefined) data.beatsPerMinute = record.beatsPerMinute;
+    if (record.weight !== undefined) data.weight = record.weight;
+    if (record.height !== undefined) data.height = record.height;
+    if (record.percentage !== undefined) data.percentage = record.percentage;
+    if (record.level !== undefined) data.level = record.level;
+    if (record.volume !== undefined) data.volume = record.volume;
+    if (record.samples !== undefined && Array.isArray(record.samples)) {
+      data.samplesCount = record.samples.length;
+      if (record.samples.length > 0) data.firstSample = record.samples[0];
+    }
+
+    return data;
+  }
+
+  private extractNumericValue(record: any, recordType: string): number | undefined {
+    switch (recordType) {
+      case 'Steps':
+        return record.count;
+      case 'Distance':
+        return record.distance?.inMeters || record.distance;
+      case 'ActiveCaloriesBurned':
+        return record.energy?.inCalories || record.energy;
+      case 'HeartRate':
+      case 'RestingHeartRate':
+        if (record.samples && Array.isArray(record.samples) && record.samples.length > 0) {
+          return record.samples[record.samples.length - 1].beatsPerMinute;
+        }
+        return record.beatsPerMinute;
+      case 'Weight':
+        return record.weight?.inKilograms || record.weight;
+      case 'Nutrition':
+        return record.energy?.inKilocalories || record.energy?.inCalories || record.energy;
+      case 'Hydration':
+        return record.volume?.inMilliliters || record.volume;
+      case 'BloodGlucose':
+        return record.level?.inMillimolesPerLiter || record.level?.inMilligramsPerDeciliter || record.level;
+      default:
+        return record.value || record.amount || record.quantity;
+    }
+  }
+
+  private extractUnit(record: any, recordType: string): string {
+    switch (recordType) {
+      case 'Steps':
+        return 'steps';
+      case 'Distance':
+        return 'meters';
+      case 'ActiveCaloriesBurned':
+        return 'cal';
+      case 'HeartRate':
+      case 'RestingHeartRate':
+        return 'bpm';
+      case 'Weight':
+        return 'kg';
+      case 'Nutrition':
+        return 'kcal';
+      case 'Hydration':
+        return 'ml';
+      case 'BloodGlucose':
+        return 'mg/dL';
+      default:
+        return '';
     }
   }
 

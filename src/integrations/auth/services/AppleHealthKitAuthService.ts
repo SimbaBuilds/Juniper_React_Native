@@ -118,17 +118,35 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
         console.log('✅ Apple HealthKit permissions granted successfully');
         await this.notifyAuthCallbacks(integrationId);
 
-        // Trigger immediate health data sync after all database operations complete
+        // Trigger health-data-sync edge function for 7-day backfill
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            console.log('🔄 Apple Health: Triggering immediate health sync after auth...');
-            // Use bypassDebounce=true for post-auth sync to ensure it runs immediately
-            const syncResult = await HealthSyncService.getInstance().syncHealthData(user.id, true);
-            console.log('🔄 Apple Health: Post-auth sync result:', syncResult);
+            console.log('🔄 Apple Health: Triggering health-data-sync edge function...');
+
+            const response = await fetch('https://ydbabipbxxleeiiysojv.supabase.co/functions/v1/health-data-sync', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+              },
+              body: JSON.stringify({
+                action: 'backfill',
+                user_id: user.id,
+                service_name: 'Apple Health',
+                days: 7
+              })
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              console.log('✅ Apple Health: Edge function sync triggered successfully:', result);
+            } else {
+              console.warn('⚠️ Apple Health: Edge function sync failed:', response.status, response.statusText);
+            }
           }
         } catch (syncError) {
-          console.warn('⚠️ Apple Health: Post-auth sync failed (auth still successful):', syncError);
+          console.warn('⚠️ Apple Health: Edge function sync failed (auth still successful):', syncError);
         }
 
         return authResult;
