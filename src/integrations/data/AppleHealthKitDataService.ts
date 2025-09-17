@@ -2058,6 +2058,7 @@ export class AppleHealthKitDataService {
 
       // Body Temperature - use most recent from the day
       try {
+        console.log('🌡️ Fetching body temperature samples for date range:', { dayStart: dayStart.toISOString(), dayEnd: dayEnd.toISOString() });
         const temperatureSamples = await queryQuantitySamples('HKQuantityTypeIdentifierBodyTemperature', {
           filter: {
             startDate: dayStart,
@@ -2067,7 +2068,9 @@ export class AppleHealthKitDataService {
           limit: 0
         });
 
+        console.log('🌡️ Body temperature samples found:', temperatureSamples.length);
         if (temperatureSamples.length > 0) {
+          console.log('🌡️ Temperature samples:', temperatureSamples);
           const lastTemperature = temperatureSamples[temperatureSamples.length - 1];
           records.push({
             user_id: userId,
@@ -2081,6 +2084,9 @@ export class AppleHealthKitDataService {
             recorded_at: lastTemperature.startDate,
             sync_date: syncDate
           });
+          console.log('🌡️ Body temperature record created successfully');
+        } else {
+          console.log('🌡️ No body temperature data available for this date range');
         }
       } catch (error) {
         console.warn('🍎 Error fetching body temperature:', error);
