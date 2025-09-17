@@ -893,6 +893,29 @@ export class AppleHealthKitDataService {
               samples: []
             };
           }
+        case 'getVO2Max':
+          console.log('🍎 VO2 Max query params:', { from: options.startDate, to: options.endDate });
+          try {
+            const vo2MaxSamples = await queryQuantitySamples('HKQuantityTypeIdentifierVO2Max', {
+              filter: {
+                startDate: new Date(options.startDate),
+                endDate: new Date(options.endDate)
+              },
+              ascending: true,
+              limit: 0
+            });
+            console.log('🍎 Raw VO2 Max samples:', vo2MaxSamples);
+
+            // Get the most recent VO2 Max value
+            if (vo2MaxSamples.length > 0) {
+              const latestVO2Max = vo2MaxSamples[vo2MaxSamples.length - 1];
+              return { value: latestVO2Max.quantity, unit: latestVO2Max.unit };
+            }
+            return { value: 0, unit: 'ml/kg*min' };
+          } catch (error) {
+            console.warn('🍎 Error fetching VO2 Max:', error);
+            return { value: 0, unit: 'ml/kg*min' };
+          }
         default:
           throw new Error(`Method ${method} not implemented`);
       }
@@ -1136,8 +1159,8 @@ export class AppleHealthKitDataService {
     });
 
     // Get 7 days of data for detailed analysis
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    await this.getDetailedMetricsForDays(integrationId, sevenDaysAgo, endDate);
+    // const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    // await this.getDetailedMetricsForDays(integrationId, sevenDaysAgo, endDate);
 
     const realtimeData: Record<string, any> = {};
 
@@ -1375,6 +1398,22 @@ export class AppleHealthKitDataService {
         // 4. Sync body measurements (if available for this day)
         const bodyRecords = await this.createBodyMeasurementRecords(userId, integrationId, dayStart, dayEnd);
         recordsToInsert.push(...bodyRecords);
+
+        // 5. Sync vital signs (resting heart rate, HRV, blood pressure, etc.)
+        const vitalSignsRecords = await this.createVitalSignsRecords(userId, integrationId, dayStart, dayEnd);
+        recordsToInsert.push(...vitalSignsRecords);
+
+        // 6. Sync blood chemistry (blood glucose)
+        const bloodChemistryRecords = await this.createBloodChemistryRecords(userId, integrationId, dayStart, dayEnd);
+        recordsToInsert.push(...bloodChemistryRecords);
+
+        // 7. Sync environmental data (time in daylight, VO2 max)
+        const environmentalRecords = await this.createEnvironmentalRecords(userId, integrationId, dayStart, dayEnd);
+        recordsToInsert.push(...environmentalRecords);
+
+        // 8. Sync reproductive health data (menstruation)
+        const reproductiveHealthRecords = await this.createReproductiveHealthRecords(userId, integrationId, dayStart, dayEnd);
+        recordsToInsert.push(...reproductiveHealthRecords);
       }
 
       console.log(`🍎 Created ${recordsToInsert.length} records for wearables_data sync`);
@@ -1602,7 +1641,9 @@ export class AppleHealthKitDataService {
 
       if (sleepData && sleepData.totalSleepHours > 0) {
         const syncDate = day.toISOString().split('T')[0];
+        const recordedAt = sleepData.sleepEndTime || sleepEnd.toISOString();
 
+        // Main sleep record
         records.push({
           user_id: userId,
           integration_id: integrationId,
@@ -1621,9 +1662,88 @@ export class AppleHealthKitDataService {
             sleep_end: sleepData.sleepEndTime,
             source: 'apple_health'
           },
-          recorded_at: sleepData.sleepEndTime || sleepEnd.toISOString(),
+          recorded_at: recordedAt,
           sync_date: syncDate
         });
+
+        // Individual sleep stage records
+        if (sleepData.sleepStages.deep > 0) {
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'deep_sleep',
+            metric_value: {
+              hours: sleepData.sleepStages.deep,
+              unit: 'hours',
+              source: 'apple_health'
+            },
+            recorded_at: recordedAt,
+            sync_date: syncDate
+          });
+        }
+
+        if (sleepData.sleepStages.rem > 0) {
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'rem_sleep',
+            metric_value: {
+              hours: sleepData.sleepStages.rem,
+              unit: 'hours',
+              source: 'apple_health'
+            },
+            recorded_at: recordedAt,
+            sync_date: syncDate
+          });
+        }
+
+        const lightSleepHours = (sleepData.sleepStages.core || 0) + (sleepData.sleepStages.asleep || 0);
+        if (lightSleepHours > 0) {
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'light_sleep',
+            metric_value: {
+              hours: lightSleepHours,
+              unit: 'hours',
+              source: 'apple_health'
+            },
+            recorded_at: recordedAt,
+            sync_date: syncDate
+          });
+        }
+
+        // Time in bed record
+        if (sleepData.totalInBedHours > 0) {
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'time_in_bed',
+            metric_value: {
+              hours: sleepData.totalInBedHours,
+              unit: 'hours',
+              source: 'apple_health'
+            },
+            recorded_at: recordedAt,
+            sync_date: syncDate
+          });
+        }
+
+        // Awakenings record (from awake stage time)
+        if (sleepData.sleepStages.awake > 0) {
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'awake_in_bed',
+            metric_value: {
+              hours: sleepData.sleepStages.awake,
+              unit: 'hours',
+              source: 'apple_health'
+            },
+            recorded_at: recordedAt,
+            sync_date: syncDate
+          });
+        }
       }
 
     } catch (error) {
@@ -1694,8 +1814,469 @@ export class AppleHealthKitDataService {
         });
       }
 
+      // Check for BMI measurements on this day
+      const bmiSamples = await queryQuantitySamples('HKQuantityTypeIdentifierBodyMassIndex', {
+        filter: {
+          startDate: dayStart,
+          endDate: dayEnd
+        },
+        ascending: true,
+        limit: 0
+      });
+
+      if (bmiSamples.length > 0) {
+        const lastBMI = bmiSamples[bmiSamples.length - 1];
+        records.push({
+          user_id: userId,
+          integration_id: integrationId,
+          metric_type: 'bmi',
+          metric_value: {
+            bmi: lastBMI.quantity,
+            unit: lastBMI.unit,
+            source: 'apple_health'
+          },
+          recorded_at: lastBMI.startDate,
+          sync_date: syncDate
+        });
+      }
+
+      // Check for body fat percentage measurements on this day
+      const bodyFatSamples = await queryQuantitySamples('HKQuantityTypeIdentifierBodyFatPercentage', {
+        filter: {
+          startDate: dayStart,
+          endDate: dayEnd
+        },
+        ascending: true,
+        limit: 0
+      });
+
+      if (bodyFatSamples.length > 0) {
+        const lastBodyFat = bodyFatSamples[bodyFatSamples.length - 1];
+        records.push({
+          user_id: userId,
+          integration_id: integrationId,
+          metric_type: 'body_fat_percentage',
+          metric_value: {
+            percentage: lastBodyFat.quantity * 100, // Convert to percentage
+            unit: 'percent',
+            source: 'apple_health'
+          },
+          recorded_at: lastBodyFat.startDate,
+          sync_date: syncDate
+        });
+      }
+
     } catch (error) {
       console.warn('🍎 Error creating body measurement records:', error);
+    }
+
+    return records;
+  }
+
+  /**
+   * Create vital signs records (resting heart rate, HRV, blood pressure, respiratory rate, oxygen saturation, body temperature)
+   */
+  private async createVitalSignsRecords(userId: string, integrationId: string, dayStart: Date, dayEnd: Date): Promise<any[]> {
+    const records: any[] = [];
+    const syncDate = dayStart.toISOString().split('T')[0];
+
+    try {
+      // Resting heart rate - use most recent from the day
+      try {
+        const restingHRSamples = await queryQuantitySamples('HKQuantityTypeIdentifierRestingHeartRate', {
+          filter: {
+            startDate: dayStart,
+            endDate: dayEnd
+          },
+          ascending: true,
+          limit: 0
+        });
+
+        if (restingHRSamples.length > 0) {
+          const lastRestingHR = restingHRSamples[restingHRSamples.length - 1];
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'resting_heart_rate',
+            metric_value: {
+              bpm: Math.round(lastRestingHR.quantity),
+              unit: 'bpm',
+              source: 'apple_health'
+            },
+            recorded_at: lastRestingHR.startDate,
+            sync_date: syncDate
+          });
+        }
+      } catch (error) {
+        console.warn('🍎 Error fetching resting heart rate:', error);
+      }
+
+      // Heart Rate Variability - use most recent from the day
+      try {
+        const hrvSamples = await queryQuantitySamples('HKQuantityTypeIdentifierHeartRateVariabilitySDNN', {
+          filter: {
+            startDate: dayStart,
+            endDate: dayEnd
+          },
+          ascending: true,
+          limit: 0
+        });
+
+        if (hrvSamples.length > 0) {
+          const lastHRV = hrvSamples[hrvSamples.length - 1];
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'hrv',
+            metric_value: {
+              hrv_sdnn: lastHRV.quantity,
+              unit: 'ms',
+              source: 'apple_health'
+            },
+            recorded_at: lastHRV.startDate,
+            sync_date: syncDate
+          });
+        }
+      } catch (error) {
+        console.warn('🍎 Error fetching HRV:', error);
+      }
+
+      // Blood Pressure - check for measurements on this day
+      try {
+        const systolicSamples = await queryQuantitySamples('HKQuantityTypeIdentifierBloodPressureSystolic', {
+          filter: {
+            startDate: dayStart,
+            endDate: dayEnd
+          },
+          ascending: true,
+          limit: 0
+        });
+
+        const diastolicSamples = await queryQuantitySamples('HKQuantityTypeIdentifierBloodPressureDiastolic', {
+          filter: {
+            startDate: dayStart,
+            endDate: dayEnd
+          },
+          ascending: true,
+          limit: 0
+        });
+
+        if (systolicSamples.length > 0) {
+          const lastSystolic = systolicSamples[systolicSamples.length - 1];
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'blood_pressure_systolic',
+            metric_value: {
+              pressure: lastSystolic.quantity,
+              unit: 'mmHg',
+              source: 'apple_health'
+            },
+            recorded_at: lastSystolic.startDate,
+            sync_date: syncDate
+          });
+        }
+
+        if (diastolicSamples.length > 0) {
+          const lastDiastolic = diastolicSamples[diastolicSamples.length - 1];
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'blood_pressure_diastolic',
+            metric_value: {
+              pressure: lastDiastolic.quantity,
+              unit: 'mmHg',
+              source: 'apple_health'
+            },
+            recorded_at: lastDiastolic.startDate,
+            sync_date: syncDate
+          });
+        }
+      } catch (error) {
+        console.warn('🍎 Error fetching blood pressure:', error);
+      }
+
+      // Respiratory Rate - use most recent from the day
+      try {
+        const respiratorySamples = await queryQuantitySamples('HKQuantityTypeIdentifierRespiratoryRate', {
+          filter: {
+            startDate: dayStart,
+            endDate: dayEnd
+          },
+          ascending: true,
+          limit: 0
+        });
+
+        if (respiratorySamples.length > 0) {
+          const lastRespiratory = respiratorySamples[respiratorySamples.length - 1];
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'respiratory_rate',
+            metric_value: {
+              rate: lastRespiratory.quantity,
+              unit: 'breaths/min',
+              source: 'apple_health'
+            },
+            recorded_at: lastRespiratory.startDate,
+            sync_date: syncDate
+          });
+        }
+      } catch (error) {
+        console.warn('🍎 Error fetching respiratory rate:', error);
+      }
+
+      // Oxygen Saturation - use most recent from the day
+      try {
+        const oxygenSamples = await queryQuantitySamples('HKQuantityTypeIdentifierOxygenSaturation', {
+          filter: {
+            startDate: dayStart,
+            endDate: dayEnd
+          },
+          ascending: true,
+          limit: 0
+        });
+
+        if (oxygenSamples.length > 0) {
+          const lastOxygen = oxygenSamples[oxygenSamples.length - 1];
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'oxygen_saturation',
+            metric_value: {
+              percentage: lastOxygen.quantity * 100, // Convert to percentage
+              unit: '%',
+              source: 'apple_health'
+            },
+            recorded_at: lastOxygen.startDate,
+            sync_date: syncDate
+          });
+        }
+      } catch (error) {
+        console.warn('🍎 Error fetching oxygen saturation:', error);
+      }
+
+      // Body Temperature - use most recent from the day
+      try {
+        const temperatureSamples = await queryQuantitySamples('HKQuantityTypeIdentifierBodyTemperature', {
+          filter: {
+            startDate: dayStart,
+            endDate: dayEnd
+          },
+          ascending: true,
+          limit: 0
+        });
+
+        if (temperatureSamples.length > 0) {
+          const lastTemperature = temperatureSamples[temperatureSamples.length - 1];
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'body_temperature',
+            metric_value: {
+              temperature: lastTemperature.quantity,
+              unit: lastTemperature.unit || '°F',
+              source: 'apple_health'
+            },
+            recorded_at: lastTemperature.startDate,
+            sync_date: syncDate
+          });
+        }
+      } catch (error) {
+        console.warn('🍎 Error fetching body temperature:', error);
+      }
+
+    } catch (error) {
+      console.warn('🍎 Error creating vital signs records:', error);
+    }
+
+    return records;
+  }
+
+  /**
+   * Create blood chemistry records (blood glucose)
+   */
+  private async createBloodChemistryRecords(userId: string, integrationId: string, dayStart: Date, dayEnd: Date): Promise<any[]> {
+    const records: any[] = [];
+    const syncDate = dayStart.toISOString().split('T')[0];
+
+    try {
+      // Blood Glucose - check for measurements on this day
+      try {
+        const glucoseSamples = await queryQuantitySamples('HKQuantityTypeIdentifierBloodGlucose', {
+          filter: {
+            startDate: dayStart,
+            endDate: dayEnd
+          },
+          ascending: true,
+          limit: 0
+        });
+
+        if (glucoseSamples.length > 0) {
+          // Create record for each glucose measurement (multiple per day are common)
+          glucoseSamples.forEach((sample: any) => {
+            records.push({
+              user_id: userId,
+              integration_id: integrationId,
+              metric_type: 'blood_glucose',
+              metric_value: {
+                glucose: sample.quantity,
+                unit: sample.unit || 'mg/dL',
+                source: 'apple_health'
+              },
+              recorded_at: sample.startDate,
+              sync_date: syncDate
+            });
+          });
+        }
+      } catch (error) {
+        console.warn('🍎 Error fetching blood glucose:', error);
+      }
+
+    } catch (error) {
+      console.warn('🍎 Error creating blood chemistry records:', error);
+    }
+
+    return records;
+  }
+
+  /**
+   * Create environmental records (time in daylight, VO2 max)
+   */
+  private async createEnvironmentalRecords(userId: string, integrationId: string, dayStart: Date, dayEnd: Date): Promise<any[]> {
+    const records: any[] = [];
+    const syncDate = dayStart.toISOString().split('T')[0];
+
+    try {
+      // Time in Daylight - aggregate for the day
+      try {
+        const daylightSamples = await queryQuantitySamples('HKQuantityTypeIdentifierTimeInDaylight', {
+          filter: {
+            startDate: dayStart,
+            endDate: dayEnd
+          },
+          ascending: true,
+          limit: 0
+        });
+
+        if (daylightSamples.length > 0) {
+          const totalDaylight = daylightSamples.reduce((sum: number, sample: any) => sum + (sample.quantity || 0), 0);
+
+          if (totalDaylight > 0) {
+            records.push({
+              user_id: userId,
+              integration_id: integrationId,
+              metric_type: 'time_in_daylight',
+              metric_value: {
+                minutes: totalDaylight,
+                hours: Math.round((totalDaylight / 60) * 100) / 100,
+                unit: 'minutes',
+                source: 'apple_health'
+              },
+              recorded_at: dayEnd.toISOString(),
+              sync_date: syncDate
+            });
+          }
+        }
+      } catch (error) {
+        console.warn('🍎 Error fetching time in daylight:', error);
+      }
+
+      // VO2 Max - use most recent from the day
+      try {
+        const vo2MaxSamples = await queryQuantitySamples('HKQuantityTypeIdentifierVO2Max', {
+          filter: {
+            startDate: dayStart,
+            endDate: dayEnd
+          },
+          ascending: true,
+          limit: 0
+        });
+
+        if (vo2MaxSamples.length > 0) {
+          const lastVO2Max = vo2MaxSamples[vo2MaxSamples.length - 1];
+          records.push({
+            user_id: userId,
+            integration_id: integrationId,
+            metric_type: 'vo2_max',
+            metric_value: {
+              vo2_max: lastVO2Max.quantity,
+              unit: lastVO2Max.unit || 'mL/kg·min',
+              source: 'apple_health'
+            },
+            recorded_at: lastVO2Max.startDate,
+            sync_date: syncDate
+          });
+        }
+      } catch (error) {
+        console.warn('🍎 Error fetching VO2 Max:', error);
+      }
+
+    } catch (error) {
+      console.warn('🍎 Error creating environmental records:', error);
+    }
+
+    return records;
+  }
+
+  /**
+   * Create reproductive health records (menstruation)
+   */
+  private async createReproductiveHealthRecords(userId: string, integrationId: string, dayStart: Date, dayEnd: Date): Promise<any[]> {
+    const records: any[] = [];
+    const syncDate = dayStart.toISOString().split('T')[0];
+
+    try {
+      // Menstruation - check for active menstruation on this day
+      try {
+        const menstruationSamples = await queryCategorySamples('HKCategoryTypeIdentifierMenstrualFlow', {
+          filter: {
+            startDate: dayStart,
+            endDate: dayEnd
+          },
+          ascending: true,
+          limit: 0
+        });
+
+        if (menstruationSamples.length > 0) {
+          // Find active menstruation (any flow except NotApplicable = 0)
+          const activeMenstruation = menstruationSamples.filter((sample: any) => sample.value && sample.value !== 0);
+
+          if (activeMenstruation.length > 0) {
+            // Map flow values to text
+            const mapFlowValue = (value: number): string => {
+              switch (value) {
+                case 1: return 'Unspecified';
+                case 2: return 'Light';
+                case 3: return 'Medium';
+                case 4: return 'Heavy';
+                default: return 'Unknown';
+              }
+            };
+
+            // Use the most recent flow value for the day
+            const mostRecentFlow = activeMenstruation[activeMenstruation.length - 1];
+            records.push({
+              user_id: userId,
+              integration_id: integrationId,
+              metric_type: 'menstruation',
+              metric_value: {
+                flow: mapFlowValue(mostRecentFlow.value),
+                flow_value: mostRecentFlow.value,
+                active: true,
+                source: 'apple_health'
+              },
+              recorded_at: mostRecentFlow.startDate,
+              sync_date: syncDate
+            });
+          }
+        }
+      } catch (error) {
+        console.warn('🍎 Error fetching menstruation data:', error);
+      }
+
+    } catch (error) {
+      console.warn('🍎 Error creating reproductive health records:', error);
     }
 
     return records;
@@ -1743,6 +2324,13 @@ export class AppleHealthKitDataService {
       }
 
       console.log(`✅ Successfully upserted ${totalUpserted} wearables data records (new + updated)`);
+
+      // Log metric summary
+      const metricCounts: Record<string, number> = {};
+      records.forEach(record => {
+        metricCounts[record.metric_type] = (metricCounts[record.metric_type] || 0) + 1;
+      });
+      console.log('📊 Metrics populated:', Object.entries(metricCounts).map(([type, count]) => `${type}(${count})`).join(', '));
 
     } catch (error) {
       console.error('🍎 Error during batch insert:', error);

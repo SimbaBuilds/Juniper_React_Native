@@ -97,8 +97,8 @@ export class GoogleHealthConnectDataService {
       });
 
       // Get 7 days of data for detailed analysis
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      await this.getDetailedMetricsForDays(integrationId, sevenDaysAgo, todayEnd);
+      // const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      // await this.getDetailedMetricsForDays(integrationId, sevenDaysAgo, todayEnd);
 
       const realtimeData: Record<string, any> = {};
 
@@ -794,6 +794,13 @@ export class GoogleHealthConnectDataService {
       }
 
       console.log(`✅ Successfully upserted ${totalUpserted} wearables data records (new + updated)`)
+
+      // Log metric summary
+      const metricCounts: Record<string, number> = {};
+      records.forEach(record => {
+        metricCounts[record.metric_type] = (metricCounts[record.metric_type] || 0) + 1;
+      });
+      console.log('📊 Metrics populated:', Object.entries(metricCounts).map(([type, count]) => `${type}(${count})`).join(', '))
 
     } catch (error) {
       console.error('🤖 Error during batch insert:', error);
