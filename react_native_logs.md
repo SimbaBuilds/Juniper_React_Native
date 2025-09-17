@@ -1,1150 +1,1400 @@
- LOG  🔄 Reconnecting Apple Health integration...
- LOG  🔗 Mapped Apple Health to apple-health for reconnection
- LOG  ✅ Integration 8d8ebaa8-5340-4968-aee4-8ff4be463259 status updated to: pending
- LOG  🔗 Starting OAuth flow for apple-health...
- LOG  🔧 apple-health OAuth Service initialized
- LOG  🍎 Starting Apple HealthKit permission request...
- LOG  🍎 Integration ID: 8d8ebaa8-5340-4968-aee4-8ff4be463259
- LOG  ✅ HealthKit permissions granted
- LOG  🔍 Storing apple-health tokens for integration: 8d8ebaa8-5340-4968-aee4-8ff4be463259
- LOG  🔍 Token result keys: ["accessToken", "refreshToken", "expiresAt", "scope"]
- WARN  Invalid expires_in value, using default: undefined
- LOG  🔍 Storage key: apple_health_tokens_8d8ebaa8-5340-4968-aee4-8ff4be463259
- LOG  🔍 Token data to store: {
-  "accessToken": "healthkit-permissions-granted",
-  "refreshToken": "not-applicable",
-  "expiresAt": "2025-09-16T02:32:17.357Z",
-  "integrationId": "8d8ebaa8-5340-4968-aee4-8ff4be463259",
-  "service": "apple-health",
-  "scope": "read",
-  "storedAt": "2025-09-16T01:32:17.357Z"
-}
- LOG  🔐 apple-health tokens stored securely
- LOG  ✅ Apple HealthKit integration saved to Supabase
- LOG  🔍 apple-health completing integration flow...
- LOG  ℹ️ apple-health skipping completion message for reconnection
- LOG  ✅ apple-health integration completion flow triggered
- LOG  ✅ Apple HealthKit permissions granted successfully
- LOG  🔄 Apple Health: Triggering immediate health sync after auth...
+ LOG  🌐 API: Using backend URL: https://mobile-jarvis-backend.onrender.com
+ LOG  🔍 Environment variable present: true
+ LOG  ServerApiService initialized with config: {"apiEndpoint": "/api/chat", "baseUrl": "https://mobile-jarvis-backend.onrender.com"}
+ LOG  ServerApiService config updated: {"apiEndpoint": "/api/chat", "baseUrl": "https://mobile-jarvis-backend.onrender.com"}
+ LOG  ✅ Loaded server config from React Native environment: {"apiEndpoint": "/api/chat", "baseUrl": "https://mobile-jarvis-backend.onrender.com"}
+ LOG  Available native modules: []
+ LOG  WakeWordModule available: Yes
+ LOG  🚀 App: Starting initialization...
+ LOG  📁 App: Initializing storage...
+ LOG  📁 StorageInitializer: Starting AsyncStorage initialization...
+ LOG  🔊 App: Checking wake word detection...
+ LOG  Calling getStatus() on WakeWordModule
+ LOG  🔐 App: Getting initial auth session...
+ LOG  🏥 App: Starting health data sync...
+ LOG  Setting up deep link handlers...
+ LOG  Adding deep link event listener...
+ LOG  Checking for initial URL (cold start)...
+ LOG  getStatus result: {"enabled": false}
+ LOG  Wake word detection available: false
+ LOG  Found initial URL: exp+mobilejarvisnative://expo-development-client/?url=http%3A%2F%2F192.168.1.80%3A8081
+ LOG  === DEEP LINK RECEIVED ===
+ LOG  Full URL: exp+mobilejarvisnative://expo-development-client/?url=http%3A%2F%2F192.168.1.80%3A8081
+ LOG  URL starts with https:// false
+ LOG  URL includes /oauth/ false
+ LOG  ❌ URL did not match any OAuth patterns
+ LOG  Expected OAuth patterns:
+ LOG    1. Contains "oauth2redirect" or "com.googleusercontent.apps"
+ LOG    2. Starts with "mobilejarvisnative://oauth/callback"
+ LOG    3. Contains "code=" or "error=" parameters
  LOG  🏥 HealthSync: Starting health data sync for user: f8ac1669-7e9e-4d9e-bb9d-bebd806ce58e
- LOG  🏥 HealthSync: Bypassing debounce for critical sync
- LOG  🏥 HealthSync: Platform detected: ios
- LOG  🍎 HealthSync: Starting Apple Health sync
- LOG  🍎 HealthSync: Checking for active integration
- LOG  🍎 HealthSync: Active integration found, fetching health data
- LOG  🍎 AppleHealthKitDataService: Fetching current realtime data
- LOG  🍎 DETAILED LOGGING: Getting 7 days of data for wearables_data integration
- LOG  🍎 Date range for detailed analysis: {"daysDifference": 1, "endDate": "2025-09-16T01:32:18.126Z", "startDate": "2025-09-15T01:32:18.126Z"}
- LOG  🍎 ===== DETAILED METRICS ANALYSIS =====
- LOG  🍎 Analyzing 7 days of data for wearables_data table integration
- LOG  🍎 Days to analyze: ["Mon Sep 08 2025", "Tue Sep 09 2025", "Wed Sep 10 2025", "Thu Sep 11 2025", "Fri Sep 12 2025", "Sat Sep 13 2025", "Sun Sep 14 2025"]
- LOG  
-🍎 ===== Mon Sep 08 2025 =====
- LOG  🍎 Day range: {"end": "2025-09-09T04:59:59.999Z", "start": "2025-09-08T05:00:00.000Z"}
- LOG  🍎 📊 Steps Analysis:
- LOG  🍎   Raw samples count: 373
- LOG  🍎   First sample: {"endDate": 2025-09-08T05:01:00.900Z, "quantity": 1, "source": "SourceProxy", "startDate": 2025-09-08T05:01:00.000Z, "unit": "count"}
- LOG  🍎   Last sample: {"endDate": 2025-09-09T05:00:00.000Z, "quantity": 1, "source": "SourceProxy", "startDate": 2025-09-09T04:59:00.000Z, "unit": "count"}
- LOG  🍎   Total for day: 13243 count
- LOG  🍎   Active hours (16): 0h: 7.0, 9h: 5.0, 10h: 1330.0, 11h: 83.0, 12h: 448.0, 13h: 368.0, 14h: 614.0, 15h: 1679.0, 16h: 724.0, 17h: 939.0, 18h: 260.0, 19h: 2877.0, 20h: 1778.0, 21h: 537.0, 22h: 82.0, 23h: 1512.0
- LOG  🍎 📊 Distance Analysis:
- LOG  🍎   Raw samples count: 17
- LOG  🍎   First sample: {"endDate": 2025-09-08T19:14:34.366Z, "quantity": 0.11624980633331262, "source": "SourceProxy", "startDate": 2025-09-08T19:11:47.992Z, "unit": "mi"}
- LOG  🍎   Last sample: {"endDate": 2025-09-09T02:14:25.395Z, "quantity": 0.08489761590624877, "source": "SourceProxy", "startDate": 2025-09-09T02:11:15.949Z, "unit": "mi"}
- LOG  🍎   Total for day: 1.927279608195197 mi
- LOG  🍎   Active hours (8): 14h: 0.1, 15h: 0.4, 16h: 0.1, 17h: 0.2, 18h: 0.0, 19h: 0.6, 20h: 0.4, 21h: 0.1
- LOG  🍎 📊 Active Energy Analysis:
- LOG  🍎   Raw samples count: 273
- LOG  🍎   First sample: {"endDate": 2025-09-08T05:05:00.000Z, "quantity": 0.121, "source": "SourceProxy", "startDate": 2025-09-08T05:05:00.000Z, "unit": "Cal"}
- LOG  🍎   Last sample: {"endDate": 2025-09-09T04:46:00.000Z, "quantity": 0.403, "source": "SourceProxy", "startDate": 2025-09-09T04:46:00.000Z, "unit": "Cal"}
- LOG  🍎   Total for day: 492.9860000000002 Cal
- LOG  🍎   Active hours (16): 0h: 0.1, 9h: 1.7, 10h: 55.7, 11h: 2.7, 12h: 19.6, 13h: 16.3, 14h: 23.0, 15h: 58.2, 16h: 37.8, 17h: 25.4, 18h: 11.8, 19h: 96.8, 20h: 47.6, 21h: 28.6, 22h: 4.9, 23h: 62.7
- LOG  🍎 📊 Heart Rate Analysis:
- LOG  🍎   Raw samples count: 976
- LOG  🍎   First sample: {"endDate": 2025-09-08T05:04:05.000Z, "quantity": 61, "source": "SourceProxy", "startDate": 2025-09-08T05:04:05.000Z, "unit": "count/min"}
- LOG  🍎   Last sample: {"endDate": 2025-09-09T04:59:52.000Z, "quantity": 57, "source": "SourceProxy", "startDate": 2025-09-09T04:59:52.000Z, "unit": "count/min"}
- LOG  🍎   Average: 69.02, Min: 41, Max: 140 count/min
- LOG  🍎   Active hours (24): 0h: 1234.0, 1h: 1252.0, 2h: 1150.0, 3h: 1233.0, 4h: 865.0, 5h: 1126.0, 6h: 1112.0, 7h: 933.0, 8h: 1166.0, 9h: 726.0, 10h: 11789.0, 11h: 1354.0, 12h: 1037.0, 13h: 1187.0, 14h: 1612.0, 15h: 7882.0, 16h: 11489.0, 17h: 602.0, 18h: 170.0, 19h: 12232.0, 20h: 4306.0, 21h: 946.0, 22h: 903.0, 23h: 1053.0
- LOG  🍎 📊 Resting Heart Rate Analysis:
- LOG  🍎   Raw samples count: 0
- LOG  🍎   No data available for this day
- LOG  🍎 📊 HRV Analysis:
- LOG  🍎   Raw samples count: 0
- LOG  🍎   No data available for this day
- LOG  🍎 📊 Weight Analysis:
- LOG  🍎   Raw samples count: 0
- LOG  🍎   No data available for this day
- LOG  🍎 😴 Sleep Analysis:
- LOG  🍎   Sleep window: 2025-09-07T23:00:00.000Z to 2025-09-08T19:00:00.000Z
- LOG  🍎   Sleep samples count: 96
- LOG  🍎     Sample: awake (2) - 9.5min - Mon Sep 08 2025 00:37:03 GMT-0500 to Mon Sep 08 2025 00:46:33 GMT-0500
- LOG  🍎     Sample: inBed (0) - 555.0min - Mon Sep 08 2025 00:37:03 GMT-0500 to Mon Sep 08 2025 09:52:03 GMT-0500
- LOG  🍎     Sample: core (3) - 21.0min - Mon Sep 08 2025 00:46:33 GMT-0500 to Mon Sep 08 2025 01:07:33 GMT-0500
- LOG  🍎     Sample: deep (4) - 36.5min - Mon Sep 08 2025 01:07:33 GMT-0500 to Mon Sep 08 2025 01:44:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 2.0min - Mon Sep 08 2025 01:44:03 GMT-0500 to Mon Sep 08 2025 01:46:03 GMT-0500
- LOG  🍎     Sample: core (3) - 12.5min - Mon Sep 08 2025 01:46:03 GMT-0500 to Mon Sep 08 2025 01:58:33 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 01:58:33 GMT-0500 to Mon Sep 08 2025 01:59:03 GMT-0500
- LOG  🍎     Sample: core (3) - 2.0min - Mon Sep 08 2025 01:59:03 GMT-0500 to Mon Sep 08 2025 02:01:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 02:01:03 GMT-0500 to Mon Sep 08 2025 02:01:33 GMT-0500
- LOG  🍎     Sample: core (3) - 7.5min - Mon Sep 08 2025 02:01:33 GMT-0500 to Mon Sep 08 2025 02:09:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 02:09:03 GMT-0500 to Mon Sep 08 2025 02:09:33 GMT-0500
- LOG  🍎     Sample: core (3) - 19.5min - Mon Sep 08 2025 02:09:33 GMT-0500 to Mon Sep 08 2025 02:29:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 02:29:03 GMT-0500 to Mon Sep 08 2025 02:29:33 GMT-0500
- LOG  🍎     Sample: core (3) - 12.0min - Mon Sep 08 2025 02:29:33 GMT-0500 to Mon Sep 08 2025 02:41:33 GMT-0500
- LOG  🍎     Sample: deep (4) - 10.5min - Mon Sep 08 2025 02:41:33 GMT-0500 to Mon Sep 08 2025 02:52:03 GMT-0500
- LOG  🍎     Sample: core (3) - 13.0min - Mon Sep 08 2025 02:52:03 GMT-0500 to Mon Sep 08 2025 03:05:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 03:05:03 GMT-0500 to Mon Sep 08 2025 03:05:33 GMT-0500
- LOG  🍎     Sample: core (3) - 4.5min - Mon Sep 08 2025 03:05:33 GMT-0500 to Mon Sep 08 2025 03:10:03 GMT-0500
- LOG  🍎     Sample: rem (5) - 12.5min - Mon Sep 08 2025 03:10:03 GMT-0500 to Mon Sep 08 2025 03:22:33 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 03:22:33 GMT-0500 to Mon Sep 08 2025 03:23:03 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Mon Sep 08 2025 03:23:03 GMT-0500 to Mon Sep 08 2025 03:23:33 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Mon Sep 08 2025 03:23:33 GMT-0500 to Mon Sep 08 2025 03:24:03 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Mon Sep 08 2025 03:24:03 GMT-0500 to Mon Sep 08 2025 03:24:33 GMT-0500
- LOG  🍎     Sample: core (3) - 4.5min - Mon Sep 08 2025 03:24:33 GMT-0500 to Mon Sep 08 2025 03:29:03 GMT-0500
- LOG  🍎     Sample: rem (5) - 8.5min - Mon Sep 08 2025 03:29:03 GMT-0500 to Mon Sep 08 2025 03:37:33 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Mon Sep 08 2025 03:37:33 GMT-0500 to Mon Sep 08 2025 03:38:03 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Mon Sep 08 2025 03:38:03 GMT-0500 to Mon Sep 08 2025 03:38:33 GMT-0500
- LOG  🍎     Sample: core (3) - 20.5min - Mon Sep 08 2025 03:38:33 GMT-0500 to Mon Sep 08 2025 03:59:03 GMT-0500
- LOG  🍎     Sample: deep (4) - 5.0min - Mon Sep 08 2025 03:59:03 GMT-0500 to Mon Sep 08 2025 04:04:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 04:04:03 GMT-0500 to Mon Sep 08 2025 04:04:33 GMT-0500
- LOG  🍎     Sample: deep (4) - 0.5min - Mon Sep 08 2025 04:04:33 GMT-0500 to Mon Sep 08 2025 04:05:03 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Mon Sep 08 2025 04:05:03 GMT-0500 to Mon Sep 08 2025 04:05:33 GMT-0500
- LOG  🍎     Sample: awake (2) - 14.0min - Mon Sep 08 2025 04:05:33 GMT-0500 to Mon Sep 08 2025 04:19:33 GMT-0500
- LOG  🍎     Sample: core (3) - 8.5min - Mon Sep 08 2025 04:19:33 GMT-0500 to Mon Sep 08 2025 04:28:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 2.5min - Mon Sep 08 2025 04:28:03 GMT-0500 to Mon Sep 08 2025 04:30:33 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Mon Sep 08 2025 04:30:33 GMT-0500 to Mon Sep 08 2025 04:32:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Mon Sep 08 2025 04:32:03 GMT-0500 to Mon Sep 08 2025 04:33:33 GMT-0500
- LOG  🍎     Sample: core (3) - 27.0min - Mon Sep 08 2025 04:33:33 GMT-0500 to Mon Sep 08 2025 05:00:33 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 05:00:33 GMT-0500 to Mon Sep 08 2025 05:01:03 GMT-0500
- LOG  🍎     Sample: core (3) - 4.5min - Mon Sep 08 2025 05:01:03 GMT-0500 to Mon Sep 08 2025 05:05:33 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Mon Sep 08 2025 05:05:33 GMT-0500 to Mon Sep 08 2025 05:06:33 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Mon Sep 08 2025 05:06:33 GMT-0500 to Mon Sep 08 2025 05:07:33 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Mon Sep 08 2025 05:07:33 GMT-0500 to Mon Sep 08 2025 05:08:33 GMT-0500
- LOG  🍎     Sample: core (3) - 21.5min - Mon Sep 08 2025 05:08:33 GMT-0500 to Mon Sep 08 2025 05:30:03 GMT-0500
- LOG  🍎     Sample: rem (5) - 10.5min - Mon Sep 08 2025 05:30:03 GMT-0500 to Mon Sep 08 2025 05:40:33 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Mon Sep 08 2025 05:40:33 GMT-0500 to Mon Sep 08 2025 05:41:33 GMT-0500
- LOG  🍎     Sample: rem (5) - 2.5min - Mon Sep 08 2025 05:41:33 GMT-0500 to Mon Sep 08 2025 05:44:03 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Mon Sep 08 2025 05:44:03 GMT-0500 to Mon Sep 08 2025 05:45:03 GMT-0500
- LOG  🍎     Sample: rem (5) - 29.0min - Mon Sep 08 2025 05:45:03 GMT-0500 to Mon Sep 08 2025 06:14:03 GMT-0500
- LOG  🍎     Sample: core (3) - 23.5min - Mon Sep 08 2025 06:14:03 GMT-0500 to Mon Sep 08 2025 06:37:33 GMT-0500
- LOG  🍎     Sample: deep (4) - 6.0min - Mon Sep 08 2025 06:37:33 GMT-0500 to Mon Sep 08 2025 06:43:33 GMT-0500
- LOG  🍎     Sample: core (3) - 7.5min - Mon Sep 08 2025 06:43:33 GMT-0500 to Mon Sep 08 2025 06:51:03 GMT-0500
- LOG  🍎     Sample: deep (4) - 2.0min - Mon Sep 08 2025 06:51:03 GMT-0500 to Mon Sep 08 2025 06:53:03 GMT-0500
- LOG  🍎     Sample: core (3) - 2.0min - Mon Sep 08 2025 06:53:03 GMT-0500 to Mon Sep 08 2025 06:55:03 GMT-0500
- LOG  🍎     Sample: deep (4) - 7.0min - Mon Sep 08 2025 06:55:03 GMT-0500 to Mon Sep 08 2025 07:02:03 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Mon Sep 08 2025 07:02:03 GMT-0500 to Mon Sep 08 2025 07:03:33 GMT-0500
- LOG  🍎     Sample: deep (4) - 3.5min - Mon Sep 08 2025 07:03:33 GMT-0500 to Mon Sep 08 2025 07:07:03 GMT-0500
- LOG  🍎     Sample: core (3) - 11.5min - Mon Sep 08 2025 07:07:03 GMT-0500 to Mon Sep 08 2025 07:18:33 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 07:18:33 GMT-0500 to Mon Sep 08 2025 07:19:03 GMT-0500
- LOG  🍎     Sample: core (3) - 10.5min - Mon Sep 08 2025 07:19:03 GMT-0500 to Mon Sep 08 2025 07:29:33 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 07:29:33 GMT-0500 to Mon Sep 08 2025 07:30:03 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Mon Sep 08 2025 07:30:03 GMT-0500 to Mon Sep 08 2025 07:31:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 07:31:03 GMT-0500 to Mon Sep 08 2025 07:31:33 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Mon Sep 08 2025 07:31:33 GMT-0500 to Mon Sep 08 2025 07:32:33 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 07:32:33 GMT-0500 to Mon Sep 08 2025 07:33:03 GMT-0500
- LOG  🍎     Sample: core (3) - 17.0min - Mon Sep 08 2025 07:33:03 GMT-0500 to Mon Sep 08 2025 07:50:03 GMT-0500
- LOG  🍎     Sample: rem (5) - 3.0min - Mon Sep 08 2025 07:50:03 GMT-0500 to Mon Sep 08 2025 07:53:03 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Mon Sep 08 2025 07:53:03 GMT-0500 to Mon Sep 08 2025 07:53:33 GMT-0500
- LOG  🍎     Sample: rem (5) - 2.5min - Mon Sep 08 2025 07:53:33 GMT-0500 to Mon Sep 08 2025 07:56:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 4.0min - Mon Sep 08 2025 07:56:03 GMT-0500 to Mon Sep 08 2025 08:00:03 GMT-0500
- LOG  🍎     Sample: rem (5) - 3.0min - Mon Sep 08 2025 08:00:03 GMT-0500 to Mon Sep 08 2025 08:03:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Mon Sep 08 2025 08:03:03 GMT-0500 to Mon Sep 08 2025 08:04:03 GMT-0500
- LOG  🍎     Sample: core (3) - 4.0min - Mon Sep 08 2025 08:04:03 GMT-0500 to Mon Sep 08 2025 08:08:03 GMT-0500
- LOG  🍎     Sample: rem (5) - 10.5min - Mon Sep 08 2025 08:08:03 GMT-0500 to Mon Sep 08 2025 08:18:33 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Mon Sep 08 2025 08:18:33 GMT-0500 to Mon Sep 08 2025 08:19:03 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.5min - Mon Sep 08 2025 08:19:03 GMT-0500 to Mon Sep 08 2025 08:20:33 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Mon Sep 08 2025 08:20:33 GMT-0500 to Mon Sep 08 2025 08:21:33 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Mon Sep 08 2025 08:21:33 GMT-0500 to Mon Sep 08 2025 08:22:03 GMT-0500
- LOG  🍎     Sample: core (3) - 6.5min - Mon Sep 08 2025 08:22:03 GMT-0500 to Mon Sep 08 2025 08:28:33 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 08:28:33 GMT-0500 to Mon Sep 08 2025 08:29:03 GMT-0500
- LOG  🍎     Sample: core (3) - 2.5min - Mon Sep 08 2025 08:29:03 GMT-0500 to Mon Sep 08 2025 08:31:33 GMT-0500
- LOG  🍎     Sample: rem (5) - 12.5min - Mon Sep 08 2025 08:31:33 GMT-0500 to Mon Sep 08 2025 08:44:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 4.5min - Mon Sep 08 2025 08:44:03 GMT-0500 to Mon Sep 08 2025 08:48:33 GMT-0500
- LOG  🍎     Sample: rem (5) - 7.0min - Mon Sep 08 2025 08:48:33 GMT-0500 to Mon Sep 08 2025 08:55:33 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 08:55:33 GMT-0500 to Mon Sep 08 2025 08:56:03 GMT-0500
- LOG  🍎     Sample: rem (5) - 7.5min - Mon Sep 08 2025 08:56:03 GMT-0500 to Mon Sep 08 2025 09:03:33 GMT-0500
- LOG  🍎     Sample: core (3) - 12.5min - Mon Sep 08 2025 09:03:33 GMT-0500 to Mon Sep 08 2025 09:16:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 09:16:03 GMT-0500 to Mon Sep 08 2025 09:16:33 GMT-0500
- LOG  🍎     Sample: core (3) - 4.5min - Mon Sep 08 2025 09:16:33 GMT-0500 to Mon Sep 08 2025 09:21:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Mon Sep 08 2025 09:21:03 GMT-0500 to Mon Sep 08 2025 09:21:33 GMT-0500
- LOG  🍎     Sample: core (3) - 14.5min - Mon Sep 08 2025 09:21:33 GMT-0500 to Mon Sep 08 2025 09:36:03 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Mon Sep 08 2025 09:36:03 GMT-0500 to Mon Sep 08 2025 09:37:33 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Mon Sep 08 2025 09:37:33 GMT-0500 to Mon Sep 08 2025 09:39:03 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Mon Sep 08 2025 09:39:03 GMT-0500 to Mon Sep 08 2025 09:40:03 GMT-0500
- LOG  🍎     Sample: core (3) - 2.5min - Mon Sep 08 2025 09:40:03 GMT-0500 to Mon Sep 08 2025 09:42:33 GMT-0500
- LOG  🍎     Sample: awake (2) - 9.5min - Mon Sep 08 2025 09:42:33 GMT-0500 to Mon Sep 08 2025 09:52:03 GMT-0500
- LOG  🍎   Sleep breakdown: {"efficiency": "44.5%", "stages": {"asleep": "0.0min", "awake": "61.0min", "core": "309.5min", "deep": "71.0min", "inBed": "555.0min", "rem": "113.5min"}, "totalInBedHours": "18.50", "totalSleepHours": "8.23"}
- LOG  
-🍎 ===== Tue Sep 09 2025 =====
- LOG  🍎 Day range: {"end": "2025-09-10T04:59:59.999Z", "start": "2025-09-09T05:00:00.000Z"}
- LOG  🍎 📊 Steps Analysis:
- LOG  🍎   Raw samples count: 229
- LOG  🍎   First sample: {"endDate": 2025-09-09T05:00:00.000Z, "quantity": 1, "source": "SourceProxy", "startDate": 2025-09-09T04:59:00.000Z, "unit": "count"}
- LOG  🍎   Last sample: {"endDate": 2025-09-10T04:39:05.000Z, "quantity": 1, "source": "SourceProxy", "startDate": 2025-09-10T04:39:00.000Z, "unit": "count"}
- LOG  🍎   Total for day: 9516 count
- LOG  🍎   Active hours (16): 0h: 167.0, 1h: 12.0, 3h: 1.0, 10h: 827.0, 11h: 48.0, 12h: 42.0, 13h: 56.0, 14h: 766.0, 15h: 55.0, 16h: 496.0, 18h: 15.0, 19h: 2534.0, 20h: 3294.0, 21h: 12.0, 22h: 1127.0, 23h: 64.0
- LOG  🍎 📊 Distance Analysis:
- LOG  🍎   Raw samples count: 9
- LOG  🍎   First sample: {"endDate": 2025-09-09T19:25:26.640Z, "quantity": 0.12434446019731238, "source": "SourceProxy", "startDate": 2025-09-09T19:20:32.300Z, "unit": "mi"}
- LOG  🍎   Last sample: {"endDate": 2025-09-10T01:36:46.351Z, "quantity": 0.1798421958434404, "source": "SourceProxy", "startDate": 2025-09-10T01:27:00.187Z, "unit": "mi"}
- LOG  🍎   Total for day: 0.6514180752613601 mi
- LOG  🍎   Active hours (5): 14h: 0.2, 15h: 0.0, 16h: 0.2, 18h: 0.0, 20h: 0.2
- LOG  🍎 📊 Active Energy Analysis:
- LOG  🍎   Raw samples count: 263
- LOG  🍎   First sample: {"endDate": 2025-09-09T05:01:00.000Z, "quantity": 0.242, "source": "SourceProxy", "startDate": 2025-09-09T05:01:00.000Z, "unit": "Cal"}
- LOG  🍎   Last sample: {"endDate": 2025-09-10T04:22:00.000Z, "quantity": 0.403, "source": "SourceProxy", "startDate": 2025-09-10T04:22:00.000Z, "unit": "Cal"}
- LOG  🍎   Total for day: 1049.4050000000016 Cal
- LOG  🍎   Active hours (15): 0h: 7.6, 1h: 0.5, 3h: 0.5, 10h: 33.6, 11h: 2.2, 12h: 1.0, 13h: 2.9, 14h: 220.5, 15h: 434.4, 16h: 29.7, 18h: 0.3, 19h: 111.3, 20h: 162.9, 22h: 37.6, 23h: 4.4
- LOG  🍎 📊 Heart Rate Analysis:
- LOG  🍎   Raw samples count: 1141
- LOG  🍎   First sample: {"endDate": 2025-09-09T05:00:31.000Z, "quantity": 62, "source": "SourceProxy", "startDate": 2025-09-09T05:00:31.000Z, "unit": "count/min"}
- LOG  🍎   Last sample: {"endDate": 2025-09-10T04:59:17.000Z, "quantity": 49, "source": "SourceProxy", "startDate": 2025-09-10T04:59:17.000Z, "unit": "count/min"}
- LOG  🍎   Average: 76.97, Min: 41, Max: 115 count/min
- LOG  🍎   Active hours (20): 0h: 2137.0, 1h: 1036.0, 2h: 1092.0, 3h: 928.0, 4h: 1148.0, 5h: 1082.0, 6h: 926.0, 7h: 886.0, 8h: 776.0, 9h: 748.0, 10h: 749.0, 11h: 1028.0, 12h: 1410.0, 13h: 1242.0, 14h: 364.0, 19h: 27573.0, 20h: 41225.0, 21h: 1292.0, 22h: 1215.0, 23h: 968.0
- LOG  🍎 📊 Resting Heart Rate Analysis:
- LOG  🍎   Raw samples count: 0
- LOG  🍎   No data available for this day
- LOG  🍎 📊 HRV Analysis:
- LOG  🍎   Raw samples count: 0
- LOG  🍎   No data available for this day
- LOG  🍎 📊 Weight Analysis:
- LOG  🍎   Raw samples count: 0
- LOG  🍎   No data available for this day
- LOG  🍎 😴 Sleep Analysis:
- LOG  🍎   Sleep window: 2025-09-08T23:00:00.000Z to 2025-09-09T19:00:00.000Z
- LOG  🍎   Sleep samples count: 92
- LOG  🍎     Sample: awake (2) - 12.0min - Tue Sep 09 2025 01:17:02 GMT-0500 to Tue Sep 09 2025 01:29:02 GMT-0500
- LOG  🍎     Sample: inBed (0) - 523.0min - Tue Sep 09 2025 01:17:02 GMT-0500 to Tue Sep 09 2025 10:00:02 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Tue Sep 09 2025 01:29:02 GMT-0500 to Tue Sep 09 2025 01:30:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 2.0min - Tue Sep 09 2025 01:30:32 GMT-0500 to Tue Sep 09 2025 01:32:32 GMT-0500
- LOG  🍎     Sample: core (3) - 11.0min - Tue Sep 09 2025 01:32:32 GMT-0500 to Tue Sep 09 2025 01:43:32 GMT-0500
- LOG  🍎     Sample: deep (4) - 41.0min - Tue Sep 09 2025 01:43:32 GMT-0500 to Tue Sep 09 2025 02:24:32 GMT-0500
- LOG  🍎     Sample: core (3) - 6.5min - Tue Sep 09 2025 02:24:32 GMT-0500 to Tue Sep 09 2025 02:31:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Tue Sep 09 2025 02:31:02 GMT-0500 to Tue Sep 09 2025 02:31:32 GMT-0500
- LOG  🍎     Sample: core (3) - 2.0min - Tue Sep 09 2025 02:31:32 GMT-0500 to Tue Sep 09 2025 02:33:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.5min - Tue Sep 09 2025 02:33:32 GMT-0500 to Tue Sep 09 2025 02:35:02 GMT-0500
- LOG  🍎     Sample: core (3) - 2.0min - Tue Sep 09 2025 02:35:02 GMT-0500 to Tue Sep 09 2025 02:37:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Tue Sep 09 2025 02:37:02 GMT-0500 to Tue Sep 09 2025 02:38:02 GMT-0500
- LOG  🍎     Sample: core (3) - 13.0min - Tue Sep 09 2025 02:38:02 GMT-0500 to Tue Sep 09 2025 02:51:02 GMT-0500
- LOG  🍎     Sample: deep (4) - 24.0min - Tue Sep 09 2025 02:51:02 GMT-0500 to Tue Sep 09 2025 03:15:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Tue Sep 09 2025 03:15:02 GMT-0500 to Tue Sep 09 2025 03:16:02 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Tue Sep 09 2025 03:16:02 GMT-0500 to Tue Sep 09 2025 03:17:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Tue Sep 09 2025 03:17:32 GMT-0500 to Tue Sep 09 2025 03:19:02 GMT-0500
- LOG  🍎     Sample: core (3) - 8.5min - Tue Sep 09 2025 03:19:02 GMT-0500 to Tue Sep 09 2025 03:27:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 03:27:32 GMT-0500 to Tue Sep 09 2025 03:28:02 GMT-0500
- LOG  🍎     Sample: core (3) - 2.5min - Tue Sep 09 2025 03:28:02 GMT-0500 to Tue Sep 09 2025 03:30:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 03:30:32 GMT-0500 to Tue Sep 09 2025 03:31:02 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Tue Sep 09 2025 03:31:02 GMT-0500 to Tue Sep 09 2025 03:32:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 03:32:02 GMT-0500 to Tue Sep 09 2025 03:32:32 GMT-0500
- LOG  🍎     Sample: core (3) - 2.5min - Tue Sep 09 2025 03:32:32 GMT-0500 to Tue Sep 09 2025 03:35:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 7.0min - Tue Sep 09 2025 03:35:02 GMT-0500 to Tue Sep 09 2025 03:42:02 GMT-0500
- LOG  🍎     Sample: core (3) - 6.5min - Tue Sep 09 2025 03:42:02 GMT-0500 to Tue Sep 09 2025 03:48:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 03:48:32 GMT-0500 to Tue Sep 09 2025 03:49:02 GMT-0500
- LOG  🍎     Sample: core (3) - 7.0min - Tue Sep 09 2025 03:49:02 GMT-0500 to Tue Sep 09 2025 03:56:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 37.0min - Tue Sep 09 2025 03:56:02 GMT-0500 to Tue Sep 09 2025 04:33:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 04:33:02 GMT-0500 to Tue Sep 09 2025 04:33:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.5min - Tue Sep 09 2025 04:33:32 GMT-0500 to Tue Sep 09 2025 04:35:02 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Tue Sep 09 2025 04:35:02 GMT-0500 to Tue Sep 09 2025 04:36:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Tue Sep 09 2025 04:36:32 GMT-0500 to Tue Sep 09 2025 04:38:02 GMT-0500
- LOG  🍎     Sample: core (3) - 30.5min - Tue Sep 09 2025 04:38:02 GMT-0500 to Tue Sep 09 2025 05:08:32 GMT-0500
- LOG  🍎     Sample: deep (4) - 4.5min - Tue Sep 09 2025 05:08:32 GMT-0500 to Tue Sep 09 2025 05:13:02 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Tue Sep 09 2025 05:13:02 GMT-0500 to Tue Sep 09 2025 05:14:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 05:14:02 GMT-0500 to Tue Sep 09 2025 05:14:32 GMT-0500
- LOG  🍎     Sample: core (3) - 5.0min - Tue Sep 09 2025 05:14:32 GMT-0500 to Tue Sep 09 2025 05:19:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 05:19:32 GMT-0500 to Tue Sep 09 2025 05:20:02 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Tue Sep 09 2025 05:20:02 GMT-0500 to Tue Sep 09 2025 05:20:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 05:20:32 GMT-0500 to Tue Sep 09 2025 05:21:02 GMT-0500
- LOG  🍎     Sample: core (3) - 9.0min - Tue Sep 09 2025 05:21:02 GMT-0500 to Tue Sep 09 2025 05:30:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Tue Sep 09 2025 05:30:02 GMT-0500 to Tue Sep 09 2025 05:31:02 GMT-0500
- LOG  🍎     Sample: core (3) - 27.5min - Tue Sep 09 2025 05:31:02 GMT-0500 to Tue Sep 09 2025 05:58:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 05:58:32 GMT-0500 to Tue Sep 09 2025 05:59:02 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Tue Sep 09 2025 05:59:02 GMT-0500 to Tue Sep 09 2025 06:00:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 28.0min - Tue Sep 09 2025 06:00:32 GMT-0500 to Tue Sep 09 2025 06:28:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 06:28:32 GMT-0500 to Tue Sep 09 2025 06:29:02 GMT-0500
- LOG  🍎     Sample: core (3) - 2.0min - Tue Sep 09 2025 06:29:02 GMT-0500 to Tue Sep 09 2025 06:31:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Tue Sep 09 2025 06:31:02 GMT-0500 to Tue Sep 09 2025 06:32:02 GMT-0500
- LOG  🍎     Sample: core (3) - 32.0min - Tue Sep 09 2025 06:32:02 GMT-0500 to Tue Sep 09 2025 07:04:02 GMT-0500
- LOG  🍎     Sample: deep (4) - 1.5min - Tue Sep 09 2025 07:04:02 GMT-0500 to Tue Sep 09 2025 07:05:32 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Tue Sep 09 2025 07:05:32 GMT-0500 to Tue Sep 09 2025 07:06:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 3.5min - Tue Sep 09 2025 07:06:02 GMT-0500 to Tue Sep 09 2025 07:09:32 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Tue Sep 09 2025 07:09:32 GMT-0500 to Tue Sep 09 2025 07:10:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Tue Sep 09 2025 07:10:32 GMT-0500 to Tue Sep 09 2025 07:11:32 GMT-0500
- LOG  🍎     Sample: core (3) - 9.0min - Tue Sep 09 2025 07:11:32 GMT-0500 to Tue Sep 09 2025 07:20:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Tue Sep 09 2025 07:20:32 GMT-0500 to Tue Sep 09 2025 07:21:32 GMT-0500
- LOG  🍎     Sample: core (3) - 15.5min - Tue Sep 09 2025 07:21:32 GMT-0500 to Tue Sep 09 2025 07:37:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 07:37:02 GMT-0500 to Tue Sep 09 2025 07:37:32 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Tue Sep 09 2025 07:37:32 GMT-0500 to Tue Sep 09 2025 07:38:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 07:38:32 GMT-0500 to Tue Sep 09 2025 07:39:02 GMT-0500
- LOG  🍎     Sample: core (3) - 4.5min - Tue Sep 09 2025 07:39:02 GMT-0500 to Tue Sep 09 2025 07:43:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Tue Sep 09 2025 07:43:32 GMT-0500 to Tue Sep 09 2025 07:44:32 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Tue Sep 09 2025 07:44:32 GMT-0500 to Tue Sep 09 2025 07:45:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 6.5min - Tue Sep 09 2025 07:45:32 GMT-0500 to Tue Sep 09 2025 07:52:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 07:52:02 GMT-0500 to Tue Sep 09 2025 07:52:32 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Tue Sep 09 2025 07:52:32 GMT-0500 to Tue Sep 09 2025 07:53:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 9.0min - Tue Sep 09 2025 07:53:02 GMT-0500 to Tue Sep 09 2025 08:02:02 GMT-0500
- LOG  🍎     Sample: core (3) - 13.0min - Tue Sep 09 2025 08:02:02 GMT-0500 to Tue Sep 09 2025 08:15:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 08:15:02 GMT-0500 to Tue Sep 09 2025 08:15:32 GMT-0500
- LOG  🍎     Sample: core (3) - 20.0min - Tue Sep 09 2025 08:15:32 GMT-0500 to Tue Sep 09 2025 08:35:32 GMT-0500
- LOG  🍎     Sample: deep (4) - 1.5min - Tue Sep 09 2025 08:35:32 GMT-0500 to Tue Sep 09 2025 08:37:02 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Tue Sep 09 2025 08:37:02 GMT-0500 to Tue Sep 09 2025 08:38:02 GMT-0500
- LOG  🍎     Sample: deep (4) - 3.5min - Tue Sep 09 2025 08:38:02 GMT-0500 to Tue Sep 09 2025 08:41:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 08:41:32 GMT-0500 to Tue Sep 09 2025 08:42:02 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Tue Sep 09 2025 08:42:02 GMT-0500 to Tue Sep 09 2025 08:42:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 08:42:32 GMT-0500 to Tue Sep 09 2025 08:43:02 GMT-0500
- LOG  🍎     Sample: core (3) - 15.0min - Tue Sep 09 2025 08:43:02 GMT-0500 to Tue Sep 09 2025 08:58:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 25.0min - Tue Sep 09 2025 08:58:02 GMT-0500 to Tue Sep 09 2025 09:23:02 GMT-0500
- LOG  🍎     Sample: core (3) - 5.5min - Tue Sep 09 2025 09:23:02 GMT-0500 to Tue Sep 09 2025 09:28:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 09:28:32 GMT-0500 to Tue Sep 09 2025 09:29:02 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Tue Sep 09 2025 09:29:02 GMT-0500 to Tue Sep 09 2025 09:30:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 09:30:02 GMT-0500 to Tue Sep 09 2025 09:30:32 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Tue Sep 09 2025 09:30:32 GMT-0500 to Tue Sep 09 2025 09:31:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Tue Sep 09 2025 09:31:02 GMT-0500 to Tue Sep 09 2025 09:32:02 GMT-0500
- LOG  🍎     Sample: core (3) - 11.0min - Tue Sep 09 2025 09:32:02 GMT-0500 to Tue Sep 09 2025 09:43:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Tue Sep 09 2025 09:43:02 GMT-0500 to Tue Sep 09 2025 09:43:32 GMT-0500
- LOG  🍎     Sample: core (3) - 7.0min - Tue Sep 09 2025 09:43:32 GMT-0500 to Tue Sep 09 2025 09:50:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Tue Sep 09 2025 09:50:32 GMT-0500 to Tue Sep 09 2025 09:51:32 GMT-0500
- LOG  🍎     Sample: core (3) - 2.5min - Tue Sep 09 2025 09:51:32 GMT-0500 to Tue Sep 09 2025 09:54:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 6.0min - Tue Sep 09 2025 09:54:02 GMT-0500 to Tue Sep 09 2025 10:00:02 GMT-0500
- LOG  🍎   Sleep breakdown: {"efficiency": "45.3%", "stages": {"asleep": "0.0min", "awake": "49.0min", "core": "286.0min", "deep": "76.0min", "inBed": "523.0min", "rem": "112.0min"}, "totalInBedHours": "17.43", "totalSleepHours": "7.90"}
- LOG  
-🍎 ===== Wed Sep 10 2025 =====
- LOG  🍎 Day range: {"end": "2025-09-11T04:59:59.999Z", "start": "2025-09-10T05:00:00.000Z"}
- LOG  🍎 📊 Steps Analysis:
- LOG  🍎   Raw samples count: 303
- LOG  🍎   First sample: {"endDate": 2025-09-10T15:13:00.000Z, "quantity": 4, "source": "SourceProxy", "startDate": 2025-09-10T15:12:00.000Z, "unit": "count"}
- LOG  🍎   Last sample: {"endDate": 2025-09-11T05:00:00.000Z, "quantity": 1, "source": "SourceProxy", "startDate": 2025-09-11T04:59:00.000Z, "unit": "count"}
- LOG  🍎   Total for day: 9676 count
- LOG  🍎   Active hours (14): 10h: 191.0, 11h: 124.0, 12h: 954.0, 13h: 117.0, 14h: 1062.0, 15h: 29.0, 16h: 1400.0, 17h: 81.0, 18h: 373.0, 19h: 3297.0, 20h: 506.0, 21h: 1330.0, 22h: 109.0, 23h: 103.0
- LOG  🍎 📊 Distance Analysis:
- LOG  🍎   Raw samples count: 7
- LOG  🍎   First sample: {"endDate": 2025-09-10T17:08:14.248Z, "quantity": 0.19505742685270314, "source": "SourceProxy", "startDate": 2025-09-10T17:03:40.349Z, "unit": "mi"}
- LOG  🍎   Last sample: {"endDate": 2025-09-11T04:27:04.126Z, "quantity": 0.0034796786762975912, "source": "SourceProxy", "startDate": 2025-09-11T04:26:59.007Z, "unit": "mi"}
- LOG  🍎   Total for day: 0.7758140464972931 mi
- LOG  🍎   Active hours (6): 12h: 0.2, 14h: 0.2, 16h: 0.3, 18h: 0.1, 21h: 0.0, 23h: 0.0
- LOG  🍎 📊 Active Energy Analysis:
- LOG  🍎   Raw samples count: 196
- LOG  🍎   First sample: {"endDate": 2025-09-10T12:43:00.000Z, "quantity": 0.403, "source": "SourceProxy", "startDate": 2025-09-10T12:43:00.000Z, "unit": "Cal"}
- LOG  🍎   Last sample: {"endDate": 2025-09-11T04:57:00.000Z, "quantity": 0.403, "source": "SourceProxy", "startDate": 2025-09-11T04:57:00.000Z, "unit": "Cal"}
- LOG  🍎   Total for day: 427.3679999999999 Cal
- LOG  🍎   Active hours (15): 7h: 0.4, 10h: 5.8, 11h: 10.0, 12h: 57.4, 13h: 5.7, 14h: 34.2, 15h: 1.3, 16h: 44.2, 17h: 6.6, 18h: 18.5, 19h: 144.8, 20h: 20.7, 21h: 68.0, 22h: 4.3, 23h: 5.7
- LOG  🍎 📊 Heart Rate Analysis:
- LOG  🍎   Raw samples count: 1233
- LOG  🍎   First sample: {"endDate": 2025-09-10T05:02:31.000Z, "quantity": 51, "source": "SourceProxy", "startDate": 2025-09-10T04:57:32.000Z, "unit": "count/min"}
- LOG  🍎   Last sample: {"endDate": 2025-09-11T04:51:42.000Z, "quantity": 49, "source": "SourceProxy", "startDate": 2025-09-11T04:51:42.000Z, "unit": "count/min"}
- LOG  🍎   Average: 71.72, Min: 43, Max: 108 count/min
- LOG  🍎   Active hours (24): 0h: 1084.0, 1h: 1082.0, 2h: 1117.0, 3h: 1100.0, 4h: 1147.0, 5h: 1134.0, 6h: 1144.0, 7h: 915.0, 8h: 833.0, 9h: 661.0, 10h: 704.0, 11h: 2315.0, 12h: 6195.0, 13h: 1785.0, 14h: 1778.0, 15h: 1845.0, 16h: 1119.0, 17h: 1165.0, 18h: 1015.0, 19h: 32887.0, 20h: 6911.0, 21h: 16917.0, 22h: 2283.0, 23h: 1289.0
- LOG  🍎 📊 Resting Heart Rate Analysis:
- LOG  🍎   Raw samples count: 1
- LOG  🍎   First sample: {"endDate": 2025-09-11T01:26:00.000Z, "quantity": 50, "source": "SourceProxy", "startDate": 2025-09-11T01:26:00.000Z, "unit": "count/min"}
- LOG  🍎   Last sample: {"endDate": 2025-09-11T01:26:00.000Z, "quantity": 50, "source": "SourceProxy", "startDate": 2025-09-11T01:26:00.000Z, "unit": "count/min"}
- LOG  🍎   Average: 50.00, Min: 50, Max: 50 count/min
- LOG  🍎   Active hours (1): 20h: 50.0
- LOG  🍎 📊 HRV Analysis:
- LOG  🍎   Raw samples count: 1
- LOG  🍎   First sample: {"endDate": 2025-09-11T01:25:00.000Z, "quantity": 110, "source": "SourceProxy", "startDate": 2025-09-11T01:25:00.000Z, "unit": "ms"}
- LOG  🍎   Last sample: {"endDate": 2025-09-11T01:25:00.000Z, "quantity": 110, "source": "SourceProxy", "startDate": 2025-09-11T01:25:00.000Z, "unit": "ms"}
- LOG  🍎   Average: 110.00, Min: 110, Max: 110 ms
- LOG  🍎   Active hours (1): 20h: 110.0
- LOG  🍎 📊 Weight Analysis:
- LOG  🍎   Raw samples count: 0
- LOG  🍎   No data available for this day
- LOG  🍎 😴 Sleep Analysis:
- LOG  🍎   Sleep window: 2025-09-09T23:00:00.000Z to 2025-09-10T19:00:00.000Z
- LOG  🍎   Sleep samples count: 112
- LOG  🍎     Sample: awake (2) - 18.0min - Tue Sep 09 2025 23:42:32 GMT-0500 to Wed Sep 10 2025 00:00:32 GMT-0500
- LOG  🍎     Sample: inBed (0) - 624.0min - Tue Sep 09 2025 23:42:32 GMT-0500 to Wed Sep 10 2025 10:06:32 GMT-0500
- LOG  🍎     Sample: core (3) - 11.0min - Wed Sep 10 2025 00:00:32 GMT-0500 to Wed Sep 10 2025 00:11:32 GMT-0500
- LOG  🍎     Sample: deep (4) - 28.0min - Wed Sep 10 2025 00:11:32 GMT-0500 to Wed Sep 10 2025 00:39:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Wed Sep 10 2025 00:39:32 GMT-0500 to Wed Sep 10 2025 00:40:32 GMT-0500
- LOG  🍎     Sample: core (3) - 14.5min - Wed Sep 10 2025 00:40:32 GMT-0500 to Wed Sep 10 2025 00:55:02 GMT-0500
- LOG  🍎     Sample: deep (4) - 7.0min - Wed Sep 10 2025 00:55:02 GMT-0500 to Wed Sep 10 2025 01:02:02 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Wed Sep 10 2025 01:02:02 GMT-0500 to Wed Sep 10 2025 01:03:32 GMT-0500
- LOG  🍎     Sample: deep (4) - 1.0min - Wed Sep 10 2025 01:03:32 GMT-0500 to Wed Sep 10 2025 01:04:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 01:04:32 GMT-0500 to Wed Sep 10 2025 01:05:02 GMT-0500
- LOG  🍎     Sample: core (3) - 3.5min - Wed Sep 10 2025 01:05:02 GMT-0500 to Wed Sep 10 2025 01:08:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 01:08:32 GMT-0500 to Wed Sep 10 2025 01:09:02 GMT-0500
- LOG  🍎     Sample: core (3) - 6.0min - Wed Sep 10 2025 01:09:02 GMT-0500 to Wed Sep 10 2025 01:15:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 01:15:02 GMT-0500 to Wed Sep 10 2025 01:15:32 GMT-0500
- LOG  🍎     Sample: core (3) - 9.0min - Wed Sep 10 2025 01:15:32 GMT-0500 to Wed Sep 10 2025 01:24:32 GMT-0500
- LOG  🍎     Sample: deep (4) - 31.0min - Wed Sep 10 2025 01:24:32 GMT-0500 to Wed Sep 10 2025 01:55:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 01:55:32 GMT-0500 to Wed Sep 10 2025 01:56:02 GMT-0500
- LOG  🍎     Sample: core (3) - 9.5min - Wed Sep 10 2025 01:56:02 GMT-0500 to Wed Sep 10 2025 02:05:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 02:05:32 GMT-0500 to Wed Sep 10 2025 02:06:02 GMT-0500
- LOG  🍎     Sample: core (3) - 17.5min - Wed Sep 10 2025 02:06:02 GMT-0500 to Wed Sep 10 2025 02:23:32 GMT-0500
- LOG  🍎     Sample: deep (4) - 0.5min - Wed Sep 10 2025 02:23:32 GMT-0500 to Wed Sep 10 2025 02:24:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Wed Sep 10 2025 02:24:02 GMT-0500 to Wed Sep 10 2025 02:25:02 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Wed Sep 10 2025 02:25:02 GMT-0500 to Wed Sep 10 2025 02:26:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 02:26:02 GMT-0500 to Wed Sep 10 2025 02:26:32 GMT-0500
- LOG  🍎     Sample: core (3) - 2.5min - Wed Sep 10 2025 02:26:32 GMT-0500 to Wed Sep 10 2025 02:29:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 10.5min - Wed Sep 10 2025 02:29:02 GMT-0500 to Wed Sep 10 2025 02:39:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 02:39:32 GMT-0500 to Wed Sep 10 2025 02:40:02 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Wed Sep 10 2025 02:40:02 GMT-0500 to Wed Sep 10 2025 02:41:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 16.5min - Wed Sep 10 2025 02:41:02 GMT-0500 to Wed Sep 10 2025 02:57:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 02:57:32 GMT-0500 to Wed Sep 10 2025 02:58:02 GMT-0500
- LOG  🍎     Sample: core (3) - 23.5min - Wed Sep 10 2025 02:58:02 GMT-0500 to Wed Sep 10 2025 03:21:32 GMT-0500
- LOG  🍎     Sample: deep (4) - 5.0min - Wed Sep 10 2025 03:21:32 GMT-0500 to Wed Sep 10 2025 03:26:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 3.0min - Wed Sep 10 2025 03:26:32 GMT-0500 to Wed Sep 10 2025 03:29:32 GMT-0500
- LOG  🍎     Sample: core (3) - 15.0min - Wed Sep 10 2025 03:29:32 GMT-0500 to Wed Sep 10 2025 03:44:32 GMT-0500
- LOG  🍎     Sample: deep (4) - 9.0min - Wed Sep 10 2025 03:44:32 GMT-0500 to Wed Sep 10 2025 03:53:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Wed Sep 10 2025 03:53:32 GMT-0500 to Wed Sep 10 2025 03:54:32 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Wed Sep 10 2025 03:54:32 GMT-0500 to Wed Sep 10 2025 03:56:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Wed Sep 10 2025 03:56:02 GMT-0500 to Wed Sep 10 2025 03:57:02 GMT-0500
- LOG  🍎     Sample: core (3) - 16.5min - Wed Sep 10 2025 03:57:02 GMT-0500 to Wed Sep 10 2025 04:13:32 GMT-0500
- LOG  🍎     Sample: deep (4) - 2.0min - Wed Sep 10 2025 04:13:32 GMT-0500 to Wed Sep 10 2025 04:15:32 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Wed Sep 10 2025 04:15:32 GMT-0500 to Wed Sep 10 2025 04:16:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Wed Sep 10 2025 04:16:02 GMT-0500 to Wed Sep 10 2025 04:17:02 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Wed Sep 10 2025 04:17:02 GMT-0500 to Wed Sep 10 2025 04:17:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 3.0min - Wed Sep 10 2025 04:17:32 GMT-0500 to Wed Sep 10 2025 04:20:32 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Wed Sep 10 2025 04:20:32 GMT-0500 to Wed Sep 10 2025 04:22:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Wed Sep 10 2025 04:22:02 GMT-0500 to Wed Sep 10 2025 04:23:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 04:23:02 GMT-0500 to Wed Sep 10 2025 04:23:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 21.0min - Wed Sep 10 2025 04:23:32 GMT-0500 to Wed Sep 10 2025 04:44:32 GMT-0500
- LOG  🍎     Sample: core (3) - 30.0min - Wed Sep 10 2025 04:44:32 GMT-0500 to Wed Sep 10 2025 05:14:32 GMT-0500
- LOG  🍎     Sample: deep (4) - 5.5min - Wed Sep 10 2025 05:14:32 GMT-0500 to Wed Sep 10 2025 05:20:02 GMT-0500
- LOG  🍎     Sample: core (3) - 11.5min - Wed Sep 10 2025 05:20:02 GMT-0500 to Wed Sep 10 2025 05:31:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 3.5min - Wed Sep 10 2025 05:31:32 GMT-0500 to Wed Sep 10 2025 05:35:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Wed Sep 10 2025 05:35:02 GMT-0500 to Wed Sep 10 2025 05:36:32 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Wed Sep 10 2025 05:36:32 GMT-0500 to Wed Sep 10 2025 05:37:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Wed Sep 10 2025 05:37:02 GMT-0500 to Wed Sep 10 2025 05:38:02 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Wed Sep 10 2025 05:38:02 GMT-0500 to Wed Sep 10 2025 05:38:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 05:38:32 GMT-0500 to Wed Sep 10 2025 05:39:02 GMT-0500
- LOG  🍎     Sample: core (3) - 2.0min - Wed Sep 10 2025 05:39:02 GMT-0500 to Wed Sep 10 2025 05:41:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Wed Sep 10 2025 05:41:02 GMT-0500 to Wed Sep 10 2025 05:42:02 GMT-0500
- LOG  🍎     Sample: core (3) - 5.0min - Wed Sep 10 2025 05:42:02 GMT-0500 to Wed Sep 10 2025 05:47:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 19.0min - Wed Sep 10 2025 05:47:02 GMT-0500 to Wed Sep 10 2025 06:06:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Wed Sep 10 2025 06:06:02 GMT-0500 to Wed Sep 10 2025 06:07:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Wed Sep 10 2025 06:07:32 GMT-0500 to Wed Sep 10 2025 06:08:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Wed Sep 10 2025 06:08:02 GMT-0500 to Wed Sep 10 2025 06:09:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Wed Sep 10 2025 06:09:02 GMT-0500 to Wed Sep 10 2025 06:09:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Wed Sep 10 2025 06:09:32 GMT-0500 to Wed Sep 10 2025 06:10:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 6.0min - Wed Sep 10 2025 06:10:32 GMT-0500 to Wed Sep 10 2025 06:16:32 GMT-0500
- LOG  🍎     Sample: core (3) - 43.5min - Wed Sep 10 2025 06:16:32 GMT-0500 to Wed Sep 10 2025 07:00:02 GMT-0500
- LOG  🍎     Sample: deep (4) - 7.5min - Wed Sep 10 2025 07:00:02 GMT-0500 to Wed Sep 10 2025 07:07:32 GMT-0500
- LOG  🍎     Sample: core (3) - 3.5min - Wed Sep 10 2025 07:07:32 GMT-0500 to Wed Sep 10 2025 07:11:02 GMT-0500
- LOG  🍎     Sample: deep (4) - 4.0min - Wed Sep 10 2025 07:11:02 GMT-0500 to Wed Sep 10 2025 07:15:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 2.0min - Wed Sep 10 2025 07:15:02 GMT-0500 to Wed Sep 10 2025 07:17:02 GMT-0500
- LOG  🍎     Sample: core (3) - 8.0min - Wed Sep 10 2025 07:17:02 GMT-0500 to Wed Sep 10 2025 07:25:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Wed Sep 10 2025 07:25:02 GMT-0500 to Wed Sep 10 2025 07:26:02 GMT-0500
- LOG  🍎     Sample: core (3) - 2.0min - Wed Sep 10 2025 07:26:02 GMT-0500 to Wed Sep 10 2025 07:28:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 12.0min - Wed Sep 10 2025 07:28:02 GMT-0500 to Wed Sep 10 2025 07:40:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Wed Sep 10 2025 07:40:02 GMT-0500 to Wed Sep 10 2025 07:41:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.5min - Wed Sep 10 2025 07:41:02 GMT-0500 to Wed Sep 10 2025 07:42:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 5.5min - Wed Sep 10 2025 07:42:32 GMT-0500 to Wed Sep 10 2025 07:48:02 GMT-0500
- LOG  🍎     Sample: core (3) - 19.0min - Wed Sep 10 2025 07:48:02 GMT-0500 to Wed Sep 10 2025 08:07:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 6.5min - Wed Sep 10 2025 08:07:02 GMT-0500 to Wed Sep 10 2025 08:13:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 08:13:32 GMT-0500 to Wed Sep 10 2025 08:14:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 15.0min - Wed Sep 10 2025 08:14:02 GMT-0500 to Wed Sep 10 2025 08:29:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 08:29:02 GMT-0500 to Wed Sep 10 2025 08:29:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Wed Sep 10 2025 08:29:32 GMT-0500 to Wed Sep 10 2025 08:30:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 08:30:32 GMT-0500 to Wed Sep 10 2025 08:31:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 2.0min - Wed Sep 10 2025 08:31:02 GMT-0500 to Wed Sep 10 2025 08:33:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 2.5min - Wed Sep 10 2025 08:33:02 GMT-0500 to Wed Sep 10 2025 08:35:32 GMT-0500
- LOG  🍎     Sample: core (3) - 5.0min - Wed Sep 10 2025 08:35:32 GMT-0500 to Wed Sep 10 2025 08:40:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 4.0min - Wed Sep 10 2025 08:40:32 GMT-0500 to Wed Sep 10 2025 08:44:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Wed Sep 10 2025 08:44:32 GMT-0500 to Wed Sep 10 2025 08:45:32 GMT-0500
- LOG  🍎     Sample: core (3) - 4.0min - Wed Sep 10 2025 08:45:32 GMT-0500 to Wed Sep 10 2025 08:49:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 3.0min - Wed Sep 10 2025 08:49:32 GMT-0500 to Wed Sep 10 2025 08:52:32 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Wed Sep 10 2025 08:52:32 GMT-0500 to Wed Sep 10 2025 08:53:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 2.0min - Wed Sep 10 2025 08:53:02 GMT-0500 to Wed Sep 10 2025 08:55:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 08:55:02 GMT-0500 to Wed Sep 10 2025 08:55:32 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Wed Sep 10 2025 08:55:32 GMT-0500 to Wed Sep 10 2025 08:57:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 08:57:02 GMT-0500 to Wed Sep 10 2025 08:57:32 GMT-0500
- LOG  🍎     Sample: core (3) - 14.0min - Wed Sep 10 2025 08:57:32 GMT-0500 to Wed Sep 10 2025 09:11:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 09:11:32 GMT-0500 to Wed Sep 10 2025 09:12:02 GMT-0500
- LOG  🍎     Sample: core (3) - 3.0min - Wed Sep 10 2025 09:12:02 GMT-0500 to Wed Sep 10 2025 09:15:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 16.5min - Wed Sep 10 2025 09:15:02 GMT-0500 to Wed Sep 10 2025 09:31:32 GMT-0500
- LOG  🍎     Sample: core (3) - 2.0min - Wed Sep 10 2025 09:31:32 GMT-0500 to Wed Sep 10 2025 09:33:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 7.5min - Wed Sep 10 2025 09:33:32 GMT-0500 to Wed Sep 10 2025 09:41:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.5min - Wed Sep 10 2025 09:41:02 GMT-0500 to Wed Sep 10 2025 09:42:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 09:42:32 GMT-0500 to Wed Sep 10 2025 09:43:02 GMT-0500
- LOG  🍎     Sample: rem (5) - 3.0min - Wed Sep 10 2025 09:43:02 GMT-0500 to Wed Sep 10 2025 09:46:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 09:46:02 GMT-0500 to Wed Sep 10 2025 09:46:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 4.5min - Wed Sep 10 2025 09:46:32 GMT-0500 to Wed Sep 10 2025 09:51:02 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Wed Sep 10 2025 09:51:02 GMT-0500 to Wed Sep 10 2025 09:51:32 GMT-0500
- LOG  🍎     Sample: rem (5) - 4.0min - Wed Sep 10 2025 09:51:32 GMT-0500 to Wed Sep 10 2025 09:55:32 GMT-0500
- LOG  🍎     Sample: awake (2) - 11.0min - Wed Sep 10 2025 09:55:32 GMT-0500 to Wed Sep 10 2025 10:06:32 GMT-0500
- LOG  🍎   Sleep breakdown: {"efficiency": "42.5%", "stages": {"asleep": "0.0min", "awake": "93.5min", "core": "291.5min", "deep": "100.5min", "inBed": "624.0min", "rem": "138.5min"}, "totalInBedHours": "20.80", "totalSleepHours": "8.84"}
- LOG  
-🍎 ===== Thu Sep 11 2025 =====
- LOG  🍎 Day range: {"end": "2025-09-12T04:59:59.999Z", "start": "2025-09-11T05:00:00.000Z"}
- LOG  🍎 📊 Steps Analysis:
- LOG  🍎   Raw samples count: 159
- LOG  🍎   First sample: {"endDate": 2025-09-11T05:00:00.000Z, "quantity": 1, "source": "SourceProxy", "startDate": 2025-09-11T04:59:00.000Z, "unit": "count"}
- LOG  🍎   Last sample: {"endDate": 2025-09-12T04:19:11.000Z, "quantity": 1, "source": "SourceProxy", "startDate": 2025-09-12T04:19:00.000Z, "unit": "count"}
- LOG  🍎   Total for day: 4298 count
- LOG  🍎   Active hours (13): 0h: 9.0, 9h: 24.0, 10h: 260.0, 12h: 3.0, 13h: 1090.0, 14h: 68.0, 15h: 1122.0, 16h: 70.0, 17h: 663.0, 18h: 371.0, 19h: 255.0, 20h: 357.0, 23h: 6.0
- LOG  🍎 📊 Distance Analysis:
- LOG  🍎   Raw samples count: 6
- LOG  🍎   First sample: {"endDate": 2025-09-12T00:01:25.795Z, "quantity": 0.12533404028701078, "source": "SourceProxy", "startDate": 2025-09-11T23:51:31.949Z, "unit": "mi"}
- LOG  🍎   Last sample: {"endDate": 2025-09-12T01:45:12.824Z, "quantity": 0.04594582879583726, "source": "SourceProxy", "startDate": 2025-09-12T01:44:03.705Z, "unit": "mi"}
- LOG  🍎   Total for day: 0.36392292272792753 mi
- LOG  🍎   Active hours (3): 18h: 0.1, 19h: 0.1, 20h: 0.2
- LOG  🍎 📊 Active Energy Analysis:
- LOG  🍎   Raw samples count: 102
- LOG  🍎   First sample: {"endDate": 2025-09-11T14:57:00.000Z, "quantity": 0.766, "source": "SourceProxy", "startDate": 2025-09-11T14:57:00.000Z, "unit": "Cal"}
- LOG  🍎   Last sample: {"endDate": 2025-09-12T04:35:00.000Z, "quantity": 0.121, "source": "SourceProxy", "startDate": 2025-09-12T04:35:00.000Z, "unit": "Cal"}
- LOG  🍎   Total for day: 169.82400000000007 Cal
- LOG  🍎   Active hours (11): 9h: 2.5, 10h: 11.4, 13h: 49.6, 14h: 3.7, 15h: 53.4, 16h: 2.4, 17h: 22.6, 18h: 10.0, 19h: 4.8, 20h: 8.1, 23h: 1.4
- LOG  🍎 📊 Heart Rate Analysis:
- LOG  🍎   Raw samples count: 662
- LOG  🍎   First sample: {"endDate": 2025-09-11T05:06:43.000Z, "quantity": 46, "source": "SourceProxy", "startDate": 2025-09-11T05:06:43.000Z, "unit": "count/min"}
- LOG  🍎   Last sample: {"endDate": 2025-09-12T04:57:43.000Z, "quantity": 58, "source": "SourceProxy", "startDate": 2025-09-12T04:57:43.000Z, "unit": "count/min"}
- LOG  🍎   Average: 65.36, Min: 41, Max: 103 count/min
- LOG  🍎   Active hours (21): 0h: 1262.0, 1h: 1168.0, 2h: 1004.0, 3h: 1144.0, 4h: 1032.0, 5h: 1098.0, 6h: 1072.0, 7h: 1086.0, 8h: 964.0, 9h: 938.0, 10h: 880.0, 11h: 501.0, 12h: 358.0, 13h: 10879.0, 14h: 1669.0, 15h: 12150.0, 16h: 1268.0, 17h: 1747.0, 18h: 1472.0, 22h: 142.0, 23h: 1437.0
- LOG  🍎 📊 Resting Heart Rate Analysis:
- LOG  🍎   Raw samples count: 1
- LOG  🍎   First sample: {"endDate": 2025-09-12T01:26:00.000Z, "quantity": 51, "source": "SourceProxy", "startDate": 2025-09-12T01:26:00.000Z, "unit": "count/min"}
- LOG  🍎   Last sample: {"endDate": 2025-09-12T01:26:00.000Z, "quantity": 51, "source": "SourceProxy", "startDate": 2025-09-12T01:26:00.000Z, "unit": "count/min"}
- LOG  🍎   Average: 51.00, Min: 51, Max: 51 count/min
- LOG  🍎   Active hours (1): 20h: 51.0
- LOG  🍎 📊 HRV Analysis:
- LOG  🍎   Raw samples count: 1
- LOG  🍎   First sample: {"endDate": 2025-09-12T01:25:00.000Z, "quantity": 111, "source": "SourceProxy", "startDate": 2025-09-12T01:25:00.000Z, "unit": "ms"}
- LOG  🍎   Last sample: {"endDate": 2025-09-12T01:25:00.000Z, "quantity": 111, "source": "SourceProxy", "startDate": 2025-09-12T01:25:00.000Z, "unit": "ms"}
- LOG  🍎   Average: 111.00, Min: 111, Max: 111 ms
- LOG  🍎   Active hours (1): 20h: 111.0
- LOG  🍎 📊 Weight Analysis:
- LOG  🍎   Raw samples count: 0
- LOG  🍎   No data available for this day
- LOG  🍎 😴 Sleep Analysis:
- LOG  🍎   Sleep window: 2025-09-10T23:00:00.000Z to 2025-09-11T19:00:00.000Z
- LOG  🍎   Sleep samples count: 126
- LOG  🍎     Sample: awake (2) - 13.5min - Thu Sep 11 2025 00:14:28 GMT-0500 to Thu Sep 11 2025 00:27:58 GMT-0500
- LOG  🍎     Sample: inBed (0) - 584.0min - Thu Sep 11 2025 00:14:28 GMT-0500 to Thu Sep 11 2025 09:58:28 GMT-0500
- LOG  🍎     Sample: core (3) - 2.0min - Thu Sep 11 2025 00:27:58 GMT-0500 to Thu Sep 11 2025 00:29:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 00:29:58 GMT-0500 to Thu Sep 11 2025 00:30:28 GMT-0500
- LOG  🍎     Sample: core (3) - 5.0min - Thu Sep 11 2025 00:30:28 GMT-0500 to Thu Sep 11 2025 00:35:28 GMT-0500
- LOG  🍎     Sample: deep (4) - 32.5min - Thu Sep 11 2025 00:35:28 GMT-0500 to Thu Sep 11 2025 01:07:58 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Thu Sep 11 2025 01:07:58 GMT-0500 to Thu Sep 11 2025 01:08:28 GMT-0500
- LOG  🍎     Sample: deep (4) - 3.5min - Thu Sep 11 2025 01:08:28 GMT-0500 to Thu Sep 11 2025 01:11:58 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Thu Sep 11 2025 01:11:58 GMT-0500 to Thu Sep 11 2025 01:12:58 GMT-0500
- LOG  🍎     Sample: deep (4) - 5.0min - Thu Sep 11 2025 01:12:58 GMT-0500 to Thu Sep 11 2025 01:17:58 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Thu Sep 11 2025 01:17:58 GMT-0500 to Thu Sep 11 2025 01:18:28 GMT-0500
- LOG  🍎     Sample: deep (4) - 1.0min - Thu Sep 11 2025 01:18:28 GMT-0500 to Thu Sep 11 2025 01:19:28 GMT-0500
- LOG  🍎     Sample: core (3) - 13.0min - Thu Sep 11 2025 01:19:28 GMT-0500 to Thu Sep 11 2025 01:32:28 GMT-0500
- LOG  🍎     Sample: rem (5) - 8.5min - Thu Sep 11 2025 01:32:28 GMT-0500 to Thu Sep 11 2025 01:40:58 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Thu Sep 11 2025 01:40:58 GMT-0500 to Thu Sep 11 2025 01:41:28 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Thu Sep 11 2025 01:41:28 GMT-0500 to Thu Sep 11 2025 01:41:58 GMT-0500
- LOG  🍎     Sample: core (3) - 11.5min - Thu Sep 11 2025 01:41:58 GMT-0500 to Thu Sep 11 2025 01:53:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 01:53:28 GMT-0500 to Thu Sep 11 2025 01:53:58 GMT-0500
- LOG  🍎     Sample: core (3) - 3.5min - Thu Sep 11 2025 01:53:58 GMT-0500 to Thu Sep 11 2025 01:57:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 01:57:28 GMT-0500 to Thu Sep 11 2025 01:57:58 GMT-0500
- LOG  🍎     Sample: core (3) - 9.0min - Thu Sep 11 2025 01:57:58 GMT-0500 to Thu Sep 11 2025 02:06:58 GMT-0500
- LOG  🍎     Sample: deep (4) - 1.0min - Thu Sep 11 2025 02:06:58 GMT-0500 to Thu Sep 11 2025 02:07:58 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Thu Sep 11 2025 02:07:58 GMT-0500 to Thu Sep 11 2025 02:08:58 GMT-0500
- LOG  🍎     Sample: deep (4) - 8.0min - Thu Sep 11 2025 02:08:58 GMT-0500 to Thu Sep 11 2025 02:16:58 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Thu Sep 11 2025 02:16:58 GMT-0500 to Thu Sep 11 2025 02:17:28 GMT-0500
- LOG  🍎     Sample: deep (4) - 1.5min - Thu Sep 11 2025 02:17:28 GMT-0500 to Thu Sep 11 2025 02:18:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 3.5min - Thu Sep 11 2025 02:18:58 GMT-0500 to Thu Sep 11 2025 02:22:28 GMT-0500
- LOG  🍎     Sample: core (3) - 15.0min - Thu Sep 11 2025 02:22:28 GMT-0500 to Thu Sep 11 2025 02:37:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 02:37:28 GMT-0500 to Thu Sep 11 2025 02:37:58 GMT-0500
- LOG  🍎     Sample: core (3) - 18.0min - Thu Sep 11 2025 02:37:58 GMT-0500 to Thu Sep 11 2025 02:55:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 02:55:58 GMT-0500 to Thu Sep 11 2025 02:56:28 GMT-0500
- LOG  🍎     Sample: core (3) - 6.5min - Thu Sep 11 2025 02:56:28 GMT-0500 to Thu Sep 11 2025 03:02:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Thu Sep 11 2025 03:02:58 GMT-0500 to Thu Sep 11 2025 03:03:58 GMT-0500
- LOG  🍎     Sample: core (3) - 5.5min - Thu Sep 11 2025 03:03:58 GMT-0500 to Thu Sep 11 2025 03:09:28 GMT-0500
- LOG  🍎     Sample: rem (5) - 2.5min - Thu Sep 11 2025 03:09:28 GMT-0500 to Thu Sep 11 2025 03:11:58 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Thu Sep 11 2025 03:11:58 GMT-0500 to Thu Sep 11 2025 03:12:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 03:12:58 GMT-0500 to Thu Sep 11 2025 03:13:28 GMT-0500
- LOG  🍎     Sample: core (3) - 3.5min - Thu Sep 11 2025 03:13:28 GMT-0500 to Thu Sep 11 2025 03:16:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 03:16:58 GMT-0500 to Thu Sep 11 2025 03:17:28 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Thu Sep 11 2025 03:17:28 GMT-0500 to Thu Sep 11 2025 03:18:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Thu Sep 11 2025 03:18:58 GMT-0500 to Thu Sep 11 2025 03:19:58 GMT-0500
- LOG  🍎     Sample: core (3) - 4.5min - Thu Sep 11 2025 03:19:58 GMT-0500 to Thu Sep 11 2025 03:24:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 03:24:28 GMT-0500 to Thu Sep 11 2025 03:24:58 GMT-0500
- LOG  🍎     Sample: core (3) - 5.0min - Thu Sep 11 2025 03:24:58 GMT-0500 to Thu Sep 11 2025 03:29:58 GMT-0500
- LOG  🍎     Sample: rem (5) - 12.5min - Thu Sep 11 2025 03:29:58 GMT-0500 to Thu Sep 11 2025 03:42:28 GMT-0500
- LOG  🍎     Sample: core (3) - 4.0min - Thu Sep 11 2025 03:42:28 GMT-0500 to Thu Sep 11 2025 03:46:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Thu Sep 11 2025 03:46:28 GMT-0500 to Thu Sep 11 2025 03:47:28 GMT-0500
- LOG  🍎     Sample: core (3) - 27.0min - Thu Sep 11 2025 03:47:28 GMT-0500 to Thu Sep 11 2025 04:14:28 GMT-0500
- LOG  🍎     Sample: deep (4) - 6.5min - Thu Sep 11 2025 04:14:28 GMT-0500 to Thu Sep 11 2025 04:20:58 GMT-0500
- LOG  🍎     Sample: core (3) - 2.0min - Thu Sep 11 2025 04:20:58 GMT-0500 to Thu Sep 11 2025 04:22:58 GMT-0500
- LOG  🍎     Sample: deep (4) - 2.0min - Thu Sep 11 2025 04:22:58 GMT-0500 to Thu Sep 11 2025 04:24:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 04:24:58 GMT-0500 to Thu Sep 11 2025 04:25:28 GMT-0500
- LOG  🍎     Sample: core (3) - 4.0min - Thu Sep 11 2025 04:25:28 GMT-0500 to Thu Sep 11 2025 04:29:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 04:29:28 GMT-0500 to Thu Sep 11 2025 04:29:58 GMT-0500
- LOG  🍎     Sample: core (3) - 9.5min - Thu Sep 11 2025 04:29:58 GMT-0500 to Thu Sep 11 2025 04:39:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 04:39:28 GMT-0500 to Thu Sep 11 2025 04:39:58 GMT-0500
- LOG  🍎     Sample: core (3) - 11.5min - Thu Sep 11 2025 04:39:58 GMT-0500 to Thu Sep 11 2025 04:51:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 04:51:28 GMT-0500 to Thu Sep 11 2025 04:51:58 GMT-0500
- LOG  🍎     Sample: core (3) - 15.0min - Thu Sep 11 2025 04:51:58 GMT-0500 to Thu Sep 11 2025 05:06:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 05:06:58 GMT-0500 to Thu Sep 11 2025 05:07:28 GMT-0500
- LOG  🍎     Sample: core (3) - 3.0min - Thu Sep 11 2025 05:07:28 GMT-0500 to Thu Sep 11 2025 05:10:28 GMT-0500
- LOG  🍎     Sample: rem (5) - 19.0min - Thu Sep 11 2025 05:10:28 GMT-0500 to Thu Sep 11 2025 05:29:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 05:29:28 GMT-0500 to Thu Sep 11 2025 05:29:58 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Thu Sep 11 2025 05:29:58 GMT-0500 to Thu Sep 11 2025 05:30:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 05:30:58 GMT-0500 to Thu Sep 11 2025 05:31:28 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Thu Sep 11 2025 05:31:28 GMT-0500 to Thu Sep 11 2025 05:32:28 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Thu Sep 11 2025 05:32:28 GMT-0500 to Thu Sep 11 2025 05:33:28 GMT-0500
- LOG  🍎     Sample: rem (5) - 3.0min - Thu Sep 11 2025 05:33:28 GMT-0500 to Thu Sep 11 2025 05:36:28 GMT-0500
- LOG  🍎     Sample: core (3) - 21.5min - Thu Sep 11 2025 05:36:28 GMT-0500 to Thu Sep 11 2025 05:57:58 GMT-0500
- LOG  🍎     Sample: deep (4) - 0.5min - Thu Sep 11 2025 05:57:58 GMT-0500 to Thu Sep 11 2025 05:58:28 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Thu Sep 11 2025 05:58:28 GMT-0500 to Thu Sep 11 2025 05:58:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 05:58:58 GMT-0500 to Thu Sep 11 2025 05:59:28 GMT-0500
- LOG  🍎     Sample: core (3) - 22.5min - Thu Sep 11 2025 05:59:28 GMT-0500 to Thu Sep 11 2025 06:21:58 GMT-0500
- LOG  🍎     Sample: deep (4) - 9.5min - Thu Sep 11 2025 06:21:58 GMT-0500 to Thu Sep 11 2025 06:31:28 GMT-0500
- LOG  🍎     Sample: core (3) - 5.5min - Thu Sep 11 2025 06:31:28 GMT-0500 to Thu Sep 11 2025 06:36:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 06:36:58 GMT-0500 to Thu Sep 11 2025 06:37:28 GMT-0500
- LOG  🍎     Sample: core (3) - 8.0min - Thu Sep 11 2025 06:37:28 GMT-0500 to Thu Sep 11 2025 06:45:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 06:45:28 GMT-0500 to Thu Sep 11 2025 06:45:58 GMT-0500
- LOG  🍎     Sample: core (3) - 4.5min - Thu Sep 11 2025 06:45:58 GMT-0500 to Thu Sep 11 2025 06:50:28 GMT-0500
- LOG  🍎     Sample: rem (5) - 34.0min - Thu Sep 11 2025 06:50:28 GMT-0500 to Thu Sep 11 2025 07:24:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 07:24:28 GMT-0500 to Thu Sep 11 2025 07:24:58 GMT-0500
- LOG  🍎     Sample: core (3) - 13.0min - Thu Sep 11 2025 07:24:58 GMT-0500 to Thu Sep 11 2025 07:37:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 07:37:58 GMT-0500 to Thu Sep 11 2025 07:38:28 GMT-0500
- LOG  🍎     Sample: core (3) - 14.5min - Thu Sep 11 2025 07:38:28 GMT-0500 to Thu Sep 11 2025 07:52:58 GMT-0500
- LOG  🍎     Sample: deep (4) - 2.0min - Thu Sep 11 2025 07:52:58 GMT-0500 to Thu Sep 11 2025 07:54:58 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Thu Sep 11 2025 07:54:58 GMT-0500 to Thu Sep 11 2025 07:55:28 GMT-0500
- LOG  🍎     Sample: deep (4) - 4.5min - Thu Sep 11 2025 07:55:28 GMT-0500 to Thu Sep 11 2025 07:59:58 GMT-0500
- LOG  🍎     Sample: core (3) - 6.0min - Thu Sep 11 2025 07:59:58 GMT-0500 to Thu Sep 11 2025 08:05:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 08:05:58 GMT-0500 to Thu Sep 11 2025 08:06:28 GMT-0500
- LOG  🍎     Sample: core (3) - 5.0min - Thu Sep 11 2025 08:06:28 GMT-0500 to Thu Sep 11 2025 08:11:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 08:11:28 GMT-0500 to Thu Sep 11 2025 08:11:58 GMT-0500
- LOG  🍎     Sample: core (3) - 7.0min - Thu Sep 11 2025 08:11:58 GMT-0500 to Thu Sep 11 2025 08:18:58 GMT-0500
- LOG  🍎     Sample: rem (5) - 2.0min - Thu Sep 11 2025 08:18:58 GMT-0500 to Thu Sep 11 2025 08:20:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 08:20:58 GMT-0500 to Thu Sep 11 2025 08:21:28 GMT-0500
- LOG  🍎     Sample: rem (5) - 2.5min - Thu Sep 11 2025 08:21:28 GMT-0500 to Thu Sep 11 2025 08:23:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 08:23:58 GMT-0500 to Thu Sep 11 2025 08:24:28 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Thu Sep 11 2025 08:24:28 GMT-0500 to Thu Sep 11 2025 08:25:28 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Thu Sep 11 2025 08:25:28 GMT-0500 to Thu Sep 11 2025 08:25:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 08:25:58 GMT-0500 to Thu Sep 11 2025 08:26:28 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Thu Sep 11 2025 08:26:28 GMT-0500 to Thu Sep 11 2025 08:26:58 GMT-0500
- LOG  🍎     Sample: rem (5) - 5.0min - Thu Sep 11 2025 08:26:58 GMT-0500 to Thu Sep 11 2025 08:31:58 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Thu Sep 11 2025 08:31:58 GMT-0500 to Thu Sep 11 2025 08:32:58 GMT-0500
- LOG  🍎     Sample: rem (5) - 12.0min - Thu Sep 11 2025 08:32:58 GMT-0500 to Thu Sep 11 2025 08:44:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 7.0min - Thu Sep 11 2025 08:44:58 GMT-0500 to Thu Sep 11 2025 08:51:58 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Thu Sep 11 2025 08:51:58 GMT-0500 to Thu Sep 11 2025 08:53:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Thu Sep 11 2025 08:53:28 GMT-0500 to Thu Sep 11 2025 08:54:58 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Thu Sep 11 2025 08:54:58 GMT-0500 to Thu Sep 11 2025 08:55:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 08:55:28 GMT-0500 to Thu Sep 11 2025 08:55:58 GMT-0500
- LOG  🍎     Sample: core (3) - 2.0min - Thu Sep 11 2025 08:55:58 GMT-0500 to Thu Sep 11 2025 08:57:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 08:57:58 GMT-0500 to Thu Sep 11 2025 08:58:28 GMT-0500
- LOG  🍎     Sample: core (3) - 12.5min - Thu Sep 11 2025 08:58:28 GMT-0500 to Thu Sep 11 2025 09:10:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 09:10:58 GMT-0500 to Thu Sep 11 2025 09:11:28 GMT-0500
- LOG  🍎     Sample: core (3) - 4.0min - Thu Sep 11 2025 09:11:28 GMT-0500 to Thu Sep 11 2025 09:15:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 09:15:28 GMT-0500 to Thu Sep 11 2025 09:15:58 GMT-0500
- LOG  🍎     Sample: core (3) - 3.0min - Thu Sep 11 2025 09:15:58 GMT-0500 to Thu Sep 11 2025 09:18:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 09:18:58 GMT-0500 to Thu Sep 11 2025 09:19:28 GMT-0500
- LOG  🍎     Sample: core (3) - 20.0min - Thu Sep 11 2025 09:19:28 GMT-0500 to Thu Sep 11 2025 09:39:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Thu Sep 11 2025 09:39:28 GMT-0500 to Thu Sep 11 2025 09:40:58 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Thu Sep 11 2025 09:40:58 GMT-0500 to Thu Sep 11 2025 09:41:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 3.0min - Thu Sep 11 2025 09:41:58 GMT-0500 to Thu Sep 11 2025 09:44:58 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Thu Sep 11 2025 09:44:58 GMT-0500 to Thu Sep 11 2025 09:45:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 2.0min - Thu Sep 11 2025 09:45:58 GMT-0500 to Thu Sep 11 2025 09:47:58 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Thu Sep 11 2025 09:47:58 GMT-0500 to Thu Sep 11 2025 09:48:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Thu Sep 11 2025 09:48:28 GMT-0500 to Thu Sep 11 2025 09:48:58 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.5min - Thu Sep 11 2025 09:48:58 GMT-0500 to Thu Sep 11 2025 09:50:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 8.0min - Thu Sep 11 2025 09:50:28 GMT-0500 to Thu Sep 11 2025 09:58:28 GMT-0500
- LOG  🍎   Sleep breakdown: {"efficiency": "45.0%", "stages": {"asleep": "0.0min", "awake": "58.5min", "core": "341.5min", "deep": "77.5min", "inBed": "584.0min", "rem": "106.5min"}, "totalInBedHours": "19.47", "totalSleepHours": "8.76"}
- LOG  
-🍎 ===== Fri Sep 12 2025 =====
- LOG  🍎 Day range: {"end": "2025-09-13T04:59:59.999Z", "start": "2025-09-12T05:00:00.000Z"}
- LOG  🍎 📊 Steps Analysis:
- LOG  🍎   Raw samples count: 315
- LOG  🍎   First sample: {"endDate": 2025-09-12T08:57:00.000Z, "quantity": 1, "source": "SourceProxy", "startDate": 2025-09-12T08:56:00.000Z, "unit": "count"}
- LOG  🍎   Last sample: {"endDate": 2025-09-13T04:49:00.000Z, "quantity": 6, "source": "SourceProxy", "startDate": 2025-09-13T04:48:00.000Z, "unit": "count"}
- LOG  🍎   Total for day: 13153 count
- LOG  🍎   Active hours (15): 3h: 3.0, 4h: 218.0, 5h: 125.0, 6h: 3170.0, 7h: 5748.0, 8h: 1539.0, 12h: 53.0, 16h: 40.0, 17h: 23.0, 18h: 46.0, 19h: 73.0, 20h: 1058.0, 21h: 116.0, 22h: 226.0, 23h: 715.0
- LOG  🍎 📊 Distance Analysis:
- LOG  🍎   Raw samples count: 5
- LOG  🍎   First sample: {"endDate": 2025-09-12T11:15:01.923Z, "quantity": 0.07001698613494259, "source": "SourceProxy", "startDate": 2025-09-12T11:07:39.109Z, "unit": "mi"}
- LOG  🍎   Last sample: {"endDate": 2025-09-13T00:13:38.365Z, "quantity": 0.004883977571193776, "source": "SourceProxy", "startDate": 2025-09-13T00:13:33.246Z, "unit": "mi"}
- LOG  🍎   Total for day: 0.15305209530095176 mi
- LOG  🍎   Active hours (5): 6h: 0.1, 7h: 0.0, 8h: 0.0, 17h: 0.0, 19h: 0.0
- LOG  🍎 📊 Active Energy Analysis:
- LOG  🍎   Raw samples count: 251
- LOG  🍎   First sample: {"endDate": 2025-09-12T08:29:00.000Z, "quantity": 0.121, "source": "SourceProxy", "startDate": 2025-09-12T08:29:00.000Z, "unit": "Cal"}
- LOG  🍎   Last sample: {"endDate": 2025-09-13T04:47:00.000Z, "quantity": 1.544, "source": "SourceProxy", "startDate": 2025-09-13T04:47:00.000Z, "unit": "Cal"}
- LOG  🍎   Total for day: 846.6209999999998 Cal
- LOG  🍎   Active hours (16): 3h: 1.8, 4h: 16.2, 5h: 5.5, 6h: 263.0, 7h: 398.6, 8h: 63.0, 12h: 3.1, 14h: 0.8, 16h: 3.5, 17h: 0.7, 18h: 4.3, 19h: 3.1, 20h: 40.6, 21h: 3.9, 22h: 11.1, 23h: 27.5
- LOG  🍎 📊 Heart Rate Analysis:
- LOG  🍎   Raw samples count: 1260
- LOG  🍎   First sample: {"endDate": 2025-09-12T05:02:27.000Z, "quantity": 57, "source": "SourceProxy", "startDate": 2025-09-12T04:57:28.000Z, "unit": "count/min"}
- LOG  🍎   Last sample: {"endDate": 2025-09-13T04:52:42.000Z, "quantity": 44, "source": "SourceProxy", "startDate": 2025-09-13T04:52:42.000Z, "unit": "count/min"}
- LOG  🍎   Average: 107.12, Min: 44, Max: 165 count/min
- LOG  🍎   Active hours (21): 0h: 1388.0, 1h: 1311.0, 2h: 1201.0, 3h: 1022.0, 4h: 1060.0, 5h: 923.0, 6h: 30949.0, 7h: 73568.0, 8h: 14130.0, 12h: 890.0, 13h: 712.0, 14h: 654.0, 15h: 579.0, 16h: 585.0, 17h: 289.0, 18h: 923.0, 19h: 513.0, 20h: 824.0, 21h: 1525.0, 22h: 1281.0, 23h: 648.0
- LOG  🍎 📊 Resting Heart Rate Analysis:
- LOG  🍎   Raw samples count: 0
- LOG  🍎   No data available for this day
- LOG  🍎 📊 HRV Analysis:
- LOG  🍎   Raw samples count: 0
- LOG  🍎   No data available for this day
- LOG  🍎 📊 Weight Analysis:
- LOG  🍎   Raw samples count: 1
- LOG  🍎   First sample: {"endDate": 2025-09-12T10:37:35.818Z, "quantity": 177.9998548035541, "source": "SourceProxy", "startDate": 2025-09-12T10:37:35.818Z, "unit": "lb"}
- LOG  🍎   Last sample: {"endDate": 2025-09-12T10:37:35.818Z, "quantity": 177.9998548035541, "source": "SourceProxy", "startDate": 2025-09-12T10:37:35.818Z, "unit": "lb"}
- LOG  🍎   Average: 178.00, Min: 177.9998548035541, Max: 177.9998548035541 lb
- LOG  🍎   Active hours (1): 5h: 178.0
- LOG  🍎 😴 Sleep Analysis:
- LOG  🍎   Sleep window: 2025-09-11T23:00:00.000Z to 2025-09-12T19:00:00.000Z
- LOG  🍎   Sleep samples count: 44
- LOG  🍎     Sample: awake (2) - 16.5min - Thu Sep 11 2025 23:22:28 GMT-0500 to Thu Sep 11 2025 23:38:58 GMT-0500
- LOG  🍎     Sample: inBed (0) - 272.0min - Thu Sep 11 2025 23:22:28 GMT-0500 to Fri Sep 12 2025 03:54:28 GMT-0500
- LOG  🍎     Sample: core (3) - 10.0min - Thu Sep 11 2025 23:38:58 GMT-0500 to Thu Sep 11 2025 23:48:58 GMT-0500
- LOG  🍎     Sample: deep (4) - 34.0min - Thu Sep 11 2025 23:48:58 GMT-0500 to Fri Sep 12 2025 00:22:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Fri Sep 12 2025 00:22:58 GMT-0500 to Fri Sep 12 2025 00:23:58 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Fri Sep 12 2025 00:23:58 GMT-0500 to Fri Sep 12 2025 00:24:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Fri Sep 12 2025 00:24:58 GMT-0500 to Fri Sep 12 2025 00:25:28 GMT-0500
- LOG  🍎     Sample: core (3) - 19.0min - Fri Sep 12 2025 00:25:28 GMT-0500 to Fri Sep 12 2025 00:44:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Fri Sep 12 2025 00:44:28 GMT-0500 to Fri Sep 12 2025 00:44:58 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Fri Sep 12 2025 00:44:58 GMT-0500 to Fri Sep 12 2025 00:45:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Fri Sep 12 2025 00:45:28 GMT-0500 to Fri Sep 12 2025 00:45:58 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Fri Sep 12 2025 00:45:58 GMT-0500 to Fri Sep 12 2025 00:47:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Fri Sep 12 2025 00:47:28 GMT-0500 to Fri Sep 12 2025 00:47:58 GMT-0500
- LOG  🍎     Sample: core (3) - 10.5min - Fri Sep 12 2025 00:47:58 GMT-0500 to Fri Sep 12 2025 00:58:28 GMT-0500
- LOG  🍎     Sample: deep (4) - 24.5min - Fri Sep 12 2025 00:58:28 GMT-0500 to Fri Sep 12 2025 01:22:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 3.0min - Fri Sep 12 2025 01:22:58 GMT-0500 to Fri Sep 12 2025 01:25:58 GMT-0500
- LOG  🍎     Sample: core (3) - 5.5min - Fri Sep 12 2025 01:25:58 GMT-0500 to Fri Sep 12 2025 01:31:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Fri Sep 12 2025 01:31:28 GMT-0500 to Fri Sep 12 2025 01:31:58 GMT-0500
- LOG  🍎     Sample: core (3) - 3.0min - Fri Sep 12 2025 01:31:58 GMT-0500 to Fri Sep 12 2025 01:34:58 GMT-0500
- LOG  🍎     Sample: rem (5) - 16.5min - Fri Sep 12 2025 01:34:58 GMT-0500 to Fri Sep 12 2025 01:51:28 GMT-0500
- LOG  🍎     Sample: core (3) - 40.0min - Fri Sep 12 2025 01:51:28 GMT-0500 to Fri Sep 12 2025 02:31:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Fri Sep 12 2025 02:31:28 GMT-0500 to Fri Sep 12 2025 02:31:58 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Fri Sep 12 2025 02:31:58 GMT-0500 to Fri Sep 12 2025 02:33:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Fri Sep 12 2025 02:33:28 GMT-0500 to Fri Sep 12 2025 02:33:58 GMT-0500
- LOG  🍎     Sample: core (3) - 2.5min - Fri Sep 12 2025 02:33:58 GMT-0500 to Fri Sep 12 2025 02:36:28 GMT-0500
- LOG  🍎     Sample: rem (5) - 4.5min - Fri Sep 12 2025 02:36:28 GMT-0500 to Fri Sep 12 2025 02:40:58 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Fri Sep 12 2025 02:40:58 GMT-0500 to Fri Sep 12 2025 02:41:28 GMT-0500
- LOG  🍎     Sample: rem (5) - 8.0min - Fri Sep 12 2025 02:41:28 GMT-0500 to Fri Sep 12 2025 02:49:28 GMT-0500
- LOG  🍎     Sample: core (3) - 2.5min - Fri Sep 12 2025 02:49:28 GMT-0500 to Fri Sep 12 2025 02:51:58 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Fri Sep 12 2025 02:51:58 GMT-0500 to Fri Sep 12 2025 02:52:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Fri Sep 12 2025 02:52:28 GMT-0500 to Fri Sep 12 2025 02:52:58 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Fri Sep 12 2025 02:52:58 GMT-0500 to Fri Sep 12 2025 02:54:28 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Fri Sep 12 2025 02:54:28 GMT-0500 to Fri Sep 12 2025 02:55:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Fri Sep 12 2025 02:55:28 GMT-0500 to Fri Sep 12 2025 02:56:28 GMT-0500
- LOG  🍎     Sample: rem (5) - 19.0min - Fri Sep 12 2025 02:56:28 GMT-0500 to Fri Sep 12 2025 03:15:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 2.0min - Fri Sep 12 2025 03:15:28 GMT-0500 to Fri Sep 12 2025 03:17:28 GMT-0500
- LOG  🍎     Sample: core (3) - 13.5min - Fri Sep 12 2025 03:17:28 GMT-0500 to Fri Sep 12 2025 03:30:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Fri Sep 12 2025 03:30:58 GMT-0500 to Fri Sep 12 2025 03:31:58 GMT-0500
- LOG  🍎     Sample: core (3) - 13.5min - Fri Sep 12 2025 03:31:58 GMT-0500 to Fri Sep 12 2025 03:45:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Fri Sep 12 2025 03:45:28 GMT-0500 to Fri Sep 12 2025 03:46:28 GMT-0500
- LOG  🍎     Sample: core (3) - 4.0min - Fri Sep 12 2025 03:46:28 GMT-0500 to Fri Sep 12 2025 03:50:28 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Fri Sep 12 2025 03:50:28 GMT-0500 to Fri Sep 12 2025 03:51:58 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Fri Sep 12 2025 03:51:58 GMT-0500 to Fri Sep 12 2025 03:52:58 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Fri Sep 12 2025 03:52:58 GMT-0500 to Fri Sep 12 2025 03:54:28 GMT-0500
- LOG  🍎   Sleep breakdown: {"efficiency": "44.0%", "stages": {"asleep": "0.0min", "awake": "32.5min", "core": "131.5min", "deep": "58.5min", "inBed": "272.0min", "rem": "49.5min"}, "totalInBedHours": "9.07", "totalSleepHours": "3.99"}
- LOG  
-🍎 ===== Sat Sep 13 2025 =====
- LOG  🍎 Day range: {"end": "2025-09-14T04:59:59.999Z", "start": "2025-09-13T05:00:00.000Z"}
- LOG  🍎 📊 Steps Analysis:
- LOG  🍎   Raw samples count: 307
- LOG  🍎   First sample: {"endDate": 2025-09-13T05:03:00.000Z, "quantity": 1, "source": "SourceProxy", "startDate": 2025-09-13T05:02:00.000Z, "unit": "count"}
- LOG  🍎   Last sample: {"endDate": 2025-09-14T05:00:00.000Z, "quantity": 6, "source": "SourceProxy", "startDate": 2025-09-14T04:59:00.000Z, "unit": "count"}
- LOG  🍎   Total for day: 9300 count
- LOG  🍎   Active hours (19): 0h: 37.0, 1h: 105.0, 2h: 5.0, 8h: 16.0, 9h: 1294.0, 10h: 24.0, 11h: 61.0, 12h: 718.0, 13h: 68.0, 14h: 127.0, 15h: 1954.0, 16h: 602.0, 17h: 81.0, 18h: 1720.0, 19h: 2346.0, 20h: 50.0, 21h: 37.0, 22h: 5.0, 23h: 50.0
- LOG  🍎 📊 Distance Analysis:
- LOG  🍎   Raw samples count: 8
- LOG  🍎   First sample: {"endDate": 2025-09-13T20:20:34.387Z, "quantity": 0.09072453112765977, "source": "SourceProxy", "startDate": 2025-09-13T20:12:22.796Z, "unit": "mi"}
- LOG  🍎   Last sample: {"endDate": 2025-09-13T23:58:10.506Z, "quantity": 0.09221769864206077, "source": "SourceProxy", "startDate": 2025-09-13T23:50:27.079Z, "unit": "mi"}
- LOG  🍎   Total for day: 0.9752658756560878 mi
- LOG  🍎   Active hours (3): 15h: 0.4, 16h: 0.1, 18h: 0.4
- LOG  🍎 📊 Active Energy Analysis:
- LOG  🍎   Raw samples count: 306
- LOG  🍎   First sample: {"endDate": 2025-09-13T05:06:00.000Z, "quantity": 0.122, "source": "SourceProxy", "startDate": 2025-09-13T05:06:00.000Z, "unit": "Cal"}
- LOG  🍎   Last sample: {"endDate": 2025-09-14T04:54:00.000Z, "quantity": 0.122, "source": "SourceProxy", "startDate": 2025-09-14T04:54:00.000Z, "unit": "Cal"}
- LOG  🍎   Total for day: 1036.7490000000028 Cal
- LOG  🍎   Active hours (19): 0h: 1.4, 1h: 4.1, 2h: 0.4, 8h: 0.6, 9h: 65.4, 10h: 1.6, 11h: 2.6, 12h: 29.0, 13h: 3.1, 14h: 6.9, 15h: 306.7, 16h: 406.7, 17h: 4.7, 18h: 67.3, 19h: 130.6, 20h: 3.0, 21h: 0.7, 22h: 0.2, 23h: 1.9
- LOG  🍎 📊 Heart Rate Analysis:
- LOG  🍎   Raw samples count: 1090
- LOG  🍎   First sample: {"endDate": 2025-09-13T05:01:12.000Z, "quantity": 44, "source": "SourceProxy", "startDate": 2025-09-13T05:01:12.000Z, "unit": "count/min"}
- LOG  🍎   Last sample: {"endDate": 2025-09-14T04:59:02.000Z, "quantity": 54, "source": "SourceProxy", "startDate": 2025-09-14T04:59:02.000Z, "unit": "count/min"}
- LOG  🍎   Average: 73.70, Min: 43, Max: 117 count/min
- LOG  🍎   Active hours (23): 0h: 634.0, 1h: 973.0, 2h: 872.0, 3h: 1168.0, 4h: 1164.0, 5h: 1087.0, 6h: 1166.0, 7h: 1100.0, 8h: 643.0, 9h: 12959.0, 10h: 1743.0, 11h: 2206.0, 12h: 1703.0, 13h: 1223.0, 14h: 948.0, 15h: 8627.0, 17h: 1980.0, 18h: 5688.0, 19h: 30664.0, 20h: 1063.0, 21h: 1393.0, 22h: 59.0, 23h: 1268.0
- LOG  🍎 📊 Resting Heart Rate Analysis:
- LOG  🍎   Raw samples count: 0
- LOG  🍎   No data available for this day
- LOG  🍎 📊 HRV Analysis:
- LOG  🍎   Raw samples count: 0
- LOG  🍎   No data available for this day
- LOG  🍎 📊 Weight Analysis:
- LOG  🍎   Raw samples count: 0
- LOG  🍎   No data available for this day
- LOG  🍎 😴 Sleep Analysis:
- LOG  🍎   Sleep window: 2025-09-12T23:00:00.000Z to 2025-09-13T19:00:00.000Z
- LOG  🍎   Sleep samples count: 66
- LOG  🍎     Sample: awake (2) - 1.0min - Sat Sep 13 2025 02:42:29 GMT-0500 to Sat Sep 13 2025 02:43:29 GMT-0500
- LOG  🍎     Sample: inBed (0) - 366.5min - Sat Sep 13 2025 02:42:29 GMT-0500 to Sat Sep 13 2025 08:48:59 GMT-0500
- LOG  🍎     Sample: core (3) - 14.5min - Sat Sep 13 2025 02:43:29 GMT-0500 to Sat Sep 13 2025 02:57:59 GMT-0500
- LOG  🍎     Sample: deep (4) - 14.5min - Sat Sep 13 2025 02:57:59 GMT-0500 to Sat Sep 13 2025 03:12:29 GMT-0500
- LOG  🍎     Sample: core (3) - 4.5min - Sat Sep 13 2025 03:12:29 GMT-0500 to Sat Sep 13 2025 03:16:59 GMT-0500
- LOG  🍎     Sample: deep (4) - 0.5min - Sat Sep 13 2025 03:16:59 GMT-0500 to Sat Sep 13 2025 03:17:29 GMT-0500
- LOG  🍎     Sample: core (3) - 5.0min - Sat Sep 13 2025 03:17:29 GMT-0500 to Sat Sep 13 2025 03:22:29 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Sat Sep 13 2025 03:22:29 GMT-0500 to Sat Sep 13 2025 03:23:59 GMT-0500
- LOG  🍎     Sample: core (3) - 12.5min - Sat Sep 13 2025 03:23:59 GMT-0500 to Sat Sep 13 2025 03:36:29 GMT-0500
- LOG  🍎     Sample: rem (5) - 27.5min - Sat Sep 13 2025 03:36:29 GMT-0500 to Sat Sep 13 2025 04:03:59 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sat Sep 13 2025 04:03:59 GMT-0500 to Sat Sep 13 2025 04:04:29 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Sat Sep 13 2025 04:04:29 GMT-0500 to Sat Sep 13 2025 04:04:59 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sat Sep 13 2025 04:04:59 GMT-0500 to Sat Sep 13 2025 04:05:29 GMT-0500
- LOG  🍎     Sample: rem (5) - 2.0min - Sat Sep 13 2025 04:05:29 GMT-0500 to Sat Sep 13 2025 04:07:29 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Sat Sep 13 2025 04:07:29 GMT-0500 to Sat Sep 13 2025 04:08:29 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Sat Sep 13 2025 04:08:29 GMT-0500 to Sat Sep 13 2025 04:09:29 GMT-0500
- LOG  🍎     Sample: rem (5) - 7.5min - Sat Sep 13 2025 04:09:29 GMT-0500 to Sat Sep 13 2025 04:16:59 GMT-0500
- LOG  🍎     Sample: core (3) - 17.5min - Sat Sep 13 2025 04:16:59 GMT-0500 to Sat Sep 13 2025 04:34:29 GMT-0500
- LOG  🍎     Sample: deep (4) - 22.0min - Sat Sep 13 2025 04:34:29 GMT-0500 to Sat Sep 13 2025 04:56:29 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sat Sep 13 2025 04:56:29 GMT-0500 to Sat Sep 13 2025 04:56:59 GMT-0500
- LOG  🍎     Sample: core (3) - 10.0min - Sat Sep 13 2025 04:56:59 GMT-0500 to Sat Sep 13 2025 05:06:59 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Sat Sep 13 2025 05:06:59 GMT-0500 to Sat Sep 13 2025 05:07:59 GMT-0500
- LOG  🍎     Sample: core (3) - 8.5min - Sat Sep 13 2025 05:07:59 GMT-0500 to Sat Sep 13 2025 05:16:29 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sat Sep 13 2025 05:16:29 GMT-0500 to Sat Sep 13 2025 05:16:59 GMT-0500
- LOG  🍎     Sample: core (3) - 18.5min - Sat Sep 13 2025 05:16:59 GMT-0500 to Sat Sep 13 2025 05:35:29 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sat Sep 13 2025 05:35:29 GMT-0500 to Sat Sep 13 2025 05:35:59 GMT-0500
- LOG  🍎     Sample: core (3) - 5.0min - Sat Sep 13 2025 05:35:59 GMT-0500 to Sat Sep 13 2025 05:40:59 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sat Sep 13 2025 05:40:59 GMT-0500 to Sat Sep 13 2025 05:41:29 GMT-0500
- LOG  🍎     Sample: core (3) - 4.0min - Sat Sep 13 2025 05:41:29 GMT-0500 to Sat Sep 13 2025 05:45:29 GMT-0500
- LOG  🍎     Sample: rem (5) - 29.0min - Sat Sep 13 2025 05:45:29 GMT-0500 to Sat Sep 13 2025 06:14:29 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Sat Sep 13 2025 06:14:29 GMT-0500 to Sat Sep 13 2025 06:14:59 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Sat Sep 13 2025 06:14:59 GMT-0500 to Sat Sep 13 2025 06:15:59 GMT-0500
- LOG  🍎     Sample: core (3) - 19.5min - Sat Sep 13 2025 06:15:59 GMT-0500 to Sat Sep 13 2025 06:35:29 GMT-0500
- LOG  🍎     Sample: deep (4) - 18.5min - Sat Sep 13 2025 06:35:29 GMT-0500 to Sat Sep 13 2025 06:53:59 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Sat Sep 13 2025 06:53:59 GMT-0500 to Sat Sep 13 2025 06:55:29 GMT-0500
- LOG  🍎     Sample: core (3) - 30.0min - Sat Sep 13 2025 06:55:29 GMT-0500 to Sat Sep 13 2025 07:25:29 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Sat Sep 13 2025 07:25:29 GMT-0500 to Sat Sep 13 2025 07:26:29 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Sat Sep 13 2025 07:26:29 GMT-0500 to Sat Sep 13 2025 07:26:59 GMT-0500
- LOG  🍎     Sample: rem (5) - 2.5min - Sat Sep 13 2025 07:26:59 GMT-0500 to Sat Sep 13 2025 07:29:29 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Sat Sep 13 2025 07:29:29 GMT-0500 to Sat Sep 13 2025 07:30:29 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Sat Sep 13 2025 07:30:29 GMT-0500 to Sat Sep 13 2025 07:30:59 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Sat Sep 13 2025 07:30:59 GMT-0500 to Sat Sep 13 2025 07:31:59 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Sat Sep 13 2025 07:31:59 GMT-0500 to Sat Sep 13 2025 07:32:59 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sat Sep 13 2025 07:32:59 GMT-0500 to Sat Sep 13 2025 07:33:29 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.5min - Sat Sep 13 2025 07:33:29 GMT-0500 to Sat Sep 13 2025 07:34:59 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sat Sep 13 2025 07:34:59 GMT-0500 to Sat Sep 13 2025 07:35:29 GMT-0500
- LOG  🍎     Sample: rem (5) - 2.0min - Sat Sep 13 2025 07:35:29 GMT-0500 to Sat Sep 13 2025 07:37:29 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Sat Sep 13 2025 07:37:29 GMT-0500 to Sat Sep 13 2025 07:38:59 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Sat Sep 13 2025 07:38:59 GMT-0500 to Sat Sep 13 2025 07:39:29 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Sat Sep 13 2025 07:39:29 GMT-0500 to Sat Sep 13 2025 07:40:59 GMT-0500
- LOG  🍎     Sample: core (3) - 2.5min - Sat Sep 13 2025 07:40:59 GMT-0500 to Sat Sep 13 2025 07:43:29 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Sat Sep 13 2025 07:43:29 GMT-0500 to Sat Sep 13 2025 07:44:29 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Sat Sep 13 2025 07:44:29 GMT-0500 to Sat Sep 13 2025 07:44:59 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.5min - Sat Sep 13 2025 07:44:59 GMT-0500 to Sat Sep 13 2025 07:46:29 GMT-0500
- LOG  🍎     Sample: core (3) - 9.0min - Sat Sep 13 2025 07:46:29 GMT-0500 to Sat Sep 13 2025 07:55:29 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Sat Sep 13 2025 07:55:29 GMT-0500 to Sat Sep 13 2025 07:55:59 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sat Sep 13 2025 07:55:59 GMT-0500 to Sat Sep 13 2025 07:56:29 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Sat Sep 13 2025 07:56:29 GMT-0500 to Sat Sep 13 2025 07:57:59 GMT-0500
- LOG  🍎     Sample: rem (5) - 5.0min - Sat Sep 13 2025 07:57:59 GMT-0500 to Sat Sep 13 2025 08:02:59 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sat Sep 13 2025 08:02:59 GMT-0500 to Sat Sep 13 2025 08:03:29 GMT-0500
- LOG  🍎     Sample: rem (5) - 9.0min - Sat Sep 13 2025 08:03:29 GMT-0500 to Sat Sep 13 2025 08:12:29 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Sat Sep 13 2025 08:12:29 GMT-0500 to Sat Sep 13 2025 08:13:29 GMT-0500
- LOG  🍎     Sample: core (3) - 27.5min - Sat Sep 13 2025 08:13:29 GMT-0500 to Sat Sep 13 2025 08:40:59 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Sat Sep 13 2025 08:40:59 GMT-0500 to Sat Sep 13 2025 08:42:29 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Sat Sep 13 2025 08:42:29 GMT-0500 to Sat Sep 13 2025 08:42:59 GMT-0500
- LOG  🍎     Sample: awake (2) - 6.0min - Sat Sep 13 2025 08:42:59 GMT-0500 to Sat Sep 13 2025 08:48:59 GMT-0500
- LOG  🍎   Sleep breakdown: {"efficiency": "46.7%", "stages": {"asleep": "0.0min", "awake": "24.5min", "core": "193.5min", "deep": "55.5min", "inBed": "366.5min", "rem": "93.0min"}, "totalInBedHours": "12.22", "totalSleepHours": "5.70"}
- LOG  
-🍎 ===== Sun Sep 14 2025 =====
- LOG  🍎 Day range: {"end": "2025-09-15T04:59:59.999Z", "start": "2025-09-14T05:00:00.000Z"}
- LOG  🍎 📊 Steps Analysis:
- LOG  🍎   Raw samples count: 237
- LOG  🍎   First sample: {"endDate": 2025-09-14T05:00:00.000Z, "quantity": 6, "source": "SourceProxy", "startDate": 2025-09-14T04:59:00.000Z, "unit": "count"}
- LOG  🍎   Last sample: {"endDate": 2025-09-15T05:00:00.000Z, "quantity": 6, "source": "SourceProxy", "startDate": 2025-09-15T04:59:00.000Z, "unit": "count"}
- LOG  🍎   Total for day: 4981 count
- LOG  🍎   Active hours (14): 0h: 522.0, 2h: 12.0, 12h: 1161.0, 13h: 37.0, 14h: 91.0, 15h: 7.0, 16h: 104.0, 17h: 1106.0, 18h: 42.0, 19h: 7.0, 20h: 1076.0, 21h: 701.0, 22h: 49.0, 23h: 66.0
- LOG  🍎 📊 Distance Analysis:
- LOG  🍎   Raw samples count: 1
- LOG  🍎   First sample: {"endDate": 2025-09-15T03:39:00.000Z, "quantity": 3, "source": "SourceProxy", "startDate": 2025-09-15T03:39:00.000Z, "unit": "mi"}
- LOG  🍎   Last sample: {"endDate": 2025-09-15T03:39:00.000Z, "quantity": 3, "source": "SourceProxy", "startDate": 2025-09-15T03:39:00.000Z, "unit": "mi"}
- LOG  🍎   Total for day: 3 mi
- LOG  🍎   Active hours (1): 22h: 3.0
- LOG  🍎 📊 Active Energy Analysis:
- LOG  🍎   Raw samples count: 167
- LOG  🍎   First sample: {"endDate": 2025-09-14T05:04:00.000Z, "quantity": 0.122, "source": "SourceProxy", "startDate": 2025-09-14T05:04:00.000Z, "unit": "Cal"}
- LOG  🍎   Last sample: {"endDate": 2025-09-15T04:59:00.000Z, "quantity": 1.828, "source": "SourceProxy", "startDate": 2025-09-15T04:59:00.000Z, "unit": "Cal"}
- LOG  🍎   Total for day: 215.7700000000003 Cal
- LOG  🍎   Active hours (15): 0h: 18.8, 2h: 0.4, 8h: 0.1, 12h: 60.7, 13h: 0.5, 14h: 4.6, 15h: 3.7, 16h: 6.3, 17h: 46.7, 18h: 2.4, 19h: 0.1, 20h: 40.4, 21h: 26.9, 22h: 1.7, 23h: 2.6
- LOG  🍎 📊 Heart Rate Analysis:
- LOG  🍎   Raw samples count: 625
- LOG  🍎   First sample: {"endDate": 2025-09-14T05:00:07.000Z, "quantity": 58, "source": "SourceProxy", "startDate": 2025-09-14T05:00:07.000Z, "unit": "count/min"}
- LOG  🍎   Last sample: {"endDate": 2025-09-15T04:56:55.000Z, "quantity": 59, "source": "SourceProxy", "startDate": 2025-09-15T04:56:55.000Z, "unit": "count/min"}
- LOG  🍎   Average: 62.26, Min: 42, Max: 104 count/min
- LOG  🍎   Active hours (24): 0h: 1603.0, 1h: 587.0, 2h: 1010.0, 3h: 1190.0, 4h: 1128.0, 5h: 1154.0, 6h: 1156.0, 7h: 1130.0, 8h: 1052.0, 9h: 808.0, 10h: 820.0, 11h: 674.0, 12h: 12483.0, 13h: 1160.0, 14h: 714.0, 15h: 621.0, 16h: 1106.0, 17h: 798.0, 18h: 1183.0, 19h: 906.0, 20h: 844.0, 21h: 2012.0, 22h: 2455.0, 23h: 2317.0
- LOG  🍎 📊 Resting Heart Rate Analysis:
- LOG  🍎   Raw samples count: 1
- LOG  🍎   First sample: {"endDate": 2025-09-15T03:15:00.000Z, "quantity": 51, "source": "SourceProxy", "startDate": 2025-09-15T03:15:00.000Z, "unit": "count/min"}
- LOG  🍎   Last sample: {"endDate": 2025-09-15T03:15:00.000Z, "quantity": 51, "source": "SourceProxy", "startDate": 2025-09-15T03:15:00.000Z, "unit": "count/min"}
- LOG  🍎   Average: 51.00, Min: 51, Max: 51 count/min
- LOG  🍎   Active hours (1): 22h: 51.0
- LOG  🍎 📊 HRV Analysis:
- LOG  🍎   Raw samples count: 1
- LOG  🍎   First sample: {"endDate": 2025-09-15T03:15:00.000Z, "quantity": 112, "source": "SourceProxy", "startDate": 2025-09-15T03:15:00.000Z, "unit": "ms"}
- LOG  🍎   Last sample: {"endDate": 2025-09-15T03:15:00.000Z, "quantity": 112, "source": "SourceProxy", "startDate": 2025-09-15T03:15:00.000Z, "unit": "ms"}
- LOG  🍎   Average: 112.00, Min: 112, Max: 112 ms
- LOG  🍎   Active hours (1): 22h: 112.0
- LOG  🍎 📊 Weight Analysis:
- LOG  🍎   Raw samples count: 0
- LOG  🍎   No data available for this day
- LOG  🍎 😴 Sleep Analysis:
- LOG  🍎   Sleep window: 2025-09-13T23:00:00.000Z to 2025-09-14T19:00:00.000Z
- LOG  🍎   Sleep samples count: 102
- LOG  🍎     Sample: awake (2) - 9.5min - Sun Sep 14 2025 02:29:01 GMT-0500 to Sun Sep 14 2025 02:38:31 GMT-0500
- LOG  🍎     Sample: inBed (0) - 578.5min - Sun Sep 14 2025 02:29:01 GMT-0500 to Sun Sep 14 2025 12:07:31 GMT-0500
- LOG  🍎     Sample: core (3) - 13.5min - Sun Sep 14 2025 02:38:31 GMT-0500 to Sun Sep 14 2025 02:52:01 GMT-0500
- LOG  🍎     Sample: deep (4) - 39.5min - Sun Sep 14 2025 02:52:01 GMT-0500 to Sun Sep 14 2025 03:31:31 GMT-0500
- LOG  🍎     Sample: core (3) - 7.0min - Sun Sep 14 2025 03:31:31 GMT-0500 to Sun Sep 14 2025 03:38:31 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 03:38:31 GMT-0500 to Sun Sep 14 2025 03:39:01 GMT-0500
- LOG  🍎     Sample: core (3) - 4.5min - Sun Sep 14 2025 03:39:01 GMT-0500 to Sun Sep 14 2025 03:43:31 GMT-0500
- LOG  🍎     Sample: rem (5) - 6.5min - Sun Sep 14 2025 03:43:31 GMT-0500 to Sun Sep 14 2025 03:50:01 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Sun Sep 14 2025 03:50:01 GMT-0500 to Sun Sep 14 2025 03:50:31 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.5min - Sun Sep 14 2025 03:50:31 GMT-0500 to Sun Sep 14 2025 03:52:01 GMT-0500
- LOG  🍎     Sample: core (3) - 27.0min - Sun Sep 14 2025 03:52:01 GMT-0500 to Sun Sep 14 2025 04:19:01 GMT-0500
- LOG  🍎     Sample: deep (4) - 26.0min - Sun Sep 14 2025 04:19:01 GMT-0500 to Sun Sep 14 2025 04:45:01 GMT-0500
- LOG  🍎     Sample: core (3) - 7.0min - Sun Sep 14 2025 04:45:01 GMT-0500 to Sun Sep 14 2025 04:52:01 GMT-0500
- LOG  🍎     Sample: deep (4) - 1.5min - Sun Sep 14 2025 04:52:01 GMT-0500 to Sun Sep 14 2025 04:53:31 GMT-0500
- LOG  🍎     Sample: core (3) - 2.0min - Sun Sep 14 2025 04:53:31 GMT-0500 to Sun Sep 14 2025 04:55:31 GMT-0500
- LOG  🍎     Sample: deep (4) - 21.5min - Sun Sep 14 2025 04:55:31 GMT-0500 to Sun Sep 14 2025 05:17:01 GMT-0500
- LOG  🍎     Sample: rem (5) - 11.0min - Sun Sep 14 2025 05:17:01 GMT-0500 to Sun Sep 14 2025 05:28:01 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Sun Sep 14 2025 05:28:01 GMT-0500 to Sun Sep 14 2025 05:29:31 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Sun Sep 14 2025 05:29:31 GMT-0500 to Sun Sep 14 2025 05:30:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 05:30:01 GMT-0500 to Sun Sep 14 2025 05:30:31 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Sun Sep 14 2025 05:30:31 GMT-0500 to Sun Sep 14 2025 05:31:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 05:31:01 GMT-0500 to Sun Sep 14 2025 05:31:31 GMT-0500
- LOG  🍎     Sample: core (3) - 16.0min - Sun Sep 14 2025 05:31:31 GMT-0500 to Sun Sep 14 2025 05:47:31 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Sun Sep 14 2025 05:47:31 GMT-0500 to Sun Sep 14 2025 05:48:01 GMT-0500
- LOG  🍎     Sample: core (3) - 4.0min - Sun Sep 14 2025 05:48:01 GMT-0500 to Sun Sep 14 2025 05:52:01 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Sun Sep 14 2025 05:52:01 GMT-0500 to Sun Sep 14 2025 05:53:01 GMT-0500
- LOG  🍎     Sample: core (3) - 18.5min - Sun Sep 14 2025 05:53:01 GMT-0500 to Sun Sep 14 2025 06:11:31 GMT-0500
- LOG  🍎     Sample: deep (4) - 18.0min - Sun Sep 14 2025 06:11:31 GMT-0500 to Sun Sep 14 2025 06:29:31 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 06:29:31 GMT-0500 to Sun Sep 14 2025 06:30:01 GMT-0500
- LOG  🍎     Sample: core (3) - 17.5min - Sun Sep 14 2025 06:30:01 GMT-0500 to Sun Sep 14 2025 06:47:31 GMT-0500
- LOG  🍎     Sample: deep (4) - 14.0min - Sun Sep 14 2025 06:47:31 GMT-0500 to Sun Sep 14 2025 07:01:31 GMT-0500
- LOG  🍎     Sample: core (3) - 5.0min - Sun Sep 14 2025 07:01:31 GMT-0500 to Sun Sep 14 2025 07:06:31 GMT-0500
- LOG  🍎     Sample: rem (5) - 16.0min - Sun Sep 14 2025 07:06:31 GMT-0500 to Sun Sep 14 2025 07:22:31 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 07:22:31 GMT-0500 to Sun Sep 14 2025 07:23:01 GMT-0500
- LOG  🍎     Sample: rem (5) - 4.5min - Sun Sep 14 2025 07:23:01 GMT-0500 to Sun Sep 14 2025 07:27:31 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Sun Sep 14 2025 07:27:31 GMT-0500 to Sun Sep 14 2025 07:28:01 GMT-0500
- LOG  🍎     Sample: rem (5) - 5.5min - Sun Sep 14 2025 07:28:01 GMT-0500 to Sun Sep 14 2025 07:33:31 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Sun Sep 14 2025 07:33:31 GMT-0500 to Sun Sep 14 2025 07:35:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 07:35:01 GMT-0500 to Sun Sep 14 2025 07:35:31 GMT-0500
- LOG  🍎     Sample: core (3) - 13.0min - Sun Sep 14 2025 07:35:31 GMT-0500 to Sun Sep 14 2025 07:48:31 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Sun Sep 14 2025 07:48:31 GMT-0500 to Sun Sep 14 2025 07:49:01 GMT-0500
- LOG  🍎     Sample: core (3) - 33.0min - Sun Sep 14 2025 07:49:01 GMT-0500 to Sun Sep 14 2025 08:22:01 GMT-0500
- LOG  🍎     Sample: rem (5) - 15.0min - Sun Sep 14 2025 08:22:01 GMT-0500 to Sun Sep 14 2025 08:37:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 08:37:01 GMT-0500 to Sun Sep 14 2025 08:37:31 GMT-0500
- LOG  🍎     Sample: rem (5) - 6.5min - Sun Sep 14 2025 08:37:31 GMT-0500 to Sun Sep 14 2025 08:44:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 08:44:01 GMT-0500 to Sun Sep 14 2025 08:44:31 GMT-0500
- LOG  🍎     Sample: rem (5) - 14.0min - Sun Sep 14 2025 08:44:31 GMT-0500 to Sun Sep 14 2025 08:58:31 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 08:58:31 GMT-0500 to Sun Sep 14 2025 08:59:01 GMT-0500
- LOG  🍎     Sample: rem (5) - 2.0min - Sun Sep 14 2025 08:59:01 GMT-0500 to Sun Sep 14 2025 09:01:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 09:01:01 GMT-0500 to Sun Sep 14 2025 09:01:31 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Sun Sep 14 2025 09:01:31 GMT-0500 to Sun Sep 14 2025 09:02:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 09:02:01 GMT-0500 to Sun Sep 14 2025 09:02:31 GMT-0500
- LOG  🍎     Sample: rem (5) - 3.0min - Sun Sep 14 2025 09:02:31 GMT-0500 to Sun Sep 14 2025 09:05:31 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Sun Sep 14 2025 09:05:31 GMT-0500 to Sun Sep 14 2025 09:07:01 GMT-0500
- LOG  🍎     Sample: rem (5) - 2.0min - Sun Sep 14 2025 09:07:01 GMT-0500 to Sun Sep 14 2025 09:09:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 09:09:01 GMT-0500 to Sun Sep 14 2025 09:09:31 GMT-0500
- LOG  🍎     Sample: core (3) - 29.5min - Sun Sep 14 2025 09:09:31 GMT-0500 to Sun Sep 14 2025 09:39:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 09:39:01 GMT-0500 to Sun Sep 14 2025 09:39:31 GMT-0500
- LOG  🍎     Sample: core (3) - 7.5min - Sun Sep 14 2025 09:39:31 GMT-0500 to Sun Sep 14 2025 09:47:01 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Sun Sep 14 2025 09:47:01 GMT-0500 to Sun Sep 14 2025 09:48:01 GMT-0500
- LOG  🍎     Sample: core (3) - 5.0min - Sun Sep 14 2025 09:48:01 GMT-0500 to Sun Sep 14 2025 09:53:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 09:53:01 GMT-0500 to Sun Sep 14 2025 09:53:31 GMT-0500
- LOG  🍎     Sample: core (3) - 10.5min - Sun Sep 14 2025 09:53:31 GMT-0500 to Sun Sep 14 2025 10:04:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Sun Sep 14 2025 10:04:01 GMT-0500 to Sun Sep 14 2025 10:05:31 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Sun Sep 14 2025 10:05:31 GMT-0500 to Sun Sep 14 2025 10:06:01 GMT-0500
- LOG  🍎     Sample: rem (5) - 2.0min - Sun Sep 14 2025 10:06:01 GMT-0500 to Sun Sep 14 2025 10:08:01 GMT-0500
- LOG  🍎     Sample: core (3) - 2.0min - Sun Sep 14 2025 10:08:01 GMT-0500 to Sun Sep 14 2025 10:10:01 GMT-0500
- LOG  🍎     Sample: rem (5) - 7.0min - Sun Sep 14 2025 10:10:01 GMT-0500 to Sun Sep 14 2025 10:17:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.0min - Sun Sep 14 2025 10:17:01 GMT-0500 to Sun Sep 14 2025 10:18:01 GMT-0500
- LOG  🍎     Sample: rem (5) - 2.5min - Sun Sep 14 2025 10:18:01 GMT-0500 to Sun Sep 14 2025 10:20:31 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Sun Sep 14 2025 10:20:31 GMT-0500 to Sun Sep 14 2025 10:21:31 GMT-0500
- LOG  🍎     Sample: rem (5) - 3.5min - Sun Sep 14 2025 10:21:31 GMT-0500 to Sun Sep 14 2025 10:25:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 10:25:01 GMT-0500 to Sun Sep 14 2025 10:25:31 GMT-0500
- LOG  🍎     Sample: rem (5) - 17.5min - Sun Sep 14 2025 10:25:31 GMT-0500 to Sun Sep 14 2025 10:43:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 10:43:01 GMT-0500 to Sun Sep 14 2025 10:43:31 GMT-0500
- LOG  🍎     Sample: core (3) - 4.5min - Sun Sep 14 2025 10:43:31 GMT-0500 to Sun Sep 14 2025 10:48:01 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Sun Sep 14 2025 10:48:01 GMT-0500 to Sun Sep 14 2025 10:49:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 4.5min - Sun Sep 14 2025 10:49:01 GMT-0500 to Sun Sep 14 2025 10:53:31 GMT-0500
- LOG  🍎     Sample: core (3) - 3.0min - Sun Sep 14 2025 10:53:31 GMT-0500 to Sun Sep 14 2025 10:56:31 GMT-0500
- LOG  🍎     Sample: awake (2) - 1.5min - Sun Sep 14 2025 10:56:31 GMT-0500 to Sun Sep 14 2025 10:58:01 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Sun Sep 14 2025 10:58:01 GMT-0500 to Sun Sep 14 2025 10:58:31 GMT-0500
- LOG  🍎     Sample: awake (2) - 10.5min - Sun Sep 14 2025 10:58:31 GMT-0500 to Sun Sep 14 2025 11:09:01 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Sun Sep 14 2025 11:09:01 GMT-0500 to Sun Sep 14 2025 11:10:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 11:10:01 GMT-0500 to Sun Sep 14 2025 11:10:31 GMT-0500
- LOG  🍎     Sample: core (3) - 3.0min - Sun Sep 14 2025 11:10:31 GMT-0500 to Sun Sep 14 2025 11:13:31 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 11:13:31 GMT-0500 to Sun Sep 14 2025 11:14:01 GMT-0500
- LOG  🍎     Sample: core (3) - 3.0min - Sun Sep 14 2025 11:14:01 GMT-0500 to Sun Sep 14 2025 11:17:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 2.0min - Sun Sep 14 2025 11:17:01 GMT-0500 to Sun Sep 14 2025 11:19:01 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Sun Sep 14 2025 11:19:01 GMT-0500 to Sun Sep 14 2025 11:20:31 GMT-0500
- LOG  🍎     Sample: awake (2) - 12.0min - Sun Sep 14 2025 11:20:31 GMT-0500 to Sun Sep 14 2025 11:32:31 GMT-0500
- LOG  🍎     Sample: core (3) - 1.5min - Sun Sep 14 2025 11:32:31 GMT-0500 to Sun Sep 14 2025 11:34:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 2.5min - Sun Sep 14 2025 11:34:01 GMT-0500 to Sun Sep 14 2025 11:36:31 GMT-0500
- LOG  🍎     Sample: rem (5) - 1.0min - Sun Sep 14 2025 11:36:31 GMT-0500 to Sun Sep 14 2025 11:37:31 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 11:37:31 GMT-0500 to Sun Sep 14 2025 11:38:01 GMT-0500
- LOG  🍎     Sample: core (3) - 0.5min - Sun Sep 14 2025 11:38:01 GMT-0500 to Sun Sep 14 2025 11:38:31 GMT-0500
- LOG  🍎     Sample: awake (2) - 4.5min - Sun Sep 14 2025 11:38:31 GMT-0500 to Sun Sep 14 2025 11:43:01 GMT-0500
- LOG  🍎     Sample: rem (5) - 4.0min - Sun Sep 14 2025 11:43:01 GMT-0500 to Sun Sep 14 2025 11:47:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 4.0min - Sun Sep 14 2025 11:47:01 GMT-0500 to Sun Sep 14 2025 11:51:01 GMT-0500
- LOG  🍎     Sample: core (3) - 1.0min - Sun Sep 14 2025 11:51:01 GMT-0500 to Sun Sep 14 2025 11:52:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 0.5min - Sun Sep 14 2025 11:52:01 GMT-0500 to Sun Sep 14 2025 11:52:31 GMT-0500
- LOG  🍎     Sample: rem (5) - 0.5min - Sun Sep 14 2025 11:52:31 GMT-0500 to Sun Sep 14 2025 11:53:01 GMT-0500
- LOG  🍎     Sample: awake (2) - 14.5min - Sun Sep 14 2025 11:53:01 GMT-0500 to Sun Sep 14 2025 12:07:31 GMT-0500
- LOG  🍎   Sleep breakdown: {"efficiency": "43.3%", "stages": {"asleep": "0.0min", "awake": "78.0min", "core": "249.5min", "deep": "120.5min", "inBed": "578.5min", "rem": "130.5min"}, "totalInBedHours": "19.28", "totalSleepHours": "8.34"}
- LOG  
-🍎 ===== END DETAILED ANALYSIS =====
- LOG  🍎 AppleHealthKitDataService: Checking vital signs permissions...
- LOG  🍎 Permissions status: {"bloodPressure": 1, "heartRate": 1, "oxygenSaturation": 1, "restingHeartRate": 1}
- LOG  🍎 AppleHealthKitDataService: Fetching vital signs...
- LOG  🍎 Fetching most recent heart rate sample...
- LOG  🍎 Heart rate sample: {"device": undefined, "endDate": 2025-09-16T00:44:48.000Z, "metadata": {"HKExternalUUID": "aed0ec395934d9211a05ea69ed4b3d7a2087d6b9", "HKMetadataKeySyncIdentifier": "aed0ec395934d9211a05ea69ed4b3d7a2087d6b9", "HKMetadataKeySyncVersion": 1757984616}, "quantity": 50, "quantityType": "HKQuantityTypeIdentifierHeartRate", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-16T00:44:48.000Z, "unit": "count/min", "uuid": "435B3A04-3055-4FE1-BC16-C8470CFBE529"}
- LOG  🍎 Fetching most recent resting heart rate sample...
- LOG  🍎 Resting heart rate sample: {"device": undefined, "endDate": 2025-09-15T03:15:00.000Z, "metadata": {"HKWasUserEntered": true}, "quantity": 51, "quantityType": "HKQuantityTypeIdentifierRestingHeartRate", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T03:15:00.000Z, "unit": "count/min", "uuid": "5C0AD6AE-3CFD-4204-AE5B-AA7F9B89B699"}
- LOG  🍎 Fetching most recent respiratory rate sample...
- LOG  🍎 Respiratory rate sample: {"device": undefined, "endDate": 2025-09-15T11:30:47.000Z, "metadata": {"HKExternalUUID": "578cdde2901b3ac6d3963d29f3cd3101cdfffcdf", "HKMetadataKeySyncIdentifier": "578cdde2901b3ac6d3963d29f3cd3101cdfffcdf", "HKMetadataKeySyncVersion": 1757948486}, "quantity": 12.875, "quantityType": "HKQuantityTypeIdentifierRespiratoryRate", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T11:29:47.000Z, "unit": "count/min", "uuid": "0D2DFAFD-532B-4867-A882-46DA5E1D0951"}
- LOG  🍎 AppleHealthKitDataService: Vitals retrieved: {"bloodPressureDiastolic": 80, "bloodPressureSystolic": 120, "heartRate": 50, "heartRateVariability": 112, "oxygenSaturation": 0.98, "respiratoryRate": 12.875, "restingHeartRate": 51}
- LOG  🍎 Using resting heart rate (may be fallback): 51
- LOG  🍎 Using HRV: 112
- LOG  🍎 AppleHealthKitDataService: Fetching activity data...
- LOG  🍎 Date range (local): {"end": "Mon Sep 15 2025 20:32:19 GMT-0500", "endISO": "2025-09-16T01:32:19.178Z", "start": "Mon Sep 15 2025 00:00:00 GMT-0500", "startISO": "2025-09-15T05:00:00.000Z"}
- LOG  🍎 Activity data date range: {"endDate": "2025-09-16T01:32:19.178Z", "startDate": "2025-09-15T05:00:00.000Z"}
- LOG  🍎 Step query params: {"from": "2025-09-15T05:00:00.000Z", "to": "2025-09-16T01:32:19.178Z"}
- LOG  🍎 Raw step samples count: 218
- LOG  🍎 Total steps for today: 5714
- LOG  🍎 Step data response: {"value": 5714}
- LOG  🍎 Distance query params: {"from": "2025-09-15T05:00:00.000Z", "to": "2025-09-16T01:32:19.178Z"}
- LOG  🍎 Raw distance samples: [{"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T05:41:52.050Z, "metadata": {}, "quantity": 0.01081185874516109, "quantityType": "HKQuantityTypeIdentifierDistanceWalkingRunning", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T05:41:34.132Z, "unit": "mi", "uuid": "C4FE8B52-AA53-4D87-88E6-28083C07EA81"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T16:39:36.667Z, "metadata": {}, "quantity": 0.002684323550361117, "quantityType": "HKQuantityTypeIdentifierDistanceWalkingRunning", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T16:39:34.107Z, "unit": "mi", "uuid": "1C35478A-7281-4536-81B7-29F4B4F824D0"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T19:45:48.561Z, "metadata": {}, "quantity": 0.004846695299335465, "quantityType": "HKQuantityTypeIdentifierDistanceWalkingRunning", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T19:45:46.001Z, "unit": "mi", "uuid": "2D2FCD6A-494A-4E49-A826-12E881FB8915"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T20:31:55.820Z, "metadata": {}, "quantity": 0.08471463392979439, "quantityType": "HKQuantityTypeIdentifierDistanceWalkingRunning", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T20:28:28.499Z, "unit": "mi", "uuid": "FD0FEE88-9F0D-43D6-A516-B7AFADA103D1"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T20:56:52.114Z, "metadata": {}, "quantity": 0.05942133331721004, "quantityType": "HKQuantityTypeIdentifierDistanceWalkingRunning", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T20:55:14.863Z, "unit": "mi", "uuid": "A0A39437-74EC-4949-A3B3-F9637D68F52F"}]
- LOG  🍎 Distance data response: {"value": 0.1624788448418621}
- LOG  🍎 Active energy query params: {"from": "2025-09-15T05:00:00.000Z", "to": "2025-09-16T01:32:19.178Z"}
- LOG  🍎 Raw active energy samples count: 167
- LOG  🍎 First few samples: [{"device": undefined, "endDate": 2025-09-15T05:09:00.000Z, "metadata": {"HKExternalUUID": "265921354497fee44c3775b1e9b42f11773ae253", "HKMetadataKeySyncIdentifier": "265921354497fee44c3775b1e9b42f11773ae253", "HKMetadataKeySyncVersion": 1757948496}, "quantity": 0.122, "quantityType": "HKQuantityTypeIdentifierActiveEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T05:09:00.000Z, "unit": "Cal", "uuid": "FB72579D-DB15-4808-ADD3-473AEFB2A950"}, {"device": undefined, "endDate": 2025-09-15T05:19:00.000Z, "metadata": {"HKExternalUUID": "a70f1e102bcb9ec92d6fb860758c3399033e52d7", "HKMetadataKeySyncIdentifier": "a70f1e102bcb9ec92d6fb860758c3399033e52d7", "HKMetadataKeySyncVersion": 1757948496}, "quantity": 0.122, "quantityType": "HKQuantityTypeIdentifierActiveEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T05:19:00.000Z, "unit": "Cal", "uuid": "C83AD62C-C1D5-42BC-BF5F-5E15D9EF8755"}, {"device": undefined, "endDate": 2025-09-15T05:27:00.000Z, "metadata": {"HKExternalUUID": "0474c809a04095565cbb6dea38f610925a119973", "HKMetadataKeySyncIdentifier": "0474c809a04095565cbb6dea38f610925a119973", "HKMetadataKeySyncVersion": 1757948496}, "quantity": 0.244, "quantityType": "HKQuantityTypeIdentifierActiveEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T05:27:00.000Z, "unit": "Cal", "uuid": "0AE3CAC7-6D08-4CB9-B5BD-97D03C2E5961"}]
- LOG  🍎 Total active energy (kcal): 247
- LOG  🍎 Active energy data response: {"value": 247}
- LOG  🍎 Basal energy query params: {"from": "2025-09-15T05:00:00.000Z", "to": "2025-09-16T01:32:19.178Z"}
- LOG  🍎 Raw basal energy samples: [{"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T05:36:10.986Z, "metadata": {}, "quantity": 77.516, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T04:36:10.986Z, "unit": "Cal", "uuid": "41B0AF5A-BBD8-4D3E-99D0-92FFF54FE0D3"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T05:45:57.765Z, "metadata": {}, "quantity": 12.631, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T05:36:10.986Z, "unit": "Cal", "uuid": "718A6AD1-E69B-4397-A2B5-BBC0E8F4D15B"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T06:45:57.765Z, "metadata": {}, "quantity": 77.516, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T05:45:57.765Z, "unit": "Cal", "uuid": "3F6E723A-F476-4AB2-9E18-141B7F93F7D4"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T07:45:57.765Z, "metadata": {}, "quantity": 77.516, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T06:45:57.765Z, "unit": "Cal", "uuid": "1FBAB5A3-3A4A-4665-A163-D70E7701902C"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T08:45:57.765Z, "metadata": {}, "quantity": 77.516, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T07:45:57.765Z, "unit": "Cal", "uuid": "3C43354F-40DE-4899-BBFB-7B092D9150B3"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T09:45:57.765Z, "metadata": {}, "quantity": 77.516, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T08:45:57.765Z, "unit": "Cal", "uuid": "6BC3F35D-C4EC-4170-9A74-C95DD06D7CB0"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T10:45:57.765Z, "metadata": {}, "quantity": 77.516, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T09:45:57.765Z, "unit": "Cal", "uuid": "782044E6-E765-4E1A-9AC5-2C3B34C7CAB3"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T11:45:57.765Z, "metadata": {}, "quantity": 77.516, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T10:45:57.765Z, "unit": "Cal", "uuid": "2E1355FE-366E-40A7-8398-B17B17A0AEF2"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T12:45:57.765Z, "metadata": {}, "quantity": 77.516, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T11:45:57.765Z, "unit": "Cal", "uuid": "8871FC2B-A4FE-4A41-97A0-415C3A00EF28"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T13:45:57.765Z, "metadata": {}, "quantity": 77.516, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T12:45:57.765Z, "unit": "Cal", "uuid": "E6C76AE7-7376-4A5A-8054-C753F63A7736"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T14:45:57.765Z, "metadata": {}, "quantity": 77.516, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T13:45:57.765Z, "unit": "Cal", "uuid": "BE781F14-9411-4763-97AA-EF4A386F1625"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T15:45:57.765Z, "metadata": {}, "quantity": 77.516, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T14:45:57.765Z, "unit": "Cal", "uuid": "A7D81868-64BD-43F7-957A-7240ADA215DC"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T15:46:15.853Z, "metadata": {}, "quantity": 0.22, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T15:46:05.615Z, "unit": "Cal", "uuid": "1D2060C1-3D88-4F95-A1B2-5FE4855CF373"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T16:23:29.097Z, "metadata": {}, "quantity": 48.087, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T15:46:15.853Z, "unit": "Cal", "uuid": "795B596B-FA9F-499A-B795-BE003F7BAEBF"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T16:23:39.335Z, "metadata": {}, "quantity": 0.22, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T16:23:29.097Z, "unit": "Cal", "uuid": "69BFF874-C028-4824-A673-BCB84FDE14B5"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T17:23:39.335Z, "metadata": {}, "quantity": 77.516, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T16:23:39.335Z, "unit": "Cal", "uuid": "759060B0-BD81-4203-914D-DFEFA117583D"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T18:08:51.995Z, "metadata": {}, "quantity": 58.41, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T17:23:39.335Z, "unit": "Cal", "uuid": "954FFC85-B9A6-47EC-BC5E-0B3541B72BED"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T18:09:02.234Z, "metadata": {}, "quantity": 0.22, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T18:08:51.995Z, "unit": "Cal", "uuid": "F2BF6BA0-7614-4FD7-9FCD-BF957E1D0E85"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T19:09:02.234Z, "metadata": {}, "quantity": 77.516, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T18:09:02.234Z, "unit": "Cal", "uuid": "67AA5F79-9A73-42DD-9C4E-8F51C762C972"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T20:09:02.234Z, "metadata": {}, "quantity": 77.516, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T19:09:02.234Z, "unit": "Cal", "uuid": "5E8A0D53-0DB0-49D4-B1F6-1FA2220685A1"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T20:12:51.367Z, "metadata": {}, "quantity": 4.933, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T20:09:02.234Z, "unit": "Cal", "uuid": "97B61557-26EB-4ECB-9E64-795C1ED56B4C"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T20:28:43.856Z, "metadata": {}, "quantity": 20.509, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T20:12:51.367Z, "unit": "Cal", "uuid": "4E518829-38F3-4742-9DE6-E9AFF9AB4109"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T20:31:58.379Z, "metadata": {}, "quantity": 4.806000000000001, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T20:28:43.856Z, "unit": "Cal", "uuid": "FB35F9AC-F427-4AE1-8C35-98D6340A082D"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T20:55:12.304Z, "metadata": {}, "quantity": 30.014, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T20:31:58.379Z, "unit": "Cal", "uuid": "AE11BB3E-84E9-4C64-B75B-CBE075E372DE"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T20:58:47.342Z, "metadata": {}, "quantity": 5.477999999999999, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T20:55:12.304Z, "unit": "Cal", "uuid": "C0BE3E51-C0ED-4A4B-BA3F-E24124FD793F"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T21:54:08.248Z, "metadata": {}, "quantity": 71.507, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T20:58:47.342Z, "unit": "Cal", "uuid": "2BD37170-E71B-4ACE-8CDD-5442F7E39B2A"}, {"device": {"firmwareVersion": undefined, "hardwareVersion": "iPhone14,5", "localIdentifier": undefined, "manufacturer": "Apple Inc.", "model": "iPhone", "name": "iPhone", "softwareVersion": "18.6.2", "udiDeviceIdentifier": undefined}, "endDate": 2025-09-15T21:54:18.486Z, "metadata": {}, "quantity": 0.22, "quantityType": "HKQuantityTypeIdentifierBasalEnergyBurned", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T21:54:08.248Z, "unit": "Cal", "uuid": "BDCCA5FB-34B8-4126-9D38-FB162AC1DDF3"}]
- LOG  🍎 Basal energy data response: {"value": 1342.4790000000003}
- LOG  🍎 Flights query params: {"from": "2025-09-15T05:00:00.000Z", "to": "2025-09-16T01:32:19.178Z"}
- LOG  🍎 Flights data response: {"value": 2}
- WARN  Activity summary not directly available in @kingstinct/react-native-healthkit
- LOG  🍎 AppleHealthKitDataService: Activity retrieved: {"activeEnergyBurned": 247, "basalEnergyBurned": 1342.4790000000003, "distance": 0.1624788448418621, "flightsClimbed": 2, "steps": 5714}
- LOG  🍎 AppleHealthKitDataService: Checking body measurement permissions...
- LOG  🍎 Body measurement permissions: {"height": 1, "weight": 1}
- LOG  🍎 AppleHealthKitDataService: Fetching body measurements...
- LOG  🍎 Fetching most recent weight sample...
- LOG  🍎 Weight sample: {"device": undefined, "endDate": 2025-09-12T10:37:35.818Z, "metadata": {}, "quantity": 177.9998548035541, "quantityType": "HKQuantityTypeIdentifierBodyMass", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-12T10:37:35.818Z, "unit": "lb", "uuid": "0587FF42-8E67-4B24-A467-3D76E258BFF3"}
- LOG  🍎 Fetching most recent height sample...
- LOG  🍎 Height sample: {"device": undefined, "endDate": 2025-09-12T10:37:35.818Z, "metadata": {}, "quantity": 6.166666666666667, "quantityType": "HKQuantityTypeIdentifierHeight", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-12T10:37:35.818Z, "unit": "ft", "uuid": "34EDF366-6638-4695-B669-312DC51828CB"}
- LOG  🍎 AppleHealthKitDataService: Body measurements retrieved: {"bodyFatPercentage": 0.12, "height": 6.166666666666667, "leanBodyMass": 101, "weight": 177.9998548035541}
- LOG  🍎 Using body fat percentage: 0.12
- LOG  🍎 Fetching most recent blood glucose sample...
- LOG  🍎 Blood glucose sample: {"device": undefined, "endDate": 2025-09-15T03:19:00.000Z, "metadata": {"HKWasUserEntered": true}, "quantity": 80, "quantityType": "HKQuantityTypeIdentifierBloodGlucose", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T03:19:00.000Z, "unit": "mg/dL", "uuid": "01206831-8017-48A0-B3F7-72E010311C6B"}
- LOG  🍎 Time in daylight query params: {"from": "2025-09-15T05:00:00.000Z", "to": "2025-09-16T01:32:19.178Z"}
- LOG  🍎 Raw time in daylight samples: []
- LOG  🍎 Time in daylight data response: {"value": 0}
- LOG  🍎 Fetching most recent VO2 Max sample...
- LOG  🍎 VO2 Max sample: {"device": undefined, "endDate": 2025-09-15T03:15:00.000Z, "metadata": {"HKWasUserEntered": true}, "quantity": 40, "quantityType": "HKQuantityTypeIdentifierVO2Max", "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "18.6.2"}, "startDate": 2025-09-15T03:15:00.000Z, "unit": "mL/min·kg", "uuid": "5E89E87C-5B41-4CF1-B991-3C13408A208E"}
- LOG  🍎 Using VO2 Max: 40
- LOG  🍎 Fetching most recent menstruation data...
- LOG  🍎 Menstruation query params: {"from": "2025-09-15T05:00:00.000Z", "to": "2025-09-16T01:32:19.178Z"}
- LOG  🍎 Raw menstruation samples: []
- LOG  🍎 Active menstruation samples found: 0
- LOG  🍎 Most recent flow value: 0 (NotApplicable)
- LOG  🍎 Menstruation data response: {"flowValue": "NotApplicable", "hasActiveMenstruation": false, "samples": [], "totalSamples": 0}
- LOG  🍎 No active menstruation found for today
- LOG  🍎 Fetching sleep analysis data...
- LOG  🍎 Sleep analysis query params: {"from": "2025-09-14T05:00:00.000Z", "to": "2025-09-16T01:32:19.178Z"}
- LOG  🍎 Raw sleep analysis samples: [{"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T07:38:31.000Z, "metadata": {"HKExternalUUID": "9c24ae589dfc5fbed36b640cacdd5cc8a573036b", "HKMetadataKeySyncIdentifier": "9c24ae589dfc5fbed36b640cacdd5cc8a573036b", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T07:29:01.000Z, "uuid": "8E38EA5E-FE48-4934-A498-703126ED5F45", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T17:07:31.000Z, "metadata": {"HKExternalUUID": "0f7b942a9ec5fdfb606decf6fb39dc816f03059a", "HKMetadataKeySyncIdentifier": "0f7b942a9ec5fdfb606decf6fb39dc816f03059a", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T07:29:01.000Z, "uuid": "B4108ED8-6F13-4E5E-9362-79FB0818FE32", "value": 0}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T07:52:01.000Z, "metadata": {"HKExternalUUID": "b224a2b1da66f9268e8f4dde900246a0ce69cdf3", "HKMetadataKeySyncIdentifier": "b224a2b1da66f9268e8f4dde900246a0ce69cdf3", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T07:38:31.000Z, "uuid": "B910D0E6-9A62-467F-86D8-3C787D655270", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T08:31:31.000Z, "metadata": {"HKExternalUUID": "2adee910c0d1c6d6621a9865f1509ff15bd04d35", "HKMetadataKeySyncIdentifier": "2adee910c0d1c6d6621a9865f1509ff15bd04d35", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T07:52:01.000Z, "uuid": "3B549C4F-504C-4C14-858B-671D3554EA7D", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T08:38:31.000Z, "metadata": {"HKExternalUUID": "2d1edc85c59ff4cec5e17bf1cb0f551c9668c30d", "HKMetadataKeySyncIdentifier": "2d1edc85c59ff4cec5e17bf1cb0f551c9668c30d", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T08:31:31.000Z, "uuid": "BF1E25DD-7812-4A41-B120-E91E4D928670", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T08:39:01.000Z, "metadata": {"HKExternalUUID": "df1218a95f7114d2b6821e7beed740448bdf6fc5", "HKMetadataKeySyncIdentifier": "df1218a95f7114d2b6821e7beed740448bdf6fc5", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T08:38:31.000Z, "uuid": "59BD1748-A6FD-4ED6-8498-6010F58910A4", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T08:43:31.000Z, "metadata": {"HKExternalUUID": "96b90258148e136b6918b2aa4155f3cde088a6e1", "HKMetadataKeySyncIdentifier": "96b90258148e136b6918b2aa4155f3cde088a6e1", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T08:39:01.000Z, "uuid": "0C0E8D76-CF41-4271-81D2-DC154E3A223A", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T08:50:01.000Z, "metadata": {"HKExternalUUID": "fb58f27278c11f638f56cbe075d899ef535c0fd0", "HKMetadataKeySyncIdentifier": "fb58f27278c11f638f56cbe075d899ef535c0fd0", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T08:43:31.000Z, "uuid": "210B2D61-D5F1-4889-8FC1-020D08B72779", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T08:50:31.000Z, "metadata": {"HKExternalUUID": "ce2b9b8207332a96dd80591fe7fa106416ccbc1a", "HKMetadataKeySyncIdentifier": "ce2b9b8207332a96dd80591fe7fa106416ccbc1a", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T08:50:01.000Z, "uuid": "4D5F1FA2-660B-4803-A0EA-28A81FD9FA9B", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T08:52:01.000Z, "metadata": {"HKExternalUUID": "4cca803ab8058f7de5129da1f71ee551b58773bd", "HKMetadataKeySyncIdentifier": "4cca803ab8058f7de5129da1f71ee551b58773bd", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T08:50:31.000Z, "uuid": "DA910713-2082-4FCF-89EA-F2B58E0AFD5B", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T09:19:01.000Z, "metadata": {"HKExternalUUID": "4585920bd0df8dd532e9dfcbd9663ffe74b175a9", "HKMetadataKeySyncIdentifier": "4585920bd0df8dd532e9dfcbd9663ffe74b175a9", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T08:52:01.000Z, "uuid": "DF84A26A-7F4C-42C4-96CB-9354691B7A08", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T09:45:01.000Z, "metadata": {"HKExternalUUID": "45eeccf553f15b3aebffc6129c7b9f4065e94e67", "HKMetadataKeySyncIdentifier": "45eeccf553f15b3aebffc6129c7b9f4065e94e67", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T09:19:01.000Z, "uuid": "DD0CAF15-418C-4106-B482-61D9893A70A4", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T09:52:01.000Z, "metadata": {"HKExternalUUID": "c70f29909dc8cf47192f47b829869d87f09ac2c4", "HKMetadataKeySyncIdentifier": "c70f29909dc8cf47192f47b829869d87f09ac2c4", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T09:45:01.000Z, "uuid": "E1B922E4-51BB-4448-857A-1D22BA6740D4", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T09:53:31.000Z, "metadata": {"HKExternalUUID": "25a2c57b3d28f84fa64248432d44b2be3c7b4227", "HKMetadataKeySyncIdentifier": "25a2c57b3d28f84fa64248432d44b2be3c7b4227", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T09:52:01.000Z, "uuid": "E50FA265-E8A1-4A42-A828-8CAEE5A2F6CC", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T09:55:31.000Z, "metadata": {"HKExternalUUID": "e1fb892bb2aa873a49d432e7739abf408c6e2d8b", "HKMetadataKeySyncIdentifier": "e1fb892bb2aa873a49d432e7739abf408c6e2d8b", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T09:53:31.000Z, "uuid": "533DD684-385D-44A9-A285-C2D8D96E21B6", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:17:01.000Z, "metadata": {"HKExternalUUID": "173c837c829064db9f0673344199b428d7a260be", "HKMetadataKeySyncIdentifier": "173c837c829064db9f0673344199b428d7a260be", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T09:55:31.000Z, "uuid": "CD3F53CF-787E-4F8D-8593-92E197FD5AF8", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:28:01.000Z, "metadata": {"HKExternalUUID": "2619dccc6bdad948b7c1def1f401ea6c725989a6", "HKMetadataKeySyncIdentifier": "2619dccc6bdad948b7c1def1f401ea6c725989a6", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T10:17:01.000Z, "uuid": "4B7A34B0-5D1A-4CFA-BF84-131071B030C4", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:29:31.000Z, "metadata": {"HKExternalUUID": "5620d0310e58f5191b9c355eb40df90c5ba5a1cf", "HKMetadataKeySyncIdentifier": "5620d0310e58f5191b9c355eb40df90c5ba5a1cf", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T10:28:01.000Z, "uuid": "2FB88E38-BE5F-4EE2-836F-94D9BE5BBA95", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:30:01.000Z, "metadata": {"HKExternalUUID": "b6cd69443e104b08f357e4bc7034195f2fd9052b", "HKMetadataKeySyncIdentifier": "b6cd69443e104b08f357e4bc7034195f2fd9052b", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T10:29:31.000Z, "uuid": "AAFF3DA9-0173-456B-84AF-06F2F558147D", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:30:31.000Z, "metadata": {"HKExternalUUID": "84740f49dd5c3f9397149c8fedf41cb84549d04f", "HKMetadataKeySyncIdentifier": "84740f49dd5c3f9397149c8fedf41cb84549d04f", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T10:30:01.000Z, "uuid": "3A74D8B7-0675-4644-B32A-1DB38CE76876", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:31:01.000Z, "metadata": {"HKExternalUUID": "fa58ca11bf222cb626949e4032577004992b8454", "HKMetadataKeySyncIdentifier": "fa58ca11bf222cb626949e4032577004992b8454", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T10:30:31.000Z, "uuid": "FDE81103-E029-40F5-90BC-C091F2010745", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:31:31.000Z, "metadata": {"HKExternalUUID": "f27e99e1bc44a59f3d628c81d2e0a3959c13111a", "HKMetadataKeySyncIdentifier": "f27e99e1bc44a59f3d628c81d2e0a3959c13111a", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T10:31:01.000Z, "uuid": "7B5B6587-E009-4D37-9DEA-A3D55D68C496", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:47:31.000Z, "metadata": {"HKExternalUUID": "faf80f7dd81554d3cc436b80f003cebad770ebbb", "HKMetadataKeySyncIdentifier": "faf80f7dd81554d3cc436b80f003cebad770ebbb", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T10:31:31.000Z, "uuid": "1CE5CF40-BFAB-4427-B149-18200E8268C2", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:48:01.000Z, "metadata": {"HKExternalUUID": "4367cc84973d82ef67e876ea9fbe09ed035c63a9", "HKMetadataKeySyncIdentifier": "4367cc84973d82ef67e876ea9fbe09ed035c63a9", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T10:47:31.000Z, "uuid": "69785CCB-D65F-49E9-B0DF-E39CEBB996D1", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:52:01.000Z, "metadata": {"HKExternalUUID": "b06049982b80f78cd4d67e48ab874fe0cfed7ffe", "HKMetadataKeySyncIdentifier": "b06049982b80f78cd4d67e48ab874fe0cfed7ffe", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T10:48:01.000Z, "uuid": "60F06309-EFC9-4204-A052-FD21C34103D8", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:53:01.000Z, "metadata": {"HKExternalUUID": "34886c392e1eb1ed7238163eb8ab87ebf97304b7", "HKMetadataKeySyncIdentifier": "34886c392e1eb1ed7238163eb8ab87ebf97304b7", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T10:52:01.000Z, "uuid": "6CE1578C-90EC-49E9-8C83-5C2FCF8AA639", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T11:11:31.000Z, "metadata": {"HKExternalUUID": "562da8dc1993a31c2eee55f21d227fc47eba5b2a", "HKMetadataKeySyncIdentifier": "562da8dc1993a31c2eee55f21d227fc47eba5b2a", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T10:53:01.000Z, "uuid": "104DD142-21D6-4D61-A9D5-5465B0E6FE25", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T11:29:31.000Z, "metadata": {"HKExternalUUID": "8ea572d5ece52b964c506d962954f3bcf2cac95a", "HKMetadataKeySyncIdentifier": "8ea572d5ece52b964c506d962954f3bcf2cac95a", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T11:11:31.000Z, "uuid": "884B0B71-9CB0-42EA-91DA-680D06C92A78", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T11:30:01.000Z, "metadata": {"HKExternalUUID": "d66de3446570f0a19184e7286671db99586981ee", "HKMetadataKeySyncIdentifier": "d66de3446570f0a19184e7286671db99586981ee", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T11:29:31.000Z, "uuid": "19E26C08-05A6-40C6-A27D-E675B7F72673", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T11:47:31.000Z, "metadata": {"HKExternalUUID": "a57adc706f92b539713767ecc93c9ea3adcc3281", "HKMetadataKeySyncIdentifier": "a57adc706f92b539713767ecc93c9ea3adcc3281", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T11:30:01.000Z, "uuid": "53F61D26-AA7F-493C-B58C-8B12B7BA4A9D", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:01:31.000Z, "metadata": {"HKExternalUUID": "ef54fb5cfd5f342a6a9e6609b9221d767856018f", "HKMetadataKeySyncIdentifier": "ef54fb5cfd5f342a6a9e6609b9221d767856018f", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T11:47:31.000Z, "uuid": "4B9AA38A-32C1-4E8D-94D4-4A98AD31C53E", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:06:31.000Z, "metadata": {"HKExternalUUID": "9876339b8c7a690d04906f908795b58b595923f1", "HKMetadataKeySyncIdentifier": "9876339b8c7a690d04906f908795b58b595923f1", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T12:01:31.000Z, "uuid": "33B8E885-A411-437C-9F3D-08DF38A5FD9E", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:22:31.000Z, "metadata": {"HKExternalUUID": "022b3d605f95f8b401a28c8fa01c2749d20d2527", "HKMetadataKeySyncIdentifier": "022b3d605f95f8b401a28c8fa01c2749d20d2527", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T12:06:31.000Z, "uuid": "F8FCA6C5-CC28-4F9D-8AA8-86883C55A369", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:23:01.000Z, "metadata": {"HKExternalUUID": "162edd0ea2bd03fbd565369ceab0e220520f46cb", "HKMetadataKeySyncIdentifier": "162edd0ea2bd03fbd565369ceab0e220520f46cb", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T12:22:31.000Z, "uuid": "4E7FD142-2653-4069-901F-A1E21456F436", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:27:31.000Z, "metadata": {"HKExternalUUID": "191ef2b8d2c352fe2b0df410a5ca30229c28c008", "HKMetadataKeySyncIdentifier": "191ef2b8d2c352fe2b0df410a5ca30229c28c008", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T12:23:01.000Z, "uuid": "71392B94-9877-4F2D-BE7C-0058B0426071", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:28:01.000Z, "metadata": {"HKExternalUUID": "c3dd43ff0d9ff2cf1fa76e1b8fde42479ee8086d", "HKMetadataKeySyncIdentifier": "c3dd43ff0d9ff2cf1fa76e1b8fde42479ee8086d", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T12:27:31.000Z, "uuid": "622531EC-73C4-470E-BF03-B60AE7135FF6", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:33:31.000Z, "metadata": {"HKExternalUUID": "296c1b69c50bf07e99b8dace7a2e3d793fba7fcb", "HKMetadataKeySyncIdentifier": "296c1b69c50bf07e99b8dace7a2e3d793fba7fcb", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T12:28:01.000Z, "uuid": "3FC82419-DB2E-40CE-ACF0-1386911504E5", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:35:01.000Z, "metadata": {"HKExternalUUID": "e8811f8f55a20eb5f317934376b3f7030867d149", "HKMetadataKeySyncIdentifier": "e8811f8f55a20eb5f317934376b3f7030867d149", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T12:33:31.000Z, "uuid": "794F8CE6-B587-4DE9-9B88-6B53AAEE6A8F", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:35:31.000Z, "metadata": {"HKExternalUUID": "77d03ed6335847f8cc15e041cf1ca84f08dc8472", "HKMetadataKeySyncIdentifier": "77d03ed6335847f8cc15e041cf1ca84f08dc8472", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T12:35:01.000Z, "uuid": "001C1F33-BDCF-444F-AAD3-84BBAF63F24D", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:48:31.000Z, "metadata": {"HKExternalUUID": "cbaf0fdb6f317a0e2039f3a490d2783eaa343afd", "HKMetadataKeySyncIdentifier": "cbaf0fdb6f317a0e2039f3a490d2783eaa343afd", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T12:35:31.000Z, "uuid": "4FB85362-2073-4205-BC07-06D1052346A6", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:49:01.000Z, "metadata": {"HKExternalUUID": "691ada7437b1613c9e7be079bb8ad3f3ede9f61b", "HKMetadataKeySyncIdentifier": "691ada7437b1613c9e7be079bb8ad3f3ede9f61b", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T12:48:31.000Z, "uuid": "2E1C7E3B-1F65-4AEB-A338-07C6FE56C8F8", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T13:22:01.000Z, "metadata": {"HKExternalUUID": "366e9c2c74be08c05c0c57b2512bbae416ea56d6", "HKMetadataKeySyncIdentifier": "366e9c2c74be08c05c0c57b2512bbae416ea56d6", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T12:49:01.000Z, "uuid": "8F0B6DC1-B4A8-429A-ACB0-29FDE6B44C4F", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T13:37:01.000Z, "metadata": {"HKExternalUUID": "e49f7241372310276ce405dbfec9614b6c59cd4c", "HKMetadataKeySyncIdentifier": "e49f7241372310276ce405dbfec9614b6c59cd4c", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T13:22:01.000Z, "uuid": "12A21B6B-537B-4A62-8EFE-1B3F7BE4E85D", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T13:37:31.000Z, "metadata": {"HKExternalUUID": "337ba324e9ef2e4700f5e45522102a55aa45b767", "HKMetadataKeySyncIdentifier": "337ba324e9ef2e4700f5e45522102a55aa45b767", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T13:37:01.000Z, "uuid": "A849D163-7093-4C53-AA66-2094A5BD5783", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T13:44:01.000Z, "metadata": {"HKExternalUUID": "bafcf831845eaecbfe42c8caa19ac624d0cf77f5", "HKMetadataKeySyncIdentifier": "bafcf831845eaecbfe42c8caa19ac624d0cf77f5", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T13:37:31.000Z, "uuid": "FEE078FB-FFF9-423C-A7E7-6C9F0ABD873E", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T13:44:31.000Z, "metadata": {"HKExternalUUID": "37d645e532ebaba146eed2f8e71b52d8d3d50eb5", "HKMetadataKeySyncIdentifier": "37d645e532ebaba146eed2f8e71b52d8d3d50eb5", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T13:44:01.000Z, "uuid": "A4DB4277-28F9-4F3D-A3B5-DAC722F0525A", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T13:58:31.000Z, "metadata": {"HKExternalUUID": "2f89ecab5cb7ac0e2ac9ca856210382aacc91eca", "HKMetadataKeySyncIdentifier": "2f89ecab5cb7ac0e2ac9ca856210382aacc91eca", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T13:44:31.000Z, "uuid": "4F745A94-4862-4D44-B24F-254BCD895B2A", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T13:59:01.000Z, "metadata": {"HKExternalUUID": "15637b4586435b7b75cb7cde4117c1b24ec75689", "HKMetadataKeySyncIdentifier": "15637b4586435b7b75cb7cde4117c1b24ec75689", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T13:58:31.000Z, "uuid": "85481EE5-5A3A-4B5E-8A54-8318A1136B33", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:01:01.000Z, "metadata": {"HKExternalUUID": "475ffc0065d741bc123ff0a93680b1844c80f015", "HKMetadataKeySyncIdentifier": "475ffc0065d741bc123ff0a93680b1844c80f015", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T13:59:01.000Z, "uuid": "783263D7-0485-466C-82F1-A1435ABAFCD4", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:01:31.000Z, "metadata": {"HKExternalUUID": "424acd09b66170134349a7fe847a3a05da261904", "HKMetadataKeySyncIdentifier": "424acd09b66170134349a7fe847a3a05da261904", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T14:01:01.000Z, "uuid": "141D7DA0-BBBA-46EC-9DC3-2AFFE6372A83", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:02:01.000Z, "metadata": {"HKExternalUUID": "87791c1d2a4ffe6ff5e2781a510f9f95f3880b3f", "HKMetadataKeySyncIdentifier": "87791c1d2a4ffe6ff5e2781a510f9f95f3880b3f", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T14:01:31.000Z, "uuid": "A8CD7659-1067-4178-B14E-583411FF9F1A", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:02:31.000Z, "metadata": {"HKExternalUUID": "0cadedd5c6936b776c8836441e619cbfc68b00ea", "HKMetadataKeySyncIdentifier": "0cadedd5c6936b776c8836441e619cbfc68b00ea", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T14:02:01.000Z, "uuid": "22CDCC78-5CCC-41A4-999D-DBC9D7507758", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:05:31.000Z, "metadata": {"HKExternalUUID": "d1683f6cfa3b5ab9fb7f98326f5adaf2e6a3bc0a", "HKMetadataKeySyncIdentifier": "d1683f6cfa3b5ab9fb7f98326f5adaf2e6a3bc0a", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T14:02:31.000Z, "uuid": "FD3B6653-284E-4A9A-9AD5-D3CE158A6DCE", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:07:01.000Z, "metadata": {"HKExternalUUID": "4b80fb2c21076875814c7f847987d61c8dbfba59", "HKMetadataKeySyncIdentifier": "4b80fb2c21076875814c7f847987d61c8dbfba59", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T14:05:31.000Z, "uuid": "444C9637-353C-4C90-A425-290EB37F1F6B", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:09:01.000Z, "metadata": {"HKExternalUUID": "1fe94dcb90fb1715a56ee1a7940e414a741d1301", "HKMetadataKeySyncIdentifier": "1fe94dcb90fb1715a56ee1a7940e414a741d1301", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T14:07:01.000Z, "uuid": "A1B32E80-D696-4EC6-A15F-DD4A6E846544", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:09:31.000Z, "metadata": {"HKExternalUUID": "72590f2b699142f11090aebe94cd55e085bff7d9", "HKMetadataKeySyncIdentifier": "72590f2b699142f11090aebe94cd55e085bff7d9", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T14:09:01.000Z, "uuid": "F0FBB728-EA21-4EDC-BE3C-3A691A18D92E", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:39:01.000Z, "metadata": {"HKExternalUUID": "7dc2049bab2d9bfdde1b6131e2129117801a66f7", "HKMetadataKeySyncIdentifier": "7dc2049bab2d9bfdde1b6131e2129117801a66f7", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T14:09:31.000Z, "uuid": "B7EE44E7-8D70-4093-8102-DB20CE9302EF", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:39:31.000Z, "metadata": {"HKExternalUUID": "19cb532769bba41c1b0100285b89627eab635c15", "HKMetadataKeySyncIdentifier": "19cb532769bba41c1b0100285b89627eab635c15", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T14:39:01.000Z, "uuid": "E2019057-89D9-4DAE-8CEF-0D3541875098", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:47:01.000Z, "metadata": {"HKExternalUUID": "2f519a88a4ab62f61ddeb6426040b8e958a09973", "HKMetadataKeySyncIdentifier": "2f519a88a4ab62f61ddeb6426040b8e958a09973", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T14:39:31.000Z, "uuid": "81BF1531-993B-4DD2-96D2-15CE4CCB2517", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:48:01.000Z, "metadata": {"HKExternalUUID": "b078fece2a37abad6aa95f074850ffcbeff88c39", "HKMetadataKeySyncIdentifier": "b078fece2a37abad6aa95f074850ffcbeff88c39", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T14:47:01.000Z, "uuid": "23BECF69-D2B9-4F85-A2F7-B5014170BA2F", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:53:01.000Z, "metadata": {"HKExternalUUID": "37856dcccf34fde0d5e0cce7f45fc3c35b9481d0", "HKMetadataKeySyncIdentifier": "37856dcccf34fde0d5e0cce7f45fc3c35b9481d0", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T14:48:01.000Z, "uuid": "58A8B77A-1AA6-4877-8674-06F624E65CD5", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:53:31.000Z, "metadata": {"HKExternalUUID": "be17779af46f6a694cd1def96f4f6756c6666ac8", "HKMetadataKeySyncIdentifier": "be17779af46f6a694cd1def96f4f6756c6666ac8", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T14:53:01.000Z, "uuid": "2D9064D6-74DB-4D86-969A-151607AA60E8", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:04:01.000Z, "metadata": {"HKExternalUUID": "08d751b375e57c82363e35f6b75dd775cc3e1ca5", "HKMetadataKeySyncIdentifier": "08d751b375e57c82363e35f6b75dd775cc3e1ca5", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T14:53:31.000Z, "uuid": "E7D1A9F3-DD2B-44C2-882F-EC13820EE3A6", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:05:31.000Z, "metadata": {"HKExternalUUID": "13a02c94208d6810988dc8087ffe44cd004ed98b", "HKMetadataKeySyncIdentifier": "13a02c94208d6810988dc8087ffe44cd004ed98b", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:04:01.000Z, "uuid": "9D6E3C6D-BDA5-4B06-A649-F548B55C2031", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:06:01.000Z, "metadata": {"HKExternalUUID": "e9f10b8c6d0de095320d383ea8fc446b940778b5", "HKMetadataKeySyncIdentifier": "e9f10b8c6d0de095320d383ea8fc446b940778b5", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:05:31.000Z, "uuid": "3193F968-7B0A-46BD-89F5-F9519613A76A", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:08:01.000Z, "metadata": {"HKExternalUUID": "25720b2e9c334e0437e0e1f476e03011a6a16468", "HKMetadataKeySyncIdentifier": "25720b2e9c334e0437e0e1f476e03011a6a16468", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:06:01.000Z, "uuid": "8B9DC91C-F43A-4EAE-89F1-D611693E3AE5", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:10:01.000Z, "metadata": {"HKExternalUUID": "9fb20fe99d3f0e9597d5710043acfa631291cb81", "HKMetadataKeySyncIdentifier": "9fb20fe99d3f0e9597d5710043acfa631291cb81", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:08:01.000Z, "uuid": "4DD4D95E-3F2F-4079-A2BB-6EE8A6ADA1D0", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:17:01.000Z, "metadata": {"HKExternalUUID": "48f230127080f065d0eb2217b77cf99d4cbf58b8", "HKMetadataKeySyncIdentifier": "48f230127080f065d0eb2217b77cf99d4cbf58b8", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:10:01.000Z, "uuid": "859F3FCB-EC00-41A9-BF7D-D35E651D8A64", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:18:01.000Z, "metadata": {"HKExternalUUID": "9ac2c39f3daea0aeb1790a5bb8beb15757b0cf00", "HKMetadataKeySyncIdentifier": "9ac2c39f3daea0aeb1790a5bb8beb15757b0cf00", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:17:01.000Z, "uuid": "21BD61E3-9E89-417D-B19C-7EC7C5DEF756", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:20:31.000Z, "metadata": {"HKExternalUUID": "e733be3e466dcfbf8b3888d94ebae25f6dc31aed", "HKMetadataKeySyncIdentifier": "e733be3e466dcfbf8b3888d94ebae25f6dc31aed", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:18:01.000Z, "uuid": "20181A16-199A-47BC-98D2-83786A5C8C9A", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:21:31.000Z, "metadata": {"HKExternalUUID": "5ae8904b7afe6e6fb4ee8b6fd282318fdf25bbc7", "HKMetadataKeySyncIdentifier": "5ae8904b7afe6e6fb4ee8b6fd282318fdf25bbc7", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:20:31.000Z, "uuid": "1D61A614-15E6-4D93-B196-104E80B665CB", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:25:01.000Z, "metadata": {"HKExternalUUID": "a2c28b5cf96388cd648eeec442bad84d9b088e6d", "HKMetadataKeySyncIdentifier": "a2c28b5cf96388cd648eeec442bad84d9b088e6d", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:21:31.000Z, "uuid": "C2CDFCD7-27F6-4C14-B075-5DE01F1E9B8C", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:25:31.000Z, "metadata": {"HKExternalUUID": "5aeaab794c2fb57ba28cc383ff9e77d3fc460bf6", "HKMetadataKeySyncIdentifier": "5aeaab794c2fb57ba28cc383ff9e77d3fc460bf6", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:25:01.000Z, "uuid": "9CDB9D41-5CDF-4EC6-88FF-D3D86AB72071", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:43:01.000Z, "metadata": {"HKExternalUUID": "e92ac86f0e266af8a11532a9a2ae58b6d651da37", "HKMetadataKeySyncIdentifier": "e92ac86f0e266af8a11532a9a2ae58b6d651da37", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:25:31.000Z, "uuid": "FA79B258-5084-49E1-BBA0-AE541990F037", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:43:31.000Z, "metadata": {"HKExternalUUID": "7a4ff9ba812282f9b83ef37f4cbc5dcbf99310d9", "HKMetadataKeySyncIdentifier": "7a4ff9ba812282f9b83ef37f4cbc5dcbf99310d9", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:43:01.000Z, "uuid": "0249FD96-165C-4555-8318-7C92641122A4", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:48:01.000Z, "metadata": {"HKExternalUUID": "39c4b043ec7f35ac6bf93990133f29b9a0e03abb", "HKMetadataKeySyncIdentifier": "39c4b043ec7f35ac6bf93990133f29b9a0e03abb", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:43:31.000Z, "uuid": "9AE2B2E6-2AFE-4721-88E1-911F8DF06802", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:49:01.000Z, "metadata": {"HKExternalUUID": "d88f71c0efc7912757317a802ab45a1739e1dc4a", "HKMetadataKeySyncIdentifier": "d88f71c0efc7912757317a802ab45a1739e1dc4a", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:48:01.000Z, "uuid": "07F12FEF-DC9A-4A56-82F4-9A5C38627ED5", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:53:31.000Z, "metadata": {"HKExternalUUID": "2d90b3dc6cdfcb49f57abda796c3ef3207e9567a", "HKMetadataKeySyncIdentifier": "2d90b3dc6cdfcb49f57abda796c3ef3207e9567a", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:49:01.000Z, "uuid": "9490D47B-8EA0-417C-85E6-F7AB9004FD69", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:56:31.000Z, "metadata": {"HKExternalUUID": "8bc46e5095c8f624f25bf7e1ebdd510194afca3a", "HKMetadataKeySyncIdentifier": "8bc46e5095c8f624f25bf7e1ebdd510194afca3a", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:53:31.000Z, "uuid": "37D0EF90-CA15-4DB1-A68F-7639B0F8CD30", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:58:01.000Z, "metadata": {"HKExternalUUID": "36621395a00d8dd1a2ec04f6a0554b399641d5a5", "HKMetadataKeySyncIdentifier": "36621395a00d8dd1a2ec04f6a0554b399641d5a5", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:56:31.000Z, "uuid": "BAA2FF31-392F-4D59-AF3F-4122BB851A8A", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:58:31.000Z, "metadata": {"HKExternalUUID": "ee040350d9c3d3197b50a8a9d19dfef1c952ea31", "HKMetadataKeySyncIdentifier": "ee040350d9c3d3197b50a8a9d19dfef1c952ea31", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:58:01.000Z, "uuid": "BB6C55F6-B6DD-48B3-A1CD-4674C2DE3A6C", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:09:01.000Z, "metadata": {"HKExternalUUID": "729cd4b3de9abce2c8f5f43ddd3c3405b6f48fa8", "HKMetadataKeySyncIdentifier": "729cd4b3de9abce2c8f5f43ddd3c3405b6f48fa8", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T15:58:31.000Z, "uuid": "C3D90137-5D42-47FA-A170-BAF8413341B4", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:10:01.000Z, "metadata": {"HKExternalUUID": "37c9f1b7519fc2daa643b6b7bc67266e98f07c9e", "HKMetadataKeySyncIdentifier": "37c9f1b7519fc2daa643b6b7bc67266e98f07c9e", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:09:01.000Z, "uuid": "D9FFDEFD-F79D-4A29-982B-CD69FF00D97F", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:10:31.000Z, "metadata": {"HKExternalUUID": "26396bd7baca207cdce6ebbcd99a3f0747391af4", "HKMetadataKeySyncIdentifier": "26396bd7baca207cdce6ebbcd99a3f0747391af4", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:10:01.000Z, "uuid": "77A962EE-7134-4233-919E-33881D2E7A8D", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:13:31.000Z, "metadata": {"HKExternalUUID": "79950b13a1c8cb3b54a0c6aec83fb1d0bbf14baf", "HKMetadataKeySyncIdentifier": "79950b13a1c8cb3b54a0c6aec83fb1d0bbf14baf", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:10:31.000Z, "uuid": "481CFFB1-7FA2-4C5F-B41A-F9AA34540ECC", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:14:01.000Z, "metadata": {"HKExternalUUID": "728ad4b8306074b4231bc56568f19319b3113260", "HKMetadataKeySyncIdentifier": "728ad4b8306074b4231bc56568f19319b3113260", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:13:31.000Z, "uuid": "4E66FDCC-26B6-4362-A90C-ABB0B710A3D2", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:17:01.000Z, "metadata": {"HKExternalUUID": "2b63b9af6ed123b5a6c101633aeec31c3e17574d", "HKMetadataKeySyncIdentifier": "2b63b9af6ed123b5a6c101633aeec31c3e17574d", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:14:01.000Z, "uuid": "DC6B00AE-C4D8-435C-BCD1-618B2B00D14D", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:19:01.000Z, "metadata": {"HKExternalUUID": "7594c1b300df8779d1a038b193100ac8f361a488", "HKMetadataKeySyncIdentifier": "7594c1b300df8779d1a038b193100ac8f361a488", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:17:01.000Z, "uuid": "FDD3A633-AB33-44EB-8099-9C3F1E3849A7", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:20:31.000Z, "metadata": {"HKExternalUUID": "a98af2c75ec1ddc05b4d697ae343522158b9b464", "HKMetadataKeySyncIdentifier": "a98af2c75ec1ddc05b4d697ae343522158b9b464", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:19:01.000Z, "uuid": "ACACC4D7-34D9-4F3B-B83B-AF93E8467059", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:32:31.000Z, "metadata": {"HKExternalUUID": "cbf37d963e858afa8af99ae1aec1ee3de832dda1", "HKMetadataKeySyncIdentifier": "cbf37d963e858afa8af99ae1aec1ee3de832dda1", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:20:31.000Z, "uuid": "BDB4A89C-B91B-4C1D-BC0B-8C15260D4238", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:34:01.000Z, "metadata": {"HKExternalUUID": "17e4e5d607b1aaa450dad3dcc6063243fda29151", "HKMetadataKeySyncIdentifier": "17e4e5d607b1aaa450dad3dcc6063243fda29151", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:32:31.000Z, "uuid": "D1F3240E-9754-4D86-95B0-0B3B22A3AFE0", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:36:31.000Z, "metadata": {"HKExternalUUID": "c1886b21ee738b14f0026dbbad09aa7e378405e7", "HKMetadataKeySyncIdentifier": "c1886b21ee738b14f0026dbbad09aa7e378405e7", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:34:01.000Z, "uuid": "8A83EC9F-99D1-4138-B28C-51633D6DEDD5", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:37:31.000Z, "metadata": {"HKExternalUUID": "63ffd020615f87d2763cba3fcf2c2e48c4012778", "HKMetadataKeySyncIdentifier": "63ffd020615f87d2763cba3fcf2c2e48c4012778", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:36:31.000Z, "uuid": "FDC075A7-F2A5-48CE-9056-68F1ACA25D1C", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:38:01.000Z, "metadata": {"HKExternalUUID": "65d31a6ed9e60ee2161f1bf8a84cefd5ed2a0f16", "HKMetadataKeySyncIdentifier": "65d31a6ed9e60ee2161f1bf8a84cefd5ed2a0f16", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:37:31.000Z, "uuid": "20853526-CF23-45DB-A443-5C0FA9BBD0FB", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:38:31.000Z, "metadata": {"HKExternalUUID": "a609ecb560b80334f0aa108590314c2ce1b0660b", "HKMetadataKeySyncIdentifier": "a609ecb560b80334f0aa108590314c2ce1b0660b", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:38:01.000Z, "uuid": "210C1A7C-E15F-4A9E-B51A-4B699001F4CD", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:43:01.000Z, "metadata": {"HKExternalUUID": "55886d2f6e814885d38a0d66851f187fd22f4ae1", "HKMetadataKeySyncIdentifier": "55886d2f6e814885d38a0d66851f187fd22f4ae1", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:38:31.000Z, "uuid": "3F2ADF4E-63C5-4C41-A8A7-1F94F51557BD", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:47:01.000Z, "metadata": {"HKExternalUUID": "fc522122c92cbe4b6c56019d8cf8814d40ba53da", "HKMetadataKeySyncIdentifier": "fc522122c92cbe4b6c56019d8cf8814d40ba53da", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:43:01.000Z, "uuid": "27BC3D86-3D06-4B8F-BEC7-E0C93718F707", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:51:01.000Z, "metadata": {"HKExternalUUID": "da2f4f67936a8a1f0cde17d55602359d1f9fbc29", "HKMetadataKeySyncIdentifier": "da2f4f67936a8a1f0cde17d55602359d1f9fbc29", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:47:01.000Z, "uuid": "15B89934-2457-450D-B243-424E7F716CF6", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:52:01.000Z, "metadata": {"HKExternalUUID": "e275d7ed4d3912a289c66999f5a67534559a88f8", "HKMetadataKeySyncIdentifier": "e275d7ed4d3912a289c66999f5a67534559a88f8", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:51:01.000Z, "uuid": "4DA900DA-7F63-40B1-9AA8-1343E5BB95E0", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:52:31.000Z, "metadata": {"HKExternalUUID": "6c83ac3dab950ee56751dcf0e80a8ddb297a1001", "HKMetadataKeySyncIdentifier": "6c83ac3dab950ee56751dcf0e80a8ddb297a1001", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:52:01.000Z, "uuid": "5BBFA151-C693-485A-BC53-9D44CD051D9B", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:53:01.000Z, "metadata": {"HKExternalUUID": "3875f9c72b2727ffb297c86d382c6b204fc86c7b", "HKMetadataKeySyncIdentifier": "3875f9c72b2727ffb297c86d382c6b204fc86c7b", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:52:31.000Z, "uuid": "548E2CA1-E61F-4097-961C-FF1C765D668F", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T17:07:31.000Z, "metadata": {"HKExternalUUID": "a1c818e8749f510cd246cd812d2dbe4ff65fe882", "HKMetadataKeySyncIdentifier": "a1c818e8749f510cd246cd812d2dbe4ff65fe882", "HKMetadataKeySyncVersion": 1757917256}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-14T16:53:01.000Z, "uuid": "92981D02-574B-4D3A-AB1F-7EFBB5B44BA9", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T08:15:02.000Z, "metadata": {"HKExternalUUID": "7862b687845fa35c27292c2db7ec9f9b852ce2ff", "HKMetadataKeySyncIdentifier": "7862b687845fa35c27292c2db7ec9f9b852ce2ff", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T08:03:32.000Z, "uuid": "4246B74F-4695-4BCE-A2F9-956026F1CB85", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:56:02.000Z, "metadata": {"HKExternalUUID": "00315149e90a286dda17877825298e1e15037293", "HKMetadataKeySyncIdentifier": "00315149e90a286dda17877825298e1e15037293", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T08:03:32.000Z, "uuid": "118727FA-B0E6-47CF-AEFB-FBB023F9472C", "value": 0}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T08:24:32.000Z, "metadata": {"HKExternalUUID": "b6233826fb8403bef09f0984a6f2016a44b20e6b", "HKMetadataKeySyncIdentifier": "b6233826fb8403bef09f0984a6f2016a44b20e6b", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T08:15:02.000Z, "uuid": "11246ACA-1C24-4282-98F7-B3F60FCE1978", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T08:58:02.000Z, "metadata": {"HKExternalUUID": "c0f3f2ea7d753cdb3006bccd7d7e8c02a0f8dd81", "HKMetadataKeySyncIdentifier": "c0f3f2ea7d753cdb3006bccd7d7e8c02a0f8dd81", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T08:24:32.000Z, "uuid": "C0BDAD20-9218-4A7A-8F7E-2E347FC53F5E", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T08:58:32.000Z, "metadata": {"HKExternalUUID": "749b548eced9a76657fc44dfbaa78a468e239e07", "HKMetadataKeySyncIdentifier": "749b548eced9a76657fc44dfbaa78a468e239e07", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T08:58:02.000Z, "uuid": "46BC2B87-DFCA-49B7-8E04-36D0AEF36E86", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T09:01:32.000Z, "metadata": {"HKExternalUUID": "b7ec4567b2b1470ddd212790ea06d5c4de0cd502", "HKMetadataKeySyncIdentifier": "b7ec4567b2b1470ddd212790ea06d5c4de0cd502", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T08:58:32.000Z, "uuid": "62BDD9E0-E592-4CCD-A61B-84C1620C2C97", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T09:02:32.000Z, "metadata": {"HKExternalUUID": "7e065d14f789b4e90371e1754051c7596958d1f5", "HKMetadataKeySyncIdentifier": "7e065d14f789b4e90371e1754051c7596958d1f5", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T09:01:32.000Z, "uuid": "EFA2688B-B27E-4D4B-AB51-52644B33EA81", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T09:04:02.000Z, "metadata": {"HKExternalUUID": "fb9df6e6855a8a030597681ee9afa3a963c37071", "HKMetadataKeySyncIdentifier": "fb9df6e6855a8a030597681ee9afa3a963c37071", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T09:02:32.000Z, "uuid": "6C40F3F5-565C-4769-82F2-B7DB546DBE24", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T09:04:32.000Z, "metadata": {"HKExternalUUID": "cbc658d0f15bde8f5b58b402d5059c97465aba3d", "HKMetadataKeySyncIdentifier": "cbc658d0f15bde8f5b58b402d5059c97465aba3d", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T09:04:02.000Z, "uuid": "B46847AE-A72C-4FAF-930B-C921B8D484A9", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T09:06:02.000Z, "metadata": {"HKExternalUUID": "9bbeec517b5bba7f084dad402f43d9a0e6b54bef", "HKMetadataKeySyncIdentifier": "9bbeec517b5bba7f084dad402f43d9a0e6b54bef", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T09:04:32.000Z, "uuid": "1B8C74B3-D26E-4660-B4A7-C4D497ACD513", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T09:22:02.000Z, "metadata": {"HKExternalUUID": "c2f085a0504bf3a01ac50c5d4ee3b42fb068a599", "HKMetadataKeySyncIdentifier": "c2f085a0504bf3a01ac50c5d4ee3b42fb068a599", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T09:06:02.000Z, "uuid": "9223FB9C-E734-4CBC-A4A4-48B2066708BA", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T09:37:02.000Z, "metadata": {"HKExternalUUID": "99d6325fcdb3799fe76677e5a46ab33a609d1365", "HKMetadataKeySyncIdentifier": "99d6325fcdb3799fe76677e5a46ab33a609d1365", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T09:22:02.000Z, "uuid": "01CBF7CE-AAE5-45E8-BD3D-ABE0B5E20EC4", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:06:02.000Z, "metadata": {"HKExternalUUID": "fdca776edfbb82657d44ee687d18fceb09790944", "HKMetadataKeySyncIdentifier": "fdca776edfbb82657d44ee687d18fceb09790944", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T09:37:02.000Z, "uuid": "16ADEE43-92A5-4E60-A0A9-89BE55C1A60E", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:07:02.000Z, "metadata": {"HKExternalUUID": "f6e5f230dba6f98683dfe56a02ce2a03c701dca9", "HKMetadataKeySyncIdentifier": "f6e5f230dba6f98683dfe56a02ce2a03c701dca9", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T10:06:02.000Z, "uuid": "CEE7C638-E9B7-4AEA-BE99-BF650AC8AAF6", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:11:32.000Z, "metadata": {"HKExternalUUID": "d3e8ec9604de0229b67d16689f440baf383a91f4", "HKMetadataKeySyncIdentifier": "d3e8ec9604de0229b67d16689f440baf383a91f4", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T10:07:02.000Z, "uuid": "76CF198E-5ECC-4705-9BF7-03937C2FCDEC", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:12:02.000Z, "metadata": {"HKExternalUUID": "1845cda611fe3fac05be5d2b7953af81890d23bd", "HKMetadataKeySyncIdentifier": "1845cda611fe3fac05be5d2b7953af81890d23bd", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T10:11:32.000Z, "uuid": "01F2CAF0-4F3D-49C3-9297-706D437D9FB4", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:14:32.000Z, "metadata": {"HKExternalUUID": "a48b5ee8605293ae615f2ace13a338c138c16830", "HKMetadataKeySyncIdentifier": "a48b5ee8605293ae615f2ace13a338c138c16830", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T10:12:02.000Z, "uuid": "6A928472-9164-4C78-B9F6-181B91D26BD2", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:15:32.000Z, "metadata": {"HKExternalUUID": "7dc2d908c7ccb862832b99a92ca7644653ba0f74", "HKMetadataKeySyncIdentifier": "7dc2d908c7ccb862832b99a92ca7644653ba0f74", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T10:14:32.000Z, "uuid": "E1ED91CF-70B8-4270-A347-B97D93D938DA", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:19:02.000Z, "metadata": {"HKExternalUUID": "0bf02338da25e0a1958e2289a4ba547e69da62de", "HKMetadataKeySyncIdentifier": "0bf02338da25e0a1958e2289a4ba547e69da62de", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T10:15:32.000Z, "uuid": "2E19DD8F-40A9-4120-926D-BDBA2D519597", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:21:02.000Z, "metadata": {"HKExternalUUID": "41e3ee2bd5b4ed4f004062e3d8e19c4610064b73", "HKMetadataKeySyncIdentifier": "41e3ee2bd5b4ed4f004062e3d8e19c4610064b73", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T10:19:02.000Z, "uuid": "0823F751-E040-42F6-9364-02D8FD527F1B", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:21:32.000Z, "metadata": {"HKExternalUUID": "90fff49c22d3a9aada4579a209827f020a7616ac", "HKMetadataKeySyncIdentifier": "90fff49c22d3a9aada4579a209827f020a7616ac", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T10:21:02.000Z, "uuid": "F14CE150-2C7F-4C1B-B346-A0ADD77C6384", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:37:32.000Z, "metadata": {"HKExternalUUID": "dfd84e2ce0260a5fe0f7b08f3f9dd5941bc88725", "HKMetadataKeySyncIdentifier": "dfd84e2ce0260a5fe0f7b08f3f9dd5941bc88725", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T10:21:32.000Z, "uuid": "DF880526-D0F9-48AB-8A74-C79FEA757926", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:40:02.000Z, "metadata": {"HKExternalUUID": "2b82687409988da6e15f77c3bbe4ff6cf1db6281", "HKMetadataKeySyncIdentifier": "2b82687409988da6e15f77c3bbe4ff6cf1db6281", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T10:37:32.000Z, "uuid": "4E46D751-CF88-475B-81D9-76469EBEE16E", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:40:32.000Z, "metadata": {"HKExternalUUID": "c02bb4e23d979712d933fd821d21a476cbe2a9eb", "HKMetadataKeySyncIdentifier": "c02bb4e23d979712d933fd821d21a476cbe2a9eb", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T10:40:02.000Z, "uuid": "0E4E7410-E608-44DD-AD9F-5EB599CA46EE", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:59:02.000Z, "metadata": {"HKExternalUUID": "63d6c4c10c3c4b4e87fa473f295208ab74d2c4ce", "HKMetadataKeySyncIdentifier": "63d6c4c10c3c4b4e87fa473f295208ab74d2c4ce", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T10:40:32.000Z, "uuid": "917A062F-89F4-4E65-BF30-BF71CEAA1256", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:13:02.000Z, "metadata": {"HKExternalUUID": "7713636ed61af09282d60dbd09f498f21378c817", "HKMetadataKeySyncIdentifier": "7713636ed61af09282d60dbd09f498f21378c817", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T10:59:02.000Z, "uuid": "A2771495-0FA6-43A8-93F8-6F5F517152D3", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:13:32.000Z, "metadata": {"HKExternalUUID": "81e24705daa4416ff5b763e391d31ba0900eb16d", "HKMetadataKeySyncIdentifier": "81e24705daa4416ff5b763e391d31ba0900eb16d", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T11:13:02.000Z, "uuid": "7AC2A8CC-6809-4000-92F0-52F7B943EEAB", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:14:32.000Z, "metadata": {"HKExternalUUID": "5b10263e6f39fcd13c547ff805cfc5938f3aeafe", "HKMetadataKeySyncIdentifier": "5b10263e6f39fcd13c547ff805cfc5938f3aeafe", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T11:13:32.000Z, "uuid": "69CF1C82-AA69-4B39-95C4-46192AE54607", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:15:02.000Z, "metadata": {"HKExternalUUID": "e394b5ff85aa84c9af9d66288311032233585419", "HKMetadataKeySyncIdentifier": "e394b5ff85aa84c9af9d66288311032233585419", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T11:14:32.000Z, "uuid": "DB59573E-9E82-4A17-A3F9-94CF0BDE1C9E", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:35:32.000Z, "metadata": {"HKExternalUUID": "53bb372d936dc50d3f1e6ff7bd8ce3c1f5db9f8c", "HKMetadataKeySyncIdentifier": "53bb372d936dc50d3f1e6ff7bd8ce3c1f5db9f8c", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T11:15:02.000Z, "uuid": "2B113DCE-7356-44A7-90A5-6ADB67150AD3", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:36:02.000Z, "metadata": {"HKExternalUUID": "bccb4c3e5dbb5e2b9061d192e0e34f1e4b9d6e63", "HKMetadataKeySyncIdentifier": "bccb4c3e5dbb5e2b9061d192e0e34f1e4b9d6e63", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T11:35:32.000Z, "uuid": "E3199AC0-3B7A-4CD1-A591-06DF948594D6", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:39:32.000Z, "metadata": {"HKExternalUUID": "633536ad0030f16758b33ecf68d22d9507c82047", "HKMetadataKeySyncIdentifier": "633536ad0030f16758b33ecf68d22d9507c82047", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T11:36:02.000Z, "uuid": "4B083B73-E3E7-459C-9BE1-55695750CB01", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:42:02.000Z, "metadata": {"HKExternalUUID": "9ea98b4a4fb4dc6926e72f42c688ae7181fba77e", "HKMetadataKeySyncIdentifier": "9ea98b4a4fb4dc6926e72f42c688ae7181fba77e", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T11:39:32.000Z, "uuid": "DB50691C-89B8-401F-9297-7BB1E6D02CD4", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:46:02.000Z, "metadata": {"HKExternalUUID": "c4f5f5ebd10e7a9035b517d19c9081a3e483d97b", "HKMetadataKeySyncIdentifier": "c4f5f5ebd10e7a9035b517d19c9081a3e483d97b", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T11:42:02.000Z, "uuid": "3D5D22D3-EF00-43B1-85F9-7DB152478C40", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T12:29:32.000Z, "metadata": {"HKExternalUUID": "4e9305cf9af1bf62f1a306fc374f8f056b0dd570", "HKMetadataKeySyncIdentifier": "4e9305cf9af1bf62f1a306fc374f8f056b0dd570", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T11:46:02.000Z, "uuid": "E85A422D-A531-405B-A434-CDE971B0B4C3", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T12:31:02.000Z, "metadata": {"HKExternalUUID": "30a52e22225f8ad7106ae8ec0c21d9d81d83ce07", "HKMetadataKeySyncIdentifier": "30a52e22225f8ad7106ae8ec0c21d9d81d83ce07", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T12:29:32.000Z, "uuid": "502A82C6-D702-4D3B-AC1A-0A1019E77292", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T12:34:02.000Z, "metadata": {"HKExternalUUID": "8675e0f1000f860a6f424afbad392cdccf03c2df", "HKMetadataKeySyncIdentifier": "8675e0f1000f860a6f424afbad392cdccf03c2df", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T12:31:02.000Z, "uuid": "E97786F0-0A57-4A9C-B7F7-36B29FA7C547", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T12:46:02.000Z, "metadata": {"HKExternalUUID": "8bfb6534af8e792921cf93d17830a50dab37feab", "HKMetadataKeySyncIdentifier": "8bfb6534af8e792921cf93d17830a50dab37feab", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T12:34:02.000Z, "uuid": "78A148BE-91D3-4B1C-954E-16B7F9145494", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T12:46:32.000Z, "metadata": {"HKExternalUUID": "61a56e30eb359db2c9ab22692bf3cacf51b2f544", "HKMetadataKeySyncIdentifier": "61a56e30eb359db2c9ab22692bf3cacf51b2f544", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T12:46:02.000Z, "uuid": "BE582D68-908B-42B0-9B47-FCC27F1ABC0E", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:14:32.000Z, "metadata": {"HKExternalUUID": "620dadb46c5b8623a29fbda1648f53775dda918a", "HKMetadataKeySyncIdentifier": "620dadb46c5b8623a29fbda1648f53775dda918a", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T12:46:32.000Z, "uuid": "09CC7937-E6C4-4299-A739-167F2784D3C5", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:16:02.000Z, "metadata": {"HKExternalUUID": "7dc43eb3fcc59b2c5fb77b6da640d7bb191dcd37", "HKMetadataKeySyncIdentifier": "7dc43eb3fcc59b2c5fb77b6da640d7bb191dcd37", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T13:14:32.000Z, "uuid": "4C44C19A-7F57-4346-AA14-0816ADF3D818", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:18:02.000Z, "metadata": {"HKExternalUUID": "2ed7440a82fcd1baeace5e69647a2c02bba06294", "HKMetadataKeySyncIdentifier": "2ed7440a82fcd1baeace5e69647a2c02bba06294", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T13:16:02.000Z, "uuid": "9DCD4DC6-18F3-4A3E-9A52-26ED33C69D73", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:20:02.000Z, "metadata": {"HKExternalUUID": "35dda91cc876f24db7e064b7470eed3c889e5e10", "HKMetadataKeySyncIdentifier": "35dda91cc876f24db7e064b7470eed3c889e5e10", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T13:18:02.000Z, "uuid": "F50AEF0C-BE90-45FA-81AF-FB93BE5D155B", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:21:02.000Z, "metadata": {"HKExternalUUID": "b9cb65efd2130d576bcd8da362221bb298a7eaff", "HKMetadataKeySyncIdentifier": "b9cb65efd2130d576bcd8da362221bb298a7eaff", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T13:20:02.000Z, "uuid": "A65A8337-9990-4755-9BB3-4C87F86E3CCB", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:33:32.000Z, "metadata": {"HKExternalUUID": "6a21cb3819c56538b4f3bbf918a308ddacf8fe40", "HKMetadataKeySyncIdentifier": "6a21cb3819c56538b4f3bbf918a308ddacf8fe40", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T13:21:02.000Z, "uuid": "B349241B-091D-4900-804A-A829AA64579E", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:35:02.000Z, "metadata": {"HKExternalUUID": "131bce110bc0615bb0597d59f95de40301c2f50e", "HKMetadataKeySyncIdentifier": "131bce110bc0615bb0597d59f95de40301c2f50e", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T13:33:32.000Z, "uuid": "82F4EF4C-EE5F-476A-9351-E39A72CE2A30", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:35:32.000Z, "metadata": {"HKExternalUUID": "aaef6ef4318361ad273817bcb3ff12e6f28973ab", "HKMetadataKeySyncIdentifier": "aaef6ef4318361ad273817bcb3ff12e6f28973ab", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T13:35:02.000Z, "uuid": "D0DB0280-DC55-4956-9650-CCAF3B61AC4D", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:46:02.000Z, "metadata": {"HKExternalUUID": "7cd7c3cc0b141b8df564f3cae917f2a80c12cda8", "HKMetadataKeySyncIdentifier": "7cd7c3cc0b141b8df564f3cae917f2a80c12cda8", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T13:35:32.000Z, "uuid": "A6DAACAE-F97B-4995-9343-BBC6645CA01B", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:46:32.000Z, "metadata": {"HKExternalUUID": "b7b49b7598fe59147e4038bc47d7f1ad38bfd8f0", "HKMetadataKeySyncIdentifier": "b7b49b7598fe59147e4038bc47d7f1ad38bfd8f0", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T13:46:02.000Z, "uuid": "B9A413A8-FC0A-4F38-B26D-A849213284CB", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:56:32.000Z, "metadata": {"HKExternalUUID": "584ff5a8998d720d79e1fae7d0550d9e8a6ff1a9", "HKMetadataKeySyncIdentifier": "584ff5a8998d720d79e1fae7d0550d9e8a6ff1a9", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T13:46:32.000Z, "uuid": "CC2FE276-9F6C-4BD7-A255-F1021D760FCF", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:01:32.000Z, "metadata": {"HKExternalUUID": "8e80e29b2d6350c3bcc3e0e39994010403c8a40c", "HKMetadataKeySyncIdentifier": "8e80e29b2d6350c3bcc3e0e39994010403c8a40c", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T13:56:32.000Z, "uuid": "358CF8A9-BA21-42A9-936C-6A0874852D1C", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:03:02.000Z, "metadata": {"HKExternalUUID": "76cbee664134c7eccef9a251ae22657e5131fbcd", "HKMetadataKeySyncIdentifier": "76cbee664134c7eccef9a251ae22657e5131fbcd", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T14:01:32.000Z, "uuid": "5EDD3BCC-0AB2-4B2C-8243-9261184C61D1", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:06:32.000Z, "metadata": {"HKExternalUUID": "236f2c3e13167cbc636dc95340c42b934a96d1a3", "HKMetadataKeySyncIdentifier": "236f2c3e13167cbc636dc95340c42b934a96d1a3", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T14:03:02.000Z, "uuid": "A968C5C9-ABA3-4C91-893C-59C60C8DB3A8", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:10:32.000Z, "metadata": {"HKExternalUUID": "149ec98b4a9a0c090ddab9a790b7e91b9f2d7c2b", "HKMetadataKeySyncIdentifier": "149ec98b4a9a0c090ddab9a790b7e91b9f2d7c2b", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T14:06:32.000Z, "uuid": "B35147AD-7CE7-4B61-B2EA-E37E7209C3B6", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:11:02.000Z, "metadata": {"HKExternalUUID": "32e4045134fc9d47cc1b2d8e28e383e025b8d37e", "HKMetadataKeySyncIdentifier": "32e4045134fc9d47cc1b2d8e28e383e025b8d37e", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T14:10:32.000Z, "uuid": "7B55ADE3-F5D8-4D79-BFBB-1F30F5D679BA", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:13:02.000Z, "metadata": {"HKExternalUUID": "339c0d878b4dd1af6f675480ed7f8abce69a1a8c", "HKMetadataKeySyncIdentifier": "339c0d878b4dd1af6f675480ed7f8abce69a1a8c", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T14:11:02.000Z, "uuid": "60A2C5ED-0851-4B5A-A8A8-8DF0D831AD11", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:13:32.000Z, "metadata": {"HKExternalUUID": "90dd9eb15d509e21d24866babd48a005e50c882a", "HKMetadataKeySyncIdentifier": "90dd9eb15d509e21d24866babd48a005e50c882a", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T14:13:02.000Z, "uuid": "A4BDCC07-249D-4202-BA0D-DEAEFD09C5E7", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:20:02.000Z, "metadata": {"HKExternalUUID": "98e07c5e140672006f3a36571b4faa5fd51180ba", "HKMetadataKeySyncIdentifier": "98e07c5e140672006f3a36571b4faa5fd51180ba", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T14:13:32.000Z, "uuid": "F1729DD7-B2DF-4AA4-9193-77AF54892040", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:20:32.000Z, "metadata": {"HKExternalUUID": "1f86cb213b514a60a25c6a9cb4d7661031e3c50c", "HKMetadataKeySyncIdentifier": "1f86cb213b514a60a25c6a9cb4d7661031e3c50c", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T14:20:02.000Z, "uuid": "E7EFCE0F-0EE7-49D8-A775-F645FF448D0F", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:29:32.000Z, "metadata": {"HKExternalUUID": "2e707993cf945d478a1c9e0441161bf713963921", "HKMetadataKeySyncIdentifier": "2e707993cf945d478a1c9e0441161bf713963921", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T14:20:32.000Z, "uuid": "2F0A285A-4FE8-4D2C-8C1E-9CB7F083FB2F", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:30:32.000Z, "metadata": {"HKExternalUUID": "8d97160ad116c0db333c01991f0c65a61b06d468", "HKMetadataKeySyncIdentifier": "8d97160ad116c0db333c01991f0c65a61b06d468", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T14:29:32.000Z, "uuid": "9006B5EF-F24B-4A74-A7A4-7B380B46529B", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:36:32.000Z, "metadata": {"HKExternalUUID": "b9d104f6bc7804d435878e63eccd68f2d9248ede", "HKMetadataKeySyncIdentifier": "b9d104f6bc7804d435878e63eccd68f2d9248ede", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T14:30:32.000Z, "uuid": "1A9F54E7-D657-4279-A4D0-DC1D810D3586", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:56:02.000Z, "metadata": {"HKExternalUUID": "443e982e7866c4d99b54d5c65482fd93abfbbd45", "HKMetadataKeySyncIdentifier": "443e982e7866c4d99b54d5c65482fd93abfbbd45", "HKMetadataKeySyncVersion": 1757948486}, "sourceRevision": {"operatingSystemVersion": "18.6.2", "productType": "iPhone14,5", "source": [Object], "version": "2509041716"}, "startDate": 2025-09-15T14:36:32.000Z, "uuid": "C3FC69FB-72F3-4B10-B09B-9878125DDB5B", "value": 2}]
- LOG  🍎 Processing 165 sleep samples - detecting sessions...
- LOG  🍎 Detected 2 sleep sessions:
- LOG    Session 1: 2025-09-14T07:29:01.000Z to 2025-09-14T17:07:31.000Z (9.6 hours, 102 samples)
- LOG    Session 2: 2025-09-15T08:03:32.000Z to 2025-09-15T14:56:02.000Z (6.9 hours, 63 samples)
- LOG  🍎 Selected most recent session: 2025-09-15T08:03:32.000Z to 2025-09-15T14:56:02.000Z (63 samples)
- LOG  🍎 Sleep window: 2025-09-15T08:03:32.000Z to 2025-09-15T14:56:02.000Z (413 minutes)
- LOG  🍎 Processing samples for timeline:
- LOG    Sample 1: value=2, duration=11.5min, timeline=0-12
- LOG    Sample 2: value=0, duration=412.5min, timeline=0-413
- LOG    Sample 3: value=3, duration=9.5min, timeline=11-21
- LOG    Sample 4: value=4, duration=33.5min, timeline=21-55
- LOG    Sample 5: value=3, duration=0.5min, timeline=54-55
- LOG    Sample 6: value=5, duration=3.0min, timeline=55-58
- LOG    Sample 7: value=2, duration=1.0min, timeline=58-59
- LOG    Sample 8: value=3, duration=1.5min, timeline=59-61
- LOG    Sample 9: value=2, duration=0.5min, timeline=60-61
- LOG    Sample 10: value=3, duration=1.5min, timeline=61-63
- LOG    Sample 11: value=5, duration=16.0min, timeline=62-79
- LOG    Sample 12: value=3, duration=15.0min, timeline=78-94
- LOG    Sample 13: value=4, duration=29.0min, timeline=93-123
- LOG    Sample 14: value=2, duration=1.0min, timeline=122-124
- LOG    Sample 15: value=3, duration=4.5min, timeline=123-128
- LOG    Sample 16: value=2, duration=0.5min, timeline=128-129
- LOG    Sample 17: value=3, duration=2.5min, timeline=128-131
- LOG    Sample 18: value=2, duration=1.0min, timeline=131-132
- LOG    Sample 19: value=3, duration=3.5min, timeline=132-136
- LOG    Sample 20: value=5, duration=2.0min, timeline=135-138
- LOG    Sample 21: value=2, duration=0.5min, timeline=137-138
- LOG    Sample 22: value=5, duration=16.0min, timeline=138-154
- LOG    Sample 23: value=3, duration=2.5min, timeline=154-157
- LOG    Sample 24: value=5, duration=0.5min, timeline=156-157
- LOG    Sample 25: value=3, duration=18.5min, timeline=157-176
- LOG    Sample 26: value=4, duration=14.0min, timeline=175-190
- LOG    Sample 27: value=2, duration=0.5min, timeline=189-190
- LOG    Sample 28: value=3, duration=1.0min, timeline=190-191
- LOG    Sample 29: value=2, duration=0.5min, timeline=191-192
- LOG    Sample 30: value=3, duration=20.5min, timeline=191-212
- LOG    Sample 31: value=2, duration=0.5min, timeline=212-213
- LOG    Sample 32: value=3, duration=3.5min, timeline=212-216
- LOG    Sample 33: value=2, duration=2.5min, timeline=216-219
- LOG    Sample 34: value=3, duration=4.0min, timeline=218-223
- LOG    Sample 35: value=5, duration=43.5min, timeline=222-266
- LOG    Sample 36: value=3, duration=1.5min, timeline=266-268
- LOG    Sample 37: value=5, duration=3.0min, timeline=267-271
- LOG    Sample 38: value=3, duration=12.0min, timeline=270-283
- LOG    Sample 39: value=2, duration=0.5min, timeline=282-283
- LOG    Sample 40: value=3, duration=28.0min, timeline=283-311
- LOG    Sample 41: value=4, duration=1.5min, timeline=311-313
- LOG    Sample 42: value=3, duration=2.0min, timeline=312-315
- LOG    Sample 43: value=4, duration=2.0min, timeline=314-317
- LOG    Sample 44: value=2, duration=1.0min, timeline=316-318
- LOG    Sample 45: value=3, duration=12.5min, timeline=317-330
- LOG    Sample 46: value=5, duration=1.5min, timeline=330-332
- LOG    Sample 47: value=2, duration=0.5min, timeline=331-332
- LOG    Sample 48: value=3, duration=10.5min, timeline=332-343
- LOG    Sample 49: value=2, duration=0.5min, timeline=342-343
- LOG    Sample 50: value=3, duration=10.0min, timeline=343-353
- LOG    Sample 51: value=5, duration=5.0min, timeline=353-358
- LOG    Sample 52: value=3, duration=1.5min, timeline=358-360
- LOG    Sample 53: value=5, duration=3.5min, timeline=359-363
- LOG    Sample 54: value=3, duration=4.0min, timeline=363-367
- LOG    Sample 55: value=2, duration=0.5min, timeline=367-368
- LOG    Sample 56: value=3, duration=2.0min, timeline=367-370
- LOG    Sample 57: value=2, duration=0.5min, timeline=369-370
- LOG    Sample 58: value=3, duration=6.5min, timeline=370-377
- LOG    Sample 59: value=2, duration=0.5min, timeline=376-377
- LOG    Sample 60: value=3, duration=9.0min, timeline=377-386
- LOG    Sample 61: value=2, duration=1.0min, timeline=386-387
- LOG    Sample 62: value=3, duration=6.0min, timeline=387-393
- LOG    Sample 63: value=2, duration=19.5min, timeline=393-413
- LOG  🍎 Timeline Processing Results:
- LOG    Total timeline minutes: 413
- LOG    Stage breakdown (no overlaps):
- LOG      InBed (not sleeping): 0min
- LOG      Awake (during sleep): 36min
- LOG      Asleep (general): 0min
- LOG      Core/Light: 194min
- LOG      Deep: 84min
- LOG      REM: 99min
- LOG    Verification: 413 = 413
- LOG  🍎 Sleep Analysis Summary:
- LOG    Total Sleep: 6.28 hours
- LOG    Total In Bed: 6.88 hours
- LOG    Sleep Efficiency: 91.3%
- LOG    Deep Sleep: 84 minutes
- LOG    REM Sleep: 99 minutes
- LOG    Core Sleep: 194 minutes
- LOG    Awake Time: 36 minutes
- LOG  🍎 Sleep data response: {"samples": [{"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T07:38:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T07:29:01.000Z, "uuid": "8E38EA5E-FE48-4934-A498-703126ED5F45", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T17:07:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T07:29:01.000Z, "uuid": "B4108ED8-6F13-4E5E-9362-79FB0818FE32", "value": 0}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T07:52:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T07:38:31.000Z, "uuid": "B910D0E6-9A62-467F-86D8-3C787D655270", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T08:31:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T07:52:01.000Z, "uuid": "3B549C4F-504C-4C14-858B-671D3554EA7D", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T08:38:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T08:31:31.000Z, "uuid": "BF1E25DD-7812-4A41-B120-E91E4D928670", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T08:39:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T08:38:31.000Z, "uuid": "59BD1748-A6FD-4ED6-8498-6010F58910A4", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T08:43:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T08:39:01.000Z, "uuid": "0C0E8D76-CF41-4271-81D2-DC154E3A223A", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T08:50:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T08:43:31.000Z, "uuid": "210B2D61-D5F1-4889-8FC1-020D08B72779", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T08:50:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T08:50:01.000Z, "uuid": "4D5F1FA2-660B-4803-A0EA-28A81FD9FA9B", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T08:52:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T08:50:31.000Z, "uuid": "DA910713-2082-4FCF-89EA-F2B58E0AFD5B", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T09:19:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T08:52:01.000Z, "uuid": "DF84A26A-7F4C-42C4-96CB-9354691B7A08", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T09:45:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T09:19:01.000Z, "uuid": "DD0CAF15-418C-4106-B482-61D9893A70A4", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T09:52:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T09:45:01.000Z, "uuid": "E1B922E4-51BB-4448-857A-1D22BA6740D4", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T09:53:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T09:52:01.000Z, "uuid": "E50FA265-E8A1-4A42-A828-8CAEE5A2F6CC", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T09:55:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T09:53:31.000Z, "uuid": "533DD684-385D-44A9-A285-C2D8D96E21B6", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:17:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T09:55:31.000Z, "uuid": "CD3F53CF-787E-4F8D-8593-92E197FD5AF8", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:28:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T10:17:01.000Z, "uuid": "4B7A34B0-5D1A-4CFA-BF84-131071B030C4", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:29:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T10:28:01.000Z, "uuid": "2FB88E38-BE5F-4EE2-836F-94D9BE5BBA95", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:30:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T10:29:31.000Z, "uuid": "AAFF3DA9-0173-456B-84AF-06F2F558147D", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:30:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T10:30:01.000Z, "uuid": "3A74D8B7-0675-4644-B32A-1DB38CE76876", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:31:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T10:30:31.000Z, "uuid": "FDE81103-E029-40F5-90BC-C091F2010745", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:31:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T10:31:01.000Z, "uuid": "7B5B6587-E009-4D37-9DEA-A3D55D68C496", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:47:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T10:31:31.000Z, "uuid": "1CE5CF40-BFAB-4427-B149-18200E8268C2", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:48:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T10:47:31.000Z, "uuid": "69785CCB-D65F-49E9-B0DF-E39CEBB996D1", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:52:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T10:48:01.000Z, "uuid": "60F06309-EFC9-4204-A052-FD21C34103D8", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T10:53:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T10:52:01.000Z, "uuid": "6CE1578C-90EC-49E9-8C83-5C2FCF8AA639", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T11:11:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T10:53:01.000Z, "uuid": "104DD142-21D6-4D61-A9D5-5465B0E6FE25", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T11:29:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T11:11:31.000Z, "uuid": "884B0B71-9CB0-42EA-91DA-680D06C92A78", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T11:30:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T11:29:31.000Z, "uuid": "19E26C08-05A6-40C6-A27D-E675B7F72673", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T11:47:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T11:30:01.000Z, "uuid": "53F61D26-AA7F-493C-B58C-8B12B7BA4A9D", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:01:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T11:47:31.000Z, "uuid": "4B9AA38A-32C1-4E8D-94D4-4A98AD31C53E", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:06:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T12:01:31.000Z, "uuid": "33B8E885-A411-437C-9F3D-08DF38A5FD9E", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:22:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T12:06:31.000Z, "uuid": "F8FCA6C5-CC28-4F9D-8AA8-86883C55A369", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:23:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T12:22:31.000Z, "uuid": "4E7FD142-2653-4069-901F-A1E21456F436", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:27:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T12:23:01.000Z, "uuid": "71392B94-9877-4F2D-BE7C-0058B0426071", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:28:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T12:27:31.000Z, "uuid": "622531EC-73C4-470E-BF03-B60AE7135FF6", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:33:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T12:28:01.000Z, "uuid": "3FC82419-DB2E-40CE-ACF0-1386911504E5", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:35:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T12:33:31.000Z, "uuid": "794F8CE6-B587-4DE9-9B88-6B53AAEE6A8F", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:35:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T12:35:01.000Z, "uuid": "001C1F33-BDCF-444F-AAD3-84BBAF63F24D", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:48:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T12:35:31.000Z, "uuid": "4FB85362-2073-4205-BC07-06D1052346A6", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T12:49:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T12:48:31.000Z, "uuid": "2E1C7E3B-1F65-4AEB-A338-07C6FE56C8F8", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T13:22:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T12:49:01.000Z, "uuid": "8F0B6DC1-B4A8-429A-ACB0-29FDE6B44C4F", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T13:37:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T13:22:01.000Z, "uuid": "12A21B6B-537B-4A62-8EFE-1B3F7BE4E85D", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T13:37:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T13:37:01.000Z, "uuid": "A849D163-7093-4C53-AA66-2094A5BD5783", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T13:44:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T13:37:31.000Z, "uuid": "FEE078FB-FFF9-423C-A7E7-6C9F0ABD873E", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T13:44:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T13:44:01.000Z, "uuid": "A4DB4277-28F9-4F3D-A3B5-DAC722F0525A", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T13:58:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T13:44:31.000Z, "uuid": "4F745A94-4862-4D44-B24F-254BCD895B2A", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T13:59:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T13:58:31.000Z, "uuid": "85481EE5-5A3A-4B5E-8A54-8318A1136B33", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:01:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T13:59:01.000Z, "uuid": "783263D7-0485-466C-82F1-A1435ABAFCD4", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:01:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T14:01:01.000Z, "uuid": "141D7DA0-BBBA-46EC-9DC3-2AFFE6372A83", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:02:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T14:01:31.000Z, "uuid": "A8CD7659-1067-4178-B14E-583411FF9F1A", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:02:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T14:02:01.000Z, "uuid": "22CDCC78-5CCC-41A4-999D-DBC9D7507758", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:05:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T14:02:31.000Z, "uuid": "FD3B6653-284E-4A9A-9AD5-D3CE158A6DCE", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:07:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T14:05:31.000Z, "uuid": "444C9637-353C-4C90-A425-290EB37F1F6B", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:09:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T14:07:01.000Z, "uuid": "A1B32E80-D696-4EC6-A15F-DD4A6E846544", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:09:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T14:09:01.000Z, "uuid": "F0FBB728-EA21-4EDC-BE3C-3A691A18D92E", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:39:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T14:09:31.000Z, "uuid": "B7EE44E7-8D70-4093-8102-DB20CE9302EF", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:39:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T14:39:01.000Z, "uuid": "E2019057-89D9-4DAE-8CEF-0D3541875098", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:47:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T14:39:31.000Z, "uuid": "81BF1531-993B-4DD2-96D2-15CE4CCB2517", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:48:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T14:47:01.000Z, "uuid": "23BECF69-D2B9-4F85-A2F7-B5014170BA2F", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:53:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T14:48:01.000Z, "uuid": "58A8B77A-1AA6-4877-8674-06F624E65CD5", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T14:53:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T14:53:01.000Z, "uuid": "2D9064D6-74DB-4D86-969A-151607AA60E8", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:04:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T14:53:31.000Z, "uuid": "E7D1A9F3-DD2B-44C2-882F-EC13820EE3A6", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:05:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:04:01.000Z, "uuid": "9D6E3C6D-BDA5-4B06-A649-F548B55C2031", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:06:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:05:31.000Z, "uuid": "3193F968-7B0A-46BD-89F5-F9519613A76A", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:08:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:06:01.000Z, "uuid": "8B9DC91C-F43A-4EAE-89F1-D611693E3AE5", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:10:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:08:01.000Z, "uuid": "4DD4D95E-3F2F-4079-A2BB-6EE8A6ADA1D0", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:17:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:10:01.000Z, "uuid": "859F3FCB-EC00-41A9-BF7D-D35E651D8A64", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:18:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:17:01.000Z, "uuid": "21BD61E3-9E89-417D-B19C-7EC7C5DEF756", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:20:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:18:01.000Z, "uuid": "20181A16-199A-47BC-98D2-83786A5C8C9A", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:21:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:20:31.000Z, "uuid": "1D61A614-15E6-4D93-B196-104E80B665CB", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:25:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:21:31.000Z, "uuid": "C2CDFCD7-27F6-4C14-B075-5DE01F1E9B8C", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:25:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:25:01.000Z, "uuid": "9CDB9D41-5CDF-4EC6-88FF-D3D86AB72071", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:43:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:25:31.000Z, "uuid": "FA79B258-5084-49E1-BBA0-AE541990F037", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:43:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:43:01.000Z, "uuid": "0249FD96-165C-4555-8318-7C92641122A4", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:48:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:43:31.000Z, "uuid": "9AE2B2E6-2AFE-4721-88E1-911F8DF06802", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:49:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:48:01.000Z, "uuid": "07F12FEF-DC9A-4A56-82F4-9A5C38627ED5", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:53:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:49:01.000Z, "uuid": "9490D47B-8EA0-417C-85E6-F7AB9004FD69", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:56:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:53:31.000Z, "uuid": "37D0EF90-CA15-4DB1-A68F-7639B0F8CD30", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:58:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:56:31.000Z, "uuid": "BAA2FF31-392F-4D59-AF3F-4122BB851A8A", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T15:58:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:58:01.000Z, "uuid": "BB6C55F6-B6DD-48B3-A1CD-4674C2DE3A6C", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:09:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T15:58:31.000Z, "uuid": "C3D90137-5D42-47FA-A170-BAF8413341B4", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:10:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:09:01.000Z, "uuid": "D9FFDEFD-F79D-4A29-982B-CD69FF00D97F", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:10:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:10:01.000Z, "uuid": "77A962EE-7134-4233-919E-33881D2E7A8D", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:13:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:10:31.000Z, "uuid": "481CFFB1-7FA2-4C5F-B41A-F9AA34540ECC", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:14:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:13:31.000Z, "uuid": "4E66FDCC-26B6-4362-A90C-ABB0B710A3D2", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:17:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:14:01.000Z, "uuid": "DC6B00AE-C4D8-435C-BCD1-618B2B00D14D", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:19:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:17:01.000Z, "uuid": "FDD3A633-AB33-44EB-8099-9C3F1E3849A7", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:20:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:19:01.000Z, "uuid": "ACACC4D7-34D9-4F3B-B83B-AF93E8467059", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:32:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:20:31.000Z, "uuid": "BDB4A89C-B91B-4C1D-BC0B-8C15260D4238", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:34:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:32:31.000Z, "uuid": "D1F3240E-9754-4D86-95B0-0B3B22A3AFE0", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:36:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:34:01.000Z, "uuid": "8A83EC9F-99D1-4138-B28C-51633D6DEDD5", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:37:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:36:31.000Z, "uuid": "FDC075A7-F2A5-48CE-9056-68F1ACA25D1C", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:38:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:37:31.000Z, "uuid": "20853526-CF23-45DB-A443-5C0FA9BBD0FB", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:38:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:38:01.000Z, "uuid": "210C1A7C-E15F-4A9E-B51A-4B699001F4CD", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:43:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:38:31.000Z, "uuid": "3F2ADF4E-63C5-4C41-A8A7-1F94F51557BD", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:47:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:43:01.000Z, "uuid": "27BC3D86-3D06-4B8F-BEC7-E0C93718F707", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:51:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:47:01.000Z, "uuid": "15B89934-2457-450D-B243-424E7F716CF6", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:52:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:51:01.000Z, "uuid": "4DA900DA-7F63-40B1-9AA8-1343E5BB95E0", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:52:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:52:01.000Z, "uuid": "5BBFA151-C693-485A-BC53-9D44CD051D9B", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T16:53:01.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:52:31.000Z, "uuid": "548E2CA1-E61F-4097-961C-FF1C765D668F", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-14T17:07:31.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-14T16:53:01.000Z, "uuid": "92981D02-574B-4D3A-AB1F-7EFBB5B44BA9", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T08:15:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T08:03:32.000Z, "uuid": "4246B74F-4695-4BCE-A2F9-956026F1CB85", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:56:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T08:03:32.000Z, "uuid": "118727FA-B0E6-47CF-AEFB-FBB023F9472C", "value": 0}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T08:24:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T08:15:02.000Z, "uuid": "11246ACA-1C24-4282-98F7-B3F60FCE1978", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T08:58:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T08:24:32.000Z, "uuid": "C0BDAD20-9218-4A7A-8F7E-2E347FC53F5E", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T08:58:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T08:58:02.000Z, "uuid": "46BC2B87-DFCA-49B7-8E04-36D0AEF36E86", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T09:01:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T08:58:32.000Z, "uuid": "62BDD9E0-E592-4CCD-A61B-84C1620C2C97", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T09:02:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T09:01:32.000Z, "uuid": "EFA2688B-B27E-4D4B-AB51-52644B33EA81", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T09:04:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T09:02:32.000Z, "uuid": "6C40F3F5-565C-4769-82F2-B7DB546DBE24", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T09:04:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T09:04:02.000Z, "uuid": "B46847AE-A72C-4FAF-930B-C921B8D484A9", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T09:06:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T09:04:32.000Z, "uuid": "1B8C74B3-D26E-4660-B4A7-C4D497ACD513", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T09:22:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T09:06:02.000Z, "uuid": "9223FB9C-E734-4CBC-A4A4-48B2066708BA", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T09:37:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T09:22:02.000Z, "uuid": "01CBF7CE-AAE5-45E8-BD3D-ABE0B5E20EC4", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:06:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T09:37:02.000Z, "uuid": "16ADEE43-92A5-4E60-A0A9-89BE55C1A60E", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:07:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T10:06:02.000Z, "uuid": "CEE7C638-E9B7-4AEA-BE99-BF650AC8AAF6", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:11:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T10:07:02.000Z, "uuid": "76CF198E-5ECC-4705-9BF7-03937C2FCDEC", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:12:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T10:11:32.000Z, "uuid": "01F2CAF0-4F3D-49C3-9297-706D437D9FB4", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:14:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T10:12:02.000Z, "uuid": "6A928472-9164-4C78-B9F6-181B91D26BD2", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:15:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T10:14:32.000Z, "uuid": "E1ED91CF-70B8-4270-A347-B97D93D938DA", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:19:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T10:15:32.000Z, "uuid": "2E19DD8F-40A9-4120-926D-BDBA2D519597", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:21:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T10:19:02.000Z, "uuid": "0823F751-E040-42F6-9364-02D8FD527F1B", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:21:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T10:21:02.000Z, "uuid": "F14CE150-2C7F-4C1B-B346-A0ADD77C6384", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:37:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T10:21:32.000Z, "uuid": "DF880526-D0F9-48AB-8A74-C79FEA757926", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:40:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T10:37:32.000Z, "uuid": "4E46D751-CF88-475B-81D9-76469EBEE16E", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:40:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T10:40:02.000Z, "uuid": "0E4E7410-E608-44DD-AD9F-5EB599CA46EE", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T10:59:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T10:40:32.000Z, "uuid": "917A062F-89F4-4E65-BF30-BF71CEAA1256", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:13:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T10:59:02.000Z, "uuid": "A2771495-0FA6-43A8-93F8-6F5F517152D3", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:13:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T11:13:02.000Z, "uuid": "7AC2A8CC-6809-4000-92F0-52F7B943EEAB", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:14:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T11:13:32.000Z, "uuid": "69CF1C82-AA69-4B39-95C4-46192AE54607", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:15:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T11:14:32.000Z, "uuid": "DB59573E-9E82-4A17-A3F9-94CF0BDE1C9E", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:35:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T11:15:02.000Z, "uuid": "2B113DCE-7356-44A7-90A5-6ADB67150AD3", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:36:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T11:35:32.000Z, "uuid": "E3199AC0-3B7A-4CD1-A591-06DF948594D6", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:39:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T11:36:02.000Z, "uuid": "4B083B73-E3E7-459C-9BE1-55695750CB01", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:42:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T11:39:32.000Z, "uuid": "DB50691C-89B8-401F-9297-7BB1E6D02CD4", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T11:46:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T11:42:02.000Z, "uuid": "3D5D22D3-EF00-43B1-85F9-7DB152478C40", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T12:29:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T11:46:02.000Z, "uuid": "E85A422D-A531-405B-A434-CDE971B0B4C3", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T12:31:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T12:29:32.000Z, "uuid": "502A82C6-D702-4D3B-AC1A-0A1019E77292", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T12:34:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T12:31:02.000Z, "uuid": "E97786F0-0A57-4A9C-B7F7-36B29FA7C547", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T12:46:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T12:34:02.000Z, "uuid": "78A148BE-91D3-4B1C-954E-16B7F9145494", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T12:46:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T12:46:02.000Z, "uuid": "BE582D68-908B-42B0-9B47-FCC27F1ABC0E", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:14:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T12:46:32.000Z, "uuid": "09CC7937-E6C4-4299-A739-167F2784D3C5", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:16:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T13:14:32.000Z, "uuid": "4C44C19A-7F57-4346-AA14-0816ADF3D818", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:18:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T13:16:02.000Z, "uuid": "9DCD4DC6-18F3-4A3E-9A52-26ED33C69D73", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:20:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T13:18:02.000Z, "uuid": "F50AEF0C-BE90-45FA-81AF-FB93BE5D155B", "value": 4}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:21:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T13:20:02.000Z, "uuid": "A65A8337-9990-4755-9BB3-4C87F86E3CCB", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:33:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T13:21:02.000Z, "uuid": "B349241B-091D-4900-804A-A829AA64579E", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:35:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T13:33:32.000Z, "uuid": "82F4EF4C-EE5F-476A-9351-E39A72CE2A30", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:35:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T13:35:02.000Z, "uuid": "D0DB0280-DC55-4956-9650-CCAF3B61AC4D", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:46:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T13:35:32.000Z, "uuid": "A6DAACAE-F97B-4995-9343-BBC6645CA01B", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:46:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T13:46:02.000Z, "uuid": "B9A413A8-FC0A-4F38-B26D-A849213284CB", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T13:56:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T13:46:32.000Z, "uuid": "CC2FE276-9F6C-4BD7-A255-F1021D760FCF", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:01:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T13:56:32.000Z, "uuid": "358CF8A9-BA21-42A9-936C-6A0874852D1C", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:03:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T14:01:32.000Z, "uuid": "5EDD3BCC-0AB2-4B2C-8243-9261184C61D1", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:06:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T14:03:02.000Z, "uuid": "A968C5C9-ABA3-4C91-893C-59C60C8DB3A8", "value": 5}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:10:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T14:06:32.000Z, "uuid": "B35147AD-7CE7-4B61-B2EA-E37E7209C3B6", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:11:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T14:10:32.000Z, "uuid": "7B55ADE3-F5D8-4D79-BFBB-1F30F5D679BA", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:13:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T14:11:02.000Z, "uuid": "60A2C5ED-0851-4B5A-A8A8-8DF0D831AD11", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:13:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T14:13:02.000Z, "uuid": "A4BDCC07-249D-4202-BA0D-DEAEFD09C5E7", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:20:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T14:13:32.000Z, "uuid": "F1729DD7-B2DF-4AA4-9193-77AF54892040", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:20:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T14:20:02.000Z, "uuid": "E7EFCE0F-0EE7-49D8-A775-F645FF448D0F", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:29:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T14:20:32.000Z, "uuid": "2F0A285A-4FE8-4D2C-8C1E-9CB7F083FB2F", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:30:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T14:29:32.000Z, "uuid": "9006B5EF-F24B-4A74-A7A4-7B380B46529B", "value": 2}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:36:32.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T14:30:32.000Z, "uuid": "1A9F54E7-D657-4279-A4D0-DC1D810D3586", "value": 3}, {"categoryType": "HKCategoryTypeIdentifierSleepAnalysis", "device": undefined, "endDate": 2025-09-15T14:56:02.000Z, "metadata": [Object], "sourceRevision": [Object], "startDate": 2025-09-15T14:36:32.000Z, "uuid": "C3FC69FB-72F3-4B10-B09B-9878125DDB5B", "value": 2}], "sleepEfficiency": 91.3, "sleepEndTime": "2025-09-15T14:56:02.000Z", "sleepStages": {"asleep": 0, "awake": 36, "core": 194, "deep": 84, "inBed": 0, "rem": 99}, "sleepStartTime": "2025-09-15T08:03:32.000Z", "totalInBedHours": 6.88, "totalSamples": 165, "totalSleepHours": 6.28}
- LOG  🍎 Storing sleep data in new schema:
- LOG    Time in Bed: 6.88 hours
- LOG    Time Asleep: 6.28 hours
- LOG    Awake in Bed: 0.60 hours
- LOG    Deep Sleep: 1.40 hours
- LOG    REM Sleep: 1.65 hours
- LOG    Light Sleep: 3.23 hours (core + asleep)
- LOG    Stage breakdown: Core=194min + Asleep=0min = Light=194min
- LOG  🍎 AppleHealthKitDataService: Retrieved realtime data keys: ["heartrate", "restingheartrate", "bloodpressure_systolic", "bloodpressure_diastolic", "oxygensaturation", "respiratoryrate", "hrv", "steps", "distance", "activeenergy", "weight", "height", "leanbodymass", "body_fat_percentage", "bloodglucose", "v02_max", "menstruation", "time_in_bed", "time_asleep", "awake_in_bed", "deep_sleep", "rem_sleep", "light_sleep", "last_sync_at"]
- LOG  🍎 AppleHealthKitDataService: Retrieved realtime data values: {"activeenergy": 247, "awake_in_bed": 0.5999999999999996, "bloodglucose": 80, "bloodpressure_diastolic": 80, "bloodpressure_systolic": 120, "body_fat_percentage": 0.12, "deep_sleep": 1.4, "distance": 0.1624788448418621, "heartrate": 50, "height": 6.166666666666667, "hrv": 112, "last_sync_at": 2025-09-16T01:32:19.277Z, "leanbodymass": 101, "light_sleep": 3.2333333333333334, "menstruation": "NotApplicable", "oxygensaturation": 0.98, "rem_sleep": 1.65, "respiratoryrate": 12.875, "restingheartrate": 51, "steps": 5714, "time_asleep": 6.28, "time_in_bed": 6.88, "v02_max": 40, "weight": 177.9998548035541}
- LOG  🍎 HealthSync: Health data retrieved, filtering valid values
- LOG  🍎 HealthSync: Valid data found, upserting to database
- LOG  📊 DB: Upserting Apple Health realtime data for user: f8ac1669-7e9e-4d9e-bb9d-bebd806ce58e
- ERROR  📊 DB: Error upserting Apple Health data: {"code": "PGRST204", "details": null, "hint": null, "message": "Could not find the 'leanbodymass' column of 'apple_health_realtime' in the schema cache"}
- ERROR  🍎 HealthSync: Error syncing Apple Health: {"code": "PGRST204", "details": null, "hint": null, "message": "Could not find the 'leanbodymass' column of 'apple_health_realtime' in the schema cache"}
+ LOG  🏥 HealthSync: Platform detected: android
+ LOG  🤖 HealthSync: Starting Google Health sync
+ LOG  🤖 HealthSync: Checking for active integration
+ LOG  ✅ StorageInitializer: Storage read/write test passed
+ LOG  ✅ StorageInitializer: AsyncStorage initialized successfully
+ LOG  🤖 HealthSync: Active integration found, syncing to wearables_data table
+ LOG  🤖 GoogleHealthConnectDataService: Starting wearables_data sync
+ LOG  🤖 Syncing 7 days of data for user f8ac1669-7e9e-4d9e-bb9d-bebd806ce58e, integration 7ea342f1-affd-44b4-b4f9-45e8e09f7cef
+ LOG  🤖 Health Connect client initialized successfully for wearables sync
+ LOG  🤖 Syncing data from 2025-09-09T05:00:00.000Z to 2025-09-17T03:30:29.500Z
+ LOG  🤖 Syncing heart rate data...
+ LOG  🔍 Reading HeartRate records with filter: {"endTime": "2025-09-17T03:30:29.500Z", "operator": "between", "startTime": "2025-09-09T05:00:00.000Z"}
+ LOG  📊 HeartRate result: object returned
+ LOG  📊 HeartRate records: 1000 records
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 90
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 101
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 99
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 99
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 96
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 98
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 83
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 77
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 50
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 50
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 50
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 50
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 50
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 50
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 49
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 76
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 101
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 101
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 102
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 94
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 90
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 87
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 83
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 83
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 74
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 74
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 74
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 77
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 80
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 73
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 79
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 92
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 75
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 89
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 81
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 86
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 79
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 77
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 50
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 51
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 86
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 74
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 74
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 90
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 79
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 75
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 72
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 74
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 83
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 85
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 72
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 79
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 72
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 74
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 77
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 93
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 82
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 74
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 81
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 100
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 73
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 75
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 76
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 72
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 72
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 76
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 74
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 75
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 75
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 76
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 77
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 76
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 76
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 76
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 73
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 72
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 73
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 73
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 77
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 73
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 72
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 74
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 75
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 82
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 92
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 91
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 90
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 95
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 98
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 93
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 80
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 82
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 86
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 98
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 93
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 88
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 114
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 109
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 102
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 100
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 107
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 95
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 92
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 96
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 98
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 94
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 88
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 83
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 84
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 81
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 88
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 94
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 104
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 112
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 110
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 90
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 91
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 72
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 103
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 102
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 105
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 102
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 100
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 99
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 99
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 98
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 102
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 101
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 95
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 98
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 99
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 99
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 100
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 87
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 91
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 98
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 93
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 102
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 102
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 103
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 104
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 105
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 92
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 93
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 106
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 114
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 105
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 93
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 82
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 83
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 87
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 77
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 72
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 79
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 82
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 81
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 83
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 90
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 81
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 79
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 80
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 85
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 80
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 80
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 77
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 89
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 90
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 83
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 82
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 85
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 82
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 73
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 58
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 61
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 62
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 76
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 80
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 88
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 80
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 82
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 72
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 72
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 72
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 73
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 72
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 75
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 76
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 77
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 79
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 74
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 73
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 72
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 75
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 75
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 77
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 79
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 81
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 83
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 87
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 97
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 95
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 97
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 100
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 97
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 95
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 94
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 92
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 99
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 125
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 130
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 129
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 119
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 124
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 118
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 133
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 129
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 122
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 114
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 125
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 116
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 128
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 119
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 124
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 125
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 125
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 131
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 123
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 114
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 113
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 108
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 118
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 130
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 120
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 106
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 94
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 101
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 105
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 125
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 120
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 118
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 114
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 113
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 120
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 132
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 122
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 137
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 140
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 120
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 126
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 111
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 121
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 133
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 143
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 137
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 122
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 123
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 145
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 128
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 111
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 121
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 138
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 125
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 111
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 101
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 101
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 101
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 108
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 89
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 83
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 80
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 80
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 78
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 80
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 99
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 112
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 110
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 114
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 107
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 91
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 92
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 93
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 81
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 87
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 91
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 89
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 68
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 69
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 64
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 54
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 57
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 52
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 55
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 59
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 53
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 56
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 79
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 77
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 73
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 66
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 71
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 65
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 63
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 70
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 67
+ LOG  🔍 Heart rate from samples (com.fitbit.FitbitMobile): 60
+ LOG  🤖 Created 19 heart rate records
+ LOG  🤖 Syncing activity data...
+ LOG  🔍 Reading Steps records with filter: {"endTime": "2025-09-10T04:59:59.999Z", "operator": "between", "startTime": "2025-09-09T05:00:00.000Z"}
+ LOG  📊 Steps result: object returned
+ LOG  📊 Steps records: 352 records
+ LOG  🔍 Reading Distance records with filter: {"endTime": "2025-09-10T04:59:59.999Z", "operator": "between", "startTime": "2025-09-09T05:00:00.000Z"}
+ LOG  📊 Distance result: object returned
+ LOG  📊 Distance records: 352 records
+ LOG  🔍 Reading ActiveCaloriesBurned records with filter: {"endTime": "2025-09-10T04:59:59.999Z", "operator": "between", "startTime": "2025-09-09T05:00:00.000Z"}
+ LOG  📊 ActiveCaloriesBurned result: object returned
+ LOG  📊 ActiveCaloriesBurned records: 0 records
+ LOG  🔍 Reading ExerciseSession records with filter: {"endTime": "2025-09-10T04:59:59.999Z", "operator": "between", "startTime": "2025-09-09T05:00:00.000Z"}
+ LOG  📊 ExerciseSession result: object returned
+ LOG  📊 ExerciseSession records: 2 records
+ LOG  🔍 Reading Steps records with filter: {"endTime": "2025-09-11T04:59:59.999Z", "operator": "between", "startTime": "2025-09-10T05:00:00.000Z"}
+ LOG  📊 Steps result: object returned
+ LOG  📊 Steps records: 130 records
+ LOG  🔍 Reading Distance records with filter: {"endTime": "2025-09-11T04:59:59.999Z", "operator": "between", "startTime": "2025-09-10T05:00:00.000Z"}
+ LOG  📊 Distance result: object returned
+ LOG  📊 Distance records: 130 records
+ LOG  🔍 Reading ActiveCaloriesBurned records with filter: {"endTime": "2025-09-11T04:59:59.999Z", "operator": "between", "startTime": "2025-09-10T05:00:00.000Z"}
+ LOG  📊 ActiveCaloriesBurned result: object returned
+ LOG  📊 ActiveCaloriesBurned records: 0 records
+ LOG  🔍 Reading ExerciseSession records with filter: {"endTime": "2025-09-11T04:59:59.999Z", "operator": "between", "startTime": "2025-09-10T05:00:00.000Z"}
+ LOG  📊 ExerciseSession result: object returned
+ LOG  📊 ExerciseSession records: 1 records
+ LOG  🔍 Reading Steps records with filter: {"endTime": "2025-09-12T04:59:59.999Z", "operator": "between", "startTime": "2025-09-11T05:00:00.000Z"}
+ LOG  📊 Steps result: object returned
+ LOG  📊 Steps records: 328 records
+ LOG  🔍 Reading Distance records with filter: {"endTime": "2025-09-12T04:59:59.999Z", "operator": "between", "startTime": "2025-09-11T05:00:00.000Z"}
+ LOG  📊 Distance result: object returned
+ LOG  📊 Distance records: 328 records
+ LOG  🔍 Reading ActiveCaloriesBurned records with filter: {"endTime": "2025-09-12T04:59:59.999Z", "operator": "between", "startTime": "2025-09-11T05:00:00.000Z"}
+ LOG  📊 ActiveCaloriesBurned result: object returned
+ LOG  📊 ActiveCaloriesBurned records: 0 records
+ LOG  🔍 Reading ExerciseSession records with filter: {"endTime": "2025-09-12T04:59:59.999Z", "operator": "between", "startTime": "2025-09-11T05:00:00.000Z"}
+ LOG  📊 ExerciseSession result: object returned
+ LOG  📊 ExerciseSession records: 1 records
+ LOG  🔍 Reading Steps records with filter: {"endTime": "2025-09-13T04:59:59.999Z", "operator": "between", "startTime": "2025-09-12T05:00:00.000Z"}
+ LOG  📊 Steps result: object returned
+ LOG  📊 Steps records: 248 records
+ LOG  🔍 Reading Distance records with filter: {"endTime": "2025-09-13T04:59:59.999Z", "operator": "between", "startTime": "2025-09-12T05:00:00.000Z"}
+ LOG  📊 Distance result: object returned
+ LOG  📊 Distance records: 248 records
+ LOG  🔍 Reading ActiveCaloriesBurned records with filter: {"endTime": "2025-09-13T04:59:59.999Z", "operator": "between", "startTime": "2025-09-12T05:00:00.000Z"}
+ LOG  📊 ActiveCaloriesBurned result: object returned
+ LOG  📊 ActiveCaloriesBurned records: 0 records
+ LOG  🔍 Reading ExerciseSession records with filter: {"endTime": "2025-09-13T04:59:59.999Z", "operator": "between", "startTime": "2025-09-12T05:00:00.000Z"}
+ LOG  📊 ExerciseSession result: object returned
+ LOG  📊 ExerciseSession records: 2 records
+ LOG  🔍 Reading Steps records with filter: {"endTime": "2025-09-14T04:59:59.999Z", "operator": "between", "startTime": "2025-09-13T05:00:00.000Z"}
+ LOG  📊 Steps result: object returned
+ LOG  📊 Steps records: 330 records
+ LOG  🔍 Reading Distance records with filter: {"endTime": "2025-09-14T04:59:59.999Z", "operator": "between", "startTime": "2025-09-13T05:00:00.000Z"}
+ LOG  📊 Distance result: object returned
+ LOG  📊 Distance records: 334 records
+ LOG  🔍 Reading ActiveCaloriesBurned records with filter: {"endTime": "2025-09-14T04:59:59.999Z", "operator": "between", "startTime": "2025-09-13T05:00:00.000Z"}
+ LOG  📊 ActiveCaloriesBurned result: object returned
+ LOG  📊 ActiveCaloriesBurned records: 0 records
+ LOG  🔍 Reading ExerciseSession records with filter: {"endTime": "2025-09-14T04:59:59.999Z", "operator": "between", "startTime": "2025-09-13T05:00:00.000Z"}
+ LOG  📊 ExerciseSession result: object returned
+ LOG  📊 ExerciseSession records: 0 records
+ LOG  🔍 Reading Steps records with filter: {"endTime": "2025-09-15T04:59:59.999Z", "operator": "between", "startTime": "2025-09-14T05:00:00.000Z"}
+ LOG  📊 Steps result: object returned
+ LOG  📊 Steps records: 264 records
+ LOG  🔍 Reading Distance records with filter: {"endTime": "2025-09-15T04:59:59.999Z", "operator": "between", "startTime": "2025-09-14T05:00:00.000Z"}
+ LOG  📊 Distance result: object returned
+ LOG  📊 Distance records: 264 records
+ LOG  🔍 Reading ActiveCaloriesBurned records with filter: {"endTime": "2025-09-15T04:59:59.999Z", "operator": "between", "startTime": "2025-09-14T05:00:00.000Z"}
+ LOG  📊 ActiveCaloriesBurned result: object returned
+ LOG  📊 ActiveCaloriesBurned records: 0 records
+ LOG  🔍 Reading ExerciseSession records with filter: {"endTime": "2025-09-15T04:59:59.999Z", "operator": "between", "startTime": "2025-09-14T05:00:00.000Z"}
+ LOG  📊 ExerciseSession result: object returned
+ LOG  📊 ExerciseSession records: 0 records
+ LOG  🔍 Reading Steps records with filter: {"endTime": "2025-09-16T04:59:59.999Z", "operator": "between", "startTime": "2025-09-15T05:00:00.000Z"}
+ LOG  📊 Steps result: object returned
+ LOG  📊 Steps records: 312 records
+ LOG  🔍 Reading Distance records with filter: {"endTime": "2025-09-16T04:59:59.999Z", "operator": "between", "startTime": "2025-09-15T05:00:00.000Z"}
+ LOG  📊 Distance result: object returned
+ LOG  📊 Distance records: 314 records
+ LOG  🔍 Reading ActiveCaloriesBurned records with filter: {"endTime": "2025-09-16T04:59:59.999Z", "operator": "between", "startTime": "2025-09-15T05:00:00.000Z"}
+ LOG  📊 ActiveCaloriesBurned result: object returned
+ LOG  📊 ActiveCaloriesBurned records: 0 records
+ LOG  🔍 Reading ExerciseSession records with filter: {"endTime": "2025-09-16T04:59:59.999Z", "operator": "between", "startTime": "2025-09-15T05:00:00.000Z"}
+ LOG  📊 ExerciseSession result: object returned
+ LOG  📊 ExerciseSession records: 1 records
+ LOG  🔍 Reading Steps records with filter: {"endTime": "2025-09-17T04:59:59.999Z", "operator": "between", "startTime": "2025-09-16T05:00:00.000Z"}
+ LOG  📊 Steps result: object returned
+ LOG  📊 Steps records: 47 records
+ LOG  🔍 Reading Distance records with filter: {"endTime": "2025-09-17T04:59:59.999Z", "operator": "between", "startTime": "2025-09-16T05:00:00.000Z"}
+ LOG  📊 Distance result: object returned
+ LOG  📊 Distance records: 47 records
+ LOG  🔍 Reading ActiveCaloriesBurned records with filter: {"endTime": "2025-09-17T04:59:59.999Z", "operator": "between", "startTime": "2025-09-16T05:00:00.000Z"}
+ LOG  📊 ActiveCaloriesBurned result: object returned
+ LOG  📊 ActiveCaloriesBurned records: 0 records
+ LOG  🔍 Reading ExerciseSession records with filter: {"endTime": "2025-09-17T04:59:59.999Z", "operator": "between", "startTime": "2025-09-16T05:00:00.000Z"}
+ LOG  📊 ExerciseSession result: object returned
+ LOG  📊 ExerciseSession records: 0 records
+ LOG  🤖 Created 21 activity records
+ LOG  🤖 Syncing sleep data...
+ LOG  🔍 Reading SleepSession records with filter: {"endTime": "2025-09-17T03:30:29.500Z", "operator": "between", "startTime": "2025-09-08T05:00:00.000Z"}
+ LOG  📊 SleepSession result: object returned
+ LOG  📊 SleepSession records: 2 records
+ LOG  🤖 Created 2 sleep records
+ LOG  🤖 Syncing body measurements...
+ LOG  🔍 Reading Weight records with filter: {"endTime": "2025-09-17T03:30:29.500Z", "operator": "between", "startTime": "2025-09-09T05:00:00.000Z"}
+ LOG  📊 Weight result: object returned
+ LOG  📊 Weight records: 1 records
+ LOG  🔍 Reading Height records with filter: {"endTime": "2025-09-17T03:30:29.500Z", "operator": "between", "startTime": "2025-09-09T05:00:00.000Z"}
+ LOG  📊 Height result: object returned
+ LOG  📊 Height records: 1 records
+ LOG  🤖 Created 2 body measurement records
+ LOG  🤖 Syncing nutrition data...
+ LOG  🔍 Reading Nutrition records with filter: {"endTime": "2025-09-10T04:59:59.999Z", "operator": "between", "startTime": "2025-09-09T05:00:00.000Z"}
+ LOG  📊 Nutrition result: object returned
+ LOG  📊 Nutrition records: 0 records
+ LOG  🔍 Reading Hydration records with filter: {"endTime": "2025-09-10T04:59:59.999Z", "operator": "between", "startTime": "2025-09-09T05:00:00.000Z"}
+ LOG  📊 Hydration result: object returned
+ LOG  📊 Hydration records: 0 records
+ LOG  🔍 Reading Nutrition records with filter: {"endTime": "2025-09-11T04:59:59.999Z", "operator": "between", "startTime": "2025-09-10T05:00:00.000Z"}
+ LOG  📊 Nutrition result: object returned
+ LOG  📊 Nutrition records: 0 records
+ LOG  🔍 Reading Hydration records with filter: {"endTime": "2025-09-11T04:59:59.999Z", "operator": "between", "startTime": "2025-09-10T05:00:00.000Z"}
+ LOG  📊 Hydration result: object returned
+ LOG  📊 Hydration records: 0 records
+ LOG  🔍 Reading Nutrition records with filter: {"endTime": "2025-09-12T04:59:59.999Z", "operator": "between", "startTime": "2025-09-11T05:00:00.000Z"}
+ LOG  📊 Nutrition result: object returned
+ LOG  📊 Nutrition records: 0 records
+ LOG  🔍 Reading Hydration records with filter: {"endTime": "2025-09-12T04:59:59.999Z", "operator": "between", "startTime": "2025-09-11T05:00:00.000Z"}
+ LOG  📊 Hydration result: object returned
+ LOG  📊 Hydration records: 0 records
+ LOG  🔍 Reading Nutrition records with filter: {"endTime": "2025-09-13T04:59:59.999Z", "operator": "between", "startTime": "2025-09-12T05:00:00.000Z"}
+ LOG  📊 Nutrition result: object returned
+ LOG  📊 Nutrition records: 0 records
+ LOG  🔍 Reading Hydration records with filter: {"endTime": "2025-09-13T04:59:59.999Z", "operator": "between", "startTime": "2025-09-12T05:00:00.000Z"}
+ LOG  📊 Hydration result: object returned
+ LOG  📊 Hydration records: 0 records
+ LOG  🔍 Reading Nutrition records with filter: {"endTime": "2025-09-14T04:59:59.999Z", "operator": "between", "startTime": "2025-09-13T05:00:00.000Z"}
+ LOG  📊 Nutrition result: object returned
+ LOG  📊 Nutrition records: 0 records
+ LOG  🔍 Reading Hydration records with filter: {"endTime": "2025-09-14T04:59:59.999Z", "operator": "between", "startTime": "2025-09-13T05:00:00.000Z"}
+ LOG  📊 Hydration result: object returned
+ LOG  📊 Hydration records: 0 records
+ LOG  🔍 Reading Nutrition records with filter: {"endTime": "2025-09-15T04:59:59.999Z", "operator": "between", "startTime": "2025-09-14T05:00:00.000Z"}
+ LOG  📊 Nutrition result: object returned
+ LOG  📊 Nutrition records: 1 records
+ LOG  🔍 Reading Hydration records with filter: {"endTime": "2025-09-15T04:59:59.999Z", "operator": "between", "startTime": "2025-09-14T05:00:00.000Z"}
+ LOG  📊 Hydration result: object returned
+ LOG  📊 Hydration records: 1 records
+ LOG  🔍 Reading Nutrition records with filter: {"endTime": "2025-09-16T04:59:59.999Z", "operator": "between", "startTime": "2025-09-15T05:00:00.000Z"}
+ LOG  📊 Nutrition result: object returned
+ LOG  📊 Nutrition records: 0 records
+ LOG  🔍 Reading Hydration records with filter: {"endTime": "2025-09-16T04:59:59.999Z", "operator": "between", "startTime": "2025-09-15T05:00:00.000Z"}
+ LOG  📊 Hydration result: object returned
+ LOG  📊 Hydration records: 0 records
+ LOG  🔍 Reading Nutrition records with filter: {"endTime": "2025-09-17T04:59:59.999Z", "operator": "between", "startTime": "2025-09-16T05:00:00.000Z"}
+ LOG  📊 Nutrition result: object returned
+ LOG  📊 Nutrition records: 0 records
+ LOG  🔍 Reading Hydration records with filter: {"endTime": "2025-09-17T04:59:59.999Z", "operator": "between", "startTime": "2025-09-16T05:00:00.000Z"}
+ LOG  📊 Hydration result: object returned
+ LOG  📊 Hydration records: 0 records
+ LOG  🤖 Created 2 nutrition records
+ LOG  🤖 Syncing vital signs data...
+ LOG  🔍 Reading BloodPressure records with filter: {"endTime": "2025-09-17T03:30:29.500Z", "operator": "between", "startTime": "2025-09-09T05:00:00.000Z"}
+ LOG  📊 BloodPressure result: object returned
+ LOG  📊 BloodPressure records: 3 records
+ LOG  🔍 Reading BloodGlucose records with filter: {"endTime": "2025-09-17T03:30:29.500Z", "operator": "between", "startTime": "2025-09-09T05:00:00.000Z"}
+ LOG  📊 BloodGlucose result: object returned
+ LOG  📊 BloodGlucose records: 0 records
+ LOG  🔍 Reading OxygenSaturation records with filter: {"endTime": "2025-09-17T03:30:29.500Z", "operator": "between", "startTime": "2025-09-09T05:00:00.000Z"}
+ LOG  📊 OxygenSaturation result: object returned
+ LOG  📊 OxygenSaturation records: 1 records
+ LOG  ✅ Extracted percentage: 98 from source: com.google.android.apps.fitness
+ LOG  🔍 Reading RespiratoryRate records with filter: {"endTime": "2025-09-17T03:30:29.500Z", "operator": "between", "startTime": "2025-09-09T05:00:00.000Z"}
+ LOG  📊 RespiratoryRate result: object returned
+ LOG  📊 RespiratoryRate records: 5 records
+ LOG  ✅ Extracted rate: 15 from source: com.google.android.apps.fitness
+ LOG  ✅ Extracted rate: 13 from source: com.google.android.apps.fitness
+ LOG  ✅ Extracted rate: 15 from source: com.google.android.apps.fitness
+ LOG  ✅ Extracted rate: 14 from source: com.google.android.apps.fitness
+ LOG  ✅ Extracted rate: 15 from source: com.google.android.apps.fitness
+ LOG  🔍 Reading BodyTemperature records with filter: {"endTime": "2025-09-17T03:30:29.500Z", "operator": "between", "startTime": "2025-09-09T05:00:00.000Z"}
+ LOG  📊 BodyTemperature result: object returned
+ LOG  📊 BodyTemperature records: 1 records
+ LOG  ✅ Extracted temperature: [object Object] from source: com.google.android.apps.fitness
+ LOG  🤖 Created 10 vital signs records
+ LOG  🤖 Total records to sync: 56
+ LOG  🤖 Batch inserting 56 wearables data records...
+ LOG  🤖 Filtered out 0 duplicate records
+ LOG  🤖 Inserting 56 new records
+ ERROR  🤖 Error inserting batch 0-56: {"code": "22P02", "details": null, "hint": null, "message": "invalid input value for enum metric_type_enum: \"distance\""}
+ ERROR  🤖 Error during batch insert: {"code": "22P02", "details": null, "hint": null, "message": "invalid input value for enum metric_type_enum: \"distance\""}
+ ERROR  🤖 Error during wearables data sync: {"code": "22P02", "details": null, "hint": null, "message": "invalid input value for enum metric_type_enum: \"distance\""}
+ ERROR  🤖 HealthSync: Error syncing Google Health: {"code": "22P02", "details": null, "hint": null, "message": "invalid input value for enum metric_type_enum: \"distance\""}
  LOG  🏥 HealthSync: Sync completed - success: false synced: false
- LOG  🔄 Apple Health: Post-auth sync result: {"error": "Apple Health sync failed", "platform": "ios", "success": false, "synced": false}
- LOG  ✅ apple-health OAuth completed successfully
- LOG  ✅ Integration 8d8ebaa8-5340-4968-aee4-8ff4be463259 status updated to: active
+ LOG  🏥 App: Health sync result: failed
+ LOG  ✅ Component storage initialized: success=true
+ LOG  ✅ Component wakeword initialized: success=true
+ LOG  ✅ Component auth initialized: success=true
+ LOG  ✅ Component health initialized: success=false
+ LOG  ✅ App: Initialization sequence completed
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🚀 WAKE_WORD_CONTEXT: Initializing wake word context...
+ LOG  🚀 WAKE_WORD_CONTEXT: Waiting for voice settings to load...
+ LOG  🎧 WAKE_WORD_CONTEXT: Setting up wake word event listener...
+ LOG  🎧 WAKE_WORD_CONTEXT: Current voice state: IDLE
+ LOG  🔊 WAKE_WORD_SERVICE: Adding DeviceEventEmitter listener for event: wakeWordDetected
+ LOG  🔊 WAKE_WORD_SERVICE: DeviceEventEmitter available: true
+ LOG  🔊 WAKE_WORD_SERVICE: DeviceEventEmitter listener added successfully, subscription: true
+ LOG  🎧 WAKE_WORD_CONTEXT: ✅ Wake word listener registered successfully
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
+ LOG  🔄 VOICE_CONTEXT: Context voiceState: IDLE
+ LOG  🔄 VOICE_CONTEXT: Context isListening: false
+ LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
+ LOG  🔄 VOICE_CONTEXT: Context isError: false
+ LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  📱 VOICE_SETTINGS: Loading settings from storage...
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🎤 Setting up voice event listeners
+ LOG  📱 Setting up AppState monitoring for background wake word handling
+ LOG  🔐 Auth state changed: INITIAL_SESSION true
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔄 VOICE_STATE_HOOK: ========== INITIAL STATE SETUP ==========
+ LOG  🔄 VOICE_STATE_HOOK: Initial state from native: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: IDLE
+ LOG  🔄 VOICE_STATE_HOOK: Initial setState - Previous state: IDLE
+ LOG  🔄 VOICE_STATE_HOOK: Initial setState - New state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_STATE_HOOK: Initial setVoiceState called with: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_STATE_HOOK: ========== INITIAL STATE SETUP ==========
+ LOG  🔄 VOICE_STATE_HOOK: Initial state from native: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_STATE_HOOK: Current hook state from ref: IDLE
+ LOG  🔄 VOICE_STATE_HOOK: Initial setState - Previous state: IDLE
+ LOG  🔄 VOICE_STATE_HOOK: Initial setState - New state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_STATE_HOOK: Initial setVoiceState called with: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
+ LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
+ LOG  🔄 VOICE_CONTEXT: Context voiceState: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_CONTEXT: Context isListening: false
+ LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
+ LOG  🔄 VOICE_CONTEXT: Context isError: false
+ LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🎵 VOICE_SETTINGS: Updating voice settings on android - deepgramEnabled: false, voice: aura-2-pandora-en
+ LOG  🎵 VOICE_SETTINGS: VoiceModule ready after 1 attempts
+ LOG  🧹 Cleaning up voice event listeners
+ LOG  🧹 Cleaning up AppState listeners
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🎤 Setting up voice event listeners
+ LOG  📱 Setting up AppState monitoring for background wake word handling
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔄 VOICE_CONTEXT: User logged in, refreshing settings...
+ LOG  🔄 VOICE_CONTEXT: ========== SETTINGS REFRESH STARTED ==========
+ LOG  🔄 VOICE_CONTEXT: User ID: f8ac1669-7e9e-4d9e-bb9d-bebd806ce58e
+ LOG  🔄 VOICE_CONTEXT: Refreshing settings from database...
+ LOG  📱 VOICE_SETTINGS: Loading settings from storage...
+ LOG  🔄 CONVERSATION_SYNC: User loaded, checking for background conversations...
+ LOG  🔄 CONVERSATION_SYNC: Checking for background conversations...
+ LOG  [ConversationSyncService] Checking for background conversations...
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  ✅ VOICE_CONTEXT: Native voice settings update confirmed: {"deepgramEnabled": false, "message": "Native voice settings updated and configuration reloaded", "selectedVoice": "aura-2-pandora-en", "timestamp": 1758079834658}
+ LOG  Auth state changed: INITIAL_SESSION
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  [ConversationSyncService] Found 0 background conversations
+ LOG  📱 CONVERSATION_SYNC: No background conversations found
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🎵 VOICE_SETTINGS: Updating voice settings on android - deepgramEnabled: false, voice: aura-2-pandora-en
+ LOG  🎵 VOICE_SETTINGS: VoiceModule ready after 1 attempts
+ LOG  🧹 Cleaning up voice event listeners
+ LOG  🧹 Cleaning up AppState listeners
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🎤 Setting up voice event listeners
+ LOG  📱 Setting up AppState monitoring for background wake word handling
+ LOG  🎵 RELOAD_CONFIG: ✅ Native configuration reloaded successfully
+ LOG  🎵 VOICE_SETTINGS: ========== VOICE SETTINGS UPDATE COMPLETED ==========
+ LOG  🔄 WAKE_WORD_CONTEXT: Syncing with database-backed voice settings
+ LOG  🔄 WAKE_WORD_CONTEXT: Database wake word enabled: false
+ LOG  🔄 WAKE_WORD_CONTEXT: Current local enabled: false
+ LOG  🚀 WAKE_WORD_CONTEXT: Initializing wake word context...
+ LOG  🚀 WAKE_WORD_CONTEXT: Using database state as initial state: false
+ LOG  🔄 WAKE_WORD_CONTEXT: Syncing to database state: false
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  ✅ VOICE_CONTEXT: Native voice settings update confirmed: {"deepgramEnabled": false, "message": "Native voice settings updated and configuration reloaded", "selectedVoice": "aura-2-pandora-en", "timestamp": 1758079834782}
+ LOG  ✅ WAKE_WORD_CONTEXT: Native layer synced with database state
+ LOG  🔊 WAKE_WORD_SERVICE: Adding DeviceEventEmitter listener for event: wakeWordDetected
+ LOG  🔊 WAKE_WORD_SERVICE: DeviceEventEmitter available: true
+ LOG  🔊 WAKE_WORD_SERVICE: DeviceEventEmitter listener added successfully, subscription: true
+ LOG  🔍 ONBOARDING: Checking if user needs onboarding message
+ LOG  🔴 VoiceAssistant: isSpeaking changed: false
+ LOG  🔴 VoiceAssistant: voiceState: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
+ LOG  🔴 VoiceAssistant: typeof voiceState: string
+ LOG  ✅ Integration completion handler registered
+ LOG  🎵 RELOAD_CONFIG: ✅ Native configuration reloaded successfully
+ LOG  🎵 VOICE_SETTINGS: ========== VOICE SETTINGS UPDATE COMPLETED ==========
+ LOG  🔄 VOICE_CONTEXT: Local settings loaded
+ LOG  🎤 VOICE_CONTEXT: ========== WAKE WORD DETECTION REFRESH ==========
+ LOG  🎤 VOICE_CONTEXT: Refreshing wake word detection enabled state from database: false
+ LOG  🎤 VOICE_CONTEXT: Wake word sensitivity: 0.05
+ LOG  🎤 VOICE_CONTEXT: Selected wake word: Juniper
+ LOG  🔄 VOICE_CONTEXT: ========== SYNCING TO NATIVE LAYER ==========
+ LOG  🔄 VOICE_CONTEXT: About to call updateSettingsRef.current with updates...
+ LOG  🔍 VOICE_SETTINGS: updateSettings called with: {
+  "deepgramEnabled": false,
+  "baseLanguageModel": "claude-sonnet-4-20250514",
+  "generalInstructions": "",
+  "wakeWord": "Juniper",
+  "selectedWakeWord": "Juniper",
+  "wakeWordSensitivity": 0.05,
+  "wakeWordDetectionEnabled": false,
+  "selectedDeepgramVoice": "aura-2-pandora-en"
+}
+ LOG  🔍 VOICE_SETTINGS: updates keys: ["deepgramEnabled", "baseLanguageModel", "generalInstructions", "wakeWord", "selectedWakeWord", "wakeWordSensitivity", "wakeWordDetectionEnabled", "selectedDeepgramVoice"]
+ LOG  📱 VOICE_SETTINGS: Saving settings to storage...
+ LOG  ✅ VOICE_SETTINGS: Settings saved successfully
+ LOG  🧹 Cleaning up voice event listeners
+ LOG  🧹 Cleaning up AppState listeners
+ LOG  ✅ Integration completion handler registered
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🎤 Setting up voice event listeners
+ LOG  📱 Setting up AppState monitoring for background wake word handling
+ LOG  🎵 VOICE_SETTINGS: Updating voice settings on android - deepgramEnabled: false, voice: aura-2-pandora-en
+ LOG  🎵 VOICE_SETTINGS: VoiceModule ready after 1 attempts
+ LOG  ✅ VOICE_CONTEXT: Native voice settings update confirmed: {"deepgramEnabled": false, "message": "Native voice settings updated and configuration reloaded", "selectedVoice": "aura-2-pandora-en", "timestamp": 1758079836092}
+ LOG  🎵 RELOAD_CONFIG: ✅ Native configuration reloaded successfully
+ LOG  🎵 VOICE_SETTINGS: ========== VOICE SETTINGS UPDATE COMPLETED ==========
+ LOG  📝 ONBOARDING: User has conversations in database, skipping onboarding
+ LOG  🔄 VOICE_CONTEXT: ========== NATIVE SYNC COMPLETED ==========
+ LOG  🔄 VOICE_CONTEXT: Sync duration: 522 ms
+ LOG  ✅ VOICE_CONTEXT: Settings updated and synced to native successfully
+ LOG  🔄 VOICE_CONTEXT: ========== SETTINGS REFRESH COMPLETED ==========

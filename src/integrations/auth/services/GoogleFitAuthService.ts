@@ -138,36 +138,7 @@ export class GoogleFitAuthService extends BaseOAuthService {
         console.log('✅ Health Connect permissions granted successfully');
         await this.notifyAuthCallbacks(integrationId);
 
-        // Trigger health-data-sync edge function for 7-day backfill
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            console.log('🔄 Health Connect: Triggering health-data-sync edge function...');
-            const response = await fetch('https://ydbabipbxxleeiiysojv.supabase.co/functions/v1/health-data-sync', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-              },
-              body: JSON.stringify({
-                action: 'backfill',
-                user_id: user.id,
-                service_name: 'Google Health Connect',
-                days: 7
-              })
-            });
-
-            if (!response.ok) {
-              throw new Error(`Health data sync request failed: ${response.status} ${response.statusText}`);
-            }
-
-            const result = await response.json();
-            console.log('✅ Health Connect: Health-data-sync edge function completed:', result);
-          }
-        } catch (syncError) {
-          console.warn('⚠️ Health Connect: Health-data-sync edge function failed (auth still successful):', syncError);
-        }
-
+        // Edge function will be called after integration is saved to Supabase in saveIntegrationToSupabase
         return authResult;
       } else {
         throw new Error('Health Connect permissions were not granted');
@@ -355,6 +326,40 @@ export class GoogleFitAuthService extends BaseOAuthService {
       }
 
       console.log('✅ Health Connect integration saved to Supabase');
+
+      // First sync raw data to wearables_data table
+      try {
+        console.log('🔄 Health Connect: Syncing raw data to wearables_data table...');
+        const { GoogleHealthConnectDataService } = await import('../../../integrations/data/GoogleHealthConnectDataService');
+        const dataService = GoogleHealthConnectDataService.getInstance();
+        await dataService.syncToWearablesData(user.id, integrationId, 7);
+        console.log('✅ Health Connect: Raw data synced to wearables_data table');
+
+        // Then trigger health-data-sync edge function for daily metrics processing
+        console.log('🔄 Health Connect: Triggering health-data-sync edge function for daily metrics...');
+        const response = await fetch('https://ydbabipbxxleeiiysojv.supabase.co/functions/v1/health-data-sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            action: 'backfill',
+            user_id: user.id,
+            service_name: 'Google Health Connect',
+            days: 7
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Health data sync request failed: ${response.status} ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        console.log('✅ Health Connect: Health-data-sync edge function completed:', result);
+      } catch (syncError) {
+        console.warn('⚠️ Health Connect: Sync failed (integration saved, auth still successful):', syncError);
+      }
     } catch (error) {
       console.error('❌ Error saving Health Connect integration to Supabase:', error);
     }

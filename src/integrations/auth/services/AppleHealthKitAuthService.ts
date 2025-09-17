@@ -118,36 +118,7 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
         console.log('✅ Apple HealthKit permissions granted successfully');
         await this.notifyAuthCallbacks(integrationId);
 
-        // Trigger health-data-sync edge function for 7-day backfill
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            console.log('🔄 Apple Health: Triggering health-data-sync edge function...');
-
-            const response = await fetch('https://ydbabipbxxleeiiysojv.supabase.co/functions/v1/health-data-sync', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-              },
-              body: JSON.stringify({
-                action: 'backfill',
-                user_id: user.id,
-                service_name: 'Apple Health',
-                days: 7
-              })
-            });
-
-            if (response.ok) {
-              const result = await response.json();
-              console.log('✅ Apple Health: Edge function sync triggered successfully:', result);
-            } else {
-              console.warn('⚠️ Apple Health: Edge function sync failed:', response.status, response.statusText);
-            }
-          }
-        } catch (syncError) {
-          console.warn('⚠️ Apple Health: Edge function sync failed (auth still successful):', syncError);
-        }
+        // Edge function will be called after integration is saved to Supabase in saveIntegrationToSupabase
 
         return authResult;
       } else {
@@ -282,6 +253,40 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       }
 
       console.log('✅ Apple HealthKit integration saved to Supabase');
+
+      // First sync raw data to wearables_data table
+      try {
+        console.log('🔄 Apple Health: Syncing raw data to wearables_data table...');
+        const { AppleHealthKitDataService } = await import('../../../integrations/data/AppleHealthKitDataService');
+        const dataService = AppleHealthKitDataService.getInstance();
+        const syncResult = await dataService.syncToWearablesData(user.id, integrationId, 7);
+        console.log('✅ Apple Health: Raw data synced to wearables_data table:', syncResult);
+
+        // Then trigger health-data-sync edge function for daily metrics processing
+        console.log('🔄 Apple Health: Triggering health-data-sync edge function for daily metrics...');
+        const response = await fetch('https://ydbabipbxxleeiiysojv.supabase.co/functions/v1/health-data-sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            action: 'backfill',
+            user_id: user.id,
+            service_name: 'Apple Health',
+            days: 7
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ Apple Health: Edge function sync triggered successfully:', result);
+        } else {
+          console.warn('⚠️ Apple Health: Edge function sync failed:', response.status, response.statusText);
+        }
+      } catch (syncError) {
+        console.warn('⚠️ Apple Health: Sync failed (integration saved, auth still successful):', syncError);
+      }
     } catch (error) {
       console.error('❌ Error saving Apple HealthKit integration to Supabase:', error);
     }
