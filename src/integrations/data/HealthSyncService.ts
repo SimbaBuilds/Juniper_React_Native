@@ -181,49 +181,27 @@ export class HealthSyncService {
 
       console.log('🤖 HealthSync: Active integration found, syncing to wearables_data table');
 
-      // Get current health data
+      // Use new wearables_data sync approach
       const googleHealthDataService = GoogleHealthConnectDataService.getInstance();
-      // Use new wearables_data sync method with 7-day backfill
-      await googleHealthDataService.syncToWearablesData(userId, googleHealthIntegration.id, 7);
-      const healthData = { synced: true }; // Mock response for compatibility
+      const syncResult = await googleHealthDataService.syncToWearablesData(userId, googleHealthIntegration.id, 7);
 
-      if (!healthData || Object.keys(healthData).length === 0) {
-        console.log('🤖 HealthSync: No health data available');
+      if (syncResult.success) {
+        console.log('🤖 HealthSync: Successfully synced Google Health data to wearables_data');
         return {
           success: true,
           platform: 'android',
-          synced: false,
-          error: 'No health data available'
+          synced: true,
+          recordsUpdated: syncResult.recordsCreated
         };
-      }
-
-      console.log('🤖 HealthSync: Health data retrieved, filtering valid values');
-
-      // Filter out null/zero/empty values
-      const filteredData = this.filterValidHealthData(healthData);
-
-      if (Object.keys(filteredData).length === 0) {
-        console.log('🤖 HealthSync: No valid health data after filtering');
+      } else {
+        console.log('🤖 HealthSync: Failed to sync Google Health data to wearables_data');
         return {
-          success: true,
+          success: false,
           platform: 'android',
           synced: false,
-          error: 'No valid health data after filtering'
+          error: 'Failed to sync to wearables_data table'
         };
       }
-
-      console.log('🤖 HealthSync: Valid data found, upserting to database');
-
-      // Upsert to database
-      await DatabaseService.upsertGoogleHealthRealtime(userId, googleHealthIntegration.id, filteredData);
-
-      console.log('🤖 HealthSync: Successfully synced Google Health data');
-      return {
-        success: true,
-        platform: 'android',
-        synced: true,
-        recordsUpdated: 1
-      };
 
     } catch (error) {
       console.error('🤖 HealthSync: Error syncing Google Health:', error);
@@ -236,36 +214,6 @@ export class HealthSyncService {
     }
   }
 
-  /**
-   * Filter out null, zero, empty, or invalid health data values
-   */
-  private filterValidHealthData(data: Record<string, any>): Record<string, any> {
-    const filtered: Record<string, any> = {};
-
-    for (const [key, value] of Object.entries(data)) {
-      // Skip if null, undefined, empty string, or zero (for numeric values)
-      if (value === null || value === undefined || value === '') {
-        continue;
-      }
-
-      // For numeric values, skip if zero or negative (health metrics shouldn't be zero)
-      if (typeof value === 'number') {
-        if (value <= 0 || !isFinite(value)) {
-          continue;
-        }
-      }
-
-      // For arrays, skip if empty
-      if (Array.isArray(value) && value.length === 0) {
-        continue;
-      }
-
-      // Value passed all filters
-      filtered[key] = value;
-    }
-
-    return filtered;
-  }
 
   /**
    * Check if health sync is available for the current platform
