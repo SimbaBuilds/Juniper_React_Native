@@ -7,6 +7,7 @@ import HealthKit, {
   queryCategorySamples,
   getMostRecentCategorySample
 } from '@kingstinct/react-native-healthkit';
+import { supabase } from '../../supabase/supabase';
 import type {
   QuantityTypeIdentifier,
   QuantitySample,
@@ -1382,14 +1383,15 @@ export class AppleHealthKitDataService {
       const deduplicatedRecords = await this.removeDuplicateRecords(recordsToInsert, userId, integrationId);
       console.log(`🍎 After deduplication: ${deduplicatedRecords.length} records (removed ${recordsToInsert.length - deduplicatedRecords.length} duplicates)`);
 
-      // Batch insert to database (in production this would be done via the edge function)
+      // Batch insert to database using UPSERT to handle duplicates
       if (deduplicatedRecords.length > 0) {
-        // For now, just log the records that would be inserted
-        console.log('🍎 Records to be synced via wearables_data:', {
+        console.log('🍎 Inserting records to wearables_data table:', {
           totalRecords: deduplicatedRecords.length,
           recordTypes: this.getRecordTypeCounts(deduplicatedRecords),
           sampleRecords: deduplicatedRecords.slice(0, 3)
         });
+
+        await this.batchInsertWearablesData(deduplicatedRecords);
       }
 
       return {
@@ -1708,6 +1710,44 @@ export class AppleHealthKitDataService {
       counts[record.metric_type] = (counts[record.metric_type] || 0) + 1;
     });
     return counts;
+  }
+
+  /**
+   * Batch insert wearables data with duplicate prevention using UPSERT
+   */
+  private async batchInsertWearablesData(records: any[]): Promise<void> {
+    console.log(`🍎 Batch inserting ${records.length} wearables data records...`);
+
+    try {
+      // Use UPSERT to handle duplicates gracefully
+      const batchSize = 100;
+      let totalUpserted = 0;
+
+      for (let i = 0; i < records.length; i += batchSize) {
+        const batch = records.slice(i, i + batchSize);
+
+        const { error } = await supabase
+          .from('wearables_data')
+          .upsert(batch, {
+            onConflict: 'user_id,integration_id,metric_type,recorded_at',
+            ignoreDuplicates: false  // Update existing records
+          });
+
+        if (error) {
+          console.error(`🍎 Error upserting batch ${i}-${i + batch.length}:`, error);
+          throw error;
+        }
+
+        totalUpserted += batch.length;
+        console.log(`🍎 Upserted batch ${i}-${i + batch.length} (${batch.length} records)`);
+      }
+
+      console.log(`✅ Successfully upserted ${totalUpserted} wearables data records (new + updated)`);
+
+    } catch (error) {
+      console.error('🍎 Error during batch insert:', error);
+      throw error;
+    }
   }
 
   /**

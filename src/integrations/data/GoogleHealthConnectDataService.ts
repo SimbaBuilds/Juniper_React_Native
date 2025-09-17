@@ -770,56 +770,30 @@ export class GoogleHealthConnectDataService {
         recorded_at: record.recorded_at
       }));
 
-      // Query for existing records in batches
-      const existingRecords = new Set<string>();
+      // Use UPSERT to handle duplicates gracefully
       const batchSize = 100;
+      let totalUpserted = 0;
 
-      for (let i = 0; i < existingChecks.length; i += batchSize) {
-        const batch = existingChecks.slice(i, i + batchSize);
+      for (let i = 0; i < records.length; i += batchSize) {
+        const batch = records.slice(i, i + batchSize);
 
-        const { data: existing } = await supabase
+        const { error } = await supabase
           .from('wearables_data')
-          .select('user_id,integration_id,metric_type,recorded_at')
-          .in('user_id', [...new Set(batch.map(r => r.user_id))])
-          .in('integration_id', [...new Set(batch.map(r => r.integration_id))])
-          .in('metric_type', [...new Set(batch.map(r => r.metric_type))]);
-
-        if (existing) {
-          existing.forEach((record: any) => {
-            const key = `${record.user_id}-${record.integration_id}-${record.metric_type}-${record.recorded_at}`;
-            existingRecords.add(key);
+          .upsert(batch, {
+            onConflict: 'user_id,integration_id,metric_type,recorded_at',
+            ignoreDuplicates: false  // Update existing records
           });
-        }
-      }
 
-      // Filter out duplicates
-      const newRecords = records.filter(record => {
-        const key = `${record.user_id}-${record.integration_id}-${record.metric_type}-${record.recorded_at}`;
-        return !existingRecords.has(key);
-      });
-
-      console.log(`🤖 Filtered out ${records.length - newRecords.length} duplicate records`);
-      console.log(`🤖 Inserting ${newRecords.length} new records`);
-
-      if (newRecords.length > 0) {
-        // Insert in batches
-        for (let i = 0; i < newRecords.length; i += batchSize) {
-          const batch = newRecords.slice(i, i + batchSize);
-
-          const { error } = await supabase
-            .from('wearables_data')
-            .insert(batch);
-
-          if (error) {
-            console.error(`🤖 Error inserting batch ${i}-${i + batch.length}:`, error);
-            throw error;
-          }
+        if (error) {
+          console.error(`🤖 Error upserting batch ${i}-${i + batch.length}:`, error);
+          throw error;
         }
 
-        console.log('✅ Successfully inserted all new wearables data records');
-      } else {
-        console.log('✅ No new records to insert (all were duplicates)');
+        totalUpserted += batch.length;
+        console.log(`🤖 Upserted batch ${i}-${i + batch.length} (${batch.length} records)`);
       }
+
+      console.log(`✅ Successfully upserted ${totalUpserted} wearables data records (new + updated)`)
 
     } catch (error) {
       console.error('🤖 Error during batch insert:', error);
