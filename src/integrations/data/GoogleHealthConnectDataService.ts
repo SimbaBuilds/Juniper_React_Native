@@ -174,7 +174,7 @@ export class GoogleHealthConnectDataService {
   /**
    * Sync health data to wearables_data table with 7-day backfill
    */
-  async syncToWearablesData(userId: string, integrationId: string, daysToSync: number = 7): Promise<void> {
+  async syncToWearablesData(userId: string, integrationId: string, daysToSync: number = 7): Promise<any> {
     if (Platform.OS !== 'android') {
       throw new Error('Google Health Connect is only available on Android');
     }
@@ -229,6 +229,13 @@ export class GoogleHealthConnectDataService {
       }
 
       console.log('✅ Wearables data sync completed successfully');
+
+      return {
+        success: true,
+        recordsCreated: allRecords.length,
+        records: allRecords,
+        daysProcessed: daysToSync
+      };
 
     } catch (error) {
       console.error('🤖 Error during wearables data sync:', error);
