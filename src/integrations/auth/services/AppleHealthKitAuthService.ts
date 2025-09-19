@@ -104,10 +104,11 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       
       if (permissionsGranted) {
         // Create a synthetic token since HealthKit doesn't use OAuth
+        // Set a very long expiration (10 years) since HealthKit permissions don't expire
         const authResult = {
           accessToken: 'healthkit-permissions-granted',
           refreshToken: 'not-applicable',
-          expiresAt: Date.now() + (365 * 24 * 60 * 60 * 1000), // 1 year
+          expiresAt: Date.now() + (10 * 365 * 24 * 60 * 60 * 1000), // 10 years
           scope: 'read'
         };
 
@@ -177,46 +178,44 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
 
   /**
    * Refresh token (not applicable for HealthKit, but required by base class)
+   * For HealthKit, we trust stored tokens and only invalidate on actual data access failures
    */
   async refreshToken(refreshToken: string, integrationId: string): Promise<AuthResult> {
     try {
-      console.log('🍎 HealthKit permissions do not expire, returning existing auth...');
+      console.log('🍎 HealthKit permissions do not expire, returning refreshed auth token...');
 
-      // Check if permissions are still granted
-      const isStillAuthorized = await this.checkPermissionStatus();
-      
-      if (isStillAuthorized) {
-        return {
-          accessToken: 'healthkit-permissions-granted',
-          refreshToken: 'not-applicable',
-          expiresAt: Date.now() + (365 * 24 * 60 * 60 * 1000), // 1 year
-          scope: 'read'
-        };
-      } else {
-        throw new Error('HealthKit permissions have been revoked');
-      }
+      // For HealthKit, we always return a valid token since permissions don't expire
+      // and we can't reliably check permission status due to iOS privacy restrictions.
+      // If permissions were actually revoked, we'll catch that during data access attempts.
+      return {
+        accessToken: 'healthkit-permissions-granted',
+        refreshToken: 'not-applicable',
+        expiresAt: Date.now() + (10 * 365 * 24 * 60 * 60 * 1000), // 10 years
+        scope: 'read'
+      };
     } catch (error) {
-      console.error('❌ HealthKit permission check failed:', error);
-      throw new Error('Please re-authorize HealthKit access in the Health app settings');
+      console.error('❌ HealthKit token refresh failed:', error);
+      throw new Error('HealthKit token refresh failed');
     }
   }
 
   /**
    * Check current permission status
+   * Note: authorizationStatusFor() cannot determine read permission status for privacy reasons.
+   * iOS always returns 'NotDetermined' for read permissions even when granted.
+   * We should trust stored tokens instead of relying on this unreliable check.
    */
   private async checkPermissionStatus(): Promise<boolean> {
     if (Platform.OS !== 'ios') {
       return false;
     }
 
-    try {
-      // Check if at least one basic permission is granted
-      const stepCountStatus = authorizationStatusFor('HKQuantityTypeIdentifierStepCount');
-      return stepCountStatus === 'SharingAuthorized';
-    } catch (error) {
-      console.error('❌ Error checking HealthKit permission status:', error);
-      return false;
-    }
+    // For HealthKit read permissions, we cannot reliably check permission status
+    // due to iOS privacy restrictions. authorizationStatusFor() returns 'NotDetermined'
+    // even when permissions are granted. We should trust that if we have a stored token,
+    // permissions are still valid until proven otherwise by actual data access failures.
+    console.log('🍎 HealthKit: Trusting stored token for permission status (iOS limitation)');
+    return true;
   }
 
   /**
@@ -353,7 +352,7 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
 
     const isAuth = await this.isAuthenticated(integrationId);
     if (!isAuth) {
-      throw new Error('Not authenticated with HealthKit');
+      throw new Error('Not authenticated with HealthKit. Please authorize access first.');
     }
 
     // Map common data types to their HealthKit identifiers
@@ -388,6 +387,18 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
       return { dataType, samples };
     } catch (error) {
       console.error(`❌ Error fetching ${dataType} data:`, error);
+
+      // Check if this is a permission error vs other types of errors
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('permission') || errorMessage.includes('authorization') ||
+          errorMessage.includes('denied') || errorMessage.includes('not authorized')) {
+        // This is likely a permission error - clear stored tokens and require re-auth
+        console.error('🍎 HealthKit permission error detected, clearing stored tokens');
+        await this.clearStoredTokens(integrationId);
+        throw new Error('HealthKit permissions have been revoked. Please re-authorize access in the Health app settings.');
+      }
+
+      // For other errors, re-throw as-is
       throw error;
     }
   }
@@ -426,10 +437,11 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
 
     const isAuth = await this.isAuthenticated(integrationId);
     if (!isAuth) {
-      throw new Error('Not authenticated with HealthKit');
+      throw new Error('Not authenticated with HealthKit. Please authorize access first.');
     }
 
     const summary: any = {};
+    let permissionErrorDetected = false;
 
     // Get latest values for various metrics
     const metricsToFetch: Array<{key: string, identifier: QuantityTypeIdentifier}> = [
@@ -445,11 +457,49 @@ export class AppleHealthKitAuthService extends BaseOAuthService {
         summary[metric.key] = data;
       } catch (error) {
         console.warn(`Failed to fetch ${metric.key}:`, error);
+
+        // Check if this is a permission error
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes('permission') || errorMessage.includes('authorization') ||
+            errorMessage.includes('denied') || errorMessage.includes('not authorized')) {
+          permissionErrorDetected = true;
+        }
+
         summary[metric.key] = null;
       }
     }
 
+    // If we detected permission errors, clear tokens and throw
+    if (permissionErrorDetected) {
+      console.error('🍎 HealthKit permission error detected during summary fetch, clearing stored tokens');
+      await this.clearStoredTokens(integrationId);
+      throw new Error('HealthKit permissions have been revoked. Please re-authorize access in the Health app settings.');
+    }
+
     return summary;
+  }
+
+  /**
+   * Override getStoredTokens to prevent unnecessary refresh attempts for HealthKit
+   * HealthKit permissions don't expire, so we should always trust stored tokens
+   */
+  async getStoredTokens(integrationId: string, skipRefresh: boolean = true): Promise<any> {
+    // Always skip refresh for HealthKit since permissions don't expire
+    return super.getStoredTokens(integrationId, true);
+  }
+
+  /**
+   * Check if authenticated - overrides base class to avoid permission status checks
+   * For HealthKit, we trust stored tokens since permission status can't be reliably checked
+   */
+  async isAuthenticated(integrationId: string): Promise<boolean> {
+    try {
+      const tokens = await this.getStoredTokens(integrationId, true); // Skip refresh to avoid circular calls
+      return !!tokens?.accessToken;
+    } catch (error) {
+      console.error('🍎 Error checking HealthKit authentication status:', error);
+      return false;
+    }
   }
 
   /**

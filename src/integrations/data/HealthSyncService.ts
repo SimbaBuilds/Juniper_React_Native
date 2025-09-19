@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import { DatabaseService } from '../../supabase/supabase';
+import { DatabaseService, supabase } from '../../supabase/supabase';
 import { IntegrationService } from '../IntegrationService';
 import AppleHealthKitDataService from './AppleHealthKitDataService';
 import GoogleHealthConnectDataService from './GoogleHealthConnectDataService';
@@ -125,6 +125,34 @@ export class HealthSyncService {
 
       if (syncResult.success) {
         console.log('🍎 HealthSync: Successfully synced Apple Health data to wearables_data');
+
+        // Trigger health-data-sync edge function for daily metrics processing
+        try {
+          console.log('🔄 Apple Health: Triggering health-data-sync edge function for daily metrics...');
+          const response = await fetch('https://ydbabipbxxleeiiysojv.supabase.co/functions/v1/health-data-sync', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            },
+            body: JSON.stringify({
+              action: 'backfill',
+              user_id: userId,
+              service_name: 'Apple Health',
+              days: 7
+            })
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('✅ Apple Health: Edge function sync triggered successfully:', result);
+          } else {
+            console.warn('⚠️ Apple Health: Edge function sync failed:', response.status, response.statusText);
+          }
+        } catch (edgeFunctionError) {
+          console.warn('⚠️ Apple Health: Edge function call failed (wearables sync still successful):', edgeFunctionError);
+        }
+
         return {
           success: true,
           platform: 'ios',
@@ -187,6 +215,34 @@ export class HealthSyncService {
 
       if (syncResult.success) {
         console.log('🤖 HealthSync: Successfully synced Google Health data to wearables_data');
+
+        // Trigger health-data-sync edge function for daily metrics processing
+        try {
+          console.log('🔄 Health Connect: Triggering health-data-sync edge function for daily metrics...');
+          const response = await fetch('https://ydbabipbxxleeiiysojv.supabase.co/functions/v1/health-data-sync', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            },
+            body: JSON.stringify({
+              action: 'backfill',
+              user_id: userId,
+              service_name: 'Google Health Connect',
+              days: 7
+            })
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('✅ Health Connect: Edge function sync triggered successfully:', result);
+          } else {
+            console.warn('⚠️ Health Connect: Edge function sync failed:', response.status, response.statusText);
+          }
+        } catch (edgeFunctionError) {
+          console.warn('⚠️ Health Connect: Edge function call failed (wearables sync still successful):', edgeFunctionError);
+        }
+
         return {
           success: true,
           platform: 'android',
