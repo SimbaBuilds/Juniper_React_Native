@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Alert, Platform, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { DatabaseService } from '../supabase/supabase';
@@ -210,10 +210,10 @@ export const IntegrationsScreen: React.FC = () => {
   // Organize regular services into categories (excludes system integrations and non-public services)
   const organizeServicesByCategory = (services: ServiceWithStatus[]): ServiceCategory[] => {
     const categoryMap: { [key: string]: ServiceWithStatus[] } = {};
-    
+
     // Filter out system integrations and non-public services from regular categories
     const regularServices = services.filter(service => !service.isSystemIntegration && service.public);
-    
+
     regularServices.forEach(service => {
       const category = getServiceCategory(service.service_name);
       if (!categoryMap[category]) {
@@ -221,7 +221,30 @@ export const IntegrationsScreen: React.FC = () => {
       }
       categoryMap[category].push(service);
     });
-    
+
+    // Add Medical Records to Health and Wellness category (custom service not from database)
+    if (!categoryMap['Health and Wellness']) {
+      categoryMap['Health and Wellness'] = [];
+    }
+
+    // Create Medical Records service entry
+    const medicalRecordsService: ServiceWithStatus = {
+      id: 'medical-records-custom',
+      service_name: 'Medical Records',
+      tags: [],
+      description: 'Provide medical records to Juniper so it can give valuable insights and conversation around your health data - we do not share your records with third parties.',
+      isActive: false,
+      isConnected: false,
+      integration_id: undefined,
+      status: undefined,
+      isPendingSetup: false,
+      isSystemIntegration: false,
+      public: true,
+      type: 'custom'
+    };
+
+    categoryMap['Health and Wellness'].push(medicalRecordsService);
+
     // Define the order of categories
     const categoryOrder = [
       'Health and Wellness',
@@ -235,7 +258,7 @@ export const IntegrationsScreen: React.FC = () => {
       'Cloud Spreadsheets',
       'Other'
     ];
-    
+
     // Create sorted categories array
     const categories: ServiceCategory[] = [];
     categoryOrder.forEach(categoryName => {
@@ -255,7 +278,7 @@ export const IntegrationsScreen: React.FC = () => {
         });
       }
     });
-    
+
     return categories;
   };
 
@@ -332,6 +355,8 @@ export const IntegrationsScreen: React.FC = () => {
         return 'heart';
       case 'mychart':
         return 'medical';
+      case 'medical records':
+        return 'document-text';
       case 'apple health':
         return 'heart';
       case 'google health connect':
@@ -1106,6 +1131,9 @@ export const IntegrationsScreen: React.FC = () => {
                               {epicConnections.length > 0 ? 'Select Care Provider(s)' : 'Select Care Provider(s)'}
                             </Text>
                           </TouchableOpacity>
+                        ) : service.id === 'medical-records-custom' ? (
+                          // Medical Records - no connect button, just show as a note
+                          null
                         ) : (
                           <>
                             {service.isConnected ? (
@@ -1203,16 +1231,34 @@ export const IntegrationsScreen: React.FC = () => {
                           <Text style={styles.descriptionToggleText}>
                             {expandedServices.has(service.id) ? 'Hide Details' : 'Show Details'}
                           </Text>
-                          <Ionicons 
-                            name={expandedServices.has(service.id) ? 'chevron-up' : 'chevron-down'} 
-                            size={16} 
-                            color="#4A90E2" 
+                          <Ionicons
+                            name={expandedServices.has(service.id) ? 'chevron-up' : 'chevron-down'}
+                            size={16}
+                            color="#4A90E2"
                           />
                         </TouchableOpacity>
-                        
+
                         {expandedServices.has(service.id) && (
                           <View style={styles.descriptionContent}>
-                            <Text style={styles.descriptionText}>{service.description}</Text>
+                            {service.id === 'medical-records-custom' ? (
+                              <>
+                                <Text style={styles.descriptionText}>
+                                  {service.description}
+                                </Text>
+                                <Text style={[styles.descriptionText, { marginTop: 12 }]}>
+                                  Upload and manage your medical records in your{' '}
+                                  <Text
+                                    style={{ color: '#4A90E2', textDecorationLine: 'underline' }}
+                                    onPress={() => Linking.openURL('https://juniperassistant.com/repository')}
+                                  >
+                                    Repository
+                                  </Text>
+                                  {' '}in the web app.
+                                </Text>
+                              </>
+                            ) : (
+                              <Text style={styles.descriptionText}>{service.description}</Text>
+                            )}
                           </View>
                         )}
                       </View>

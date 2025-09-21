@@ -1,1 +1,11 @@
-For both Apple Health and Google Health Connect, wearables_data is synced on both app launch and permission/oauth callback.  However, the health-data-sync edge functio is only called on permissions/oauth callback.  Please add the health-data-sync call to the app launch syncs as well for both services.
+Under the Health and Wellness section in the integrations screen please add a note: 
+
+"Medical Records" (this is not in the services tables)
+
+            Provide medical records to Juniper so it can provide valuable insights and conversation around your health data - we do not share your records with third parties.
+
+
+              Upload and manage your medical records in your <Link href="/repository"><u>Repository</u></Link> in the web app.
+
+
+Please have medical records show up like a service and show the note and link above on expansion like the database services.
