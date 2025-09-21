@@ -110,14 +110,15 @@ export class MultiIssuerEpicAuthService extends BaseOAuthService {
    */
   async getUserEpicConnections(userId: string): Promise<(UserEpicConnection & { issuer: EpicIssuer })[]> {
     try {
+      // Get all connections for user (not just active ones)
+      // We want to show all connections, not just authenticated ones
       const { data, error } = await supabase
         .from('user_epic_connections')
         .select(`
           *,
           issuer:epic_issuers!issuer_id(*)
         `)
-        .eq('user_id', userId)
-        .eq('is_active', true);
+        .eq('user_id', userId);
 
       if (error) {
         throw error;
@@ -131,63 +132,100 @@ export class MultiIssuerEpicAuthService extends BaseOAuthService {
   }
 
   /**
-   * Create user Epic connections for selected issuers
+   * Create user Epic connections for selected issuers WITH integration records
    */
   async createUserEpicConnections(userId: string, issuerIds: string[]): Promise<UserEpicConnection[]> {
     try {
-      const connections: Omit<UserEpicConnection, 'id' | 'created_at'>[] = [];
+      // First, get the MyChart service ID
+      const { data: serviceData, error: serviceError } = await supabase
+        .from('services')
+        .select('id')
+        .eq('service_name', 'MyChart')
+        .single();
+
+      if (serviceError || !serviceData) {
+        throw new Error('MyChart service not found');
+      }
+
+      const connections: UserEpicConnection[] = [];
 
       for (const issuerId of issuerIds) {
-        // Generate a unique integration ID for each issuer connection
-        const integrationId = `epic-${issuerId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        
-        connections.push({
+        // 1. Create integration record first
+        const integrationData = {
+          user_id: userId,
+          service_id: serviceData.id,
+          is_active: false, // Will be activated when user authenticates
+          status: 'pending',
+          notes: null,
+          last_used: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        const { data: integration, error: integrationError } = await supabase
+          .from('integrations')
+          .insert(integrationData)
+          .select('id')
+          .single();
+
+        if (integrationError || !integration) {
+          throw integrationError || new Error('Failed to create integration');
+        }
+
+        // 2. Create user Epic connection with the integration ID
+        const connectionData = {
           user_id: userId,
           issuer_id: issuerId,
-          integration_id: integrationId,
-          is_active: true
-        });
+          integration_id: integration.id,
+          is_active: false, // Will be activated when user authenticates
+        };
+
+        const { data: connection, error: connectionError } = await supabase
+          .from('user_epic_connections')
+          .insert(connectionData)
+          .select('*')
+          .single();
+
+        if (connectionError || !connection) {
+          throw connectionError || new Error('Failed to create user Epic connection');
+        }
+
+        connections.push(connection);
+        console.log(`✅ Created integration ${integration.id} and connection for issuer ${issuerId}`);
       }
 
-      const { data, error } = await supabase
-        .from('user_epic_connections')
-        .insert(connections)
-        .select('*');
-
-      if (error) {
-        throw error;
-      }
-
-      console.log('✅ Created Epic connections for issuers:', issuerIds);
-      return data || [];
+      console.log('✅ Created Epic connections and integrations for issuers:', issuerIds);
+      return connections;
     } catch (error) {
-      console.error('❌ Error creating Epic connections:', error);
+      console.error('❌ Error creating Epic connections and integrations:', error);
       throw error;
     }
   }
 
   /**
-   * Start OAuth authentication flow for a specific issuer
+   * Start OAuth authentication flow for a specific Epic connection
+   * This method expects integration records to already exist
    */
-  async authenticate(integrationId: string): Promise<AuthResult> {
+  async authenticateConnectionDirect(connection: UserEpicConnection & { issuer: EpicIssuer }): Promise<AuthResult> {
     try {
       if (!this.isInitialized) {
         await this.initialize();
       }
 
-      // Get the connection and issuer details
-      const connection = await this.getConnectionByIntegrationId(integrationId);
-      if (!connection) {
-        throw new Error('Epic connection not found');
+      // Verify integration record exists
+      if (!connection.integration_id) {
+        throw new Error('Integration record must exist before authentication');
       }
 
       // Pre-flight check: ensure App Links are enabled
       await this.checkAppLinksBeforeAuth();
 
-      const authUrl = this.buildIssuerAuthUrl(connection.issuer, integrationId);
+      // Use the connection ID as state to track which connection this auth is for
+      const authUrl = this.buildIssuerAuthUrl(connection.issuer, connection.id);
       
       console.log('🏥 Starting Epic MyChart OAuth flow...');
-      console.log('🏥 Integration ID:', integrationId);
+      console.log('🏥 Connection ID (as state):', connection.id);
+      console.log('🏥 Integration ID:', connection.integration_id);
       console.log('🏥 Issuer:', connection.issuer.organization_name);
       console.log('🏥 Opening OAuth URL:', authUrl);
       
@@ -214,9 +252,31 @@ export class MultiIssuerEpicAuthService extends BaseOAuthService {
   }
 
   /**
+   * Legacy authenticate method for compatibility
+   */
+  async authenticate(integrationId: string): Promise<AuthResult> {
+    try {
+      // Get the connection and issuer details by integration ID
+      const connection = await this.getConnectionByIntegrationId(integrationId);
+      if (!connection) {
+        throw new Error('Epic connection not found');
+      }
+
+      return this.authenticateConnectionDirect(connection);
+    } catch (error) {
+      console.error('❌ Error during Epic MyChart authentication:', error);
+      throw error;
+    }
+  }
+
+
+  /**
    * Build authorization URL for a specific issuer
    */
   private buildIssuerAuthUrl(issuer: EpicIssuer, integrationId: string): string {
+    // Don't include aud from additionalParameters - we set it dynamically per issuer
+    const { aud: _aud, ...otherAdditionalParams } = this.config.additionalParameters || {};
+    
     const params = new URLSearchParams({
       client_id: this.config.clientId,
       redirect_uri: this.config.redirectUri,
@@ -224,7 +284,7 @@ export class MultiIssuerEpicAuthService extends BaseOAuthService {
       scope: this.config.scopes.join(' '),
       state: integrationId,
       aud: issuer.fhir_base_url, // Epic requires the audience parameter to be the FHIR base URL
-      ...this.config.additionalParameters
+      ...otherAdditionalParams
     });
 
     return `${issuer.auth_endpoint}?${params}`;
@@ -256,37 +316,88 @@ export class MultiIssuerEpicAuthService extends BaseOAuthService {
   }
 
   /**
+   * Get connection by connection ID
+   */
+  private async getConnectionById(connectionId: string): Promise<(UserEpicConnection & { issuer: EpicIssuer }) | null> {
+    try {
+      const { data, error } = await supabase
+        .from('user_epic_connections')
+        .select(`
+          *,
+          issuer:epic_issuers!issuer_id(*)
+        `)
+        .eq('id', connectionId)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('❌ Error fetching connection by ID:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Activate a user Epic connection
+   */
+  private async activateConnection(connectionId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('user_epic_connections')
+        .update({ is_active: true })
+        .eq('id', connectionId);
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ Activated Epic connection:', connectionId);
+    } catch (error) {
+      console.error('❌ Error activating Epic connection:', error);
+    }
+  }
+
+  /**
    * Handle OAuth callback
    */
-  async handleAuthCallback(code: string, integrationId: string, state?: string): Promise<boolean> {
+  async handleAuthCallback(code: string, connectionId: string, state?: string): Promise<boolean> {
     try {
       console.log('🏥 Handling Epic MyChart OAuth callback...');
-      console.log('🏥 Integration ID:', integrationId);
+      console.log('🏥 Connection ID (from state):', connectionId);
       
       if (!code) {
         throw new Error('No authorization code provided');
       }
 
-      const connection = await this.getConnectionByIntegrationId(integrationId);
+      // Get connection by connection ID (not integration ID)
+      const connection = await this.getConnectionById(connectionId);
       if (!connection) {
         throw new Error('Epic connection not found');
       }
+
+      console.log('🏥 Found connection with integration ID:', connection.integration_id);
       
       console.log('🔄 Exchanging code for tokens...');
       const tokenData = await this.exchangeCodeForToken(code, connection.issuer);
       
       console.log('✅ Token exchange successful');
       
-      // Store tokens using base class method
-      await this.storeTokens(tokenData, integrationId);
-      await this.saveIntegrationToSupabase(tokenData, integrationId, connection);
+      // Store tokens using base class method with integration_id
+      await this.storeTokens(tokenData, connection.integration_id);
+      await this.saveIntegrationToSupabase(tokenData, connection.integration_id, connection);
+      
+      // Activate the connection
+      await this.activateConnection(connection.id);
       
       // Mark this as a reconnection to skip completion flow
-      this.setIsReconnection(true, integrationId);
-      await this.completeIntegration(tokenData, integrationId);
+      this.setIsReconnection(true, connection.integration_id);
+      await this.completeIntegration(tokenData, connection.integration_id);
       
       console.log('✅ Epic MyChart authentication successful');
-      await this.notifyAuthCallbacks(integrationId);
+      await this.notifyAuthCallbacks(connection.integration_id);
       return true;
     } catch (error) {
       console.error('❌ Error handling Epic MyChart auth callback:', error);
@@ -393,7 +504,7 @@ export class MultiIssuerEpicAuthService extends BaseOAuthService {
   }
 
   /**
-   * Save integration to Supabase
+   * Save integration to Supabase - updates existing integration record
    */
   private async saveIntegrationToSupabase(tokenData: any, integrationId: string, connection: UserEpicConnection & { issuer: EpicIssuer }): Promise<void> {
     try {
@@ -405,35 +516,35 @@ export class MultiIssuerEpicAuthService extends BaseOAuthService {
 
       const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
       
-      // Use raw insert instead of upsert for MyChart integrations
+      const updateData: any = {
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        expires_at: expiresAt.toISOString(),
+        scope: tokenData.scope || this.config.scopes.join(' '),
+        is_active: true,
+        configuration: {
+          issuer_id: connection.issuer_id,
+          organization_name: connection.issuer.organization_name,
+          fhir_base_url: connection.issuer.fhir_base_url,
+          scopes: this.config.scopes,
+          fhir_user: tokenData.fhirUser,
+          patient_id: tokenData.patient,
+        },
+      };
+      
       const { error } = await supabase
         .from('integrations')
-        .insert({
-          id: integrationId,
-          user_id: user.id,
-          service_name: this.config.serviceName,
-          access_token: tokenData.access_token,
-          refresh_token: tokenData.refresh_token,
-          expires_at: expiresAt.toISOString(),
-          scope: tokenData.scope || this.config.scopes.join(' '),
-          is_active: true,
-          configuration: {
-            issuer_id: connection.issuer_id,
-            organization_name: connection.issuer.organization_name,
-            fhir_base_url: connection.issuer.fhir_base_url,
-            scopes: this.config.scopes,
-            fhir_user: tokenData.fhirUser,
-            patient_id: tokenData.patient,
-          },
-        });
+        .update(updateData)
+        .eq('id', integrationId)
+        .eq('user_id', user.id);
 
       if (error) {
         throw error;
       }
 
-      console.log('✅ Epic MyChart integration saved to Supabase');
+      console.log('✅ Epic MyChart integration updated in Supabase');
     } catch (error) {
-      console.error('❌ Error saving Epic MyChart integration to Supabase:', error);
+      console.error('❌ Error updating Epic MyChart integration in Supabase:', error);
     }
   }
 

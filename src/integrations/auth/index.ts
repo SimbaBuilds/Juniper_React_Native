@@ -126,6 +126,7 @@ export const getAuthService = (serviceName: string) => {
     case 'apple_health':
     case 'healthkit':
       return AppleHealthKitAuthService.getInstance();
+    case 'health-connect':
     case 'google-fit':
     case 'google_fit':
     case 'googlefit':

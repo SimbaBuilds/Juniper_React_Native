@@ -217,6 +217,14 @@
 						DevelopmentTeam = 2D46F842HA;
 						LastSwiftMigration = 1250;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.AssociatedDomains = {
+								enabled = 1;
+							};
+							com.apple.HealthKit = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};

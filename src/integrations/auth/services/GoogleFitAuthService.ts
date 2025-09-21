@@ -1,6 +1,15 @@
-import { Platform } from 'react-native';
+import { Platform, Linking} from 'react-native';
 import { BaseOAuthService, AuthResult } from '../BaseOAuthService';
 import { supabase } from '../../../supabase/supabase';
+import HealthSyncService from '../../data/HealthSyncService';
+import {
+  initialize,
+  requestPermission,
+  getSdkStatus,
+  openHealthConnectSettings,
+  PermissionGrantedResult,
+  SdkAvailabilityStatus
+} from 'react-native-health-connect';
 
 export class GoogleFitAuthService extends BaseOAuthService {
   private static instance: GoogleFitAuthService;
@@ -8,7 +17,7 @@ export class GoogleFitAuthService extends BaseOAuthService {
 
   static getInstance(): GoogleFitAuthService {
     if (!GoogleFitAuthService.instance) {
-      GoogleFitAuthService.instance = new GoogleFitAuthService('google-fit');
+      GoogleFitAuthService.instance = new GoogleFitAuthService('health-connect');
     }
     return GoogleFitAuthService.instance;
   }
@@ -57,12 +66,29 @@ export class GoogleFitAuthService extends BaseOAuthService {
     }
 
     try {
-      // This would use react-native-health-connect
-      // const { isAvailable } = require('react-native-health-connect');
-      // return await isAvailable();
-      
-      // For now, assume available on Android API 26+ (Android 8.0+)
-      return true;
+      await initialize();
+      const sdkStatus = await getSdkStatus();
+
+      console.log('🤖 Health Connect SDK Status:', sdkStatus);
+
+      // Handle different SDK status codes
+      switch (sdkStatus) {
+        case SdkAvailabilityStatus.SDK_AVAILABLE:
+          console.log('🤖 Health Connect SDK is available and ready');
+          return true;
+
+        case SdkAvailabilityStatus.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED:
+          console.log('🤖 Health Connect requires provider update');
+          throw new Error('Health Connect requires an update. Please update Health Connect from Google Play Store.');
+
+        case SdkAvailabilityStatus.SDK_UNAVAILABLE:
+          console.log('🤖 Health Connect SDK not available on this device');
+          throw new Error('Health Connect is not available on this device. On Android 14+, Health Connect is built into the system. On older versions, install it from Google Play Store.');
+
+        default:
+          console.log('🤖 Unknown Health Connect SDK status:', sdkStatus);
+          return false;
+      }
     } catch (error) {
       console.error('❌ Error checking Health Connect availability:', error);
       return false;
@@ -87,7 +113,7 @@ export class GoogleFitAuthService extends BaseOAuthService {
 
       const isAvailable = await this.checkHealthConnectAvailability();
       if (!isAvailable) {
-        throw new Error('Health Connect is not available on this device. Please install Health Connect from Google Play Store.');
+        throw new Error('Health Connect is not available on this device. Please install Android 14+');
       }
 
       // Initialize Health Connect
@@ -108,10 +134,11 @@ export class GoogleFitAuthService extends BaseOAuthService {
         await this.storeTokens(authResult, integrationId);
         await this.saveIntegrationToSupabase(authResult, integrationId);
         await this.completeIntegration(authResult, integrationId);
-        
+
         console.log('✅ Health Connect permissions granted successfully');
         await this.notifyAuthCallbacks(integrationId);
-        
+
+        // Edge function will be called after integration is saved to Supabase in saveIntegrationToSupabase
         return authResult;
       } else {
         throw new Error('Health Connect permissions were not granted');
@@ -128,10 +155,7 @@ export class GoogleFitAuthService extends BaseOAuthService {
    */
   private async initializeHealthConnect(): Promise<void> {
     try {
-      // This would initialize react-native-health-connect
-      // const { initialize } = require('react-native-health-connect');
-      // await initialize();
-      
+      await initialize();
       console.log('🤖 Health Connect initialized');
     } catch (error) {
       console.error('❌ Error initializing Health Connect:', error);
@@ -144,29 +168,73 @@ export class GoogleFitAuthService extends BaseOAuthService {
    */
   private async requestHealthConnectPermissions(): Promise<boolean> {
     try {
-      // This would integrate with react-native-health-connect
-      // const { requestPermission } = require('react-native-health-connect');
-      
-      // const permissions = [
-      //   { accessType: 'read', recordType: 'Steps' },
-      //   { accessType: 'read', recordType: 'HeartRate' },
-      //   { accessType: 'read', recordType: 'Weight' },
-      //   { accessType: 'read', recordType: 'Height' },
-      //   { accessType: 'read', recordType: 'ActiveCaloriesBurned' },
-      //   { accessType: 'read', recordType: 'SleepSession' },
-      //   { accessType: 'read', recordType: 'BloodPressure' },
-      //   { accessType: 'read', recordType: 'Distance' },
-      // ];
+      // Request comprehensive Health Connect permissions
+      const permissions = [
+        { accessType: 'read' as const, recordType: 'Steps' as const },
+        { accessType: 'read' as const, recordType: 'HeartRate' as const },
+        { accessType: 'read' as const, recordType: 'RestingHeartRate' as const },
+        { accessType: 'read' as const, recordType: 'ActiveCaloriesBurned' as const },
+        { accessType: 'read' as const, recordType: 'BasalMetabolicRate' as const },
+        { accessType: 'read' as const, recordType: 'BloodGlucose' as const },
+        { accessType: 'read' as const, recordType: 'BloodPressure' as const },
+        { accessType: 'read' as const, recordType: 'BodyFat' as const },
+        { accessType: 'read' as const, recordType: 'BodyTemperature' as const },
+        { accessType: 'read' as const, recordType: 'Distance' as const },
+        { accessType: 'read' as const, recordType: 'ExerciseSession' as const },
+        { accessType: 'read' as const, recordType: 'Height' as const },
+        { accessType: 'read' as const, recordType: 'Hydration' as const },
+        { accessType: 'read' as const, recordType: 'MenstruationFlow' as const },
+        { accessType: 'read' as const, recordType: 'Nutrition' as const },
+        { accessType: 'read' as const, recordType: 'OxygenSaturation' as const },
+        { accessType: 'read' as const, recordType: 'RespiratoryRate' as const },
+        { accessType: 'read' as const, recordType: 'SleepSession' as const },
+        { accessType: 'read' as const, recordType: 'Weight' as const },
+      ];
 
-      // const results = await requestPermission(permissions);
-      // return results.every(result => result === 'granted');
+      console.log('🤖 Requesting Health Connect permissions...');
+      console.log('🤖 Permission set:', JSON.stringify(permissions));
 
-      // For now, simulate permission grant
-      console.log('🤖 Simulating Health Connect permission request...');
-      return true;
-      
+      const result = await requestPermission(permissions);
+
+      console.log('🤖 Permission result:', result);
+
+      // Health Connect returns array of granted permission objects, not strings
+      // Empty array means no permissions granted, non-empty array means success
+      const isGranted = Array.isArray(result) ? result.length > 0 : result === 'granted';
+
+      console.log(`🤖 Health Connect permissions ${isGranted ? 'granted' : 'denied'}`);
+      console.log(`🤖 Result array length: ${Array.isArray(result) ? result.length : 'not array'}`);
+
+      // If permissions denied or empty array, try to open Health Connect settings
+      if (!isGranted) {
+        console.log('🤖 Attempting to open Health Connect settings...');
+        try {
+          await openHealthConnectSettings();
+        } catch (settingsError) {
+          console.log('🤖 Could not open Health Connect settings:', settingsError);
+          // Try alternate method for Android 14+
+          try {
+            await Linking.openSettings();
+            console.log('🤖 Opened Android settings instead');
+          } catch (linkError) {
+            console.error('❌ Could not open any settings:', linkError);
+          }
+        }
+      }
+
+      return isGranted;
     } catch (error) {
       console.error('❌ Error requesting Health Connect permissions:', error);
+
+      // If permission request fails entirely, try opening settings
+      console.log('🤖 Permission request failed - attempting to open Health Connect settings...');
+      try {
+        await openHealthConnectSettings();
+        return false; // User needs to grant permissions manually
+      } catch (settingsError) {
+        console.error('❌ Could not open Health Connect settings:', settingsError);
+      }
+
       return false;
     }
   }
@@ -206,12 +274,16 @@ export class GoogleFitAuthService extends BaseOAuthService {
         return false;
       }
 
-      // This would check actual Health Connect permission status
-      // const { getGrantedPermissions } = require('react-native-health-connect');
-      // const permissions = await getGrantedPermissions();
-      // return permissions.length > 0;
+      await initialize();
+      const sdkStatus = await getSdkStatus();
 
-      // For now, assume authorized
+      // If SDK is not available, permissions cannot be granted
+      if (sdkStatus !== SdkAvailabilityStatus.SDK_AVAILABLE) {
+        return false;
+      }
+
+      // For now, we assume authorized if SDK is available and tokens exist
+      // A more sophisticated check would verify actual permissions
       return true;
     } catch (error) {
       console.error('❌ Error checking Health Connect permission status:', error);
@@ -254,6 +326,40 @@ export class GoogleFitAuthService extends BaseOAuthService {
       }
 
       console.log('✅ Health Connect integration saved to Supabase');
+
+      // First sync raw data to wearables_data table
+      try {
+        console.log('🔄 Health Connect: Syncing raw data to wearables_data table...');
+        const { GoogleHealthConnectDataService } = await import('../../../integrations/data/GoogleHealthConnectDataService');
+        const dataService = GoogleHealthConnectDataService.getInstance();
+        await dataService.syncToWearablesData(user.id, integrationId, 7);
+        console.log('✅ Health Connect: Raw data synced to wearables_data table');
+
+        // Then trigger health-data-sync edge function for daily metrics processing
+        console.log('🔄 Health Connect: Triggering health-data-sync edge function for daily metrics...');
+        const response = await fetch('https://ydbabipbxxleeiiysojv.supabase.co/functions/v1/health-data-sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            action: 'backfill',
+            user_id: user.id,
+            service_name: 'Google Health Connect',
+            days: 7
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Health data sync request failed: ${response.status} ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        console.log('✅ Health Connect: Health-data-sync edge function completed:', result);
+      } catch (syncError) {
+        console.warn('⚠️ Health Connect: Sync failed (integration saved, auth still successful):', syncError);
+      }
     } catch (error) {
       console.error('❌ Error saving Health Connect integration to Supabase:', error);
     }
@@ -324,16 +430,6 @@ export class GoogleFitAuthService extends BaseOAuthService {
         throw new Error('Not authenticated with Health Connect');
       }
 
-      // This would use the Health Connect library to fetch data
-      // const { readRecords } = require('react-native-health-connect');
-      // const options = {
-      //   timeRangeFilter: {
-      //     operator: 'between',
-      //     startTime: startTime?.toISOString(),
-      //     endTime: endTime?.toISOString(),
-      //   },
-      // };
-      // return await readRecords(recordType, options);
 
       // For now, return mock data
       console.log(`🤖 Fetching ${recordType} data from Health Connect...`);
@@ -362,18 +458,6 @@ export class GoogleFitAuthService extends BaseOAuthService {
       if (!isAuth) {
         throw new Error('Not authenticated with Health Connect');
       }
-
-      // This would use Health Connect aggregation
-      // const { aggregate } = require('react-native-health-connect');
-      // const options = {
-      //   recordType,
-      //   timeRangeFilter: {
-      //     operator: 'between',
-      //     startTime: startTime?.toISOString(),
-      //     endTime: endTime?.toISOString(),
-      //   },
-      // };
-      // return await aggregate(options);
 
       console.log(`🤖 Fetching aggregated ${recordType} data from Health Connect...`);
       return {

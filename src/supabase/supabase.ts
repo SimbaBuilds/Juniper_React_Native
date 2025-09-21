@@ -602,7 +602,17 @@ export const DatabaseService = {
   async getIntegrations(userId: string) {
     const { data, error } = await supabase
       .from('integrations')
-      .select('*')
+      .select(`
+        *,
+        service:services!service_id(
+          id,
+          service_name,
+          description,
+          type,
+          tools,
+          integration_method
+        )
+      `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
     
@@ -960,5 +970,6 @@ export const DatabaseService = {
     if (error) throw error;
     return data;
   },
+
 }
         

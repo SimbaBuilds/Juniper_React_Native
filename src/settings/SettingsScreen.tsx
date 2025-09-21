@@ -694,6 +694,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.linkItemText}>Privacy Policy</Text>
               <Ionicons name="chevron-forward" size={16} color="#B0B0B0" />
             </TouchableOpacity>
+
+            <TouchableOpacity style={styles.linkItem} onPress={() => Linking.openURL('https://juniperassistant.com/support')}>
+              <Ionicons name="help-circle-outline" size={20} color="#B0B0B0" />
+              <Text style={styles.linkItemText}>Contact Support</Text>
+              <Ionicons name="chevron-forward" size={16} color="#B0B0B0" />
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity

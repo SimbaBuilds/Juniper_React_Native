@@ -15,6 +15,7 @@ import requestMapping from '../utils/requestMapping';
 import Storage from '../utils/storage';
 import AppStateService from '../appstate/AppStateService';
 import conversationSyncService from '../services/conversationSyncService';
+import HealthSyncService from '../integrations/data/HealthSyncService';
 
 const { VoiceModule } = NativeModules;
 
@@ -674,6 +675,22 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       }).catch(error => {
         console.error('📱 VOICE_CONTEXT: Error getting app state debug info:', error);
       });
+
+      // Sync health data when app comes to foreground
+      if (nextAppState === 'active' && user?.id) {
+        console.log('🏥 VOICE_CONTEXT: App became active - syncing health data');
+        const healthSync = HealthSyncService.getInstance();
+        healthSync.syncHealthData(user.id)
+          .then(result => {
+            console.log('🏥 VOICE_CONTEXT: Health sync result:', result.success ? 'success' : 'failed');
+            if (result.synced) {
+              console.log('🏥 VOICE_CONTEXT: Health data successfully synced to database');
+            }
+          })
+          .catch(error => {
+            console.warn('🏥 VOICE_CONTEXT: Health sync error:', error);
+          });
+      }
     };
     
     const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
