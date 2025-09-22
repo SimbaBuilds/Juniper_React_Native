@@ -1,11 +1,11 @@
 
 Android Bundled 656ms index.js (1362 modules)
 Android Bundled 41ms index.js (1 module)
- LOG  🌐 API: Using backend URL: https://mobile-jarvis-backend.onrender.com
+ LOG  🌐 API: Using backend URL: https://juniper-python-backend.onrender.com
  LOG  🔍 Environment variable present: true
- LOG  ServerApiService initialized with config: {"apiEndpoint": "/api/chat", "baseUrl": "https://mobile-jarvis-backend.onrender.com"}
- LOG  ServerApiService config updated: {"apiEndpoint": "/api/chat", "baseUrl": "https://mobile-jarvis-backend.onrender.com"}
- LOG  ✅ Loaded server config from React Native environment: {"apiEndpoint": "/api/chat", "baseUrl": "https://mobile-jarvis-backend.onrender.com"}
+ LOG  ServerApiService initialized with config: {"apiEndpoint": "/api/chat", "baseUrl": "https://juniper-python-backend.onrender.com"}
+ LOG  ServerApiService config updated: {"apiEndpoint": "/api/chat", "baseUrl": "https://juniper-python-backend.onrender.com"}
+ LOG  ✅ Loaded server config from React Native environment: {"apiEndpoint": "/api/chat", "baseUrl": "https://juniper-python-backend.onrender.com"}
  LOG  Available native modules: []
  LOG  WakeWordModule available: Yes
  LOG  🚀 App: Starting initialization...

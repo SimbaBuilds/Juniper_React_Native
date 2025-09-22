@@ -23,7 +23,7 @@ class NativeApiClient(private val context: Context) {
         private const val TAG = "NativeApiClient"
         
         // API Configuration
-        private const val DEFAULT_BASE_URL = "https://mobile-jarvis-backend.onrender.com"
+        private const val DEFAULT_BASE_URL = "https://juniper-python-backend.onrender.com"
         private const val CHAT_ENDPOINT = "/api/chat"
         private const val REQUEST_TIMEOUT = 300L // 5 minutes in seconds
         

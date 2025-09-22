@@ -30,7 +30,7 @@ class SettingsService {
     if (Platform.OS === 'ios' || !AppConfigModule) {
       // iOS fallback: return default configuration
       return {
-        baseUrl: 'https://mobile-jarvis-backend.onrender.com',
+        baseUrl: 'https://juniper-python-backend.onrender.com',
         apiEndpoint: '/api/chat'
       };
     }
@@ -41,7 +41,7 @@ class SettingsService {
       console.error('Error getting server API config:', error);
       // Return default values on error
       return {
-        baseUrl: 'https://mobile-jarvis-backend.onrender.com',
+        baseUrl: 'https://juniper-python-backend.onrender.com',
         apiEndpoint: '/api/chat'
       };
     }

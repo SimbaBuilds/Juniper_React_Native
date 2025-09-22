@@ -20,7 +20,7 @@ function toSnakeCase(str: string): string {
 
 // Default server configuration - prioritize React Native environment variables
 const DEFAULT_SERVER_CONFIG = {
-  baseUrl: process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL || 'https://mobile-jarvis-backend.onrender.com',
+  baseUrl: process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL || 'https://juniper-python-backend.onrender.com',
   apiEndpoint: '/api/chat'
 };
 

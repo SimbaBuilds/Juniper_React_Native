@@ -5,7 +5,7 @@ import { supabase } from '../supabase/supabase';
 // const supabase = createClient();
 
 // Log the backend URL being used
-const backendUrl = process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL || 'https://mobile-jarvis-backend.onrender.com';
+const backendUrl = process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL || 'https://juniper-python-backend.onrender.com';
 console.log('🌐 API: Using backend URL:', backendUrl);
 console.log('🔍 Environment variable present:', !!process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL);
 
