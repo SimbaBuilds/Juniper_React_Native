@@ -614,7 +614,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                   minimumValue={0}
                   maximumValue={1}
                   step={1e-5}
-                  description="The threshold level for wake word detection (0 = more sensitive, 1 = less sensitive).  Note: threshold must be set lower for the word to be detected when the app is closed."
+                  description="The threshold level for wake word detection (0 = more sensitive, 1 = less sensitive).  Note: threshold must be set lower for the word to be detected when the app is closed.  Also note: the wake word engine takes a few moments to restart when the app is moved to the background."
                   formatValue={(value) => `${Math.round(value * 100)}%`}
                 />
               </View>
