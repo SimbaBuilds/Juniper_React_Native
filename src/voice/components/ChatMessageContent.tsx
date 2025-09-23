@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Image, StyleSheet, TouchableOpacity, Modal, Dimensions, Platform, Alert, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MarkdownMessage } from './MarkdownMessage';
+import { SourcesDropdown } from './SourcesDropdown';
 import { ChatMessage } from '../VoiceContext';
 
 interface ChatMessageContentProps {
@@ -10,12 +11,56 @@ interface ChatMessageContentProps {
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+const parseMessageContent = (content: string) => {
+  // Match both plain "Sources:" and markdown "**Sources:**" formats
+  const sourcesRegex = /\*\*Sources:\*\*\s*(\[[^\]]+\](?:,\s*\[[^\]]+\])*)\s*$/i;
+  const plainSourcesRegex = /\n\s*Sources?:\s*\[([^\]]+)\]\s*$/i;
+
+  let match = content.match(sourcesRegex);
+  let isMarkdownFormat = true;
+
+  if (!match) {
+    match = content.match(plainSourcesRegex);
+    isMarkdownFormat = false;
+  }
+
+  if (match) {
+    const regex = isMarkdownFormat ? sourcesRegex : plainSourcesRegex;
+    const mainContent = content.replace(regex, '').trim();
+
+    let sources: string[] = [];
+
+    if (isMarkdownFormat) {
+      // Parse markdown format: [url1], [url2], ...
+      const sourcesString = match[1];
+      const urlMatches = sourcesString.match(/\[([^\]]+)\]/g);
+      if (urlMatches) {
+        sources = urlMatches
+          .map(match => match.slice(1, -1).trim()) // Remove brackets
+          .filter(source => source.length > 0);
+      }
+    } else {
+      // Parse plain format: url1, url2, ...
+      const sourcesString = match[1];
+      sources = sourcesString
+        .split(',')
+        .map(source => source.trim())
+        .filter(source => source.length > 0);
+    }
+
+    return { mainContent, sources };
+  }
+
+  return { mainContent: content, sources: [] };
+};
+
 export const ChatMessageContent: React.FC<ChatMessageContentProps> = ({ message }) => {
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [imageLoadError, setImageLoadError] = useState(false);
 
   const hasImage = !!message.imageUrl;
-  const hasText = !!message.content?.trim();
+  const { mainContent, sources } = parseMessageContent(message.content || '');
+  const hasText = !!mainContent?.trim();
 
   const handleImagePress = () => {
     console.log('🔄 ChatMessageContent: Image pressed', { 
@@ -93,7 +138,10 @@ export const ChatMessageContent: React.FC<ChatMessageContentProps> = ({ message 
       {/* Text content */}
       {hasText && (
         <View style={hasImage ? styles.textWithImage : undefined}>
-          <MarkdownMessage content={message.content} role={message.role} />
+          <MarkdownMessage content={mainContent} role={message.role} />
+          {message.role === 'assistant' && sources.length > 0 && (
+            <SourcesDropdown sources={sources} role={message.role} />
+          )}
         </View>
       )}
 

@@ -1,11 +1,1 @@
-Under the Health and Wellness section in the integrations screen please add a note: 
-
-"Medical Records" (this is not in the services tables)
-
-            Provide medical records to Juniper so it can provide valuable insights and conversation around your health data - we do not share your records with third parties.
-
-
-              Upload and manage your medical records in your <Link href="/repository"><u>Repository</u></Link> in the web app.
-
-
-Please have medical records show up like a service and show the note and link above on expansion like the database services.
+The assistant response will often contain cited sources in the format "Sources: [url1, url2, etc…]”. Please create a plan for adding parsing and display logic that adds “Sources” to the end of the assistant message as an expandable dropdown with the links. There is already logic that makes https urls clickable.
