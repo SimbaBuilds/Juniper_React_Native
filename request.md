@@ -1,1 +1,1 @@
-The assistant response will often contain cited sources in the format "Sources: [url1, url2, etc…]”. Please create a plan for adding parsing and display logic that adds “Sources” to the end of the assistant message as an expandable dropdown with the links. There is already logic that makes https urls clickable.
+When a conversation ends after speech recognition retries are exhausted, I want wake word to resume, but as you can hopefulyl see in the logs, wake word detection does not resume.  Please debug.

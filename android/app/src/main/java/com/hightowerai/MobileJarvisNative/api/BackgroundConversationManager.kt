@@ -220,15 +220,15 @@ class BackgroundConversationManager private constructor(private val context: Con
         managerScope.launch {
             try {
                 Log.d(TAG, "📱 SYNC_FROM_RN: Syncing ${history.size} history entries from React Native")
-                
+
                 // Merge with existing background history
                 val mergedHistory = mergeHistoryEntries(_conversationHistory.value, history)
                 _conversationHistory.value = mergedHistory
-                
+
                 persistConversationHistory()
-                
+
                 Log.i(TAG, "📱 SYNC_FROM_RN: ✅ History synced from React Native (${mergedHistory.size} total entries)")
-                
+
             } catch (e: Exception) {
                 Log.e(TAG, "📱 SYNC_FROM_RN: ❌ Error syncing from React Native: ${e.message}", e)
             }

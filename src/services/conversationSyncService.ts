@@ -158,11 +158,12 @@ class ConversationSyncService {
 
     try {
       console.log(`[ConversationSyncService] Marking ${conversationIds.length} conversations as synced`);
-      
+
       for (const id of conversationIds) {
         console.log(`[ConversationSyncService] Marking conversation ${id} as processed`);
       }
-      
+
+      await ConversationSyncModule.markConversationsAsSynced(conversationIds);
       console.log('✅ [ConversationSyncService] Conversations marked as synced');
     } catch (error) {
       console.error('❌ [ConversationSyncService] Failed to mark conversations as synced:', error);

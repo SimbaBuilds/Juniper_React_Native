@@ -91,10 +91,21 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
         fun isRunning(): Boolean {
             return instance?.isServiceRunning ?: false
         }
-        
+
+        fun isServiceRunning(context: Context): Boolean {
+            val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+            @Suppress("DEPRECATION")
+            for (service in manager.getRunningServices(Integer.MAX_VALUE)) {
+                if (WakeWordService::class.java.name == service.service.className) {
+                    return true
+                }
+            }
+            return false
+        }
+
         @Volatile
         private var instance: WakeWordService? = null
-        
+
         // Available wake words from OpenWakeWord
         val AVAILABLE_WAKE_WORDS: Set<String>
             get() = setOf(
@@ -175,6 +186,37 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.i(TAG, "Service onStartCommand called with action: ${intent?.action}")
+
+        // Handle RESUME_WAKE_WORD action directly
+        if (intent?.action == Constants.Actions.RESUME_WAKE_WORD) {
+            Log.i(TAG, "🔄 WAKE_WORD_RESUME: Received resume command via startService")
+            serviceScope.launch(Dispatchers.Main) {
+                if (isPaused) {
+                    Log.i(TAG, "🔄 WAKE_WORD_RESUME: Service is paused, calling resumeWakeWordDetectionFromPaused()")
+                    resumeWakeWordDetectionFromPaused()
+                } else {
+                    Log.i(TAG, "🔄 WAKE_WORD_RESUME: Service not paused, wake word already active")
+                }
+            }
+            return START_STICKY
+        }
+
+        // Handle PAUSE_WAKE_WORD_KEEP_LISTENING action directly
+        if (intent?.action == Constants.Actions.PAUSE_WAKE_WORD_KEEP_LISTENING) {
+            Log.i(TAG, "🔄 WAKE_WORD_PAUSE: Received pause command via startService")
+            serviceScope.launch(Dispatchers.Main) {
+                if (!isPaused) {
+                    Log.i(TAG, "🔄 WAKE_WORD_PAUSE: Service is active, calling pauseWakeWordButKeepMicActive()")
+                    pauseWakeWordButKeepMicActive()
+                } else {
+                    Log.i(TAG, "🔄 WAKE_WORD_PAUSE: Service already paused")
+                }
+            }
+            return START_STICKY
+        }
+
+        // Existing initialization code for normal service startup
         Log.i(TAG, "Service onStartCommand called (WakeWordService)")
         serviceScope.launch(Dispatchers.Main) {
             try {
@@ -933,11 +975,14 @@ class WakeWordService : Service(), SharedPreferences.OnSharedPreferenceChangeLis
     }
     
     private fun resumeWakeWordDetectionFromPaused() {
+        Log.i(TAG, "▶️ PAUSE_RESUME: resumeWakeWordDetectionFromPaused() called")
+        Log.i(TAG, "▶️ PAUSE_RESUME: Current isPaused state: $isPaused")
+
         if (!isPaused) {
-            Log.d(TAG, "▶️ PAUSE_RESUME: Wake word detection not paused")
+            Log.d(TAG, "▶️ PAUSE_RESUME: Wake word detection not paused, nothing to resume")
             return
         }
-        
+
         // Defensive check: Ensure service is still running and not destroyed
         if (!isServiceRunning || serviceScope.isActive == false) {
             Log.w(TAG, "▶️ PAUSE_RESUME: ⚠️ Service is not running or scope is cancelled - skipping resume")

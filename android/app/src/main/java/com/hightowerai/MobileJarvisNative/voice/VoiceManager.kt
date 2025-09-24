@@ -264,9 +264,20 @@ class VoiceManager private constructor() {
             updateState(VoiceState.WAKE_WORD_DETECTED)
             
             // Explicitly tell the WakeWordService to pause but keep mic active
-            val intent = Intent("com.hightowerai.MobileJarvisNative.PAUSE_WAKE_WORD_KEEP_LISTENING")
-            context.sendBroadcast(intent)
-            Log.d(TAG, "Sent broadcast to pause wake word detection but keep mic active")
+            val intent = Intent(context, com.hightowerai.MobileJarvisNative.wakeword.WakeWordService::class.java).apply {
+                action = Constants.Actions.PAUSE_WAKE_WORD_KEEP_LISTENING
+            }
+            try {
+                context.startService(intent)
+                Log.d(TAG, "🔄 WAKE_WORD_PAUSE: Sent pause command to WakeWordService via startService")
+            } catch (e: Exception) {
+                Log.e(TAG, "🔄 WAKE_WORD_PAUSE: Failed to start service for pause: ${e.message}")
+                // Fallback to broadcast
+                val broadcastIntent = Intent(Constants.Actions.PAUSE_WAKE_WORD_KEEP_LISTENING)
+                broadcastIntent.setPackage(context.packageName)
+                context.sendBroadcast(broadcastIntent)
+                Log.w(TAG, "🔄 WAKE_WORD_PAUSE: Fell back to broadcast method")
+            }
             
             // Initialize Whisper client for speech recognition
             initializeWhisperClient()
@@ -410,11 +421,22 @@ class VoiceManager private constructor() {
         
         // Always ensure wake word detection is paused when actively listening
         try {
-            val intent = Intent("com.hightowerai.MobileJarvisNative.PAUSE_WAKE_WORD_KEEP_LISTENING")
-            context.sendBroadcast(intent)
-            Log.d(TAG, "Sent broadcast to pause wake word detection during listening")
+            val intent = Intent(context, com.hightowerai.MobileJarvisNative.wakeword.WakeWordService::class.java).apply {
+                action = Constants.Actions.PAUSE_WAKE_WORD_KEEP_LISTENING
+            }
+            try {
+                context.startService(intent)
+                Log.d(TAG, "🔄 WAKE_WORD_PAUSE: Sent pause command to WakeWordService via startService during listening")
+            } catch (e: Exception) {
+                Log.e(TAG, "🔄 WAKE_WORD_PAUSE: Failed to start service for pause during listening: ${e.message}")
+                // Fallback to broadcast
+                val broadcastIntent = Intent(Constants.Actions.PAUSE_WAKE_WORD_KEEP_LISTENING)
+                broadcastIntent.setPackage(context.packageName)
+                context.sendBroadcast(broadcastIntent)
+                Log.w(TAG, "🔄 WAKE_WORD_PAUSE: Fell back to broadcast method during listening")
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Error sending pause wake word broadcast: ${e.message}", e)
+            Log.e(TAG, "Error sending pause wake word command: ${e.message}", e)
         }
         
         // Check if speechRecognizer is still valid and reinitialize if needed
@@ -1034,18 +1056,22 @@ class VoiceManager private constructor() {
                 try {
                     voiceProcessor.start()
                     
-                    // Also send broadcast to WakeWordService to ensure it resumes
-                    val intent = Intent(Constants.Actions.RESUME_WAKE_WORD)
-                    intent.setPackage(context.packageName) // Ensure broadcast stays within our app
-                    val result = context.sendBroadcast(intent)
-                    Log.i(TAG, "🔄 WAKE_WORD_RESUME: Sent broadcast to resume wake word detection")
-                    Log.d(TAG, "🔄 WAKE_WORD_RESUME: Broadcast action: ${Constants.Actions.RESUME_WAKE_WORD}")
-                    Log.d(TAG, "🔄 WAKE_WORD_RESUME: Package name: ${context.packageName}")
-                    
-                    // Add a small delay and then check if we should try alternative methods
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        Log.d(TAG, "🔄 WAKE_WORD_RESUME: Broadcast sent, WakeWordService should have resumed by now")
-                    }, 500)
+                    // Send resume command to WakeWordService via startService for reliability
+                    val intent = Intent(context, com.hightowerai.MobileJarvisNative.wakeword.WakeWordService::class.java).apply {
+                        action = Constants.Actions.RESUME_WAKE_WORD
+                    }
+                    try {
+                        context.startService(intent)
+                        Log.i(TAG, "🔄 WAKE_WORD_RESUME: Sent resume command to WakeWordService via startService")
+                        Log.d(TAG, "🔄 WAKE_WORD_RESUME: Service intent action: ${Constants.Actions.RESUME_WAKE_WORD}")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "🔄 WAKE_WORD_RESUME: Failed to start service for resume: ${e.message}")
+                        // Fallback: try broadcast as before
+                        val broadcastIntent = Intent(Constants.Actions.RESUME_WAKE_WORD)
+                        broadcastIntent.setPackage(context.packageName)
+                        context.sendBroadcast(broadcastIntent)
+                        Log.w(TAG, "🔄 WAKE_WORD_RESUME: Fell back to broadcast method")
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error re-enabling wake word detection", e)
                 }
