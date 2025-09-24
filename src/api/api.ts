@@ -11,7 +11,7 @@ console.log('🔍 Environment variable present:', !!process.env.EXPO_PUBLIC_PYTH
 
 const api = axios.create({
   baseURL: backendUrl,
-  timeout: Platform.OS === 'android' ? 300000 : 300000, // 5 minute timeout - sole timeout mechanism (native timeouts removed)
+  timeout: Platform.OS === 'android' ? 600000 : 600000, // 5 minute timeout - sole timeout mechanism (native timeouts removed)
 });
 
 // Add request interceptor to add auth token

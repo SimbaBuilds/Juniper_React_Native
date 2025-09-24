@@ -1,1 +1,1 @@
-When a conversation ends after speech recognition retries are exhausted, I want wake word to resume, but as you can hopefulyl see in the logs, wake word detection does not resume.  Please debug.
+Please determine what API timeouts are set in the React Native and Android layers.  I think there are some hidden in non config files in the native layer.  

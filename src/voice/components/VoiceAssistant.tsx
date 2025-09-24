@@ -62,12 +62,12 @@ interface VoiceAssistantProps {
  * Main component for voice assistant functionality
  * Combines voice button, response display, and status indicator
  */
-export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ 
-  onSpeechResult 
+export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
+  onSpeechResult
 }) => {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const { 
+  const {
     isListening,
     isSpeaking,
     transcript,
@@ -91,9 +91,12 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
 
   // State for conversation history modal
   const [showConversationHistory, setShowConversationHistory] = React.useState(false);
-  
+
   // State for onboarding - use ref to prevent re-evaluation on re-renders
   const hasEvaluatedOnboarding = React.useRef(false);
+
+  // Android-specific keyboard height tracking
+  const [androidKeyboardPadding, setAndroidKeyboardPadding] = React.useState(0);
 
   // Handle opening conversation history and loading data
   const handleOpenConversationHistory = () => {
@@ -197,6 +200,36 @@ What would you like to get started with today? If you aren't sure, starting with
 
     checkForOnboarding();
   }, [user?.id, continuePreviousChat, settingsLoading]);
+
+  // Android-specific keyboard height tracking
+  React.useEffect(() => {
+    if (Platform.OS === 'android') {
+      const showListener = Keyboard.addListener('keyboardDidShow', (e) => {
+        console.log('🔄 Keyboard shown, height:', e.endCoordinates.height, '(using adjustResize, not adding to bottomSection)');
+        setAndroidKeyboardPadding(e.endCoordinates.height);
+      });
+      const hideListener = Keyboard.addListener('keyboardDidHide', () => {
+        console.log('🔄 Keyboard hidden');
+        setAndroidKeyboardPadding(0);
+      });
+
+      return () => {
+        showListener.remove();
+        hideListener.remove();
+      };
+    }
+  }, []);
+
+  // Calculate dynamic padding for chat list (Android only)
+  const chatListBottomPadding = React.useMemo(() => {
+    if (Platform.OS === 'ios') {
+      return 80; // Keep iOS unchanged
+    }
+    // Android: reduce padding when keyboard is shown
+    const padding = androidKeyboardPadding > 0 ? 16 : 80;
+    console.log('🔄 Chat list padding changed:', padding, 'keyboard height:', androidKeyboardPadding);
+    return padding;
+  }, [androidKeyboardPadding]);
 
   // When a speech result is received, call the callback
   React.useEffect(() => {
@@ -377,8 +410,8 @@ What would you like to get started with today? If you aren't sure, starting with
   return (
     <KeyboardAvoidingView 
       style={styles.keyboardAvoidingView}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <View style={styles.container}>
           <View style={styles.header}>
@@ -441,7 +474,10 @@ What would you like to get started with today? If you aren't sure, starting with
                     data={chatHistory}
                     keyExtractor={(item, index) => `chat-${index}-${item.timestamp}`}
                     style={styles.chatList}
-                    contentContainerStyle={styles.chatListContent}
+                    contentContainerStyle={[
+                      styles.chatListContent,
+                      { paddingBottom: chatListBottomPadding }
+                    ]}
                     keyboardShouldPersistTaps="always"
                     keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={true}
@@ -536,6 +572,9 @@ What would you like to get started with today? If you aren't sure, starting with
             styles.bottomSection,
             Platform.OS === 'ios' && {
               paddingBottom: Math.max(insets.bottom, 4), // Use safe area insets or minimum 4px
+            },
+            Platform.OS === 'android' && {
+              paddingBottom: 4, // Minimal padding - adjustResize handles keyboard
             }
           ]}>
             {/* Voice button - positioned above text input */}
@@ -652,7 +691,7 @@ const styles = StyleSheet.create({
     minHeight: 0, // Important for FlatList scrolling
   },
   chatListContent: {
-    paddingBottom: 80,
+    // paddingBottom is now applied dynamically
   },
   chatBubble: {
     padding: 8,
