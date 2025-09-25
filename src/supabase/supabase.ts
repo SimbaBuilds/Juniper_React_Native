@@ -932,41 +932,46 @@ export const DatabaseService = {
         image_url: requestData.image_url,
         total_turns: requestData.total_turns || 0,
         user_message: requestData.user_message || '',
+        network_success: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },
 
-  async updateRequestStatus(requestId: string, status: string, metadata?: Record<string, any>, total_turns?: number, user_message?: string): Promise<Request> {
+  async updateRequestStatus(requestId: string, status: string, metadata?: Record<string, any>, total_turns?: number, user_message?: string, network_success?: boolean): Promise<Request> {
     const updateData: any = {
       status,
       updated_at: new Date().toISOString()
     };
-    
+
     if (metadata) {
       updateData.metadata = metadata;
     }
-    
+
     if (total_turns !== undefined) {
       updateData.total_turns = total_turns;
     }
-    
+
     if (user_message !== undefined) {
       updateData.user_message = user_message;
     }
-    
+
+    if (network_success !== undefined) {
+      updateData.network_success = network_success;
+    }
+
     const { data, error } = await supabase
       .from('requests')
       .update(updateData)
       .eq('request_id', requestId)
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },

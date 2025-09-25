@@ -507,23 +507,26 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           
           // Send to API with updated history in a separate async operation
           setTimeout(async () => {
+            let localRequestId: string | null = null; // Local variable accessible in catch block
+
             try {
               console.log('🔄 VOICE_CONTEXT: Sending message with current settings');
-              
+
               // Start polling immediately when request begins
               setRequestStatus('pending');
-              
+
               console.log('🔍 RN_BRIDGE_DEBUG: ========== STARTING API CALL ==========');
               console.log('🔍 RN_BRIDGE_DEBUG: API call start time:', Date.now());
               console.log('🔍 RN_BRIDGE_DEBUG: Text being sent to API:', text);
               console.log('🔍 RN_BRIDGE_DEBUG: History entries count:', updatedHistory.length);
-              
+
               const apiStartTime = performance.now();
               const response = await sendMessage(text, updatedHistory, (reactNativeRequestId) => {
+                localRequestId = reactNativeRequestId; // Store in local variable for catch block
                 console.log('📊 REQUEST_STATUS: Setting request ID for polling:', reactNativeRequestId);
                 console.log('🔍 RN_BRIDGE_DEBUG: Request ID assigned:', reactNativeRequestId);
                 setCurrentRequestId(reactNativeRequestId);
-                
+
                 // Store mapping between React Native request ID and native request ID
                 requestMapping.mapRequestIds(reactNativeRequestId, requestId);
               });
@@ -580,12 +583,29 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               
             } catch (error) {
               console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
-              
+
+              // Check for network error and update request status
+              if (error instanceof Error && error.message === 'Network Error' && localRequestId) {
+                try {
+                  await DatabaseService.updateRequestStatus(
+                    localRequestId,
+                    'failed',
+                    undefined,  // metadata
+                    undefined,  // total_turns
+                    undefined,  // user_message
+                    false       // network_success = false
+                  );
+                  console.log('🌐 VOICE_CONTEXT: Network error - updated request network_success to false for requestId:', localRequestId);
+                } catch (updateError) {
+                  console.error('🌐 VOICE_CONTEXT: Failed to update network_success status:', updateError);
+                }
+              }
+
               // Clean up request mapping on error
               if (currentRequestId) {
                 requestMapping.removeMapping(currentRequestId);
               }
-              
+
               if (!isCancellationError(error)) {
                 const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
                 // Send error response back to native
@@ -865,17 +885,20 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         
         // Send to API with updated history in a separate async operation
         setTimeout(async () => {
+          let localRequestId: string | null = null; // Local variable accessible in catch block
+
           try {
             console.log('📝 TEXT_INPUT: ========== SENDING TO API ==========');
             console.log('📝 TEXT_INPUT: Sending message to API');
-            
+
             // Start polling immediately when request begins
             setRequestStatus('pending');
-            
+
             const apiStartTime = Date.now();
             const response = await sendMessage(text.trim(), updatedHistory, async (requestId) => {
+              localRequestId = requestId; // Store in local variable for catch block
               console.log('🔄 CALLBACK_START: onRequestStart callback called with requestId:', requestId);
-              
+
               // Create database request record BEFORE setting request ID to ensure it exists when polling starts
               if (user?.id) {
                 try {
@@ -884,14 +907,14 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
                     request_id: requestId,
                     request_type: 'chat_message',
                     status: 'pending',
-                    metadata: { 
+                    metadata: {
                       message: text.trim(),
-                      hasImage: !!imageUrl 
+                      hasImage: !!imageUrl
                     },
                     ...(imageUrl && { image_url: imageUrl })
                   });
                   console.log('🔄 DB_CREATE_SUCCESS: Database request record created:', dbRecord.id, 'with image URL:', !!imageUrl);
-                  
+
                   // Set request ID AFTER database record is successfully created
                   console.log('🔄 SET_REQUEST_ID: Setting currentRequestId to trigger polling:', requestId);
                   setCurrentRequestId(requestId);
@@ -982,7 +1005,24 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             
           } catch (error) {
             console.error('📝 TEXT_INPUT: ❌ Error processing text message:', error);
-            
+
+            // Check for network error and update request status
+            if (error instanceof Error && error.message === 'Network Error' && localRequestId) {
+              try {
+                await DatabaseService.updateRequestStatus(
+                  localRequestId,
+                  'failed',
+                  undefined,  // metadata
+                  undefined,  // total_turns
+                  undefined,  // user_message
+                  false       // network_success = false
+                );
+                console.log('🌐 TEXT_INPUT: Network error - updated request network_success to false for requestId:', localRequestId);
+              } catch (updateError) {
+                console.error('🌐 TEXT_INPUT: Failed to update network_success status:', updateError);
+              }
+            }
+
             // Don't show cancellation errors to user in chat
             if (!isCancellationError(error)) {
               // Add error message to chat history only for non-cancellation errors
@@ -991,12 +1031,12 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
                 content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`,
                 timestamp: Date.now()
               };
-              
+
               setChatHistory(prevHistory => [...prevHistory, errorMessage]);
             } else {
               console.log('📝 TEXT_INPUT: Request was cancelled - not showing error to user');
             }
-            
+
             // Clear request ID after error
             setCurrentRequestId(null);
             setRequestStatus(null);

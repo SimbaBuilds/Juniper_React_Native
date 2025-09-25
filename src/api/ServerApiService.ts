@@ -272,7 +272,7 @@ class ServerApiService {
             headers: { 
               'Content-Type': 'multipart/form-data'
             },
-            timeout: 600000, // no native API timeout for iOS
+            timeout: 1200000, // no native API timeout for iOS
             signal: this.currentRequestController.signal // Add AbortController signal
           }).catch((error: unknown) => {
             console.error('🔴 SERVER_API: ❌ API request error:', error);
