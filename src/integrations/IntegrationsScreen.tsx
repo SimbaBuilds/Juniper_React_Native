@@ -232,7 +232,7 @@ export const IntegrationsScreen: React.FC = () => {
       id: 'medical-records-custom',
       service_name: 'Medical Records',
       tags: [],
-      description: 'Provide medical records to Juniper so it can give valuable insights and conversation around your health data - we do not share your records with third parties.',
+      description: 'Provide medical records to Juniper so it can give valuable insights and conversation around your health data - we do not share your medical records with third parties.',
       isActive: false,
       isConnected: false,
       integration_id: undefined,
