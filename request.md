@@ -1,24 +1,20 @@
-node@20 is keg-only, which means it was not symlinked into /usr/local,
+ 0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
 
-because this is an alternate version of another formula.
+100 20.1M  100 20.1M    0     0  65.2M      0 --:--:-- --:--:-- --:--:-- 65.3M
 
-If you need to have node@20 first in your PATH, run:
+[!] CocoaPods could not find compatible versions for pod "hermes-engine":
 
-  echo 'export PATH="/usr/local/opt/node@20/bin:$PATH"' >> ~/.zshrc
+  In snapshot (Podfile.lock):
 
-For compilers to find node@20 you may need to set:
+    hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
 
-  export LDFLAGS="-L/usr/local/opt/node@20/lib"
+  In Podfile:
 
-  export CPPFLAGS="-I/usr/local/opt/node@20/include"
+    hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
 
-🔧 Configuring Node.js PATH...
+It seems like you've changed the version of the dependency `hermes-engine` and it differs from the version stored in `Pods/Local Podspecs`.
 
-🔗 Creating Node.js symlinks...
-
-sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
-
-sudo: a password is required
+You should run `pod update hermes-engine --no-repo-update` to apply changes made locally.
 
 Error
 Command exited with non-zero exit-code: 1

@@ -50,9 +50,10 @@ cd "$REPO_ROOT/ios"
 echo "🧹 Cleaning existing Pods installation..."
 rm -rf Pods
 rm -rf build
+rm -f Podfile.lock
 
-# Install CocoaPods dependencies with clean install
+# Install CocoaPods dependencies
 echo "📦 Installing CocoaPods dependencies..."
-pod install --clean-install --repo-update
+pod install --repo-update
 
 echo "✅ CI post-clone setup completed successfully!"
