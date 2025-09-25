@@ -1,0 +1,6 @@
+module ReactNativeHealthkit {
+  umbrella header "ReactNativeHealthkit-umbrella.h"
+
+  export *
+  module * { export * }
+}

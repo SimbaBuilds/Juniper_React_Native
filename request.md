@@ -1,1 +1,9 @@
-Please determine what API timeouts are set in the React Native and Android layers.  I think there are some hidden in non config files in the native layer.  
+Getting this from XCode Cloud:
+
+Error
+Unable to open base configuration reference file '/Volumes/workspace/repository/ios/Pods/Target Support Files/Pods-MobileJarvisNative/Pods-MobileJarvisNative.release.xcconfig'.
+
+MobileJarvisNative.xcodeproj:1
+
+
+Please help debug.
