@@ -1,6 +1,0 @@
-module Pods_MobileJarvisNative {
-  umbrella header "Pods-MobileJarvisNative-umbrella.h"
-
-  export *
-  module * { export * }
-}
