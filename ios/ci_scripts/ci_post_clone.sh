@@ -18,6 +18,25 @@ echo "📦 Installing Node.js..."
 export HOMEBREW_NO_INSTALL_CLEANUP=TRUE
 brew install node@20
 
+# Add Node.js to PATH (node@20 is keg-only, not symlinked by default)
+echo "🔧 Configuring Node.js PATH..."
+export PATH="/usr/local/opt/node@20/bin:$PATH"
+export PATH="/usr/local/opt/node@20/libexec/bin:$PATH"
+
+# Create symlinks for broader compatibility
+echo "🔗 Creating Node.js symlinks..."
+sudo mkdir -p /usr/local/bin
+sudo ln -sf /usr/local/opt/node@20/bin/node /usr/local/bin/node
+sudo ln -sf /usr/local/opt/node@20/bin/npm /usr/local/bin/npm
+sudo ln -sf /usr/local/opt/node@20/bin/npx /usr/local/bin/npx
+
+# Verify Node.js installation
+echo "✅ Verifying Node.js installation..."
+which node
+node --version
+which npm
+npm --version
+
 # Install yarn (package manager)
 echo "📦 Installing yarn..."
 brew install yarn
