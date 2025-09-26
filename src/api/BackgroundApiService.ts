@@ -86,8 +86,9 @@ class BackgroundApiService {
     });
 
     // Listen for completion events
-    this.eventEmitter.addListener('BackgroundApiComplete', (data: BackgroundApiComplete) => {
+    this.eventEmitter.addListener('BackgroundApiComplete', (data: any) => {
       console.log('✅ BackgroundApiService: Request completed', data.requestId);
+      console.log('✅ BackgroundApiService: Complete event data:', JSON.stringify(data));
       this.notifyListener(`complete_${data.requestId}`, data);
     });
 

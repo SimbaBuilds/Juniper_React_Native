@@ -225,15 +225,81 @@ class ServerApiService {
       bodyString
     );
 
-    console.log('🌐 SERVER_API: Background request started, request will continue in background');
+    console.log('🌐 SERVER_API: Background request started, waiting for completion...');
 
-    // Return a placeholder response indicating background processing
-    return {
-      response: 'Request started in background. Processing will continue even if app is backgrounded.',
-      timestamp: Date.now(),
-      request_id: requestId,
-      integration_in_progress: false
-    };
+    // Create a promise that will resolve when the background request completes
+    return new Promise<ChatResponse>((resolve, reject) => {
+      let checkAttempts = 0;
+      const maxAttempts = 600; // 10 minutes with 1 second intervals
+
+      // Set up event listener for completion
+      const removeListener = this.backgroundApiService.addListener('complete', requestId, (data: any) => {
+        console.log('🌐 SERVER_API: Received BackgroundApiComplete event', data);
+
+        // Clear the interval if it's running
+        if (checkInterval) {
+          clearInterval(checkInterval);
+        }
+
+        // Parse and return the response
+        try {
+          const responseData = typeof data.data === 'string' ? JSON.parse(data.data) : data;
+          const response: ChatResponse = {
+            response: responseData.response || responseData.message || '',
+            timestamp: Date.now(),
+            request_id: requestId,
+            settings_updated: responseData.settings_updated,
+            integration_in_progress: responseData.integration_in_progress,
+            additional_data: responseData.additional_data
+          };
+
+          removeListener();
+          resolve(response);
+        } catch (error) {
+          console.error('❌ SERVER_API: Error parsing background response:', error);
+          removeListener();
+          reject(new Error('Failed to parse background response'));
+        }
+      });
+
+      // Also set up error listener
+      const removeErrorListener = this.backgroundApiService.addListener('error', requestId, (data: any) => {
+        console.error('❌ SERVER_API: Background request failed:', data.error);
+        removeListener();
+        removeErrorListener();
+        if (checkInterval) {
+          clearInterval(checkInterval);
+        }
+        reject(new Error(data.error || 'Background request failed'));
+      });
+
+      // Poll for completed request as a fallback
+      const checkInterval = setInterval(async () => {
+        checkAttempts++;
+
+        if (checkAttempts > maxAttempts) {
+          clearInterval(checkInterval);
+          removeListener();
+          removeErrorListener();
+          reject(new Error('Background request timeout after 10 minutes'));
+          return;
+        }
+
+        try {
+          const result = await this.checkCompletedBackgroundRequest(requestId);
+          if (result) {
+            console.log('🌐 SERVER_API: Found completed request via polling');
+            clearInterval(checkInterval);
+            removeListener();
+            removeErrorListener();
+            resolve(result);
+          }
+        } catch (error) {
+          // Continue polling unless it's a critical error
+          console.log('🌐 SERVER_API: Polling attempt', checkAttempts, 'no result yet');
+        }
+      }, 1000); // Check every second
+    });
   }
 
   /**

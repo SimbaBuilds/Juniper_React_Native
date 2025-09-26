@@ -240,7 +240,10 @@ class BackgroundApiModule: RCTEventEmitter {
 extension BackgroundApiModule: URLSessionDelegate, URLSessionDataDelegate {
 
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        guard let requestId = dataTask.taskDescription else { return }
+        guard let requestId = dataTask.taskDescription else {
+            print("⚠️ BackgroundApiModule: Received data but no requestId in task description")
+            return
+        }
 
         print("📊 BackgroundApiModule: Receiving data for request \(requestId), bytes: \(data.count)")
         NSLog("📊 BackgroundApiModule: Receiving data for request \(requestId), bytes: \(data.count)")
@@ -248,6 +251,9 @@ extension BackgroundApiModule: URLSessionDelegate, URLSessionDataDelegate {
         if let mutableData = taskData[requestId] {
             mutableData.append(data)
             print("📊 BackgroundApiModule: Total accumulated data: \(mutableData.length) bytes")
+            NSLog("📊 BackgroundApiModule: Total accumulated data: \(mutableData.length) bytes")
+        } else {
+            print("⚠️ BackgroundApiModule: No taskData entry for request \(requestId)")
         }
 
         // Update progress if needed
@@ -258,8 +264,13 @@ extension BackgroundApiModule: URLSessionDelegate, URLSessionDataDelegate {
         ])
     }
 
-    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didCompleteWithError error: Error?) {
-        guard let requestId = dataTask.taskDescription else { return }
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        guard let dataTask = task as? URLSessionDataTask,
+              let requestId = dataTask.taskDescription else {
+            print("⚠️ BackgroundApiModule: Task completed but no requestId in task description")
+            NSLog("⚠️ BackgroundApiModule: Task completed but no requestId in task description")
+            return
+        }
 
         print("🏁 BackgroundApiModule: Request \(requestId) completed")
         NSLog("🏁 BackgroundApiModule: Request \(requestId) completed")
@@ -287,6 +298,13 @@ extension BackgroundApiModule: URLSessionDelegate, URLSessionDataDelegate {
         } else {
             print("✅ BackgroundApiModule: Request \(requestId) completed successfully with \(accumulatedData?.count ?? 0) bytes")
             NSLog("✅ BackgroundApiModule: Request \(requestId) completed successfully with \(accumulatedData?.count ?? 0) bytes")
+
+            // Log the actual response data for debugging
+            if let data = accumulatedData, let dataString = String(data: data, encoding: .utf8) {
+                print("📦 BackgroundApiModule: Response data: \(dataString.prefix(200))...")
+                NSLog("📦 BackgroundApiModule: Response data received")
+            }
+
             // Store successful response with accumulated data
             let response = BackgroundApiResponse(
                 requestId: requestId,
@@ -297,11 +315,24 @@ extension BackgroundApiModule: URLSessionDelegate, URLSessionDataDelegate {
             )
             completedRequests[requestId] = response
 
-            // Notify React Native of completion
-            sendEventToReactNative(name: "BackgroundApiComplete", body: [
+            // Notify React Native of completion with the actual data
+            var eventBody: [String: Any] = [
                 "requestId": requestId,
                 "dataSize": accumulatedData?.count ?? 0
-            ])
+            ]
+
+            // Include the actual response data in the event
+            if let data = accumulatedData {
+                if let dataString = String(data: data, encoding: .utf8) {
+                    eventBody["data"] = dataString
+                } else {
+                    eventBody["data"] = data.base64EncodedString()
+                }
+            }
+
+            sendEventToReactNative(name: "BackgroundApiComplete", body: eventBody)
+            print("📨 BackgroundApiModule: Sent BackgroundApiComplete event to React Native")
+            NSLog("📨 BackgroundApiModule: Sent BackgroundApiComplete event to React Native")
         }
 
         // Clean up
