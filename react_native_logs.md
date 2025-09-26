@@ -1,208 +1,85 @@
- LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: Querying request status for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: No request record found for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_RESULT: Received status: null for requestId: 1758663242303-zpusnfs53
- LOG  ✅ API Response Success: 200 /api/chat
- LOG  📱 Android: API request completed successfully
- LOG  🔴 SERVER_API: ✅ Server response received
- LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
- LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
- LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: Querying request status for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
- LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
- LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
- LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: Querying request status for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
- LOG  API Response:
- {"integration_in_progress": false, "request_id": "1758663242303-zpusnfs53", "response": "You've reached your monthly limit of 40 requests on the free tier. To continue using Juniper, you can manage your account and upgrade at https://juniperassistant.com.", "settings_updated": false, "timestamp": 1758663258}
- LOG  🔍 RN_BRIDGE_DEBUG: ========== API CALL COMPLETED ==========
- LOG  🔍 RN_BRIDGE_DEBUG: API call duration: 15720.82123196125 ms
- LOG  🔍 RN_BRIDGE_DEBUG: Response received at: 1758663257906
- LOG  🔍 RN_BRIDGE_DEBUG: Response data: {
-  "response": "You've reached your monthly limit of 40 requests on the free tier. To continue using Juniper, you can manage your account and upgrade at https://juniperassistant.com.",
-  "timestamp": 1758663258,
-  "settings_updated": false,
-  "integration_in_progress": false,
-  "request_id": "1758663242303-zpusnfs53"
+ LOG  🔄 TextChatInput: handleSend called {"hasImage": false, "hasMessage": true, "isSending": false, "platform": "ios"}
+ LOG  🔄 TextChatInput: Sending message {"hasImageUrl": false, "messageLength": 2}
+ LOG  📷 Sending message: {"imageUrl": undefined, "text": "Hi"}
+ LOG  📝 TEXT_INPUT: ========== TEXT MESSAGE PROCESSING ==========
+ LOG  📝 TEXT_INPUT: Processing text message: Hi
+ LOG  📝 TEXT_INPUT: Current voice settings: {
+  "deepgramEnabled": true,
+  "baseLanguageModel": "claude-sonnet-4-20250514",
+  "generalInstructions": "",
+  "selectedWakeWord": "Juniper",
+  "wakeWordSensitivity": 0.2,
+  "wakeWordDetectionEnabled": false,
+  "selectedDeepgramVoice": "aura-2-pandora-en",
+  "timezone": "UTC",
+  "wakeWord": "Juniper"
 }
- LOG  🟠 VOICE_CONTEXT: Received API response
- LOG  🔄 VOICE_CONTEXT: Response settings_updated flag: false
- LOG  ⚙️ VOICE_CONTEXT: No settings update flag - skipping settings refresh
- LOG  📱 Sending API response back to native: {"requestId": "5c63a545-697d-4f99-a453-edf55783f953", "responseLength": 166}
- LOG  📱 Platform: android
- LOG  📱 VoiceModule available: true
- LOG  📱 handleApiResponse method available: true
- LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
- LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
- LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: Querying request status for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
- LOG  💬 Response update: You've reached your monthly limit of 40 requests on the free tier. To continue using Juniper, you can manage your account and upgrade at https://juniperassistant.com.
- LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
- LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
- LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: Querying request status for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
- LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
- LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
- LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: Querying request status for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
  LOG  🕐 Setting auto-refresh timer for 10 minutes
- LOG  ✅ VOICE_RESPONSE: Setting request status to completed after voice response
- LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
- LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1758663242303-zpusnfs53
+ LOG  ✅ TextChatInput: Message sent successfully
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  📝 TEXT_INPUT: ========== SENDING TO API ==========
+ LOG  📝 TEXT_INPUT: Sending message to API
+ LOG  🌐 useServerApi: useBackgroundApi = true
+ LOG  🌐 useServerApi: backgroundApiService.isBackgroundApiAvailable() = true
+ LOG  🔴 SERVER_API: sendChatRequest called
+ LOG  🔴 SERVER_API: Message: "Hi"
+ LOG  🔴 SERVER_API: Generated request ID: 1758910005069-e5zsnzrzf
+ LOG  🔴 SERVER_API_CALLBACK: Calling onRequestStart callback with requestId: 1758910005069-e5zsnzrzf
+ LOG  🔄 CALLBACK_START: onRequestStart callback called with requestId: 1758910005069-e5zsnzrzf
+ LOG  🔄 DB_CREATE_START: Starting database record creation for user: 56a2c117-6486-4ca5-a57d-6c2e877e7083
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
+ LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
+ LOG  🔄 DB_CREATE_SUCCESS: Database request record created: 92645b01-347f-40e2-a595-cd7d4b994e34 with image URL: false
+ LOG  🔄 SET_REQUEST_ID: Setting currentRequestId to trigger polling: 1758910005069-e5zsnzrzf
+ LOG  🔄 SET_REQUEST_ID_COMPLETE: currentRequestId set, polling should start now
+ LOG  🔄 CALLBACK_END: onRequestStart callback completed
+ LOG  🔴 SERVER_API_CALLBACK_DONE: onRequestStart callback completed for requestId: 1758910005069-e5zsnzrzf
+ LOG  🌐 SERVER_API: useBackgroundApi = true
+ LOG  🌐 SERVER_API: Platform.OS = ios
+ LOG  🌐 SERVER_API: backgroundApiService.isBackgroundApiAvailable() = true
+ LOG  🌐 SERVER_API: ✅ Routing request through background API (simplified)
+ LOG  🌐 SERVER_API: Using background API for iOS request 1758910005069-e5zsnzrzf
+ LOG  🌐 BackgroundApiService: Sending background request 1758910005069-e5zsnzrzf
+ LOG  🌐 BackgroundApiService: URL: https://juniper-python-backend.onrender.com/api/chat
+ LOG  🌐 BackgroundApiService: Method: POST
+ LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1758910005069-e5zsnzrzf
+ LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1758910005069-e5zsnzrzf
  LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
- LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: Querying request status for requestId: 1758663242303-zpusnfs53
+ LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1758910005069-e5zsnzrzf
+ LOG  🔍 DB_QUERY: Querying request status for requestId: 1758910005069-e5zsnzrzf
  LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
- LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1758663242303-zpusnfs53
+ LOG  🌐 BackgroundApiService: Background request started successfully {"requestId": "1758910005069-e5zsnzrzf", "success": true}
+ LOG  🌐 SERVER_API: Background request started, request will continue in background
+ LOG  API Response:
+ {"integration_in_progress": false, "request_id": "1758910005069-e5zsnzrzf", "response": "Request started in background. Processing will continue even if app is backgrounded.", "timestamp": 1758910005230}
+ LOG  📝 TEXT_INPUT: ========== API RESPONSE RECEIVED ==========
+ LOG  📝 TEXT_INPUT: API call duration: 162 ms
+ LOG  📝 TEXT_INPUT: Received API response
+ LOG  📝 TEXT_INPUT: Response settings_updated flag: undefined
+ LOG  📝 TEXT_INPUT: Response integration_in_progress flag: false
+ LOG  ⚙️ TEXT_INPUT: No settings update flag - skipping settings refresh
+ LOG  🔗 TEXT_INPUT: No integration build in progress flag - skipping polling
+ LOG  📝 TEXT_INPUT: Response added to chat (no TTS in text mode)
+ LOG  🔄 COMPLETION: Clearing request ID to stop polling
+ LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1758910005069-e5zsnzrzf
  LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
- LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_START: Starting polling for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_INITIAL: Starting initial poll
- LOG  📊 POLLING_HOOK_POLL: Polling status for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: Querying request status for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_INTERVAL: Setting up polling interval: 5000 ms
- LOG  📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_CLEANUP_DONE: Polling interval cleared in cleanup
  LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
  LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
- LOG  📱 Native handleApiResponse result: true
- LOG  [ConversationSyncService] Syncing 2 messages to native
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@376135
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: RESPONDING(message=You've reached your monthly limit of 40 requests on the free tier. To continue using Juniper, you can manage your account and upgrade at https://juniperassistant.com.)
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@376135
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: RESPONDING(message=You've reached your monthly limit of 40 requests on the free tier. To continue using Juniper, you can manage your account and upgrade at https://juniperassistant.com.)
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: RESPONDING(message=You've reached your monthly limit of 40 requests on the free tier. To continue using Juniper, you can manage your account and upgrade at https://juniperassistant.com.)
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: RESPONDING(message=You've reached your monthly limit of 40 requests on the free tier. To continue using Juniper, you can manage your account and upgrade at https://juniperassistant.com.)
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔴 VoiceAssistant: isSpeaking changed: true
- LOG  🔴 VoiceAssistant: voiceState: RESPONDING(message=You've reached your monthly limit of 40 requests on the free tier. To continue using Juniper, you can manage your account and upgrade at https://juniperassistant.com.)
- LOG  🔴 VoiceAssistant: typeof voiceState: string
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
- LOG  🔄 VOICE_CONTEXT: Context voiceState: RESPONDING(message=You've reached your monthly limit of 40 requests on the free tier. To continue using Juniper, you can manage your account and upgrade at https://juniperassistant.com.)
- LOG  🔄 VOICE_CONTEXT: Context isListening: false
- LOG  🔄 VOICE_CONTEXT: Context isSpeaking: true
- LOG  🔄 VOICE_CONTEXT: Context isError: false
- LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  🕐 Setting auto-refresh timer for 10 minutes
  LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
  LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: RESPONDING(message=You've reached your monthly limit of 40 requests on the free tier. To continue using Juniper, you can manage your account and upgrade at https://juniperassistant.com.)
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: RESPONDING(message=You've reached your monthly limit of 40 requests on the free tier. To continue using Juniper, you can manage your account and upgrade at https://juniperassistant.com.)
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  ✅ [ConversationSyncService] History synced to native successfully
- LOG  ✅ VOICE_BRIDGE: History synced to native after API response
- LOG  ✅ VOICE_BRIDGE: Setting request status to completed after successful API response
- LOG  🔍 DB_QUERY: No request record found for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_RESULT: Received status: null for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: No request record found for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_RESULT: Received status: null for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: No request record found for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_RESULT: Received status: null for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: No request record found for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_RESULT: Received status: null for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: No request record found for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_RESULT: Received status: null for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: No request record found for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_RESULT: Received status: null for requestId: 1758663242303-zpusnfs53
- LOG  🔍 DB_QUERY: No request record found for requestId: 1758663242303-zpusnfs53
- LOG  📊 POLLING_HOOK_RESULT: Received status: null for requestId: 1758663242303-zpusnfs53
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: RESPONDING(message=You've reached your monthly limit of 40 requests on the free tier. To continue using Juniper, you can manage your account and upgrade at https://juniperassistant.com.)
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: RESPONDING(message=You've reached your monthly limit of 40 requests on the free tier. To continue using Juniper, you can manage your account and upgrade at https://juniperassistant.com.)
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔴 VoiceAssistant: isSpeaking changed: false
- LOG  🔴 VoiceAssistant: voiceState: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f
- LOG  🔴 VoiceAssistant: typeof voiceState: string
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
- LOG  🔄 VOICE_CONTEXT: Context voiceState: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f
- LOG  🔄 VOICE_CONTEXT: Context isListening: true
- LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
- LOG  🔄 VOICE_CONTEXT: Context isError: false
- LOG  🔄 VOICE_CONTEXT: ====================================================
+ LOG  [ConversationSyncService] Skipping native sync - not available
+ LOG  ✅ TEXT_INPUT: History synced to native after API response
+ LOG  🔍 DB_QUERY: Found request record: {"created_at": "2025-09-26T18:06:45.07+00:00", "id": "92645b01-347f-40e2-a595-cd7d4b994e34", "requestId": "1758910005069-e5zsnzrzf", "status": "pending", "total_turns": 0, "updated_at": "2025-09-26T18:06:45.07+00:00", "user_message": ""}
+ LOG  🔍 DB_QUERY: Returning status: pending for requestId: 1758910005069-e5zsnzrzf
+ LOG  📊 POLLING_HOOK_RESULT: Received status: pending for requestId: 1758910005069-e5zsnzrzf
+ LOG  📊 POLLING_HOOK_CALLBACK: Calling onStatusChange with status: pending
+ LOG  📊 REQUEST_STATUS: Status changed to: pending
  LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
  LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: RESPONDING(message=I didn't hear anything. Please try saying the wake word again when you're ready.)
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: RESPONDING(message=I didn't hear anything. Please try saying the wake word again when you're ready.)
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: RESPONDING(message=I didn't hear anything. Please try saying the wake word again when you're ready.)
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: RESPONDING(message=I didn't hear anything. Please try saying the wake word again when you're ready.)
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔴 VoiceAssistant: isSpeaking changed: true
- LOG  🔴 VoiceAssistant: voiceState: RESPONDING(message=I didn't hear anything. Please try saying the wake word again when you're ready.)
- LOG  🔴 VoiceAssistant: typeof voiceState: string
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
- LOG  🔄 VOICE_CONTEXT: Context voiceState: RESPONDING(message=I didn't hear anything. Please try saying the wake word again when you're ready.)
- LOG  🔄 VOICE_CONTEXT: Context isListening: false
- LOG  🔄 VOICE_CONTEXT: Context isSpeaking: true
- LOG  🔄 VOICE_CONTEXT: Context isError: false
- LOG  🔄 VOICE_CONTEXT: ====================================================
  LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
  LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: RESPONDING(message=I didn't hear anything. Please try saying the wake word again when you're ready.)
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: RESPONDING(message=I didn't hear anything. Please try saying the wake word again when you're ready.)
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: RESPONDING(message=I didn't hear anything. Please try saying the wake word again when you're ready.)
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: RESPONDING(message=I didn't hear anything. Please try saying the wake word again when you're ready.)
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
- LOG  🔴 VoiceAssistant: isSpeaking changed: false
- LOG  🔴 VoiceAssistant: voiceState: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
- LOG  🔴 VoiceAssistant: typeof voiceState: string
- LOG  🔄 VOICE_STATE_HOOK: ========== HOOK STATE CHANGE DETECTED ==========
- LOG  🔄 VOICE_CONTEXT: ========== CONTEXT STATE CHANGE ==========
- LOG  🔄 VOICE_CONTEXT: Context voiceState: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
- LOG  🔄 VOICE_CONTEXT: Context isListening: false
- LOG  🔄 VOICE_CONTEXT: Context isSpeaking: false
- LOG  🔄 VOICE_CONTEXT: Context isError: false
- LOG  🔄 VOICE_CONTEXT: ====================================================
- LOG  📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId: null
- LOG  📊 POLLING_HOOK_CLEAR: No requestId, clearing status and stopping polling
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - Previous state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
- LOG  🔄 VOICE_STATE_HOOK: Functional setState - New state: com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c
- LOG  🔄 VOICE_STATE_HOOK: setVoiceState called - React should update now
+ LOG  📊 BackgroundApiService: Progress update for request 1758910005069-e5zsnzrzf

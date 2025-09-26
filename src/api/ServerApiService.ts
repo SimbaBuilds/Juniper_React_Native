@@ -2,6 +2,8 @@ import { ChatMessage } from '../voice/VoiceContext';
 import SettingsService from '../app-config/AppConfigService';
 import api from './api';
 import { supabase } from '../supabase/supabase';
+import BackgroundApiService from './BackgroundApiService';
+import { Platform } from 'react-native';
 
 // Helper function to convert camelCase to snake_case
 function toSnakeCase(str: string): string {
@@ -70,6 +72,7 @@ class ServerApiService {
   private requestQueue: Promise<any> = Promise.resolve();
   private currentRequestController: AbortController | null = null;
   private currentRequestId: string | null = null;
+  private backgroundApiService: BackgroundApiService;
 
   constructor(config?: Partial<ServerApiConfig>) {
     this.config = {
@@ -77,7 +80,10 @@ class ServerApiService {
       ...config
     };
     console.log('ServerApiService initialized with config:', this.config);
-    
+
+    // Initialize background API service
+    this.backgroundApiService = BackgroundApiService.getInstance();
+
     // Load configuration from settings module
     this.loadConfig();
   }
@@ -166,6 +172,183 @@ class ServerApiService {
   }
 
   /**
+   * Send chat request using background API (iOS only)
+   */
+  private async sendBackgroundChatRequest(
+    message: string,
+    history: ChatMessage[],
+    requestId: string,
+    integrationInProgress?: boolean,
+    imageUrl?: string
+  ): Promise<ChatResponse> {
+    console.log('🌐 SERVER_API: Using background API for iOS request', requestId);
+
+    const jsonData: ChatRequest = {
+      message,
+      timestamp: Date.now(),
+      history: history.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp,
+        type: 'text'
+      })),
+      request_id: requestId,
+      ...(integrationInProgress && { integration_in_progress: integrationInProgress }),
+      ...(imageUrl && { image_url: imageUrl })
+    };
+
+    // For background API, we pass the JSON directly to the native module
+    // The native module will handle creating the multipart/form-data format
+    const bodyString = JSON.stringify(jsonData);
+
+    const url = `${this.config.baseUrl}${this.config.apiEndpoint}`;
+
+    // Get the auth token from Supabase
+    const { data: { session } } = await supabase.auth.getSession();
+    const authToken = session?.access_token;
+
+    if (!authToken) {
+      throw new Error('No authentication token available for background request');
+    }
+
+    const headers = {
+      'Authorization': `Bearer ${authToken}`,
+      'Accept': 'application/json, text/plain, */*'
+    };
+
+    // Start background request
+    await this.backgroundApiService.sendBackgroundRequest(
+      requestId,
+      url,
+      'POST',
+      headers,
+      bodyString
+    );
+
+    console.log('🌐 SERVER_API: Background request started, waiting for completion...');
+
+    // Create a promise that will resolve when the background request completes
+    return new Promise<ChatResponse>((resolve, reject) => {
+      let checkAttempts = 0;
+      const maxAttempts = 600; // 10 minutes with 1 second intervals
+
+      // Set up event listener for completion
+      const removeListener = this.backgroundApiService.addListener('complete', requestId, (data: any) => {
+        console.log('🌐 SERVER_API: Received BackgroundApiComplete event', data);
+
+        // Clear the interval if it's running
+        if (checkInterval) {
+          clearInterval(checkInterval);
+        }
+
+        // Parse and return the response
+        try {
+          const responseData = typeof data.data === 'string' ? JSON.parse(data.data) : data;
+          const response: ChatResponse = {
+            response: responseData.response || responseData.message || '',
+            timestamp: Date.now(),
+            request_id: requestId,
+            settings_updated: responseData.settings_updated,
+            integration_in_progress: responseData.integration_in_progress,
+            additional_data: responseData.additional_data
+          };
+
+          removeListener();
+          resolve(response);
+        } catch (error) {
+          console.error('❌ SERVER_API: Error parsing background response:', error);
+          removeListener();
+          reject(new Error('Failed to parse background response'));
+        }
+      });
+
+      // Also set up error listener
+      const removeErrorListener = this.backgroundApiService.addListener('error', requestId, (data: any) => {
+        console.error('❌ SERVER_API: Background request failed:', data.error);
+        removeListener();
+        removeErrorListener();
+        if (checkInterval) {
+          clearInterval(checkInterval);
+        }
+        reject(new Error(data.error || 'Background request failed'));
+      });
+
+      // Poll for completed request as a fallback
+      const checkInterval = setInterval(async () => {
+        checkAttempts++;
+
+        if (checkAttempts > maxAttempts) {
+          clearInterval(checkInterval);
+          removeListener();
+          removeErrorListener();
+          reject(new Error('Background request timeout after 10 minutes'));
+          return;
+        }
+
+        try {
+          const result = await this.checkCompletedBackgroundRequest(requestId);
+          if (result) {
+            console.log('🌐 SERVER_API: Found completed request via polling');
+            clearInterval(checkInterval);
+            removeListener();
+            removeErrorListener();
+            resolve(result);
+          }
+        } catch (error) {
+          // Continue polling unless it's a critical error
+          console.log('🌐 SERVER_API: Polling attempt', checkAttempts, 'no result yet');
+        }
+      }, 1000); // Check every second
+    });
+  }
+
+  /**
+   * Check for completed background requests and return result if available
+   */
+  async checkCompletedBackgroundRequest(requestId: string): Promise<ChatResponse | null> {
+    if (!this.backgroundApiService.isBackgroundApiAvailable()) {
+      return null;
+    }
+
+    try {
+      const result = await this.backgroundApiService.getCompletedRequest(requestId);
+
+      if (result.success && !result.pending && result.data) {
+        console.log('✅ SERVER_API: Found completed background request', requestId);
+
+        // Parse the JSON response
+        try {
+          const responseData = JSON.parse(result.data);
+          return {
+            response: responseData.response || responseData.message || 'Background request completed',
+            timestamp: Date.now(),
+            request_id: requestId,
+            settings_updated: responseData.settings_updated,
+            integration_in_progress: responseData.integration_in_progress,
+            additional_data: responseData.additional_data
+          };
+        } catch (parseError) {
+          console.error('❌ SERVER_API: Error parsing background response:', parseError);
+          return {
+            response: 'Background request completed but response could not be parsed',
+            timestamp: Date.now(),
+            request_id: requestId
+          };
+        }
+      } else if (result.error) {
+        console.error('❌ SERVER_API: Background request failed:', result.error);
+        throw new Error(`Background request failed: ${result.error}`);
+      }
+
+      // Request still pending or not found
+      return null;
+    } catch (error) {
+      console.error('❌ SERVER_API: Error checking background request:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Insert cancellation request into database
    */
   private async insertCancellationRequest(requestId: string): Promise<void> {
@@ -206,6 +389,7 @@ class ServerApiService {
     onRequestStart?: (requestId: string) => void | Promise<void>,
     integrationInProgress?: boolean,
     imageUrl?: string,
+    useBackgroundApi: boolean = false
   ): Promise<ChatResponse> {
     // Queue requests to prevent concurrent auth issues
     // Use .catch() to prevent cancelled requests from breaking the queue
@@ -228,6 +412,34 @@ class ServerApiService {
         console.log('🔴 SERVER_API_CALLBACK: Calling onRequestStart callback with requestId:', this.currentRequestId);
         await onRequestStart(this.currentRequestId);
         console.log('🔴 SERVER_API_CALLBACK_DONE: onRequestStart callback completed for requestId:', this.currentRequestId);
+      }
+
+      // Check if we should use background API (iOS only, for long-running requests)
+      console.log('🌐 SERVER_API: useBackgroundApi =', useBackgroundApi);
+      console.log('🌐 SERVER_API: Platform.OS =', Platform.OS);
+      console.log('🌐 SERVER_API: backgroundApiService.isBackgroundApiAvailable() =', this.backgroundApiService.isBackgroundApiAvailable());
+
+      if (useBackgroundApi && Platform.OS === 'ios') {
+        console.log('🌐 SERVER_API: ✅ Routing request through background API (simplified)');
+
+        try {
+          const backgroundResponse = await this.sendBackgroundChatRequest(
+            message,
+            history,
+            this.currentRequestId,
+            integrationInProgress,
+            imageUrl
+          );
+
+          // Clear the controller and request ID since background request is started
+          this.currentRequestController = null;
+          this.currentRequestId = null;
+
+          return backgroundResponse;
+        } catch (error) {
+          console.error('❌ SERVER_API: Background API failed, falling back to regular request:', error);
+          // Fall through to regular request handling
+        }
       }
 
       try {

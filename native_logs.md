@@ -41,3 +41,15 @@
 09-23 16:34:38.545 I/ReactNativeJS(25787): '🔄 VOICE_CONTEXT: Context voiceState:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c'
 09-23 16:34:38.557 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - Previous state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c'
 09-23 16:34:38.558 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - New state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c'
+default	13:06:30.917005-0500	MobileJarvisNative	🔧 BackgroundApiModule: ✅ Simplified URLSession configured with long timeout
+default	13:06:30.917181-0500	MobileJarvisNative	🔧 BackgroundApiModule: ✅ Simplified URLSession configured with long timeout
+default	13:06:45.228245-0500	MobileJarvisNative	🌐 BackgroundApiModule: Starting background request 1758910005069-e5zsnzrzf
+default	13:06:45.228296-0500	MobileJarvisNative	🌐 BackgroundApiModule: URL: https://juniper-python-backend.onrender.com/api/chat
+default	13:06:45.228271-0500	MobileJarvisNative	🌐 BackgroundApiModule: Starting background request 1758910005069-e5zsnzrzf
+default	13:06:45.228344-0500	MobileJarvisNative	🌐 BackgroundApiModule: Method: POST
+default	13:06:45.228321-0500	MobileJarvisNative	🌐 BackgroundApiModule: URL: https://juniper-python-backend.onrender.com/api/chat
+default	13:06:45.228372-0500	MobileJarvisNative	🌐 BackgroundApiModule: Method: POST
+default	13:06:45.229923-0500	MobileJarvisNative	 🌐 BackgroundApiModule: Background task started for request 1758910005069-e5zsnzrzf
+default	13:06:45.229899-0500	MobileJarvisNative	 🌐 BackgroundApiModule: Background task started for request 1758910005069-e5zsnzrzf
+default	13:06:51.728502-0500	MobileJarvisNative	📊 BackgroundApiModule: Receiving data for request 1758910005069-e5zsnzrzf, bytes: 297
+default	13:06:51.728558-0500	MobileJarvisNative	📊 BackgroundApiModule: Receiving data for request 1758910005069-e5zsnzrzf, bytes: 297

@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Platform, NativeModules } from 'react-native';
+import { Platform, NativeModules, AppState } from 'react-native';
 import ServerApiService, { ServerApiConfig, ChatResponse } from './ServerApiService';
 import { ChatMessage } from '../voice/VoiceContext';
+import BackgroundApiService from './BackgroundApiService';
 
 const { VoiceModule } = NativeModules;
 
@@ -36,6 +37,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
   const [error, setError] = useState<Error | null>(null);
   const [response, setResponse] = useState<ChatResponse | null>(null);
   const [isRequestInProgress, setIsRequestInProgress] = useState(false);
+  const [backgroundApiService] = useState(() => BackgroundApiService.getInstance());
 
   // Initialize with custom config if provided
   useEffect(() => {
@@ -43,6 +45,56 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
       ServerApiService.updateConfig(options.initialConfig);
     }
   }, []);
+
+  // Check for completed background requests when app comes to foreground
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: string) => {
+      if (nextAppState === 'active' && Platform.OS === 'ios' && backgroundApiService.isBackgroundApiAvailable()) {
+        try {
+          // Check if there are any pending background requests
+          const pendingRequests = await backgroundApiService.getPendingRequests();
+          if (pendingRequests.length > 0) {
+            console.log('🔄 useServerApi: Checking for completed background requests:', pendingRequests);
+
+            const completedResults = await backgroundApiService.pollForCompletedRequests(pendingRequests);
+
+            // Handle completed requests
+            for (const [requestId, result] of completedResults) {
+              console.log('✅ useServerApi: Found completed background request:', requestId);
+
+              try {
+                const chatResponse = await ServerApiService.checkCompletedBackgroundRequest(requestId);
+                if (chatResponse) {
+                  setResponse(chatResponse);
+                  setIsLoading(false);
+                  setIsRequestInProgress(false);
+
+                  if (options.onResponse) {
+                    options.onResponse(chatResponse);
+                  }
+                }
+              } catch (error) {
+                console.error('❌ useServerApi: Error processing completed background request:', error);
+                const errorObj = error instanceof Error ? error : new Error(String(error));
+                setError(errorObj);
+                setIsLoading(false);
+                setIsRequestInProgress(false);
+
+                if (options.onError) {
+                  options.onError(errorObj);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('❌ useServerApi: Error checking background requests:', error);
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [backgroundApiService, options.onResponse, options.onError]);
 
   /**
    * Send message to server API
@@ -60,12 +112,20 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
     setIsRequestInProgress(true);
 
     try {
+      // Determine if we should use background API
+      // Force use background API on iOS for all requests (simplified approach)
+      const useBackgroundApi = Platform.OS === 'ios';
+
+      console.log('🌐 useServerApi: useBackgroundApi =', useBackgroundApi);
+      console.log('🌐 useServerApi: backgroundApiService.isBackgroundApiAvailable() =', backgroundApiService.isBackgroundApiAvailable());
+
       const result = await ServerApiService.sendChatRequest(
-        message, 
-        history, 
+        message,
+        history,
         onRequestStart,
         integrationInProgress,
         imageUrl,
+        useBackgroundApi
       );
       
       setResponse(result);
