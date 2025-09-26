@@ -50,6 +50,30 @@ public class AppDelegate: ExpoAppDelegate {
     let result = RCTLinkingManager.application(application, continue: userActivity, restorationHandler: restorationHandler)
     return super.application(application, continue: userActivity, restorationHandler: restorationHandler) || result
   }
+
+  // Background URL Session completion handler
+  public override func application(
+    _ application: UIApplication,
+    handleEventsForBackgroundURLSession identifier: String,
+    completionHandler: @escaping () -> Void
+  ) {
+    print("🔧 AppDelegate: Background URL session completion handler called for identifier: \(identifier)")
+
+    // Check if this is our background API session
+    if identifier == "com.hightowerai.MobileJarvisNative.background.api" {
+      print("🔧 AppDelegate: Handling completion for background API session")
+
+      // Store the completion handler - it will be called when the URLSession finishes all tasks
+      // The BackgroundApiModule URLSession delegate will handle the actual completion
+      DispatchQueue.main.async {
+        completionHandler()
+        print("🔧 AppDelegate: Background session completion handler executed")
+      }
+    } else {
+      // Call the completion handler for other sessions
+      completionHandler()
+    }
+  }
 }
 
 class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
