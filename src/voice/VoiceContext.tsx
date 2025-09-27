@@ -63,6 +63,8 @@ const VoiceContext = createContext<VoiceContextValue>({
   continuePreviousChat: () => {},
   cancelRequest: async () => false,
   isRequestInProgress: false,
+  setCurrentRequestId: () => {},
+  setRequestStatus: () => {},
   voiceSettings: {},
   settingsLoading: false,
   updateVoiceSettings: async () => {},
@@ -145,8 +147,15 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     requestId: currentRequestId,
     onStatusChange: (status) => {
       console.log('📊 REQUEST_STATUS: Status changed to:', status);
-      setRequestStatus(status);
-      
+
+      // For failed/cancelled states, set to 'completed' to hide status indicator
+      if (status === 'failed' || status === 'cancelled') {
+        console.log('📊 REQUEST_STATUS: Setting failed/cancelled status to completed to hide indicator');
+        setRequestStatus('completed');
+      } else {
+        setRequestStatus(status);
+      }
+
       // Clear request ID when request completes, fails, or is cancelled
       if (status === 'completed' || status === 'failed' || status === 'cancelled') {
         console.log('📊 REQUEST_STATUS: Request reached final state, clearing request ID');
@@ -158,7 +167,15 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
   });
 
-  
+  // Clear requestStatus when currentRequestId is cleared
+  useEffect(() => {
+    if (!currentRequestId && requestStatus) {
+      console.log('📊 REQUEST_STATUS: Clearing status after request ID cleared');
+      setRequestStatus(null);
+    }
+  }, [currentRequestId, requestStatus]);
+
+
   // Voice service instance
   const voiceService = useMemo(() => VoiceService.getInstance(), []);
   
@@ -450,11 +467,20 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           content: event.response,
           timestamp: Date.now()
         }]);
-        
-        // Mark request as completed after successful voice response
-        console.log('✅ VOICE_RESPONSE: Setting request status to completed after voice response');
-        setRequestStatus('completed');
-        // Clear current request ID to stop polling
+
+        // Mark response as fetched since it's now displayed in UI
+        if (currentRequestId) {
+          DatabaseService.markResponseAsFetched(currentRequestId)
+            .then(() => {
+              console.log('✅ VOICE_RESPONSE: Response marked as fetched for requestId:', currentRequestId);
+            })
+            .catch((error) => {
+              console.error('❌ VOICE_RESPONSE: Error marking response as fetched:', error);
+            });
+        }
+
+        // Clear current request ID to stop polling (backend handles status updates)
+        console.log('✅ VOICE_RESPONSE: Clearing request ID after voice response');
         setCurrentRequestId(null);
       }
     });
@@ -570,34 +596,39 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               } catch (syncError) {
                 console.warn('⚠️ VOICE_BRIDGE: Failed to sync history to native:', syncError);
               }
-              
+
+              // Mark response as fetched since it's now displayed in UI
+              if (currentRequestId) {
+                DatabaseService.markResponseAsFetched(currentRequestId)
+                  .then(() => {
+                    console.log('✅ VOICE_BRIDGE: Response marked as fetched for requestId:', currentRequestId);
+                  })
+                  .catch((error) => {
+                    console.error('❌ VOICE_BRIDGE: Error marking response as fetched:', error);
+                  });
+              }
+
               // Clean up request mapping since request completed successfully
               if (currentRequestId) {
                 requestMapping.removeMapping(currentRequestId);
               }
-              
-              // Mark request as completed after successful API response (voice mode)
-              console.log('✅ VOICE_BRIDGE: Setting request status to completed after successful API response');
-              setRequestStatus('completed');
+
+              // Clear request ID after successful API response (backend handles status updates)
+              console.log('✅ VOICE_BRIDGE: Clearing request ID after successful API response');
               setCurrentRequestId(null);
               
             } catch (error) {
               console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
 
-              // Check for network error and update request status
+              // Handle network errors gracefully - don't mark request as failed
               if (error instanceof Error && error.message === 'Network Error' && localRequestId) {
                 try {
-                  await DatabaseService.updateRequestStatus(
-                    localRequestId,
-                    'failed',
-                    undefined,  // metadata
-                    undefined,  // total_turns
-                    undefined,  // user_message
-                    false       // network_success = false
-                  );
-                  console.log('🌐 VOICE_CONTEXT: Network error - updated request network_success to false for requestId:', localRequestId);
+                  // Only update network_success, keep status unchanged so polling can continue
+                  await DatabaseService.updateRequestNetworkSuccess(localRequestId, false);
+                  console.log('🌐 VOICE_CONTEXT: Network error - updated network_success to false, keeping status unchanged for requestId:', localRequestId);
+                  console.log('🔄 VOICE_CONTEXT: Request polling will continue - backend may still complete successfully');
                 } catch (updateError) {
-                  console.error('🌐 VOICE_CONTEXT: Failed to update network_success status:', updateError);
+                  console.error('🌐 VOICE_CONTEXT: Failed to update network_success:', updateError);
                 }
               }
 
@@ -607,20 +638,30 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               }
 
               if (!isCancellationError(error)) {
-                const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-                // Send error response back to native
-                try {
-                  await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
-                } catch (responseError) {
-                  console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
+                // For network errors, don't send error response to native - let polling continue
+                if (error instanceof Error && error.message === 'Network Error') {
+                  console.log('🟠 VOICE_CONTEXT: Network error - not sending error to native, polling will continue');
+                } else {
+                  const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                  // Send error response back to native
+                  try {
+                    await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
+                  } catch (responseError) {
+                    console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
+                  }
                 }
               } else {
                 console.log('🟠 VOICE_CONTEXT: Request was cancelled - not sending error to native');
               }
               
-              // Clear request ID after error
-              setCurrentRequestId(null);
-              setRequestStatus(null);
+              // Only clear request ID for non-network errors (let polling continue for network errors)
+              if (!(error instanceof Error && error.message === 'Network Error')) {
+                console.log('🟠 VOICE_CONTEXT: Clearing request ID after non-network error');
+                setCurrentRequestId(null);
+                setRequestStatus(null);
+              } else {
+                console.log('🟠 VOICE_CONTEXT: Network error - keeping request ID for continued polling');
+              }
             }
           }, 0);
           
@@ -972,6 +1013,17 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               console.log('🔗 TEXT_INPUT: No integration build in progress flag - skipping polling');
             }
             
+            // Check if response has already been fetched (e.g., by unfetched check)
+            if (localRequestId) {
+              const alreadyFetched = await DatabaseService.isResponseAlreadyFetched(localRequestId);
+              if (alreadyFetched) {
+                console.log('📝 TEXT_INPUT: Response already fetched by unfetched check, skipping duplicate processing');
+                console.log('🔄 COMPLETION: Clearing request ID to stop polling');
+                setCurrentRequestId(null);
+                return;
+              }
+            }
+            
             // Add assistant response to chat history
             const assistantMessage: ChatMessage = {
               role: 'assistant',
@@ -981,7 +1033,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
             
             setChatHistory(prevHistory => {
               const updatedHistoryWithResponse = [...prevHistory, assistantMessage];
-              
+
               // Sync updated history to native after API response
               setTimeout(async () => {
                 try {
@@ -991,55 +1043,70 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
                   console.warn('⚠️ TEXT_INPUT: Failed to sync history to native:', syncError);
                 }
               }, 0);
-              
+
               return updatedHistoryWithResponse;
             });
-            
+
+            // Mark response as fetched since it's now displayed in UI
+            if (localRequestId) {
+              DatabaseService.markResponseAsFetched(localRequestId)
+                .then(() => {
+                  console.log('✅ TEXT_INPUT: Response marked as fetched for requestId:', localRequestId);
+                })
+                .catch((error) => {
+                  console.error('❌ TEXT_INPUT: Error marking response as fetched:', error);
+                });
+            }
+
             // Note: No TTS playback because we're in text mode
             console.log('📝 TEXT_INPUT: Response added to chat (no TTS in text mode)');
-            
-            // Clear request ID after successful completion to stop polling
+
+            // Clear request ID after successful completion to stop polling (backend handles status updates)
             console.log('🔄 COMPLETION: Clearing request ID to stop polling');
             setCurrentRequestId(null);
-            setRequestStatus('completed');
             
           } catch (error) {
             console.error('📝 TEXT_INPUT: ❌ Error processing text message:', error);
 
-            // Check for network error and update request status
+            // Handle network errors gracefully - don't mark request as failed
             if (error instanceof Error && error.message === 'Network Error' && localRequestId) {
               try {
-                await DatabaseService.updateRequestStatus(
-                  localRequestId,
-                  'failed',
-                  undefined,  // metadata
-                  undefined,  // total_turns
-                  undefined,  // user_message
-                  false       // network_success = false
-                );
-                console.log('🌐 TEXT_INPUT: Network error - updated request network_success to false for requestId:', localRequestId);
+                // Only update network_success, keep status unchanged so polling can continue
+                await DatabaseService.updateRequestNetworkSuccess(localRequestId, false);
+                console.log('🌐 TEXT_INPUT: Network error - updated network_success to false, keeping status unchanged for requestId:', localRequestId);
+                console.log('🔄 TEXT_INPUT: Request polling will continue - backend may still complete successfully');
               } catch (updateError) {
-                console.error('🌐 TEXT_INPUT: Failed to update network_success status:', updateError);
+                console.error('🌐 TEXT_INPUT: Failed to update network_success:', updateError);
               }
             }
 
             // Don't show cancellation errors to user in chat
             if (!isCancellationError(error)) {
-              // Add error message to chat history only for non-cancellation errors
-              const errorMessage: ChatMessage = {
-                role: 'assistant',
-                content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-                timestamp: Date.now()
-              };
+              // For network errors, don't show error message - let polling continue
+              if (error instanceof Error && error.message === 'Network Error') {
+                console.log('📝 TEXT_INPUT: Network error - not showing error message, polling will continue');
+              } else {
+                // Add error message to chat history only for non-cancellation, non-network errors
+                const errorMessage: ChatMessage = {
+                  role: 'assistant',
+                  content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                  timestamp: Date.now()
+                };
 
-              setChatHistory(prevHistory => [...prevHistory, errorMessage]);
+                setChatHistory(prevHistory => [...prevHistory, errorMessage]);
+              }
             } else {
               console.log('📝 TEXT_INPUT: Request was cancelled - not showing error to user');
             }
 
-            // Clear request ID after error
-            setCurrentRequestId(null);
-            setRequestStatus(null);
+            // Only clear request ID for non-network errors (let polling continue for network errors)
+            if (!(error instanceof Error && error.message === 'Network Error')) {
+              console.log('📝 TEXT_INPUT: Clearing request ID after non-network error');
+              setCurrentRequestId(null);
+              setRequestStatus(null);
+            } else {
+              console.log('📝 TEXT_INPUT: Network error - keeping request ID for continued polling');
+            }
           }
         }, 0);
         
@@ -1109,7 +1176,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     integrationInProgress,
     currentRequestId,
     requestStatus,
-    
+    setCurrentRequestId,
+    setRequestStatus,
+
     // Voice settings
     voiceSettings,
     settingsLoading,

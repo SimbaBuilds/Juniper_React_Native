@@ -1,18 +1,74 @@
-I realized that only upserting one google and/or apple realtime record per user on app launch will result in very poor tracking for those services if the user does not open the app daily.  Instead of syncing to their own db tables, we have to integrate apple and google health with the existing wearables_data table that currently exists for Fitbit and Oura.  This will allow for up to a week backfill logic when the user opens the app and easier integration with the rest of the system.  
+✅ COMPLETED: Call unfetched logic when app returns to foreground
 
+    Based on the logs showing the app successfully working and the current code structure, here's the 
+    plan to check for unfetched responses when the app returns from background to foreground:
 
+    Current State
 
-The below must be done separately for both Apple Health and Google Health Connect:
+    - checkUnfetchedRequests function exists in VoiceAssistant.tsx (line 138-220)
+    - It's currently only called during onboarding check (line 266)
+    - VoiceContext.tsx already handles AppState changes (line 725-750) and syncs health data on 
+    foreground
 
-- [ ]  decide on reasonable number of samples per day to store for each metric based on available data and metric type, referencing service raw lake data
-- [ ]  create sync function that populates wearables_data table with a 7 day backfill ensuring no duplicates - referencing wearables_data_rows_sample.csv
-    - For Google, make sure current support for multiple data source types is maintained (Fit, Fitbit, Connect, etc..) but that backfill is also supported
-- [ ]  replace post permissions sync to service realtime table with new sync function that syncs to wearables_data
-- [ ]  replace app launch sync to service realtime table with with new sync function that syncs to wearables_data
-- [ ]  Update service auth/permissions callback to call health-data-sync edge function like Oura and Fitbit do
+    Proposed Implementation
 
+    Option 1: Add to VoiceContext (Recommended)
+    Add unfetched check alongside health sync in VoiceContext.tsx around line 736-749:
 
-Reference:
-- Raw lake formatting data available in apple_raw_lake.md and google_raw_lake.md
-- Wearables data current table value samples available at wearables_data_rows_sample.csv for reference
+    // Sync health data and check unfetched requests when app comes to foreground
+    if (nextAppState === 'active' && user?.id) {
+      console.log('🏥 VOICE_CONTEXT: App became active - syncing health data');
+      
+      // Existing health sync...
+      
+      // Add unfetched requests check
+      console.log('📬 VOICE_CONTEXT: Checking for unfetched completed requests...');
+      DatabaseService.getUnfetchedCompletedRequests(user.id)
+        .then(unfetchedRequests => {
+          if (unfetchedRequests.length > 0) {
+            console.log('📬 VOICE_CONTEXT: Found unfetched requests, triggering UI update');
+            // Trigger a state update or event to notify VoiceAssistant
+          }
+        })
+        .catch(error => {
+          console.warn('📬 VOICE_CONTEXT: Error checking unfetched requests:', error);
+        });
+    }
 
+    Option 2: Add AppState listener in VoiceAssistant
+    Add a new useEffect in VoiceAssistant.tsx to listen for AppState changes:
+
+    // Check for unfetched requests when app returns to foreground
+    React.useEffect(() => {
+      const handleAppStateChange = (nextAppState: string) => {
+        if (nextAppState === 'active' && user?.id) {
+          console.log('📬 VOICE_ASSISTANT: App became active - checking unfetched requests');
+          checkUnfetchedRequests();
+        }
+      };
+
+      const subscription = AppState.addEventListener('change', handleAppStateChange);
+      
+      return () => {
+        subscription?.remove();
+      };
+    }, [user?.id]);
+
+    Recommendation
+
+    Option 2 is simpler and cleaner since:
+    1. The checkUnfetchedRequests function already exists in VoiceAssistant
+    2. It already has all the necessary state and functions to update the chat
+    3. No need to pass data between components
+    4. Follows the existing pattern (health sync in VoiceContext, UI updates in VoiceAssistant)
+
+## Implementation Complete ✅
+
+Added AppState listener to VoiceAssistant.tsx (lines 326-340):
+- Imported AppState from react-native
+- Added useEffect hook that listens for AppState changes
+- Calls checkUnfetchedRequests() when app becomes 'active' and user is logged in
+- Properly cleans up the subscription on component unmount
+- Dependencies: [user?.id, checkUnfetchedRequests]
+
+The implementation follows Option 2 as recommended, keeping the unfetched request logic self-contained within VoiceAssistant where the checkUnfetchedRequests function already exists.

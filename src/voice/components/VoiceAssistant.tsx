@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Animated } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Animated, AppState } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { VoiceButton } from './VoiceButton';
 import { VoiceResponseDisplay } from './VoiceResponseDisplay';
@@ -16,6 +16,7 @@ import { ChatMessageContent } from './ChatMessageContent';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { colors } from '../../shared/theme/colors';
 import { conversationService } from '../../services/conversationService';
+import { DatabaseService } from '../../supabase/supabase';
 
 const { VoiceModule } = NativeModules;
 
@@ -86,6 +87,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     startContinuousConversation,
     startListening,
     requestStatus,
+    setRequestStatus,
+    setCurrentRequestId,
     settingsLoading
   } = useVoice();
 
@@ -131,6 +134,91 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     }
   };
 
+  // Check for unfetched completed requests and display them in chat
+  const checkUnfetchedRequests = async () => {
+    if (!user?.id) {
+      return;
+    }
+
+    try {
+      console.log('🔍 UNFETCHED_CHECK: Checking for unfetched completed requests...');
+      const unfetchedRequests = await DatabaseService.getUnfetchedCompletedRequests(user.id);
+
+      if (unfetchedRequests.length > 0) {
+        console.log('📬 UNFETCHED_CHECK: Found', unfetchedRequests.length, 'unfetched completed requests');
+
+        // Process each request and fetch full conversations
+        const allConversationMessages: any[] = [];
+        const processedConversationIds = new Set<string>();
+
+        for (const request of unfetchedRequests) {
+          if (request.conversation_id && !processedConversationIds.has(request.conversation_id)) {
+            try {
+              console.log('📬 UNFETCHED_CHECK: Fetching conversation for ID:', request.conversation_id);
+              const conversationMessages = await DatabaseService.getConversationMessages(request.conversation_id);
+
+              // Convert database messages to chat history format
+              const formattedMessages = conversationMessages.map(message => ({
+                role: message.role as 'user' | 'assistant',
+                content: message.content,
+                timestamp: new Date(message.created_at).getTime()
+              }));
+
+              allConversationMessages.push(...formattedMessages);
+              processedConversationIds.add(request.conversation_id);
+              console.log('📬 UNFETCHED_CHECK: Added', formattedMessages.length, 'messages from conversation:', request.conversation_id);
+
+            } catch (error) {
+              console.error('❌ UNFETCHED_CHECK: Error fetching conversation messages for ID:', request.conversation_id, error);
+
+              // Fallback to old behavior if conversation fetch fails
+              if (request.assistant_response && request.assistant_response.trim()) {
+                allConversationMessages.push({
+                  role: 'assistant' as const,
+                  content: request.assistant_response,
+                  timestamp: new Date(request.updated_at).getTime()
+                });
+                console.log('📬 UNFETCHED_CHECK: Used fallback assistant response for request:', request.request_id);
+              }
+            }
+          } else if (!request.conversation_id) {
+            // Handle requests without conversation_id (fallback to old behavior)
+            console.log('📬 UNFETCHED_CHECK: No conversation_id for request:', request.request_id, 'using fallback');
+            if (request.assistant_response && request.assistant_response.trim()) {
+              allConversationMessages.push({
+                role: 'assistant' as const,
+                content: request.assistant_response,
+                timestamp: new Date(request.updated_at).getTime()
+              });
+            }
+          }
+        }
+
+        // Sort messages by timestamp and add to chat history
+        if (allConversationMessages.length > 0) {
+          allConversationMessages.sort((a, b) => a.timestamp - b.timestamp);
+          console.log('📬 UNFETCHED_CHECK: Displaying', allConversationMessages.length, 'total messages from', processedConversationIds.size, 'conversations');
+          continuePreviousChat(allConversationMessages);
+        }
+
+        // Mark all these requests as fetched (even ones without responses to prevent re-checking)
+        for (const request of unfetchedRequests) {
+          try {
+            await DatabaseService.markResponseAsFetched(request.request_id);
+            console.log('✅ UNFETCHED_CHECK: Marked response as fetched for:', request.request_id);
+          } catch (error) {
+            console.error('❌ UNFETCHED_CHECK: Error marking response as fetched:', error);
+          }
+        }
+
+      } else {
+        console.log('📬 UNFETCHED_CHECK: No unfetched completed requests found');
+      }
+    } catch (error) {
+      console.error('❌ UNFETCHED_CHECK: Error checking unfetched requests:', error);
+    }
+  };
+
   // Check for onboarding when user is available and we haven't evaluated yet
   React.useEffect(() => {
     const checkForOnboarding = async () => {
@@ -169,13 +257,16 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         
         // Check database for existing conversations
         const hasConversations = await conversationService.hasUserConversations();
-        
+
         if (hasConversations) {
           console.log('📝 ONBOARDING: User has conversations in database, skipping onboarding');
           hasEvaluatedOnboarding.current = true;
+
+          // Check for unfetched completed requests
+          await checkUnfetchedRequests();
           return;
         }
-        
+
         // User is new - show onboarding message
         console.log('👋 ONBOARDING: New user detected (no conversations in database), showing onboarding message');
         const onboardingMessage = {
@@ -200,6 +291,53 @@ What would you like to get started with today? If you aren't sure, starting with
 
     checkForOnboarding();
   }, [user?.id, continuePreviousChat, settingsLoading]);
+
+  // Check for uncompleted requests on app launch/resume
+  React.useEffect(() => {
+    const checkUncompletedRequests = async () => {
+      if (!user?.id || settingsLoading) {
+        return;
+      }
+
+      try {
+        console.log('🔍 REQUEST_CHECK: Checking for uncompleted requests...');
+        const uncompletedRequests = await DatabaseService.getUncompletedRequests(user.id);
+
+        if (uncompletedRequests.length > 0) {
+          console.log('📊 REQUEST_CHECK: Found', uncompletedRequests.length, 'uncompleted requests');
+          // Set the request status to show status indicator for the most recent request
+          const mostRecentRequest = uncompletedRequests[0];
+          console.log('📊 REQUEST_CHECK: Most recent uncompleted request:', mostRecentRequest.request_id, 'status:', mostRecentRequest.status);
+
+          // Set the current request status and ID to show the status indicator
+          setCurrentRequestId(mostRecentRequest.request_id);
+          setRequestStatus(mostRecentRequest.status);
+        } else {
+          console.log('📊 REQUEST_CHECK: No uncompleted requests found');
+        }
+      } catch (error) {
+        console.error('❌ REQUEST_CHECK: Error checking uncompleted requests:', error);
+      }
+    };
+
+    checkUncompletedRequests();
+  }, [user?.id, settingsLoading]);
+
+  // Check for unfetched requests when app returns to foreground
+  React.useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active' && user?.id) {
+        console.log('📬 VOICE_ASSISTANT: App became active - checking unfetched requests');
+        checkUnfetchedRequests();
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    return () => {
+      subscription?.remove();
+    };
+  }, [user?.id, checkUnfetchedRequests]);
 
   // Android-specific keyboard height tracking
   React.useEffect(() => {

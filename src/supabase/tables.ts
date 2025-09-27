@@ -327,11 +327,14 @@ export type UserProfile = {
     total_turns: number;
     user_message: string;
     network_success: boolean;
+    response_fetched?: boolean;      // Whether the response has been fetched and displayed in UI
+    assistant_response?: string;     // The complete assistant response stored by backend
+    conversation_id?: string;         // The conversation ID for the request
   };
 
   export const requestFields = [
     'id', 'user_id', 'request_id', 'request_type', 'status',
-    'metadata', 'image_url', 'created_at', 'updated_at', 'total_turns', 'user_message', 'network_success'
+    'metadata', 'image_url', 'created_at', 'updated_at', 'total_turns', 'user_message', 'network_success', 'response_fetched', 'assistant_response', 'conversation_id'
   ] as const;
   export type RequestField = (typeof requestFields)[number];
 
