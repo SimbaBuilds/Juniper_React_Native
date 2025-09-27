@@ -15,6 +15,7 @@ export const useRequestStatusPolling = ({
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const initialDelayRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     console.log('📊 POLLING_HOOK_EFFECT: useEffect triggered with requestId:', requestId);
@@ -58,17 +59,24 @@ export const useRequestStatusPolling = ({
       }
     };
 
-    // Initial poll
-    console.log('📊 POLLING_HOOK_INITIAL: Starting initial poll');
-    pollStatus();
+    // Add small delay before starting initial poll to allow state to stabilize
+    console.log('📊 POLLING_HOOK_INITIAL: Starting initial poll with 150ms delay');
+    initialDelayRef.current = setTimeout(() => {
+      pollStatus();
 
-    // Set up interval for subsequent polls
-    console.log('📊 POLLING_HOOK_INTERVAL: Setting up polling interval:', intervalMs, 'ms');
-    intervalRef.current = setInterval(pollStatus, intervalMs);
+      // Set up interval for subsequent polls
+      console.log('📊 POLLING_HOOK_INTERVAL: Setting up polling interval:', intervalMs, 'ms');
+      intervalRef.current = setInterval(pollStatus, intervalMs);
+    }, 150);
 
     // Cleanup on unmount or when requestId changes
     return () => {
       console.log('📊 POLLING_HOOK_CLEANUP: Cleaning up polling for requestId:', requestId);
+      if (initialDelayRef.current) {
+        clearTimeout(initialDelayRef.current);
+        initialDelayRef.current = null;
+        console.log('📊 POLLING_HOOK_CLEANUP_DONE: Initial delay timeout cleared');
+      }
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;

@@ -101,6 +101,36 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   // Android-specific keyboard height tracking
   const [androidKeyboardPadding, setAndroidKeyboardPadding] = React.useState(0);
 
+  // State for delayed status indicator display
+  const [shouldShowStatusIndicator, setShouldShowStatusIndicator] = React.useState(false);
+  const statusIndicatorTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Effect to handle delayed status indicator display
+  React.useEffect(() => {
+    // Clear any existing timeout
+    if (statusIndicatorTimeoutRef.current) {
+      clearTimeout(statusIndicatorTimeoutRef.current);
+      statusIndicatorTimeoutRef.current = null;
+    }
+
+    if (requestStatus && requestStatus !== 'completed') {
+      // Show status indicator after 150ms delay
+      statusIndicatorTimeoutRef.current = setTimeout(() => {
+        setShouldShowStatusIndicator(true);
+      }, 150);
+    } else {
+      // Hide status indicator immediately when status is completed or null
+      setShouldShowStatusIndicator(false);
+    }
+
+    return () => {
+      if (statusIndicatorTimeoutRef.current) {
+        clearTimeout(statusIndicatorTimeoutRef.current);
+        statusIndicatorTimeoutRef.current = null;
+      }
+    };
+  }, [requestStatus]);
+
   // Handle opening conversation history and loading data
   const handleOpenConversationHistory = () => {
     console.log('📚 Opening conversation history...');
@@ -650,7 +680,7 @@ What would you like to get started with today? If you aren't sure, starting with
                   />
                   
                   {/* Status indicator overlay */}
-                  {requestStatus && requestStatus !== 'completed' && (
+                  {shouldShowStatusIndicator && (
                     <View style={styles.statusOverlay}>
                       <View style={styles.statusContent}>
                         <LoadingDot />
@@ -670,7 +700,7 @@ What would you like to get started with today? If you aren't sure, starting with
                   </Text>
                   
                   {/* Status indicator overlay for empty chat */}
-                  {requestStatus && requestStatus !== 'completed' && (
+                  {shouldShowStatusIndicator && (
                     <View style={styles.statusOverlay}>
                       <View style={styles.statusContent}>
                         <LoadingDot />
