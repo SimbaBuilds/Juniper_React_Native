@@ -136,16 +136,18 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
 
   // Check for unfetched completed requests and display them in chat
   const checkUnfetchedRequests = async () => {
+    console.log('🎯 SOURCE_3: checkUnfetchedRequests starting...');
     if (!user?.id) {
+      console.log('🎯 SOURCE_3: No user ID, returning early');
       return;
     }
 
     try {
-      console.log('🔍 UNFETCHED_CHECK: Checking for unfetched completed requests...');
+      console.log('🎯 SOURCE_3: UNFETCHED_CHECK: Checking for unfetched completed requests...');
       const unfetchedRequests = await DatabaseService.getUnfetchedCompletedRequests(user.id);
 
       if (unfetchedRequests.length > 0) {
-        console.log('📬 UNFETCHED_CHECK: Found', unfetchedRequests.length, 'unfetched completed requests');
+        console.log('🎯 SOURCE_3: UNFETCHED_CHECK: Found', unfetchedRequests.length, 'unfetched completed requests');
 
         // Process each request and fetch full conversations
         const allConversationMessages: any[] = [];
@@ -197,8 +199,14 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         // Sort messages by timestamp and add to chat history
         if (allConversationMessages.length > 0) {
           allConversationMessages.sort((a, b) => a.timestamp - b.timestamp);
-          console.log('📬 UNFETCHED_CHECK: Displaying', allConversationMessages.length, 'total messages from', processedConversationIds.size, 'conversations');
+          console.log('🎯 SOURCE_3: UNFETCHED_CHECK: Displaying', allConversationMessages.length, 'total messages from', processedConversationIds.size, 'conversations');
+          console.log('🎯 SOURCE_3: About to call continuePreviousChat with messages:', allConversationMessages.map(msg => ({
+            role: msg.role,
+            content: msg.content.substring(0, 50) + '...',
+            timestamp: msg.timestamp
+          })));
           continuePreviousChat(allConversationMessages);
+          console.log('🎯 SOURCE_3: continuePreviousChat call completed');
         }
 
         // Mark all these requests as fetched (even ones without responses to prevent re-checking)

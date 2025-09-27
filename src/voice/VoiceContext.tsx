@@ -143,6 +143,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const [lastMessageTimestamp, setLastMessageTimestamp] = useState<number | null>(null);
   const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const integrationPollingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Track recent assistant messages to prevent duplicates
+  const recentAssistantMessagesRef = useRef<{content: string, timestamp: number}[]>([]);
   
   // Request status polling
   const { status: polledStatus } = useRequestStatusPolling({
@@ -252,15 +255,68 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
   }, [chatHistory.length, handleAutoRefresh]);
 
+  // Helper function to update recent assistant messages ref
+  const updateRecentAssistantMessages = useCallback((content: string, timestamp: number) => {
+    const newMessage = { content, timestamp };
+    console.log(`📝 UPDATE_RECENT_REF: Adding message to recentRef - content: "${content.substring(0, 50)}...", timestamp: ${timestamp}`);
+    console.log(`📝 UPDATE_RECENT_REF: Previous recentRef length: ${recentAssistantMessagesRef.current.length}`);
+    
+    recentAssistantMessagesRef.current = [
+      newMessage,
+      ...recentAssistantMessagesRef.current.slice(0, 2) // Keep only last 3 messages
+    ];
+    
+    console.log(`📝 UPDATE_RECENT_REF: Updated recentRef length: ${recentAssistantMessagesRef.current.length}`);
+    console.log(`📝 UPDATE_RECENT_REF: Updated recentRef contents:`, recentAssistantMessagesRef.current.map(msg => ({ 
+      content: msg.content.substring(0, 30) + '...', 
+      timestamp: msg.timestamp 
+    })));
+  }, []);
+
   // Helper function to check for duplicate messages within time window
   const isDuplicateMessage = useCallback((newContent: string, role: 'user' | 'assistant', timeWindowMs: number = 5000): boolean => {
     const now = Date.now();
-    return chatHistory.some(msg =>
-      msg.role === role &&
-      msg.content === newContent &&
-      (now - msg.timestamp) < timeWindowMs
-    );
+    console.log(`🔍 DUPLICATE_CHECK: Checking isDuplicateMessage - role: ${role}, content: "${newContent.substring(0, 50)}...", chatHistory length: ${chatHistory.length}`);
+    
+    const duplicate = chatHistory.some(msg => {
+      const isMatch = msg.role === role &&
+        msg.content === newContent &&
+        (now - msg.timestamp) < timeWindowMs;
+      
+      if (isMatch) {
+        console.log(`🔍 DUPLICATE_CHECK: Found duplicate in chatHistory - timestamp diff: ${now - msg.timestamp}ms, content matches: ${msg.content === newContent}`);
+      }
+      return isMatch;
+    });
+    
+    console.log(`🔍 DUPLICATE_CHECK: isDuplicateMessage result: ${duplicate}`);
+    return duplicate;
   }, [chatHistory]);
+
+  // Helper function to check recent assistant messages ref for duplicates
+  const isDuplicateInRecentRef = useCallback((content: string, timeWindowMs: number = 5000): boolean => {
+    const now = Date.now();
+    console.log(`🔍 DUPLICATE_CHECK: Checking isDuplicateInRecentRef - content: "${content.substring(0, 50)}...", recentRef length: ${recentAssistantMessagesRef.current.length}`);
+    
+    const duplicate = recentAssistantMessagesRef.current.some(msg => {
+      const isMatch = msg.content === content && (now - msg.timestamp) < timeWindowMs;
+      
+      if (isMatch) {
+        console.log(`🔍 DUPLICATE_CHECK: Found duplicate in recentRef - timestamp diff: ${now - msg.timestamp}ms, content matches: ${msg.content === content}`);
+      } else if (msg.content === content) {
+        console.log(`🔍 DUPLICATE_CHECK: Content matches but outside time window - timestamp diff: ${now - msg.timestamp}ms`);
+      }
+      return isMatch;
+    });
+    
+    console.log(`🔍 DUPLICATE_CHECK: isDuplicateInRecentRef result: ${duplicate}`);
+    console.log(`🔍 DUPLICATE_CHECK: Current recentRef contents:`, recentAssistantMessagesRef.current.map(msg => ({ 
+      content: msg.content.substring(0, 30) + '...', 
+      age: now - msg.timestamp 
+    })));
+    
+    return duplicate;
+  }, []);
 
   // Integration status polling functions
   const stopIntegrationPolling = useCallback(() => {
@@ -428,14 +484,56 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       if (backgroundConversations.length > 0) {
         console.log(`📱 CONVERSATION_SYNC: Found ${backgroundConversations.length} background conversations, merging...`);
         
+        console.log('🎯 SOURCE_2: checkAndMergeBackgroundConversations processing background conversations');
         setChatHistory(currentHistory => {
+          console.log('🎯 SOURCE_2: Current chatHistory length before merging:', currentHistory.length);
           const mergedHistory = conversationSyncService.mergeBackgroundHistory(currentHistory, backgroundConversations);
+          console.log('🎯 SOURCE_2: Merged history length after merging:', mergedHistory.length, 'difference:', mergedHistory.length - currentHistory.length);
           
+          // Apply the same deduplication logic as VoiceResponseUpdate
+          const deduplicatedHistory = mergedHistory.filter((message, index) => {
+            // Only apply deduplication to assistant messages
+            if (message.role !== 'assistant') {
+              return true;
+            }
+
+            const messageContent = message.content.trim();
+            console.log('🎯 SOURCE_2: Checking assistant message for duplicates - content:', messageContent.substring(0, 50) + '...');
+            
+            // Check for duplicate using recent ref (same as VoiceResponseUpdate)
+            if (isDuplicateInRecentRef(messageContent)) {
+              console.log('🔄 SOURCE_2: CONVERSATION_SYNC: Duplicate message detected in recent ref, filtering:', messageContent.substring(0, 50) + '...');
+              return false;
+            }
+
+            // Check if this message already exists in the current history (same as VoiceResponseUpdate)
+            const isDuplicate = currentHistory.some(existingMsg =>
+              existingMsg.role === 'assistant' &&
+              existingMsg.content.trim() === messageContent &&
+              Math.abs(existingMsg.timestamp - message.timestamp) < 5000 // 5 second window
+            );
+
+            if (isDuplicate) {
+              console.log('🔄 SOURCE_2: CONVERSATION_SYNC: Duplicate message detected via time window, filtering:', messageContent.substring(0, 50) + '...');
+              return false;
+            }
+
+            console.log('🎯 SOURCE_2: No duplicates found for message, keeping it');
+            // Update recent assistant messages ref for future deduplication
+            updateRecentAssistantMessages(messageContent, message.timestamp);
+            return true;
+          });
+
           // Mark conversations as synced
           const conversationIds = backgroundConversations.map(conv => conv.id);
           conversationSyncService.markConversationsAsSynced(conversationIds);
           
-          return mergedHistory;
+          if (deduplicatedHistory.length < mergedHistory.length) {
+            console.log(`🎯 SOURCE_2: CONVERSATION_SYNC: Filtered ${mergedHistory.length - deduplicatedHistory.length} duplicate messages`);
+          }
+          
+          console.log('🎯 SOURCE_2: Final deduplicatedHistory length:', deduplicatedHistory.length);
+          return deduplicatedHistory;
         });
         
         console.log('✅ CONVERSATION_SYNC: Background conversations merged successfully');
@@ -445,7 +543,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('❌ CONVERSATION_SYNC: Error checking background conversations:', error);
     }
-  }, []);
+  }, [isDuplicateInRecentRef, updateRecentAssistantMessages]);
 
   // Sync current history to native
   const syncCurrentHistoryToNative = useCallback(async () => {
@@ -481,22 +579,57 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     
     // Listen for response updates
     const responseSub = DeviceEventEmitter.addListener('VoiceResponseUpdate', (event) => {
-      console.log('💬 Response update:', event.response);
+      console.log('🎯 SOURCE_1: VoiceResponseUpdate received - content:', event.response.substring(0, 50) + '...');
       setResponse(event.response);
       
       // Add to chat history
       if (event.response && event.response.trim()) {
-        // Check for duplicate message to prevent race conditions
-        if (isDuplicateMessage(event.response.trim(), 'assistant')) {
-          console.log('🔄 VOICE_RESPONSE: Duplicate message detected, skipping:', event.response.substring(0, 50) + '...');
+        console.log('🎯 SOURCE_1: Processing VoiceResponseUpdate for chat history addition');
+        console.log('🎯 SOURCE_1: Current chatHistory length before addition:', chatHistory.length);
+        console.log('🎯 SOURCE_1: Current requestId:', currentRequestId);
+        
+        // Check for duplicate message using ref (avoids React state closure issues)
+        if (isDuplicateInRecentRef(event.response.trim())) {
+          console.log('🔄 SOURCE_1: VOICE_RESPONSE: Duplicate message detected in recent ref, skipping:', event.response.substring(0, 50) + '...');
           return;
         }
 
-        setChatHistory(prev => [...prev, {
-          role: 'assistant',
-          content: event.response,
-          timestamp: Date.now()
-        }]);
+        // Additional check using traditional method as fallback
+        if (isDuplicateMessage(event.response.trim(), 'assistant')) {
+          console.log('🔄 SOURCE_1: VOICE_RESPONSE: Duplicate message detected via time window, skipping:', event.response.substring(0, 50) + '...');
+          return;
+        }
+
+        const timestamp = Date.now();
+        console.log('🎯 SOURCE_1: No duplicates detected - proceeding to add message with timestamp:', timestamp);
+
+        // Update recent messages ref immediately
+        updateRecentAssistantMessages(event.response.trim(), timestamp);
+
+        console.log('🎯 SOURCE_1: About to call setChatHistory to add assistant message');
+        setChatHistory(prev => {
+          console.log('🎯 SOURCE_1: setChatHistory callback - prev length:', prev.length, 'adding message');
+          
+          // Check for duplicates against the CURRENT state (prev), not stale closure state
+          const isDuplicateInCurrentState = prev.some(msg =>
+            msg.role === 'assistant' &&
+            msg.content === event.response &&
+            Math.abs(Date.now() - msg.timestamp) < 30000 // 30 second window for background scenarios
+          );
+          
+          if (isDuplicateInCurrentState) {
+            console.log('🔄 SOURCE_1: VOICE_RESPONSE: Duplicate detected in current state, skipping addition');
+            return prev; // Return unchanged state
+          }
+          
+          const newHistory = [...prev, {
+            role: 'assistant' as const,
+            content: event.response,
+            timestamp
+          }];
+          console.log('🎯 SOURCE_1: setChatHistory callback - new length:', newHistory.length);
+          return newHistory;
+        });
 
         // Mark response as fetched since it's now displayed in UI
         if (currentRequestId) {
@@ -1263,7 +1396,12 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
 
   // Continue previous chat by setting the chat history
   const continuePreviousChat = useCallback((messages: ChatMessage[]) => {
-    console.log('📚 Continuing previous chat with', messages.length, 'messages');
+    console.log('🎯 CONTINUE_CHAT: continuePreviousChat called with', messages.length, 'messages');
+    console.log('🎯 CONTINUE_CHAT: Input messages:', messages.map(msg => ({
+      role: msg.role,
+      content: msg.content.substring(0, 50) + '...',
+      timestamp: msg.timestamp
+    })));
 
     // Deduplicate messages within the incoming array itself (in case unfetched check brings duplicates)
     const deduplicatedMessages = messages.filter((message, index) => {
@@ -1273,14 +1411,32 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         m.role === message.role &&
         Math.abs(m.timestamp - message.timestamp) < 1000 // Within 1 second
       );
-      return firstIndex === index;
+      const isKept = firstIndex === index;
+      if (!isKept) {
+        console.log('🎯 CONTINUE_CHAT: Filtering duplicate message from input array:', message.content.substring(0, 50) + '...');
+      }
+      return isKept;
     });
 
     if (deduplicatedMessages.length < messages.length) {
-      console.log('📚 Removed', messages.length - deduplicatedMessages.length, 'duplicate messages from unfetched data');
+      console.log('🎯 CONTINUE_CHAT: Removed', messages.length - deduplicatedMessages.length, 'duplicate messages from unfetched data');
     }
 
+    // Update recent assistant messages ref with assistant messages from the loaded conversation
+    const assistantMessages = deduplicatedMessages
+      .filter(msg => msg.role === 'assistant')
+      .slice(-3) // Get last 3 assistant messages
+      .reverse(); // Most recent first
+
+    console.log('🎯 CONTINUE_CHAT: Updating recentAssistantMessagesRef with', assistantMessages.length, 'messages');
+    recentAssistantMessagesRef.current = assistantMessages.map(msg => ({
+      content: msg.content,
+      timestamp: msg.timestamp
+    }));
+
+    console.log('🎯 CONTINUE_CHAT: About to call setChatHistory with', deduplicatedMessages.length, 'messages');
     setChatHistory(deduplicatedMessages);
+    console.log('🎯 CONTINUE_CHAT: setChatHistory call completed');
   }, []);
 
   // Wrap cancelRequest to immediately update UI status

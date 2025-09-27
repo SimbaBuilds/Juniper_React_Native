@@ -1,74 +1,82 @@
-✅ COMPLETED: Call unfetched logic when app returns to foreground
+Based on my investigation, I've identified the root cause of the duplicate assistant messages. Here's my comprehensive plan to fix this issue:
 
-    Based on the logs showing the app successfully working and the current code structure, here's the 
-    plan to check for unfetched responses when the app returns from background to foreground:
+## Root Cause Analysis
 
-    Current State
+There are **three separate systems** that can all add the same assistant message when returning from background during a voice request:
 
-    - checkUnfetchedRequests function exists in VoiceAssistant.tsx (line 138-220)
-    - It's currently only called during onboarding check (line 266)
-    - VoiceContext.tsx already handles AppState changes (line 725-750) and syncs health data on 
-    foreground
+1. **`checkAndMergeBackgroundConversations`** (VoiceContext) - loads conversation history from native sync
+2. **`checkUnfetchedRequests`** (VoiceAssistant) - loads unfetched requests from database  
+3. **`VoiceResponseUpdate` event handler** - native event can still fire after background/foreground
 
-    Proposed Implementation
+These systems overlap and aren't properly coordinated, causing duplicates despite existing protective measures.
 
-    Option 1: Add to VoiceContext (Recommended)
-    Add unfetched check alongside health sync in VoiceContext.tsx around line 736-749:
+## Implementation Plan
 
-    // Sync health data and check unfetched requests when app comes to foreground
-    if (nextAppState === 'active' && user?.id) {
-      console.log('🏥 VOICE_CONTEXT: App became active - syncing health data');
-      
-      // Existing health sync...
-      
-      // Add unfetched requests check
-      console.log('📬 VOICE_CONTEXT: Checking for unfetched completed requests...');
-      DatabaseService.getUnfetchedCompletedRequests(user.id)
-        .then(unfetchedRequests => {
-          if (unfetchedRequests.length > 0) {
-            console.log('📬 VOICE_CONTEXT: Found unfetched requests, triggering UI update');
-            // Trigger a state update or event to notify VoiceAssistant
-          }
-        })
-        .catch(error => {
-          console.warn('📬 VOICE_CONTEXT: Error checking unfetched requests:', error);
-        });
-    }
+### Phase 1: Add Background Loading Coordination System
+**Location**: `src/voice/VoiceContext.tsx` (after line 148)
 
-    Option 2: Add AppState listener in VoiceAssistant
-    Add a new useEffect in VoiceAssistant.tsx to listen for AppState changes:
+Add coordination refs to track which system is currently loading:
+```typescript
+// Background loading coordination to prevent duplicate messages
+const backgroundLoadingStateRef = useRef({
+  isLoadingBackgroundConversations: false,
+  isLoadingUnfetchedRequests: false,
+  lastBackgroundLoadTimestamp: 0
+});
+```
 
-    // Check for unfetched requests when app returns to foreground
-    React.useEffect(() => {
-      const handleAppStateChange = (nextAppState: string) => {
-        if (nextAppState === 'active' && user?.id) {
-          console.log('📬 VOICE_ASSISTANT: App became active - checking unfetched requests');
-          checkUnfetchedRequests();
-        }
-      };
+### Phase 2: Implement Coordinated Message Addition
+**Location**: `src/voice/VoiceContext.tsx` (around line 277)
 
-      const subscription = AppState.addEventListener('change', handleAppStateChange);
-      
-      return () => {
-        subscription?.remove();
-      };
-    }, [user?.id]);
+Create a centralized message addition function that coordinates all three systems:
+```typescript
+const addMessageWithCoordination = useCallback((message: ChatMessage, source: 'native_sync' | 'unfetched_db' | 'voice_event') => {
+  // Comprehensive duplicate checking across all sources
+  // Only allow one source to add messages during background loading
+});
+```
 
-    Recommendation
+### Phase 3: Update Background Conversation Loading
+**Location**: `src/voice/VoiceContext.tsx` (line 444)
 
-    Option 2 is simpler and cleaner since:
-    1. The checkUnfetchedRequests function already exists in VoiceAssistant
-    2. It already has all the necessary state and functions to update the chat
-    3. No need to pass data between components
-    4. Follows the existing pattern (health sync in VoiceContext, UI updates in VoiceAssistant)
+Modify `checkAndMergeBackgroundConversations` to use coordination system and prevent overlaps with unfetched check.
 
-## Implementation Complete ✅
+### Phase 4: Update Unfetched Request Loading  
+**Location**: `src/voice/components/VoiceAssistant.tsx` (line 138)
 
-Added AppState listener to VoiceAssistant.tsx (lines 326-340):
-- Imported AppState from react-native
-- Added useEffect hook that listens for AppState changes
-- Calls checkUnfetchedRequests() when app becomes 'active' and user is logged in
-- Properly cleans up the subscription on component unmount
-- Dependencies: [user?.id, checkUnfetchedRequests]
+Modify `checkUnfetchedRequests` to check coordination state and avoid loading if background conversations are already being processed.
 
-The implementation follows Option 2 as recommended, keeping the unfetched request logic self-contained within VoiceAssistant where the checkUnfetchedRequests function already exists.
+### Phase 5: Update Native Event Handler
+**Location**: `src/voice/VoiceContext.tsx` (line 504)
+
+Modify `VoiceResponseUpdate` event handler to check if background loading is in progress and defer message addition if needed.
+
+### Phase 6: Add Timing-Based Coordination
+Implement a time-window approach where:
+- Only one background loading system can run within a 2-second window
+- Later systems defer to already-running system
+- Native events are suppressed during background loading
+
+### Phase 7: Enhanced Duplicate Detection
+Strengthen existing duplicate detection with:
+- Content + timestamp matching across longer time windows
+- Request ID tracking to prevent same response from multiple sources
+- Conversation ID coordination between systems
+
+## Expected Outcome
+
+This coordination system will:
+- ✅ Prevent multiple systems from adding the same message
+- ✅ Maintain existing functionality of all three systems
+- ✅ Provide clear logging of which system is handling message loading
+- ✅ Eliminate duplicate assistant messages when returning from background
+
+## Testing Strategy
+
+After implementation:
+1. Test background/foreground transitions during active voice requests
+2. Verify conversation history still loads correctly
+3. Confirm unfetched requests are still processed
+4. Validate native voice events still work properly
+
+Would you like me to proceed with implementing this plan? I'll start with Phase 1 and work through systematically.
