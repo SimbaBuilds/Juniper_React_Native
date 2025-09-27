@@ -1,1 +1,1 @@
-Please create a plan for moving conversation creation from "new" "save" to creation when first message is sent and making sure request record is created iwth conversation_id populated.
+When I am in voice mode and I background the app in the middle of an api/chat request adn return to foreground, the full conversation reloads and then the assistant message double props to the chat window.  Please recommend options and choose best.

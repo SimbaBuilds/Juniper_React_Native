@@ -27,6 +27,7 @@ export interface VoiceContextState {
   integrationInProgress: boolean;
   currentRequestId: string | null;
   requestStatus: string | null;
+  activeConversationId: string | null;
 }
 
 /**

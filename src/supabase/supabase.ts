@@ -920,6 +920,7 @@ export const DatabaseService = {
     image_url?: string;
     total_turns?: number;
     user_message?: string;
+    conversation_id?: string;
   }): Promise<Request> {
     const { data, error } = await supabase
       .from('requests')
@@ -932,6 +933,7 @@ export const DatabaseService = {
         image_url: requestData.image_url,
         total_turns: requestData.total_turns || 0,
         user_message: requestData.user_message || '',
+        conversation_id: requestData.conversation_id,
         network_success: true,
         response_fetched: false,
         created_at: new Date().toISOString(),
