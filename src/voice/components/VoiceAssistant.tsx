@@ -603,7 +603,7 @@ What would you like to get started with today? If you aren't sure, starting with
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollViewContent,
-          { paddingBottom: keyboardHeight > 0 ? keyboardHeight : 0 }
+          { paddingBottom: keyboardHeight > 0 ? keyboardHeight - 60 : 0 }
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -670,7 +670,7 @@ What would you like to get started with today? If you aren't sure, starting with
                     style={styles.chatList}
                     contentContainerStyle={[
                       styles.chatListContent,
-                      { paddingBottom: 80 }
+                      { paddingBottom: 20 }
                     ]}
                     keyboardShouldPersistTaps="always"
                     keyboardDismissMode="on-drag"
@@ -762,15 +762,7 @@ What would you like to get started with today? If you aren't sure, starting with
           )}
 
 
-          <View style={[
-            styles.bottomSection,
-            Platform.OS === 'ios' && {
-              paddingBottom: Math.max(insets.bottom, 4), // Use safe area insets or minimum 4px
-            },
-            Platform.OS === 'android' && {
-              paddingBottom: 4, // Minimal padding - adjustResize handles keyboard
-            }
-          ]}>
+          <View style={styles.bottomSection}>
             {/* Voice button - positioned above text input */}
             <View style={styles.voiceButtonContainer}>
               <VoiceButton 
