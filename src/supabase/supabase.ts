@@ -920,6 +920,7 @@ export const DatabaseService = {
     image_url?: string;
     total_turns?: number;
     user_message?: string;
+    conversation_id?: string;
   }): Promise<Request> {
     const { data, error } = await supabase
       .from('requests')
@@ -932,7 +933,9 @@ export const DatabaseService = {
         image_url: requestData.image_url,
         total_turns: requestData.total_turns || 0,
         user_message: requestData.user_message || '',
+        conversation_id: requestData.conversation_id,
         network_success: true,
+        response_fetched: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -974,6 +977,128 @@ export const DatabaseService = {
 
     if (error) throw error;
     return data;
+  },
+
+  // Get uncompleted requests for user (status not completed or failed)
+  async getUncompletedRequests(userId: string): Promise<Request[]> {
+    console.log('🔍 DB_QUERY: Getting uncompleted requests for userId:', userId);
+
+    const { data, error } = await supabase
+      .from('requests')
+      .select('*')
+      .eq('user_id', userId)
+      .not('status', 'in', '(completed,failed, cancelled, canceled)')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('🔍 DB_QUERY: Error getting uncompleted requests:', error);
+      throw error;
+    }
+
+    console.log('🔍 DB_QUERY: Found', data?.length || 0, 'uncompleted requests');
+    return data || [];
+  },
+
+  // Get completed requests that haven't been fetched yet
+  async getUnfetchedCompletedRequests(userId: string): Promise<Request[]> {
+    console.log('🔍 DB_QUERY: Getting unfetched completed requests for userId:', userId);
+
+    const { data, error } = await supabase
+      .from('requests')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'completed')
+      .eq('response_fetched', false)
+      .not('assistant_response', 'is', null)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('🔍 DB_QUERY: Error getting unfetched completed requests:', error);
+      throw error;
+    }
+
+    console.log('🔍 DB_QUERY: Found', data?.length || 0, 'unfetched completed requests');
+    return data || [];
+  },
+
+  // Get conversation messages by conversation ID
+  async getConversationMessages(conversationId: string) {
+    console.log('🔍 DB_QUERY: Getting conversation messages for conversationId:', conversationId);
+
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('🔍 DB_QUERY: Error getting conversation messages:', error);
+      throw error;
+    }
+
+    console.log('🔍 DB_QUERY: Found', data?.length || 0, 'messages for conversation:', conversationId);
+    return data || [];
+  },
+
+  // Check if response has already been fetched
+  async isResponseAlreadyFetched(requestId: string): Promise<boolean> {
+    console.log('🔍 DB_QUERY: Checking if response already fetched for requestId:', requestId);
+
+    const { data, error } = await supabase
+      .from('requests')
+      .select('response_fetched')
+      .eq('request_id', requestId)
+      .single();
+
+    if (error) {
+      console.error('🔍 DB_QUERY: Error checking if response fetched:', error);
+      // If there's an error, assume not fetched to be safe
+      return false;
+    }
+
+    const isFetched = data?.response_fetched === true;
+    console.log('🔍 DB_QUERY: Response fetched status for requestId:', requestId, '=', isFetched);
+    return isFetched;
+  },
+
+  // Update only network_success field without changing request status
+  async updateRequestNetworkSuccess(requestId: string, networkSuccess: boolean): Promise<void> {
+    console.log('🌐 DB_QUERY: Updating network_success for requestId:', requestId, 'to:', networkSuccess);
+
+    const { error } = await supabase
+      .from('requests')
+      .update({
+        network_success: networkSuccess,
+        updated_at: new Date().toISOString()
+      })
+      .eq('request_id', requestId);
+
+    if (error) {
+      console.error('🌐 DB_QUERY: Error updating network_success:', error);
+      throw error;
+    }
+
+    console.log('✅ DB_QUERY: Network_success updated for requestId:', requestId);
+  },
+
+  // Mark response as fetched when displayed in UI
+  async markResponseAsFetched(requestId: string): Promise<void> {
+    console.log('🔍 DB_QUERY: Marking response as fetched for requestId:', requestId);
+
+    const { error } = await supabase
+      .from('requests')
+      .update({
+        response_fetched: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('request_id', requestId);
+
+    if (error) {
+      console.error('🔍 DB_QUERY: Error marking response as fetched:', error);
+      throw error;
+    }
+
+    console.log('✅ DB_QUERY: Response marked as fetched for requestId:', requestId);
   },
 
 }

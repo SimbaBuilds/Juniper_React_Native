@@ -235,6 +235,7 @@ export const useServerApi = (options: UseServerApiOptions = {}): UseServerApiRes
     updateConfig,
     cancelRequest,
     isRequestInProgress,
+    setIsRequestInProgress,
     getCurrentRequestId,
   };
 }; 

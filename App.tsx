@@ -604,8 +604,8 @@ export default function App() {
 
   return (
     <NavigationContainer ref={navigationRef}>
-      <AuthProvider>
-        <VoiceProvider>
+        <AuthProvider>
+          <VoiceProvider>
               {Platform.OS === 'android' ? (
                 <WakeWordProvider>
                   <Stack.Navigator
@@ -721,7 +721,7 @@ export default function App() {
             )}
           </VoiceProvider>
         </AuthProvider>
-      </NavigationContainer>
+    </NavigationContainer>
   );
 }
 

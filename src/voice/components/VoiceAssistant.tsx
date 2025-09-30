@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Animated } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert, Platform, TouchableWithoutFeedback, Keyboard, Animated, AppState, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { VoiceButton } from './VoiceButton';
 import { VoiceResponseDisplay } from './VoiceResponseDisplay';
@@ -16,6 +16,7 @@ import { ChatMessageContent } from './ChatMessageContent';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { colors } from '../../shared/theme/colors';
 import { conversationService } from '../../services/conversationService';
+import { DatabaseService } from '../../supabase/supabase';
 
 const { VoiceModule } = NativeModules;
 
@@ -83,9 +84,12 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     continuePreviousChat,
     cancelRequest,
     isRequestInProgress,
+    setIsRequestInProgress,
     startContinuousConversation,
     startListening,
     requestStatus,
+    setRequestStatus,
+    setCurrentRequestId,
     settingsLoading
   } = useVoice();
 
@@ -95,8 +99,67 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   // State for onboarding - use ref to prevent re-evaluation on re-renders
   const hasEvaluatedOnboarding = React.useRef(false);
 
-  // Android-specific keyboard height tracking
-  const [androidKeyboardPadding, setAndroidKeyboardPadding] = React.useState(0);
+  // State for keyboard height tracking
+  const [keyboardHeight, setKeyboardHeight] = React.useState(0);
+  const scrollViewRef = React.useRef<ScrollView>(null);
+
+  // State for delayed status indicator display
+  const [shouldShowStatusIndicator, setShouldShowStatusIndicator] = React.useState(false);
+  const statusIndicatorTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Track keyboard show/hide events and scroll to bottom when keyboard appears
+  React.useEffect(() => {
+    const showListener = Keyboard.addListener('keyboardDidShow', (e) => {
+      console.log('⌨️ KEYBOARD_DID_SHOW:', {
+        height: e.endCoordinates.height,
+        screenY: e.endCoordinates.screenY,
+        width: e.endCoordinates.width,
+        duration: e.duration,
+      });
+      setKeyboardHeight(e.endCoordinates.height);
+
+      // Scroll to bottom when keyboard shows to keep input visible
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    });
+
+    const hideListener = Keyboard.addListener('keyboardDidHide', () => {
+      console.log('⌨️ KEYBOARD_DID_HIDE');
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showListener.remove();
+      hideListener.remove();
+    };
+  }, []);
+
+  // Effect to handle delayed status indicator display
+  React.useEffect(() => {
+    // Clear any existing timeout
+    if (statusIndicatorTimeoutRef.current) {
+      clearTimeout(statusIndicatorTimeoutRef.current);
+      statusIndicatorTimeoutRef.current = null;
+    }
+
+    if (requestStatus && requestStatus !== 'completed') {
+      // Show status indicator after 150ms delay
+      statusIndicatorTimeoutRef.current = setTimeout(() => {
+        setShouldShowStatusIndicator(true);
+      }, 150);
+    } else {
+      // Hide status indicator immediately when status is completed or null
+      setShouldShowStatusIndicator(false);
+    }
+
+    return () => {
+      if (statusIndicatorTimeoutRef.current) {
+        clearTimeout(statusIndicatorTimeoutRef.current);
+        statusIndicatorTimeoutRef.current = null;
+      }
+    };
+  }, [requestStatus]);
 
   // Handle opening conversation history and loading data
   const handleOpenConversationHistory = () => {
@@ -128,6 +191,99 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     } catch (error) {
       console.error('Error copying to clipboard:', error);
       Alert.alert('Error', 'Failed to copy chat to clipboard.');
+    }
+  };
+
+  // Check for unfetched completed requests and display them in chat
+  const checkUnfetchedRequests = async () => {
+    console.log('🎯 SOURCE_3: checkUnfetchedRequests starting...');
+    if (!user?.id) {
+      console.log('🎯 SOURCE_3: No user ID, returning early');
+      return;
+    }
+
+    try {
+      console.log('🎯 SOURCE_3: UNFETCHED_CHECK: Checking for unfetched completed requests...');
+      const unfetchedRequests = await DatabaseService.getUnfetchedCompletedRequests(user.id);
+
+      if (unfetchedRequests.length > 0) {
+        console.log('🎯 SOURCE_3: UNFETCHED_CHECK: Found', unfetchedRequests.length, 'unfetched completed requests');
+
+        // Process each request and fetch full conversations
+        const allConversationMessages: any[] = [];
+        const processedConversationIds = new Set<string>();
+
+        for (const request of unfetchedRequests) {
+          if (request.conversation_id && !processedConversationIds.has(request.conversation_id)) {
+            try {
+              console.log('📬 UNFETCHED_CHECK: Fetching conversation for ID:', request.conversation_id);
+              const conversationMessages = await DatabaseService.getConversationMessages(request.conversation_id);
+
+              // Convert database messages to chat history format
+              const formattedMessages = conversationMessages.map(message => ({
+                role: message.role as 'user' | 'assistant',
+                content: message.content,
+                timestamp: new Date(message.created_at).getTime()
+              }));
+
+              allConversationMessages.push(...formattedMessages);
+              processedConversationIds.add(request.conversation_id);
+              console.log('📬 UNFETCHED_CHECK: Added', formattedMessages.length, 'messages from conversation:', request.conversation_id);
+
+            } catch (error) {
+              console.error('❌ UNFETCHED_CHECK: Error fetching conversation messages for ID:', request.conversation_id, error);
+
+              // Fallback to old behavior if conversation fetch fails
+              if (request.assistant_response && request.assistant_response.trim()) {
+                allConversationMessages.push({
+                  role: 'assistant' as const,
+                  content: request.assistant_response,
+                  timestamp: new Date(request.updated_at).getTime()
+                });
+                console.log('📬 UNFETCHED_CHECK: Used fallback assistant response for request:', request.request_id);
+              }
+            }
+          } else if (!request.conversation_id) {
+            // Handle requests without conversation_id (fallback to old behavior)
+            console.log('📬 UNFETCHED_CHECK: No conversation_id for request:', request.request_id, 'using fallback');
+            if (request.assistant_response && request.assistant_response.trim()) {
+              allConversationMessages.push({
+                role: 'assistant' as const,
+                content: request.assistant_response,
+                timestamp: new Date(request.updated_at).getTime()
+              });
+            }
+          }
+        }
+
+        // Sort messages by timestamp and add to chat history
+        if (allConversationMessages.length > 0) {
+          allConversationMessages.sort((a, b) => a.timestamp - b.timestamp);
+          console.log('🎯 SOURCE_3: UNFETCHED_CHECK: Displaying', allConversationMessages.length, 'total messages from', processedConversationIds.size, 'conversations');
+          console.log('🎯 SOURCE_3: About to call continuePreviousChat with messages:', allConversationMessages.map(msg => ({
+            role: msg.role,
+            content: msg.content.substring(0, 50) + '...',
+            timestamp: msg.timestamp
+          })));
+          continuePreviousChat(allConversationMessages);
+          console.log('🎯 SOURCE_3: continuePreviousChat call completed');
+        }
+
+        // Mark all these requests as fetched (even ones without responses to prevent re-checking)
+        for (const request of unfetchedRequests) {
+          try {
+            await DatabaseService.markResponseAsFetched(request.request_id);
+            console.log('✅ UNFETCHED_CHECK: Marked response as fetched for:', request.request_id);
+          } catch (error) {
+            console.error('❌ UNFETCHED_CHECK: Error marking response as fetched:', error);
+          }
+        }
+
+      } else {
+        console.log('📬 UNFETCHED_CHECK: No unfetched completed requests found');
+      }
+    } catch (error) {
+      console.error('❌ UNFETCHED_CHECK: Error checking unfetched requests:', error);
     }
   };
 
@@ -169,13 +325,16 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
         
         // Check database for existing conversations
         const hasConversations = await conversationService.hasUserConversations();
-        
+
         if (hasConversations) {
           console.log('📝 ONBOARDING: User has conversations in database, skipping onboarding');
           hasEvaluatedOnboarding.current = true;
+
+          // Check for unfetched completed requests
+          await checkUnfetchedRequests();
           return;
         }
-        
+
         // User is new - show onboarding message
         console.log('👋 ONBOARDING: New user detected (no conversations in database), showing onboarding message');
         const onboardingMessage = {
@@ -201,35 +360,65 @@ What would you like to get started with today? If you aren't sure, starting with
     checkForOnboarding();
   }, [user?.id, continuePreviousChat, settingsLoading]);
 
-  // Android-specific keyboard height tracking
+  // Check for uncompleted requests on app launch/resume
   React.useEffect(() => {
-    if (Platform.OS === 'android') {
-      const showListener = Keyboard.addListener('keyboardDidShow', (e) => {
-        console.log('🔄 Keyboard shown, height:', e.endCoordinates.height, '(using adjustResize, not adding to bottomSection)');
-        setAndroidKeyboardPadding(e.endCoordinates.height);
-      });
-      const hideListener = Keyboard.addListener('keyboardDidHide', () => {
-        console.log('🔄 Keyboard hidden');
-        setAndroidKeyboardPadding(0);
-      });
+    const checkUncompletedRequests = async () => {
+      if (!user?.id || settingsLoading) {
+        return;
+      }
 
-      return () => {
-        showListener.remove();
-        hideListener.remove();
-      };
-    }
-  }, []);
+      try {
+        console.log('🔍 REQUEST_CHECK: Checking for uncompleted requests...');
+        const uncompletedRequests = await DatabaseService.getUncompletedRequests(user.id);
 
-  // Calculate dynamic padding for chat list (Android only)
-  const chatListBottomPadding = React.useMemo(() => {
-    if (Platform.OS === 'ios') {
-      return 80; // Keep iOS unchanged
-    }
-    // Android: reduce padding when keyboard is shown
-    const padding = androidKeyboardPadding > 0 ? 16 : 80;
-    console.log('🔄 Chat list padding changed:', padding, 'keyboard height:', androidKeyboardPadding);
-    return padding;
-  }, [androidKeyboardPadding]);
+        if (uncompletedRequests.length > 0) {
+          console.log('📊 REQUEST_CHECK: Found', uncompletedRequests.length, 'uncompleted requests');
+          // Set the request status to show status indicator for the most recent request
+          const mostRecentRequest = uncompletedRequests[0];
+          console.log('📊 REQUEST_CHECK: Most recent uncompleted request:', mostRecentRequest.request_id, 'status:', mostRecentRequest.status);
+
+          // Check if request is within 6 hours (6 * 60 * 60 * 1000 ms)
+          const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+          const requestAge = Date.now() - new Date(mostRecentRequest.created_at).getTime();
+
+          if (requestAge > SIX_HOURS_MS) {
+            console.log('📊 REQUEST_CHECK: Most recent request is too old (', Math.round(requestAge / (60 * 60 * 1000)), 'hours), ignoring');
+            return;
+          }
+
+          console.log('📊 REQUEST_CHECK: Request is recent (', Math.round(requestAge / (60 * 1000)), 'minutes old), resuming');
+
+          // Set the current request status and ID to show the status indicator
+          setCurrentRequestId(mostRecentRequest.request_id);
+          setRequestStatus(mostRecentRequest.status);
+          setIsRequestInProgress(true);
+        } else {
+          console.log('📊 REQUEST_CHECK: No uncompleted requests found');
+        }
+      } catch (error) {
+        console.error('❌ REQUEST_CHECK: Error checking uncompleted requests:', error);
+      }
+    };
+
+    checkUncompletedRequests();
+  }, [user?.id, settingsLoading, setCurrentRequestId, setRequestStatus, setIsRequestInProgress]);
+
+  // Check for unfetched requests when app returns to foreground
+  React.useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active' && user?.id) {
+        console.log('📬 VOICE_ASSISTANT: App became active - checking unfetched requests');
+        checkUnfetchedRequests();
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    return () => {
+      subscription?.remove();
+    };
+  }, [user?.id, checkUnfetchedRequests]);
+
 
   // When a speech result is received, call the callback
   React.useEffect(() => {
@@ -408,12 +597,17 @@ What would you like to get started with today? If you aren't sure, starting with
   }
   
   return (
-    <KeyboardAvoidingView 
-      style={styles.keyboardAvoidingView}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
-      <View style={styles.container}>
+    <View style={styles.container}>
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollViewContent,
+          { paddingBottom: keyboardHeight > 0 ? keyboardHeight - 60 : 0 }
+        ]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
           <View style={styles.header}>
             <VoiceStatusIndicator />
             
@@ -476,7 +670,7 @@ What would you like to get started with today? If you aren't sure, starting with
                     style={styles.chatList}
                     contentContainerStyle={[
                       styles.chatListContent,
-                      { paddingBottom: chatListBottomPadding }
+                      { paddingBottom: 20 }
                     ]}
                     keyboardShouldPersistTaps="always"
                     keyboardDismissMode="on-drag"
@@ -504,7 +698,7 @@ What would you like to get started with today? If you aren't sure, starting with
                   />
                   
                   {/* Status indicator overlay */}
-                  {requestStatus && requestStatus !== 'completed' && (
+                  {shouldShowStatusIndicator && (
                     <View style={styles.statusOverlay}>
                       <View style={styles.statusContent}>
                         <LoadingDot />
@@ -524,7 +718,7 @@ What would you like to get started with today? If you aren't sure, starting with
                   </Text>
                   
                   {/* Status indicator overlay for empty chat */}
-                  {requestStatus && requestStatus !== 'completed' && (
+                  {shouldShowStatusIndicator && (
                     <View style={styles.statusOverlay}>
                       <View style={styles.statusContent}>
                         <LoadingDot />
@@ -568,15 +762,7 @@ What would you like to get started with today? If you aren't sure, starting with
           )}
 
 
-          <View style={[
-            styles.bottomSection,
-            Platform.OS === 'ios' && {
-              paddingBottom: Math.max(insets.bottom, 4), // Use safe area insets or minimum 4px
-            },
-            Platform.OS === 'android' && {
-              paddingBottom: 4, // Minimal padding - adjustResize handles keyboard
-            }
-          ]}>
+          <View style={styles.bottomSection}>
             {/* Voice button - positioned above text input */}
             <View style={styles.voiceButtonContainer}>
               <VoiceButton 
@@ -605,17 +791,20 @@ What would you like to get started with today? If you aren't sure, starting with
               setShowConversationHistory(false);
             }}
           />
-        </View>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </View>
   );
 };
 
 const styles = StyleSheet.create({
-  keyboardAvoidingView: {
-    flex: 1,
-  },
   container: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
   },
   chatContainer: {
     flex: 1,

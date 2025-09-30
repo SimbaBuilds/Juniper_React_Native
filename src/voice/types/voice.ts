@@ -27,6 +27,7 @@ export interface VoiceContextState {
   integrationInProgress: boolean;
   currentRequestId: string | null;
   requestStatus: string | null;
+  activeConversationId: string | null;
 }
 
 /**
@@ -49,6 +50,9 @@ export interface VoiceContextActions {
   continuePreviousChat: (messages: { role: 'user' | 'assistant'; content: string; timestamp: number }[]) => void;
   cancelRequest: () => Promise<boolean>;
   isRequestInProgress: boolean;
+  setIsRequestInProgress: (inProgress: boolean) => void;
+  setCurrentRequestId: (id: string | null) => void;
+  setRequestStatus: (status: string | null) => void;
   
   // Voice settings
   voiceSettings: any;

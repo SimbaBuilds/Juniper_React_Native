@@ -4,7 +4,7 @@ import VoiceService from './VoiceService';
 import { useServerApi } from '../api/useServerApi';
 import { useVoiceState as useVoiceStateHook } from './hooks/useVoiceState';
 import { useVoiceSettings } from './hooks/useVoiceSettings';
-import { DatabaseService } from '../supabase/supabase';
+import { DatabaseService, supabase } from '../supabase/supabase';
 import { useAuth } from '../auth/AuthContext';
 import { DeviceEventEmitter, EmitterSubscription, Platform, NativeModules, AppState } from 'react-native';
 import { conversationService } from '../services/conversationService';
@@ -47,6 +47,7 @@ const VoiceContext = createContext<VoiceContextValue>({
   integrationInProgress: false,
   currentRequestId: null,
   requestStatus: null,
+  activeConversationId: null,
   setVoiceState: () => {},
   setWakeWordEnabled: () => {},
   setError: () => {},
@@ -63,6 +64,9 @@ const VoiceContext = createContext<VoiceContextValue>({
   continuePreviousChat: () => {},
   cancelRequest: async () => false,
   isRequestInProgress: false,
+  setIsRequestInProgress: () => {},
+  setCurrentRequestId: () => {},
+  setRequestStatus: () => {},
   voiceSettings: {},
   settingsLoading: false,
   updateVoiceSettings: async () => {},
@@ -134,22 +138,34 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const [integrationInProgress, setIntegrationInProgress] = useState<boolean>(false);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   const [requestStatus, setRequestStatus] = useState<string | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   
   // Auto-refresh timer state
   const [lastMessageTimestamp, setLastMessageTimestamp] = useState<number | null>(null);
   const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const integrationPollingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Track recent assistant messages to prevent duplicates
+  const recentAssistantMessagesRef = useRef<{content: string, timestamp: number}[]>([]);
   
   // Request status polling
   const { status: polledStatus } = useRequestStatusPolling({
     requestId: currentRequestId,
     onStatusChange: (status) => {
       console.log('📊 REQUEST_STATUS: Status changed to:', status);
-      setRequestStatus(status);
-      
+
+      // For failed/cancelled states, set to 'completed' to hide status indicator
+      if (status === 'failed' || status === 'cancelled') {
+        console.log('📊 REQUEST_STATUS: Setting failed/cancelled status to completed to hide indicator');
+        setRequestStatus('completed');
+      } else {
+        setRequestStatus(status);
+      }
+
       // Clear request ID when request completes, fails, or is cancelled
       if (status === 'completed' || status === 'failed' || status === 'cancelled') {
         console.log('📊 REQUEST_STATUS: Request reached final state, clearing request ID');
+        setIsRequestInProgress(false); // Clear immediately to hide cancel button
         setTimeout(() => {
           setCurrentRequestId(null);
           setRequestStatus(null);
@@ -158,7 +174,15 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
   });
 
-  
+  // Clear requestStatus when currentRequestId is cleared
+  useEffect(() => {
+    if (!currentRequestId && requestStatus) {
+      console.log('📊 REQUEST_STATUS: Clearing status after request ID cleared');
+      setRequestStatus(null);
+    }
+  }, [currentRequestId, requestStatus]);
+
+
   // Voice service instance
   const voiceService = useMemo(() => VoiceService.getInstance(), []);
   
@@ -166,22 +190,33 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const listenersSetupRef = useRef(false);
 
   // Server API hook
-  const { sendMessage, cancelRequest, isRequestInProgress, getCurrentRequestId } = useServerApi();
+  const { sendMessage, cancelRequest, isRequestInProgress, setIsRequestInProgress, getCurrentRequestId } = useServerApi();
 
   // Auto-refresh timer functions
   const handleAutoRefresh = useCallback(async () => {
     if (chatHistory.length > 0) {
       console.log('🔄 Auto-refresh: Saving and clearing conversation after 10 minutes of inactivity');
       
-      // Save conversation to Supabase before clearing
-      try {
-        const conversationId = await conversationService.saveConversation(chatHistory);
-        if (conversationId) {
-          console.log('✅ Auto-refresh: Conversation saved with ID:', conversationId);
+      // Mark conversation as completed if there's an active conversation
+      if (activeConversationId) {
+        try {
+          console.log('💬 AUTO_REFRESH: Marking conversation as completed:', activeConversationId);
+          await supabase
+            .from('conversations')
+            .update({
+              status: 'completed',
+              metadata: {
+                messageCount: chatHistory.length,
+                endTime: Date.now()
+              },
+              updated_at: new Date()
+            })
+            .eq('id', activeConversationId);
+          console.log('✅ Auto-refresh: Conversation marked as completed:', activeConversationId);
+        } catch (error) {
+          console.error('❌ Auto-refresh: Error updating conversation status:', error);
+          // Continue with clearing even if update fails
         }
-      } catch (error) {
-        console.error('❌ Auto-refresh: Error saving conversation:', error);
-        // Continue with clearing even if save fails
       }
       
       // Clear native conversation history
@@ -195,15 +230,16 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       
       // Clear chat history
       setChatHistory([]);
+      setActiveConversationId(null); // Clear the active conversation ID
       setLastMessageTimestamp(null);
-      
+
       // Clear the timer since we just cleared history
       if (autoRefreshTimerRef.current) {
         clearTimeout(autoRefreshTimerRef.current);
         autoRefreshTimerRef.current = null;
       }
     }
-  }, [chatHistory]);
+  }, [chatHistory, activeConversationId]);
 
   const resetAutoRefreshTimer = useCallback(() => {
     // Clear existing timer
@@ -220,6 +256,69 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       }, AUTO_REFRESH_DELAY);
     }
   }, [chatHistory.length, handleAutoRefresh]);
+
+  // Helper function to update recent assistant messages ref
+  const updateRecentAssistantMessages = useCallback((content: string, timestamp: number) => {
+    const newMessage = { content, timestamp };
+    console.log(`📝 UPDATE_RECENT_REF: Adding message to recentRef - content: "${content.substring(0, 50)}...", timestamp: ${timestamp}`);
+    console.log(`📝 UPDATE_RECENT_REF: Previous recentRef length: ${recentAssistantMessagesRef.current.length}`);
+    
+    recentAssistantMessagesRef.current = [
+      newMessage,
+      ...recentAssistantMessagesRef.current.slice(0, 2) // Keep only last 3 messages
+    ];
+    
+    console.log(`📝 UPDATE_RECENT_REF: Updated recentRef length: ${recentAssistantMessagesRef.current.length}`);
+    console.log(`📝 UPDATE_RECENT_REF: Updated recentRef contents:`, recentAssistantMessagesRef.current.map(msg => ({ 
+      content: msg.content.substring(0, 30) + '...', 
+      timestamp: msg.timestamp 
+    })));
+  }, []);
+
+  // Helper function to check for duplicate messages within time window
+  const isDuplicateMessage = useCallback((newContent: string, role: 'user' | 'assistant', timeWindowMs: number = 5000): boolean => {
+    const now = Date.now();
+    console.log(`🔍 DUPLICATE_CHECK: Checking isDuplicateMessage - role: ${role}, content: "${newContent.substring(0, 50)}...", chatHistory length: ${chatHistory.length}`);
+    
+    const duplicate = chatHistory.some(msg => {
+      const isMatch = msg.role === role &&
+        msg.content === newContent &&
+        (now - msg.timestamp) < timeWindowMs;
+      
+      if (isMatch) {
+        console.log(`🔍 DUPLICATE_CHECK: Found duplicate in chatHistory - timestamp diff: ${now - msg.timestamp}ms, content matches: ${msg.content === newContent}`);
+      }
+      return isMatch;
+    });
+    
+    console.log(`🔍 DUPLICATE_CHECK: isDuplicateMessage result: ${duplicate}`);
+    return duplicate;
+  }, [chatHistory]);
+
+  // Helper function to check recent assistant messages ref for duplicates
+  const isDuplicateInRecentRef = useCallback((content: string, timeWindowMs: number = 5000): boolean => {
+    const now = Date.now();
+    console.log(`🔍 DUPLICATE_CHECK: Checking isDuplicateInRecentRef - content: "${content.substring(0, 50)}...", recentRef length: ${recentAssistantMessagesRef.current.length}`);
+    
+    const duplicate = recentAssistantMessagesRef.current.some(msg => {
+      const isMatch = msg.content === content && (now - msg.timestamp) < timeWindowMs;
+      
+      if (isMatch) {
+        console.log(`🔍 DUPLICATE_CHECK: Found duplicate in recentRef - timestamp diff: ${now - msg.timestamp}ms, content matches: ${msg.content === content}`);
+      } else if (msg.content === content) {
+        console.log(`🔍 DUPLICATE_CHECK: Content matches but outside time window - timestamp diff: ${now - msg.timestamp}ms`);
+      }
+      return isMatch;
+    });
+    
+    console.log(`🔍 DUPLICATE_CHECK: isDuplicateInRecentRef result: ${duplicate}`);
+    console.log(`🔍 DUPLICATE_CHECK: Current recentRef contents:`, recentAssistantMessagesRef.current.map(msg => ({ 
+      content: msg.content.substring(0, 30) + '...', 
+      age: now - msg.timestamp 
+    })));
+    
+    return duplicate;
+  }, []);
 
   // Integration status polling functions
   const stopIntegrationPolling = useCallback(() => {
@@ -387,14 +486,56 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       if (backgroundConversations.length > 0) {
         console.log(`📱 CONVERSATION_SYNC: Found ${backgroundConversations.length} background conversations, merging...`);
         
+        console.log('🎯 SOURCE_2: checkAndMergeBackgroundConversations processing background conversations');
         setChatHistory(currentHistory => {
+          console.log('🎯 SOURCE_2: Current chatHistory length before merging:', currentHistory.length);
           const mergedHistory = conversationSyncService.mergeBackgroundHistory(currentHistory, backgroundConversations);
+          console.log('🎯 SOURCE_2: Merged history length after merging:', mergedHistory.length, 'difference:', mergedHistory.length - currentHistory.length);
           
+          // Apply the same deduplication logic as VoiceResponseUpdate
+          const deduplicatedHistory = mergedHistory.filter((message, index) => {
+            // Only apply deduplication to assistant messages
+            if (message.role !== 'assistant') {
+              return true;
+            }
+
+            const messageContent = message.content.trim();
+            console.log('🎯 SOURCE_2: Checking assistant message for duplicates - content:', messageContent.substring(0, 50) + '...');
+            
+            // Check for duplicate using recent ref (same as VoiceResponseUpdate)
+            if (isDuplicateInRecentRef(messageContent)) {
+              console.log('🔄 SOURCE_2: CONVERSATION_SYNC: Duplicate message detected in recent ref, filtering:', messageContent.substring(0, 50) + '...');
+              return false;
+            }
+
+            // Check if this message already exists in the current history (same as VoiceResponseUpdate)
+            const isDuplicate = currentHistory.some(existingMsg =>
+              existingMsg.role === 'assistant' &&
+              existingMsg.content.trim() === messageContent &&
+              Math.abs(existingMsg.timestamp - message.timestamp) < 5000 // 5 second window
+            );
+
+            if (isDuplicate) {
+              console.log('🔄 SOURCE_2: CONVERSATION_SYNC: Duplicate message detected via time window, filtering:', messageContent.substring(0, 50) + '...');
+              return false;
+            }
+
+            console.log('🎯 SOURCE_2: No duplicates found for message, keeping it');
+            // Update recent assistant messages ref for future deduplication
+            updateRecentAssistantMessages(messageContent, message.timestamp);
+            return true;
+          });
+
           // Mark conversations as synced
           const conversationIds = backgroundConversations.map(conv => conv.id);
           conversationSyncService.markConversationsAsSynced(conversationIds);
           
-          return mergedHistory;
+          if (deduplicatedHistory.length < mergedHistory.length) {
+            console.log(`🎯 SOURCE_2: CONVERSATION_SYNC: Filtered ${mergedHistory.length - deduplicatedHistory.length} duplicate messages`);
+          }
+          
+          console.log('🎯 SOURCE_2: Final deduplicatedHistory length:', deduplicatedHistory.length);
+          return deduplicatedHistory;
         });
         
         console.log('✅ CONVERSATION_SYNC: Background conversations merged successfully');
@@ -404,7 +545,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('❌ CONVERSATION_SYNC: Error checking background conversations:', error);
     }
-  }, []);
+  }, [isDuplicateInRecentRef, updateRecentAssistantMessages]);
 
   // Sync current history to native
   const syncCurrentHistoryToNative = useCallback(async () => {
@@ -440,21 +581,71 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     
     // Listen for response updates
     const responseSub = DeviceEventEmitter.addListener('VoiceResponseUpdate', (event) => {
-      console.log('💬 Response update:', event.response);
+      console.log('🎯 SOURCE_1: VoiceResponseUpdate received - content:', event.response.substring(0, 50) + '...');
       setResponse(event.response);
       
       // Add to chat history
       if (event.response && event.response.trim()) {
-        setChatHistory(prev => [...prev, {
-          role: 'assistant',
-          content: event.response,
-          timestamp: Date.now()
-        }]);
+        console.log('🎯 SOURCE_1: Processing VoiceResponseUpdate for chat history addition');
+        console.log('🎯 SOURCE_1: Current chatHistory length before addition:', chatHistory.length);
+        console.log('🎯 SOURCE_1: Current requestId:', currentRequestId);
         
-        // Mark request as completed after successful voice response
-        console.log('✅ VOICE_RESPONSE: Setting request status to completed after voice response');
-        setRequestStatus('completed');
-        // Clear current request ID to stop polling
+        // Check for duplicate message using ref (avoids React state closure issues)
+        if (isDuplicateInRecentRef(event.response.trim())) {
+          console.log('🔄 SOURCE_1: VOICE_RESPONSE: Duplicate message detected in recent ref, skipping:', event.response.substring(0, 50) + '...');
+          return;
+        }
+
+        // Additional check using traditional method as fallback
+        if (isDuplicateMessage(event.response.trim(), 'assistant')) {
+          console.log('🔄 SOURCE_1: VOICE_RESPONSE: Duplicate message detected via time window, skipping:', event.response.substring(0, 50) + '...');
+          return;
+        }
+
+        const timestamp = Date.now();
+        console.log('🎯 SOURCE_1: No duplicates detected - proceeding to add message with timestamp:', timestamp);
+
+        // Update recent messages ref immediately
+        updateRecentAssistantMessages(event.response.trim(), timestamp);
+
+        console.log('🎯 SOURCE_1: About to call setChatHistory to add assistant message');
+        setChatHistory(prev => {
+          console.log('🎯 SOURCE_1: setChatHistory callback - prev length:', prev.length, 'adding message');
+          
+          // Check for duplicates against the CURRENT state (prev), not stale closure state
+          const isDuplicateInCurrentState = prev.some(msg =>
+            msg.role === 'assistant' &&
+            msg.content === event.response &&
+            Math.abs(Date.now() - msg.timestamp) < 30000 // 30 second window for background scenarios
+          );
+          
+          if (isDuplicateInCurrentState) {
+            console.log('🔄 SOURCE_1: VOICE_RESPONSE: Duplicate detected in current state, skipping addition');
+            return prev; // Return unchanged state
+          }
+          
+          const newHistory = [...prev, {
+            role: 'assistant' as const,
+            content: event.response,
+            timestamp
+          }];
+          console.log('🎯 SOURCE_1: setChatHistory callback - new length:', newHistory.length);
+          return newHistory;
+        });
+
+        // Mark response as fetched since it's now displayed in UI
+        if (currentRequestId) {
+          DatabaseService.markResponseAsFetched(currentRequestId)
+            .then(() => {
+              console.log('✅ VOICE_RESPONSE: Response marked as fetched for requestId:', currentRequestId);
+            })
+            .catch((error) => {
+              console.error('❌ VOICE_RESPONSE: Error marking response as fetched:', error);
+            });
+        }
+
+        // Clear current request ID to stop polling (backend handles status updates)
+        console.log('✅ VOICE_RESPONSE: Clearing request ID after voice response');
         setCurrentRequestId(null);
       }
     });
@@ -521,10 +712,47 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               console.log('🔍 RN_BRIDGE_DEBUG: History entries count:', updatedHistory.length);
 
               const apiStartTime = performance.now();
-              const response = await sendMessage(text, updatedHistory, (reactNativeRequestId) => {
+              const response = await sendMessage(text, updatedHistory, async (reactNativeRequestId) => {
                 localRequestId = reactNativeRequestId; // Store in local variable for catch block
                 console.log('📊 REQUEST_STATUS: Setting request ID for polling:', reactNativeRequestId);
                 console.log('🔍 RN_BRIDGE_DEBUG: Request ID assigned:', reactNativeRequestId);
+
+                // Create database request record for voice messages too
+                if (user?.id) {
+                  try {
+                    console.log('🔄 VOICE_DB_CREATE_START: Starting database record creation for voice message');
+
+                    // Create conversation if this is the first message (no active conversation)
+                    let conversationId = activeConversationId;
+                    if (!conversationId) {
+                      console.log('💬 VOICE_FIRST_MESSAGE: Creating new conversation for first voice message');
+                      conversationId = await createConversation(text);
+                      if (conversationId) {
+                        setActiveConversationId(conversationId);
+                        console.log('💬 VOICE_FIRST_MESSAGE: ✅ New conversation created and set:', conversationId);
+                      } else {
+                        console.error('💬 VOICE_FIRST_MESSAGE: ❌ Failed to create conversation');
+                      }
+                    } else {
+                      console.log('💬 VOICE_CONTINUING: Using existing conversation:', conversationId);
+                    }
+
+                    const dbRecord = await DatabaseService.createRequest(user.id, {
+                      request_id: reactNativeRequestId,
+                      request_type: 'voice_message',
+                      status: 'pending',
+                      metadata: {
+                        message: text,
+                        nativeRequestId: requestId
+                      },
+                      conversation_id: conversationId // Include conversation_id in request record
+                    });
+                    console.log('🔄 VOICE_DB_CREATE_SUCCESS: Database request record created:', dbRecord.id, 'with conversation_id:', conversationId);
+                  } catch (error) {
+                    console.error('🔄 VOICE_DB_CREATE_ERROR: Failed to create database request record:', error);
+                  }
+                }
+
                 setCurrentRequestId(reactNativeRequestId);
 
                 // Store mapping between React Native request ID and native request ID
@@ -559,45 +787,46 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               await voiceService.handleApiResponse(requestId, response.response);
               
               // Sync updated history to native after API response
+              // Note: Don't add assistant message here since it's already added via VoiceResponseUpdate event
               try {
-                const updatedHistoryAfterResponse = [...updatedHistory, {
-                  role: 'assistant' as const,
-                  content: response.response,
-                  timestamp: Date.now()
-                }];
-                await conversationSyncService.syncHistoryToNative(updatedHistoryAfterResponse);
+                await conversationSyncService.syncHistoryToNative(updatedHistory);
                 console.log('✅ VOICE_BRIDGE: History synced to native after API response');
               } catch (syncError) {
                 console.warn('⚠️ VOICE_BRIDGE: Failed to sync history to native:', syncError);
               }
-              
+
+              // Mark response as fetched since it's now displayed in UI
+              if (currentRequestId) {
+                DatabaseService.markResponseAsFetched(currentRequestId)
+                  .then(() => {
+                    console.log('✅ VOICE_BRIDGE: Response marked as fetched for requestId:', currentRequestId);
+                  })
+                  .catch((error) => {
+                    console.error('❌ VOICE_BRIDGE: Error marking response as fetched:', error);
+                  });
+              }
+
               // Clean up request mapping since request completed successfully
               if (currentRequestId) {
                 requestMapping.removeMapping(currentRequestId);
               }
-              
-              // Mark request as completed after successful API response (voice mode)
-              console.log('✅ VOICE_BRIDGE: Setting request status to completed after successful API response');
-              setRequestStatus('completed');
+
+              // Clear request ID after successful API response (backend handles status updates)
+              console.log('✅ VOICE_BRIDGE: Clearing request ID after successful API response');
               setCurrentRequestId(null);
               
             } catch (error) {
               console.error('🟠 VOICE_CONTEXT: ❌ Error processing text request:', error);
 
-              // Check for network error and update request status
+              // Handle network errors gracefully - don't mark request as failed
               if (error instanceof Error && error.message === 'Network Error' && localRequestId) {
                 try {
-                  await DatabaseService.updateRequestStatus(
-                    localRequestId,
-                    'failed',
-                    undefined,  // metadata
-                    undefined,  // total_turns
-                    undefined,  // user_message
-                    false       // network_success = false
-                  );
-                  console.log('🌐 VOICE_CONTEXT: Network error - updated request network_success to false for requestId:', localRequestId);
+                  // Only update network_success, keep status unchanged so polling can continue
+                  await DatabaseService.updateRequestNetworkSuccess(localRequestId, false);
+                  console.log('🌐 VOICE_CONTEXT: Network error - updated network_success to false, keeping status unchanged for requestId:', localRequestId);
+                  console.log('🔄 VOICE_CONTEXT: Request polling will continue - backend may still complete successfully');
                 } catch (updateError) {
-                  console.error('🌐 VOICE_CONTEXT: Failed to update network_success status:', updateError);
+                  console.error('🌐 VOICE_CONTEXT: Failed to update network_success:', updateError);
                 }
               }
 
@@ -607,20 +836,30 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               }
 
               if (!isCancellationError(error)) {
-                const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-                // Send error response back to native
-                try {
-                  await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
-                } catch (responseError) {
-                  console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
+                // For network errors, don't send error response to native - let polling continue
+                if (error instanceof Error && error.message === 'Network Error') {
+                  console.log('🟠 VOICE_CONTEXT: Network error - not sending error to native, polling will continue');
+                } else {
+                  const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                  // Send error response back to native
+                  try {
+                    await voiceService.handleApiResponse(requestId, `Error: ${errorMessage}`);
+                  } catch (responseError) {
+                    console.error('🟠 VOICE_CONTEXT: ❌ Error sending error response to native:', responseError);
+                  }
                 }
               } else {
                 console.log('🟠 VOICE_CONTEXT: Request was cancelled - not sending error to native');
               }
               
-              // Clear request ID after error
-              setCurrentRequestId(null);
-              setRequestStatus(null);
+              // Only clear request ID for non-network errors (let polling continue for network errors)
+              if (!(error instanceof Error && error.message === 'Network Error')) {
+                console.log('🟠 VOICE_CONTEXT: Clearing request ID after non-network error');
+                setCurrentRequestId(null);
+                setRequestStatus(null);
+              } else {
+                console.log('🟠 VOICE_CONTEXT: Network error - keeping request ID for continued polling');
+              }
             }
           }, 0);
           
@@ -731,7 +970,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       appStateCleanup();
       listenersSetupRef.current = false;
     };
-  }, [sendMessage, voiceSettings, voiceService]);
+  }, [sendMessage, voiceSettings, voiceService, activeConversationId, user?.id]);
 
   // Start listening - delegate to hook
   const startListening = useCallback(async () => {
@@ -789,17 +1028,25 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const clearChatHistory = useCallback(async () => {
     console.log('🗑️ Clearing chat history (manual)');
     
-    // Save conversation to Supabase before clearing if there are messages
-    if (chatHistory.length > 0) {
+    // Mark conversation as completed if there's an active conversation
+    if (activeConversationId && chatHistory.length > 0) {
       try {
-        console.log('💾 Saving conversation before clearing...');
-        const conversationId = await conversationService.saveConversation(chatHistory);
-        if (conversationId) {
-          console.log('✅ Conversation saved with ID:', conversationId);
-        }
+        console.log('💬 COMPLETING: Marking conversation as completed:', activeConversationId);
+        await supabase
+          .from('conversations')
+          .update({
+            status: 'completed',
+            metadata: {
+              messageCount: chatHistory.length,
+              endTime: Date.now()
+            },
+            updated_at: new Date()
+          })
+          .eq('id', activeConversationId);
+        console.log('✅ Conversation marked as completed:', activeConversationId);
       } catch (error) {
-        console.error('❌ Error saving conversation:', error);
-        // Continue with clearing even if save fails
+        console.error('❌ Error updating conversation status:', error);
+        // Continue with clearing even if update fails
       }
     }
     
@@ -824,7 +1071,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }
     
     setChatHistory([]);
-  }, [chatHistory]);
+    setActiveConversationId(null); // Clear the active conversation ID
+    console.log('✅ Chat history cleared and conversation completed');
+  }, [chatHistory, activeConversationId]);
 
   // Interrupt speech - delegate to hook
   const interruptSpeech = useCallback(async () => {
@@ -852,7 +1101,52 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       return false;
     }
   }, [voiceStateFromHook]);
-  
+
+  // Create a new conversation and return its ID
+  const createConversation = useCallback(async (firstMessage: string): Promise<string | null> => {
+    if (!user?.id) {
+      console.error('❌ Cannot create conversation: No user ID');
+      return null;
+    }
+
+    try {
+      console.log('💬 Creating new conversation for first message:', firstMessage.substring(0, 50) + '...');
+
+      // Generate conversation title from first message
+      const title = firstMessage.length > 50 ?
+        firstMessage.substring(0, 50) + '...' :
+        firstMessage;
+
+      // Create conversation record with 'active' status
+      const conversationData = {
+        user_id: user.id,
+        title,
+        conversation_type: 'voice_chat',
+        status: 'active', // Changed from 'completed' to 'active'
+        metadata: {
+          messageCount: 1,
+          startTime: Date.now()
+        },
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+
+      const { data: conversation, error } = await supabase
+        .from('conversations')
+        .insert(conversationData)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Conversation created successfully:', conversation.id);
+      return conversation.id;
+    } catch (error) {
+      console.error('❌ Error creating conversation:', error);
+      return null;
+    }
+  }, [user?.id]);
+
   // Send text message using existing API infrastructure
   const sendTextMessage = useCallback(async (text: string, integrationInProgress?: boolean, imageUrl?: string) => {
     if (!text.trim()) {
@@ -903,6 +1197,22 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               if (user?.id) {
                 try {
                   console.log('🔄 DB_CREATE_START: Starting database record creation for user:', user.id);
+
+                  // Create conversation if this is the first message (no active conversation)
+                  let conversationId = activeConversationId;
+                  if (!conversationId) {
+                    console.log('💬 FIRST_MESSAGE: Creating new conversation for first message');
+                    conversationId = await createConversation(text.trim());
+                    if (conversationId) {
+                      setActiveConversationId(conversationId);
+                      console.log('💬 FIRST_MESSAGE: ✅ New conversation created and set:', conversationId);
+                    } else {
+                      console.error('💬 FIRST_MESSAGE: ❌ Failed to create conversation');
+                    }
+                  } else {
+                    console.log('💬 CONTINUING: Using existing conversation:', conversationId);
+                  }
+
                   const dbRecord = await DatabaseService.createRequest(user.id, {
                     request_id: requestId,
                     request_type: 'chat_message',
@@ -911,9 +1221,10 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
                       message: text.trim(),
                       hasImage: !!imageUrl
                     },
+                    conversation_id: conversationId, // Include conversation_id in request record
                     ...(imageUrl && { image_url: imageUrl })
                   });
-                  console.log('🔄 DB_CREATE_SUCCESS: Database request record created:', dbRecord.id, 'with image URL:', !!imageUrl);
+                  console.log('🔄 DB_CREATE_SUCCESS: Database request record created:', dbRecord.id, 'with conversation_id:', conversationId, 'and image URL:', !!imageUrl);
 
                   // Set request ID AFTER database record is successfully created
                   console.log('🔄 SET_REQUEST_ID: Setting currentRequestId to trigger polling:', requestId);
@@ -972,16 +1283,33 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
               console.log('🔗 TEXT_INPUT: No integration build in progress flag - skipping polling');
             }
             
+            // Check if response has already been fetched (e.g., by unfetched check)
+            if (localRequestId) {
+              const alreadyFetched = await DatabaseService.isResponseAlreadyFetched(localRequestId);
+              if (alreadyFetched) {
+                console.log('📝 TEXT_INPUT: Response already fetched by unfetched check, skipping duplicate processing');
+                console.log('🔄 COMPLETION: Clearing request ID to stop polling');
+                setCurrentRequestId(null);
+                return;
+              }
+            }
+            
             // Add assistant response to chat history
+            // Check for duplicate message to prevent race conditions
+            if (isDuplicateMessage(response.response, 'assistant')) {
+              console.log('🔄 TEXT_INPUT: Duplicate message detected, skipping:', response.response.substring(0, 50) + '...');
+              return;
+            }
+
             const assistantMessage: ChatMessage = {
               role: 'assistant',
               content: response.response,
               timestamp: Date.now()
             };
-            
+
             setChatHistory(prevHistory => {
               const updatedHistoryWithResponse = [...prevHistory, assistantMessage];
-              
+
               // Sync updated history to native after API response
               setTimeout(async () => {
                 try {
@@ -991,55 +1319,70 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
                   console.warn('⚠️ TEXT_INPUT: Failed to sync history to native:', syncError);
                 }
               }, 0);
-              
+
               return updatedHistoryWithResponse;
             });
-            
+
+            // Mark response as fetched since it's now displayed in UI
+            if (localRequestId) {
+              DatabaseService.markResponseAsFetched(localRequestId)
+                .then(() => {
+                  console.log('✅ TEXT_INPUT: Response marked as fetched for requestId:', localRequestId);
+                })
+                .catch((error) => {
+                  console.error('❌ TEXT_INPUT: Error marking response as fetched:', error);
+                });
+            }
+
             // Note: No TTS playback because we're in text mode
             console.log('📝 TEXT_INPUT: Response added to chat (no TTS in text mode)');
-            
-            // Clear request ID after successful completion to stop polling
+
+            // Clear request ID after successful completion to stop polling (backend handles status updates)
             console.log('🔄 COMPLETION: Clearing request ID to stop polling');
             setCurrentRequestId(null);
-            setRequestStatus('completed');
             
           } catch (error) {
             console.error('📝 TEXT_INPUT: ❌ Error processing text message:', error);
 
-            // Check for network error and update request status
+            // Handle network errors gracefully - don't mark request as failed
             if (error instanceof Error && error.message === 'Network Error' && localRequestId) {
               try {
-                await DatabaseService.updateRequestStatus(
-                  localRequestId,
-                  'failed',
-                  undefined,  // metadata
-                  undefined,  // total_turns
-                  undefined,  // user_message
-                  false       // network_success = false
-                );
-                console.log('🌐 TEXT_INPUT: Network error - updated request network_success to false for requestId:', localRequestId);
+                // Only update network_success, keep status unchanged so polling can continue
+                await DatabaseService.updateRequestNetworkSuccess(localRequestId, false);
+                console.log('🌐 TEXT_INPUT: Network error - updated network_success to false, keeping status unchanged for requestId:', localRequestId);
+                console.log('🔄 TEXT_INPUT: Request polling will continue - backend may still complete successfully');
               } catch (updateError) {
-                console.error('🌐 TEXT_INPUT: Failed to update network_success status:', updateError);
+                console.error('🌐 TEXT_INPUT: Failed to update network_success:', updateError);
               }
             }
 
             // Don't show cancellation errors to user in chat
             if (!isCancellationError(error)) {
-              // Add error message to chat history only for non-cancellation errors
-              const errorMessage: ChatMessage = {
-                role: 'assistant',
-                content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-                timestamp: Date.now()
-              };
+              // For network errors, don't show error message - let polling continue
+              if (error instanceof Error && error.message === 'Network Error') {
+                console.log('📝 TEXT_INPUT: Network error - not showing error message, polling will continue');
+              } else {
+                // Add error message to chat history only for non-cancellation, non-network errors
+                const errorMessage: ChatMessage = {
+                  role: 'assistant',
+                  content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                  timestamp: Date.now()
+                };
 
-              setChatHistory(prevHistory => [...prevHistory, errorMessage]);
+                setChatHistory(prevHistory => [...prevHistory, errorMessage]);
+              }
             } else {
               console.log('📝 TEXT_INPUT: Request was cancelled - not showing error to user');
             }
 
-            // Clear request ID after error
-            setCurrentRequestId(null);
-            setRequestStatus(null);
+            // Only clear request ID for non-network errors (let polling continue for network errors)
+            if (!(error instanceof Error && error.message === 'Network Error')) {
+              console.log('📝 TEXT_INPUT: Clearing request ID after non-network error');
+              setCurrentRequestId(null);
+              setRequestStatus(null);
+            } else {
+              console.log('📝 TEXT_INPUT: Network error - keeping request ID for continued polling');
+            }
           }
         }, 0);
         
@@ -1051,12 +1394,51 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       console.error('📝 TEXT_INPUT: Error stack:', error instanceof Error ? error.stack : 'No stack available');
       throw error;
     }
-  }, [sendMessage, voiceSettings]);
+  }, [sendMessage, voiceSettings, activeConversationId, createConversation]);
 
   // Continue previous chat by setting the chat history
   const continuePreviousChat = useCallback((messages: ChatMessage[]) => {
-    console.log('📚 Continuing previous chat with', messages.length, 'messages');
-    setChatHistory(messages);
+    console.log('🎯 CONTINUE_CHAT: continuePreviousChat called with', messages.length, 'messages');
+    console.log('🎯 CONTINUE_CHAT: Input messages:', messages.map(msg => ({
+      role: msg.role,
+      content: msg.content.substring(0, 50) + '...',
+      timestamp: msg.timestamp
+    })));
+
+    // Deduplicate messages within the incoming array itself (in case unfetched check brings duplicates)
+    const deduplicatedMessages = messages.filter((message, index) => {
+      // Keep first occurrence of each unique combination of content + timestamp
+      const firstIndex = messages.findIndex(m =>
+        m.content === message.content &&
+        m.role === message.role &&
+        Math.abs(m.timestamp - message.timestamp) < 1000 // Within 1 second
+      );
+      const isKept = firstIndex === index;
+      if (!isKept) {
+        console.log('🎯 CONTINUE_CHAT: Filtering duplicate message from input array:', message.content.substring(0, 50) + '...');
+      }
+      return isKept;
+    });
+
+    if (deduplicatedMessages.length < messages.length) {
+      console.log('🎯 CONTINUE_CHAT: Removed', messages.length - deduplicatedMessages.length, 'duplicate messages from unfetched data');
+    }
+
+    // Update recent assistant messages ref with assistant messages from the loaded conversation
+    const assistantMessages = deduplicatedMessages
+      .filter(msg => msg.role === 'assistant')
+      .slice(-3) // Get last 3 assistant messages
+      .reverse(); // Most recent first
+
+    console.log('🎯 CONTINUE_CHAT: Updating recentAssistantMessagesRef with', assistantMessages.length, 'messages');
+    recentAssistantMessagesRef.current = assistantMessages.map(msg => ({
+      content: msg.content,
+      timestamp: msg.timestamp
+    }));
+
+    console.log('🎯 CONTINUE_CHAT: About to call setChatHistory with', deduplicatedMessages.length, 'messages');
+    setChatHistory(deduplicatedMessages);
+    console.log('🎯 CONTINUE_CHAT: setChatHistory call completed');
   }, []);
 
   // Wrap cancelRequest to immediately update UI status
@@ -1078,9 +1460,13 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           setRequestStatus(null);
         }, 2000);
       } else {
-        // If cancellation failed, revert the status
-        console.log('🚫 CANCEL_WRAPPER: Request cancellation failed, reverting status');
-        setRequestStatus(null);
+        // Even if no active request, user wants to cancel UI state
+        console.log('🚫 CANCEL_WRAPPER: No active request, but clearing UI state');
+        setIsRequestInProgress(false);
+        setTimeout(() => {
+          setCurrentRequestId(null);
+          setRequestStatus(null);
+        }, 2000);
       }
       
       return result;
@@ -1089,7 +1475,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       setRequestStatus(null);
       return false;
     }
-  }, [cancelRequest]);
+  }, [cancelRequest, setIsRequestInProgress]);
 
   // Context value - now purely bridging to native state
   const value: VoiceContextValue = {
@@ -1109,7 +1495,10 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     integrationInProgress,
     currentRequestId,
     requestStatus,
-    
+    activeConversationId,
+    setCurrentRequestId,
+    setRequestStatus,
+
     // Voice settings
     voiceSettings,
     settingsLoading,
@@ -1132,8 +1521,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     continuePreviousChat,
     cancelRequest: wrappedCancelRequest,
     isRequestInProgress,
+    setIsRequestInProgress,
   };
-  
+
   return <VoiceContext.Provider value={value}>{children}</VoiceContext.Provider>;
 };
 
