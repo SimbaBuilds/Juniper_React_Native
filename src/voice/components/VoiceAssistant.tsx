@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Animated, AppState } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, FlatList, Text, TouchableOpacity, Alert, Platform, TouchableWithoutFeedback, Keyboard, Animated, AppState, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { VoiceButton } from './VoiceButton';
 import { VoiceResponseDisplay } from './VoiceResponseDisplay';
@@ -84,6 +84,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
     continuePreviousChat,
     cancelRequest,
     isRequestInProgress,
+    setIsRequestInProgress,
     startContinuousConversation,
     startListening,
     requestStatus,
@@ -98,12 +99,41 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
   // State for onboarding - use ref to prevent re-evaluation on re-renders
   const hasEvaluatedOnboarding = React.useRef(false);
 
-  // Android-specific keyboard height tracking
-  const [androidKeyboardPadding, setAndroidKeyboardPadding] = React.useState(0);
+  // State for keyboard height tracking
+  const [keyboardHeight, setKeyboardHeight] = React.useState(0);
+  const scrollViewRef = React.useRef<ScrollView>(null);
 
   // State for delayed status indicator display
   const [shouldShowStatusIndicator, setShouldShowStatusIndicator] = React.useState(false);
   const statusIndicatorTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Track keyboard show/hide events and scroll to bottom when keyboard appears
+  React.useEffect(() => {
+    const showListener = Keyboard.addListener('keyboardDidShow', (e) => {
+      console.log('⌨️ KEYBOARD_DID_SHOW:', {
+        height: e.endCoordinates.height,
+        screenY: e.endCoordinates.screenY,
+        width: e.endCoordinates.width,
+        duration: e.duration,
+      });
+      setKeyboardHeight(e.endCoordinates.height);
+
+      // Scroll to bottom when keyboard shows to keep input visible
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    });
+
+    const hideListener = Keyboard.addListener('keyboardDidHide', () => {
+      console.log('⌨️ KEYBOARD_DID_HIDE');
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showListener.remove();
+      hideListener.remove();
+    };
+  }, []);
 
   // Effect to handle delayed status indicator display
   React.useEffect(() => {
@@ -347,9 +377,21 @@ What would you like to get started with today? If you aren't sure, starting with
           const mostRecentRequest = uncompletedRequests[0];
           console.log('📊 REQUEST_CHECK: Most recent uncompleted request:', mostRecentRequest.request_id, 'status:', mostRecentRequest.status);
 
+          // Check if request is within 6 hours (6 * 60 * 60 * 1000 ms)
+          const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+          const requestAge = Date.now() - new Date(mostRecentRequest.created_at).getTime();
+
+          if (requestAge > SIX_HOURS_MS) {
+            console.log('📊 REQUEST_CHECK: Most recent request is too old (', Math.round(requestAge / (60 * 60 * 1000)), 'hours), ignoring');
+            return;
+          }
+
+          console.log('📊 REQUEST_CHECK: Request is recent (', Math.round(requestAge / (60 * 1000)), 'minutes old), resuming');
+
           // Set the current request status and ID to show the status indicator
           setCurrentRequestId(mostRecentRequest.request_id);
           setRequestStatus(mostRecentRequest.status);
+          setIsRequestInProgress(true);
         } else {
           console.log('📊 REQUEST_CHECK: No uncompleted requests found');
         }
@@ -359,7 +401,7 @@ What would you like to get started with today? If you aren't sure, starting with
     };
 
     checkUncompletedRequests();
-  }, [user?.id, settingsLoading]);
+  }, [user?.id, settingsLoading, setCurrentRequestId, setRequestStatus, setIsRequestInProgress]);
 
   // Check for unfetched requests when app returns to foreground
   React.useEffect(() => {
@@ -377,35 +419,6 @@ What would you like to get started with today? If you aren't sure, starting with
     };
   }, [user?.id, checkUnfetchedRequests]);
 
-  // Android-specific keyboard height tracking
-  React.useEffect(() => {
-    if (Platform.OS === 'android') {
-      const showListener = Keyboard.addListener('keyboardDidShow', (e) => {
-        console.log('🔄 Keyboard shown, height:', e.endCoordinates.height, '(using adjustResize, not adding to bottomSection)');
-        setAndroidKeyboardPadding(e.endCoordinates.height);
-      });
-      const hideListener = Keyboard.addListener('keyboardDidHide', () => {
-        console.log('🔄 Keyboard hidden');
-        setAndroidKeyboardPadding(0);
-      });
-
-      return () => {
-        showListener.remove();
-        hideListener.remove();
-      };
-    }
-  }, []);
-
-  // Calculate dynamic padding for chat list (Android only)
-  const chatListBottomPadding = React.useMemo(() => {
-    if (Platform.OS === 'ios') {
-      return 80; // Keep iOS unchanged
-    }
-    // Android: reduce padding when keyboard is shown
-    const padding = androidKeyboardPadding > 0 ? 16 : 80;
-    console.log('🔄 Chat list padding changed:', padding, 'keyboard height:', androidKeyboardPadding);
-    return padding;
-  }, [androidKeyboardPadding]);
 
   // When a speech result is received, call the callback
   React.useEffect(() => {
@@ -584,12 +597,17 @@ What would you like to get started with today? If you aren't sure, starting with
   }
   
   return (
-    <KeyboardAvoidingView 
-      style={styles.keyboardAvoidingView}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
-      <View style={styles.container}>
+    <View style={styles.container}>
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollViewContent,
+          { paddingBottom: keyboardHeight > 0 ? keyboardHeight : 0 }
+        ]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
           <View style={styles.header}>
             <VoiceStatusIndicator />
             
@@ -652,7 +670,7 @@ What would you like to get started with today? If you aren't sure, starting with
                     style={styles.chatList}
                     contentContainerStyle={[
                       styles.chatListContent,
-                      { paddingBottom: chatListBottomPadding }
+                      { paddingBottom: 80 }
                     ]}
                     keyboardShouldPersistTaps="always"
                     keyboardDismissMode="on-drag"
@@ -781,17 +799,20 @@ What would you like to get started with today? If you aren't sure, starting with
               setShowConversationHistory(false);
             }}
           />
-        </View>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </View>
   );
 };
 
 const styles = StyleSheet.create({
-  keyboardAvoidingView: {
-    flex: 1,
-  },
   container: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
   },
   chatContainer: {
     flex: 1,

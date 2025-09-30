@@ -64,6 +64,7 @@ const VoiceContext = createContext<VoiceContextValue>({
   continuePreviousChat: () => {},
   cancelRequest: async () => false,
   isRequestInProgress: false,
+  setIsRequestInProgress: () => {},
   setCurrentRequestId: () => {},
   setRequestStatus: () => {},
   voiceSettings: {},
@@ -188,7 +189,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
   const listenersSetupRef = useRef(false);
 
   // Server API hook
-  const { sendMessage, cancelRequest, isRequestInProgress, getCurrentRequestId } = useServerApi();
+  const { sendMessage, cancelRequest, isRequestInProgress, setIsRequestInProgress, getCurrentRequestId } = useServerApi();
 
   // Auto-refresh timer functions
   const handleAutoRefresh = useCallback(async () => {
@@ -1458,9 +1459,13 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
           setRequestStatus(null);
         }, 2000);
       } else {
-        // If cancellation failed, revert the status
-        console.log('🚫 CANCEL_WRAPPER: Request cancellation failed, reverting status');
-        setRequestStatus(null);
+        // Even if no active request, user wants to cancel UI state
+        console.log('🚫 CANCEL_WRAPPER: No active request, but clearing UI state');
+        setIsRequestInProgress(false);
+        setTimeout(() => {
+          setCurrentRequestId(null);
+          setRequestStatus(null);
+        }, 2000);
       }
       
       return result;
@@ -1469,7 +1474,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       setRequestStatus(null);
       return false;
     }
-  }, [cancelRequest]);
+  }, [cancelRequest, setIsRequestInProgress]);
 
   // Context value - now purely bridging to native state
   const value: VoiceContextValue = {
@@ -1515,8 +1520,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     continuePreviousChat,
     cancelRequest: wrappedCancelRequest,
     isRequestInProgress,
+    setIsRequestInProgress,
   };
-  
+
   return <VoiceContext.Provider value={value}>{children}</VoiceContext.Provider>;
 };
 
