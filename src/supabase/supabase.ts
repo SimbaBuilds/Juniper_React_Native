@@ -987,7 +987,7 @@ export const DatabaseService = {
       .from('requests')
       .select('*')
       .eq('user_id', userId)
-      .not('status', 'in', '(completed,failed)')
+      .not('status', 'in', '(completed,failed, cancelled, canceled)')
       .order('created_at', { ascending: false });
 
     if (error) {

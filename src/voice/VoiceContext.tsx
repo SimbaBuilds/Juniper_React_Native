@@ -165,6 +165,7 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
       // Clear request ID when request completes, fails, or is cancelled
       if (status === 'completed' || status === 'failed' || status === 'cancelled') {
         console.log('📊 REQUEST_STATUS: Request reached final state, clearing request ID');
+        setIsRequestInProgress(false); // Clear immediately to hide cancel button
         setTimeout(() => {
           setCurrentRequestId(null);
           setRequestStatus(null);
