@@ -10,7 +10,7 @@ import { GoogleAuthService } from './src/auth/GoogleAuthService';
 import { HomeScreen } from './src/HomeScreen';
 import { SettingsScreen } from './src/settings/SettingsScreen';
 import { IntegrationsScreen } from './src/integrations/IntegrationsScreen';
-
+import WellnessScreen from './src/WellnessScreen';
 import { RepoScreen } from './src/repo/RepoScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { Session } from '@supabase/supabase-js';
@@ -33,6 +33,7 @@ type RootStackParamList = {
   Home: undefined;
   Settings: undefined;
   Integrations: undefined;
+  Wellness: undefined;
   Memories: undefined;
   Login: undefined;
   SignUp: undefined;
@@ -45,6 +46,7 @@ type RootStackParamList = {
 type TabParamList = {
   Juniper: undefined;
   Integrations: undefined;
+  Wellness: undefined;
   Repo: undefined;
   Settings: undefined;
 };
@@ -780,6 +782,8 @@ function MainTabNavigator() {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Integrations') {
             iconName = focused ? 'link' : 'link-outline';
+          } else if (route.name === 'Wellness') {
+            iconName = focused ? 'fitness' : 'fitness-outline';
           } else if (route.name === 'Repo') {
             iconName = focused ? 'bookmark' : 'bookmark-outline';
           } else if (route.name === 'Settings') {
@@ -806,31 +810,38 @@ function MainTabNavigator() {
       })}
     >
 
-      <Tab.Screen 
-        name="Integrations" 
+      <Tab.Screen
+        name="Integrations"
         component={IntegrationsScreen}
         options={{
           title: 'Integrations',
           tabBarBadge: integrationInProgress ? '●' : undefined,
         }}
       />
-      <Tab.Screen 
-        name="Juniper" 
+      <Tab.Screen
+        name="Juniper"
         component={HomeScreen}
         options={{
           title: 'Juniper',
         }}
       />
-      <Tab.Screen 
-        name="Repo" 
+      <Tab.Screen
+        name="Wellness"
+        component={WellnessScreen}
+        options={{
+          title: 'Wellness',
+        }}
+      />
+      <Tab.Screen
+        name="Repo"
         component={RepoScreen}
         options={{
           title: 'Repo',
           tabBarBadge: expiringResourcesCount > 0 ? expiringResourcesCount : undefined,
         }}
       />
-      <Tab.Screen 
-        name="Settings" 
+      <Tab.Screen
+        name="Settings"
         component={SettingsScreen}
         options={{
           title: 'Settings',

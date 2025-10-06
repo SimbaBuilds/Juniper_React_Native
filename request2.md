@@ -1,8 +1,2 @@
-This check is for when the app is backgrounded and returned to the foreground - it is how we persist requests.
-
-Please create a plan for (1) Adding a 6 hour time
-  threshold and (2) ensuring the cancel request
-  functionality is always showing when the status
-  indicator is showing or the app is in open request state (in
-  this case, on app launch, the cancel request button
-  was not showing meaning state management was off)
+Both Apple and Android versions of this project are deployed to respective app stores.
+Please come up with a step by step plan for us to migrate this project to support OTA updates via EAS updates.  Research and necessary documentation. Please specify in your plan what if anything needs to be done on my end via a dev console like account creation or configuration.
