@@ -7,6 +7,10 @@ export default {
     userInterfaceStyle: "light",
     newArchEnabled: true,
     scheme: "mobilejarvisnative",
+    updates: {
+      url: "https://u.expo.dev/a1ca031e-4068-49f1-84f5-ab872bc450dc"
+    },
+    runtimeVersion: "1.0.0",
     plugins: [
       "expo-secure-store",
       "./expo-plugins/withVoiceModule.js",
@@ -24,6 +28,9 @@ export default {
     ],
     platforms: ["ios", "android", "web"],
     extra: {
+      eas: {
+        projectId: "a1ca031e-4068-49f1-84f5-ab872bc450dc"
+      },
       GOOGLE_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_SECRET,
       GOOGLE_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_API_KEY,
