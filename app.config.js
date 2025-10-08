@@ -8,7 +8,10 @@ export default {
     newArchEnabled: true,
     scheme: "mobilejarvisnative",
     updates: {
-      url: "https://u.expo.dev/a1ca031e-4068-49f1-84f5-ab872bc450dc"
+      url: "https://u.expo.dev/a1ca031e-4068-49f1-84f5-ab872bc450dc",
+      requestHeaders: {
+        "expo-channel-name": process.env.EXPO_PUBLIC_RELEASE_CHANNEL || "preview"
+      }
     },
     runtimeVersion: "1.0.0",
     plugins: [
