@@ -27,6 +27,7 @@ import { colors } from './src/shared/theme/colors';
 // Error boundaries removed - let React Native handle errors naturally
 import { Storage } from './src/utils/storage';
 import HealthSyncService from './src/integrations/data/HealthSyncService';
+import * as Updates from 'expo-updates';
 
 type RootStackParamList = {
   MainTabs: undefined;
@@ -183,6 +184,36 @@ export default function App() {
         });
       }
     };
+  }, []);
+
+  // Log EAS Updates configuration on app launch
+  useEffect(() => {
+    console.log('========== EAS Updates Configuration (JS) ==========');
+    console.log('Channel:', Updates.channel);
+    console.log('Runtime Version:', Updates.runtimeVersion);
+    console.log('Update ID:', Updates.updateId);
+    console.log('Is Embedded Launch:', Updates.isEmbeddedLaunch);
+    console.log('===================================================');
+
+    // Automatically check for updates on launch
+    const checkForUpdates = async () => {
+      try {
+        console.log('🔄 Checking for updates...');
+        const update = await Updates.checkForUpdateAsync();
+
+        if (update.isAvailable) {
+          console.log('✅ Update available! Fetching...');
+          await Updates.fetchUpdateAsync();
+          console.log('✅ Update downloaded. Will apply on next restart.');
+        } else {
+          console.log('✅ App is up to date');
+        }
+      } catch (error) {
+        console.error('❌ Error checking for updates:', error);
+      }
+    };
+
+    checkForUpdates();
   }, []);
 
   // OAuth callback handlers for each service type

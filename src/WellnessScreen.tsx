@@ -301,14 +301,14 @@ export default function WellnessScreen() {
         }
       >
       {/* Header */}
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <Text style={[styles.title, isDarkMode && styles.titleDark]}>
           Wellness Dashboard
         </Text>
         <Text style={[styles.subtitle, isDarkMode && styles.subtitleDark]}>
           Track your health metrics and wellness journey
         </Text>
-      </View>
+      </View> */}
 
       {/* Summary Section */}
       {summaryStats && filterPrefs.showSummaryStats && (
