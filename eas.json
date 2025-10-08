@@ -8,6 +8,9 @@
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
+      "env": {
+        "EXPO_PUBLIC_RELEASE_CHANNEL": "development"
+      },
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleDebug"
@@ -16,6 +19,9 @@
     "preview": {
       "distribution": "internal",
       "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_RELEASE_CHANNEL": "preview"
+      },
       "ios": {
         "buildConfiguration": "Release"
       },
@@ -26,6 +32,9 @@
     "production": {
       "autoIncrement": true,
       "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_RELEASE_CHANNEL": "production"
+      },
       "android": {
         "buildType": "app-bundle"
       }

@@ -31,6 +31,7 @@ export default {
       eas: {
         projectId: "a1ca031e-4068-49f1-84f5-ab872bc450dc"
       },
+      RELEASE_CHANNEL: process.env.EXPO_PUBLIC_RELEASE_CHANNEL,
       GOOGLE_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_SECRET,
       GOOGLE_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_API_KEY,
