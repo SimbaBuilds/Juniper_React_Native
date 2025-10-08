@@ -503,14 +503,14 @@ const styles = StyleSheet.create({
   },
   timeRangeButtonText: {
     fontSize: 12,
-    color: colors.text.primary,
+    color: '#333',
     fontWeight: '500'
   },
   timeRangeButtonTextActive: {
     color: '#fff'
   },
   timeRangeButtonTextDark: {
-    color: colors.text.primary
+    color: '#ddd'
   },
   summaryGrid: {
     flexDirection: 'row',

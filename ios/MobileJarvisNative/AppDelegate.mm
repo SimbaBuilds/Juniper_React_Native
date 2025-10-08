@@ -13,6 +13,30 @@
   // They will be passed down to the ViewController used by React Native.
   self.initialProps = @{};
 
+  // Log EAS Updates configuration
+  NSString *expoPlistPath = [[NSBundle mainBundle] pathForResource:@"Expo" ofType:@"plist"];
+  if (expoPlistPath) {
+    NSDictionary *expoConfig = [NSDictionary dictionaryWithContentsOfFile:expoPlistPath];
+
+    NSLog(@"========== EAS Updates Configuration ==========");
+    NSLog(@"Updates Enabled: %@", expoConfig[@"EXUpdatesEnabled"] ? @"YES" : @"NO");
+    NSLog(@"Updates URL: %@", expoConfig[@"EXUpdatesURL"] ?: @"NOT SET");
+    NSLog(@"Runtime Version: %@", expoConfig[@"EXUpdatesRuntimeVersion"] ?: @"NOT SET");
+    NSLog(@"Check On Launch: %@", expoConfig[@"EXUpdatesCheckOnLaunch"] ?: @"NOT SET");
+    NSLog(@"Launch Wait MS: %@", expoConfig[@"EXUpdatesLaunchWaitMs"] ?: @"NOT SET");
+
+    NSDictionary *requestHeaders = expoConfig[@"EXUpdatesRequestHeaders"];
+    if (requestHeaders) {
+      NSString *channelName = requestHeaders[@"expo-channel-name"];
+      NSLog(@"Update Channel: %@", channelName ?: @"NOT SET");
+    } else {
+      NSLog(@"Update Channel: NOT CONFIGURED (no EXUpdatesRequestHeaders)");
+    }
+    NSLog(@"===============================================");
+  } else {
+    NSLog(@"⚠️ WARNING: Expo.plist not found!");
+  }
+
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
 
