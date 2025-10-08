@@ -259,16 +259,16 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fff'
+    borderColor: '#444',
+    backgroundColor: '#2A2A2A'
   },
   presetButtonDark: {
     borderColor: '#444',
-    backgroundColor: '#222'
+    backgroundColor: '#2A2A2A'
   },
   presetButtonText: {
     fontSize: 12,
-    color: '#333'
+    color: '#ddd'
   },
   presetButtonTextDark: {
     color: '#ddd'
@@ -277,16 +277,16 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fff'
+    borderColor: '#444',
+    backgroundColor: '#2A2A2A'
   },
   selectorButtonDark: {
     borderColor: '#444',
-    backgroundColor: '#222'
+    backgroundColor: '#2A2A2A'
   },
   selectorButtonText: {
     fontSize: 14,
-    color: '#333'
+    color: '#ddd'
   },
   selectorButtonTextDark: {
     color: '#ddd'
@@ -302,11 +302,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#2A2A2A',
     gap: 4
   },
   badgeDark: {
-    backgroundColor: '#333'
+    backgroundColor: '#2A2A2A'
   },
   badgeColorIndicator: {
     width: 8,
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 11,
-    color: '#333'
+    color: '#ddd'
   },
   badgeTextDark: {
     color: '#ddd'
@@ -334,14 +334,14 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1E1E1E',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
     maxHeight: '80%'
   },
   modalContentDark: {
-    backgroundColor: '#1a1a1a'
+    backgroundColor: '#1E1E1E'
   },
   modalHeader: {
     flexDirection: 'row',
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333'
+    color: '#fff'
   },
   modalTitleDark: {
     color: '#fff'
@@ -366,14 +366,15 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#f8f8f8',
+    borderColor: '#444',
+    backgroundColor: '#2A2A2A',
     marginBottom: 16,
-    fontSize: 14
+    fontSize: 14,
+    color: '#fff'
   },
   searchInputDark: {
     borderColor: '#444',
-    backgroundColor: '#222',
+    backgroundColor: '#2A2A2A',
     color: '#fff'
   },
   metricsListScroll: {
@@ -398,11 +399,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderRadius: 8,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#2A2A2A',
     marginBottom: 6
   },
   metricItemDark: {
-    backgroundColor: '#222'
+    backgroundColor: '#2A2A2A'
   },
   metricItemLeft: {
     flexDirection: 'row',
@@ -417,7 +418,7 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 14,
-    color: '#333',
+    color: '#ddd',
     flex: 1
   },
   metricLabelDark: {

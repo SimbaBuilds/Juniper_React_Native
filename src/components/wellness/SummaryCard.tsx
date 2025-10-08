@@ -151,7 +151,7 @@ export const getMetricIcon = (metricKey: string, group?: string): string => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1E1E1E',
     borderRadius: 12,
     padding: 12,
     shadowColor: '#000',
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     elevation: 3
   },
   cardDark: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#1E1E1E',
     shadowOpacity: 0.3
   },
   header: {
@@ -223,19 +223,19 @@ const styles = StyleSheet.create({
     padding: 20
   },
   tooltipContent: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1E1E1E',
     borderRadius: 12,
     padding: 20,
     maxWidth: 300,
     width: '100%'
   },
   tooltipContentDark: {
-    backgroundColor: '#1a1a1a'
+    backgroundColor: '#1E1E1E'
   },
   tooltipTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     marginBottom: 12
   },
   tooltipTitleDark: {
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   },
   tooltipText: {
     fontSize: 14,
-    color: '#666',
+    color: '#999',
     lineHeight: 20,
     marginBottom: 16
   },

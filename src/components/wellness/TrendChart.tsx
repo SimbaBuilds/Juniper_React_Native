@@ -285,6 +285,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({
                     }}
                     labelComponent={
                       <VictoryTooltip
+                        renderInPortal={false}
                         style={{ fill: isDarkMode ? '#fff' : '#333', fontSize: 10 }}
                         flyoutStyle={{
                           fill: isDarkMode ? '#1a1a1a' : '#fff',
@@ -313,7 +314,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1E1E1E',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -324,7 +325,7 @@ const styles = StyleSheet.create({
     elevation: 3
   },
   cardDark: {
-    backgroundColor: '#1a1a1a'
+    backgroundColor: '#1E1E1E'
   },
   header: {
     flexDirection: 'row',
@@ -386,14 +387,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
-    backgroundColor: '#f0f0f0'
+    backgroundColor: '#2A2A2A'
   },
   expandButtonDark: {
-    backgroundColor: '#333'
+    backgroundColor: '#2A2A2A'
   },
   expandButtonText: {
     fontSize: 12,
-    color: '#333',
+    color: '#ddd',
     fontWeight: '500'
   },
   expandButtonTextDark: {
@@ -441,8 +442,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fff'
+    borderColor: '#444',
+    backgroundColor: '#2A2A2A'
   },
   normalizeButtonActive: {
     backgroundColor: '#007AFF',
@@ -450,11 +451,11 @@ const styles = StyleSheet.create({
   },
   normalizeButtonDark: {
     borderColor: '#444',
-    backgroundColor: '#222'
+    backgroundColor: '#2A2A2A'
   },
   normalizeButtonText: {
     fontSize: 14,
-    color: '#333',
+    color: '#ddd',
     fontWeight: '500'
   },
   normalizeButtonTextActive: {
@@ -494,18 +495,18 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fff',
+    borderColor: '#444',
+    backgroundColor: '#2A2A2A',
     minWidth: 100,
     alignItems: 'center'
   },
   pickerButtonDark: {
     borderColor: '#444',
-    backgroundColor: '#222'
+    backgroundColor: '#2A2A2A'
   },
   pickerButtonText: {
     fontSize: 14,
-    color: '#333'
+    color: '#ddd'
   },
   pickerButtonTextDark: {
     color: '#ddd'
@@ -516,13 +517,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   pickerModalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1E1E1E',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20
   },
   pickerModalContentDark: {
-    backgroundColor: '#1a1a1a'
+    backgroundColor: '#1E1E1E'
   },
   pickerOption: {
     padding: 16,
@@ -534,7 +535,7 @@ const styles = StyleSheet.create({
   },
   pickerOptionText: {
     fontSize: 16,
-    color: '#333',
+    color: '#ddd',
     textAlign: 'center'
   },
   pickerOptionTextDark: {

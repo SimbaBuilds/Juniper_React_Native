@@ -817,6 +817,13 @@ function MainTabNavigator() {
           title: 'Integrations',
           tabBarBadge: integrationInProgress ? '●' : undefined,
         }}
+        />
+        <Tab.Screen
+          name="Wellness"
+          component={WellnessScreen}
+          options={{
+            title: 'Wellness',
+          }}
       />
       <Tab.Screen
         name="Juniper"
@@ -824,13 +831,7 @@ function MainTabNavigator() {
         options={{
           title: 'Juniper',
         }}
-      />
-      <Tab.Screen
-        name="Wellness"
-        component={WellnessScreen}
-        options={{
-          title: 'Wellness',
-        }}
+
       />
       <Tab.Screen
         name="Repo"
