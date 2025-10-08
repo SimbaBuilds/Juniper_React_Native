@@ -71,6 +71,7 @@
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="https://u.expo.dev/a1ca031e-4068-49f1-84f5-ab872bc450dc"/>
     <meta-data android:name="expo.modules.updates.EXPO_RUNTIME_VERSION" android:value="1.0.0"/>
+    <meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="preview"/>
     <service android:name=".wakeword.WakeWordService" android:enabled="true" android:exported="false" android:foregroundServiceType="microphone"/>
     <!-- Health Connect permission rationale activities -->
     <activity
