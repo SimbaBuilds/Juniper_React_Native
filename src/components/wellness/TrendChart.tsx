@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   chartName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333'
+    color: '#fff'
   },
   chartNameDark: {
     color: '#fff'
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#007AFF',
     padding: 4
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 13,
-    color: '#666',
+    color: '#999',
     marginBottom: 12
   },
   descriptionDark: {
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
   controlLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333'
+    color: '#ddd'
   },
   controlLabelDark: {
     color: '#ddd'
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
     textAlign: 'center'
   },
   emptyStateTextDark: {
-    color: '#666'
+    color: '#999'
   },
   pickerButton: {
     paddingHorizontal: 12,

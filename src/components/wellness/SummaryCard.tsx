@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#666',
+    color: '#999',
     flex: 1
   },
   labelDark: {
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     marginBottom: 2
   },
   valueDark: {
