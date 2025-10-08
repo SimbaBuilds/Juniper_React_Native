@@ -1,27 +1,22 @@
-ERROR  Warning: Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+⚠️  ld: duplicate symbol 'typeinfo for worklets::WorkletRuntime' in
+┌─ libRNWorklets.a[29](WorkletRuntime.o)
+└─ libRNReanimated.a[50](WorkletRuntime.o)
 
-Check the render method of `TrendChart`.
+⚠️  ld: duplicate symbol 'worklets::WorkletsModuleProxy::~WorkletsModuleProxy()' in
+┌─ libRNWorklets.a[35](WorkletsModuleProxy.o)
+└─ libRNReanimated.a[55](WorkletsModuleProxy.o)
 
-This error is located at:
 
-  89 |
-  90 | export const TrendChart: React.FC<TrendChartProps> = ({
-> 91 |   chart,
-     |        ^
-  92 |   chartData,
-  93 |   isDarkMode,
-  94 |   onUpdateChart,
+❌  ld: 23 duplicate symbols
 
-Call Stack
-  TrendChart (src/components/wellness/TrendChart.tsx:91:8)
-  Wrapper (<anonymous>)
-  RCTSafeAreaView (<anonymous>)
-  WellnessScreen (src/WellnessScreen.tsx:77:37)
-  MainTabNavigator (App.tsx:731:62)
-  ScreenContentWrapper (<anonymous>)
-  RNSScreenStack (<anonymous>)
-  RNCSafeAreaProvider (<anonymous>)
-  WakeWordProvider (src/wakeword/WakeWordContext.tsx:29:85)
-  VoiceProvider (src/voice/VoiceContext.tsx:93:71)
-  AuthProvider (src/auth/AuthContext.tsx:24:81)
-  App (App.tsx:58:41)
+
+
+❌  clang: error: linker command failed with exit code 1 (use -v to see invocation)
+
+
+    Run script build phase '[CP-User] [Hermes] Replace Hermes for the right configuration, if needed' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'hermes-engine' from project 'Pods')
+    Run script build phase '[CP-User] Generate updates resources for expo-updates' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'EXUpdates' from project 'Pods')
+
+› 11 error(s), and 63 warning(s)
+
+CommandError: Failed to build iOS project. "xcodebuild" exited with error code 65.
