@@ -9,7 +9,8 @@ import {
   useColorScheme,
   Dimensions,
   SafeAreaView,
-  ActivityIndicator
+  ActivityIndicator,
+  Linking
 } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { supabase } from './supabase/supabase'
@@ -398,6 +399,19 @@ export default function WellnessScreen() {
           </Text>
         </View>
       )}
+
+      {/* Export Data Footer */}
+      <View style={styles.exportFooter}>
+        <Text style={[styles.exportText, isDarkMode && styles.exportTextDark]}>
+          Export data and view goal progress in the{' '}
+          <Text
+            style={styles.exportLink}
+            onPress={() => Linking.openURL('https://juniperassistant.com/wellness')}
+          >
+            web app
+          </Text>
+        </Text>
+      </View>
       </ScrollView>
     </SafeAreaView>
   )
@@ -551,5 +565,24 @@ const styles = StyleSheet.create({
   },
   noDataTextDark: {
     color: colors.text.secondary
+  },
+  exportFooter: {
+    padding: 20,
+    paddingTop: 8,
+    paddingBottom: 32,
+    alignItems: 'center'
+  },
+  exportText: {
+    fontSize: 13,
+    color: colors.text.secondary,
+    textAlign: 'center'
+  },
+  exportTextDark: {
+    color: colors.text.secondary
+  },
+  exportLink: {
+    color: '#007AFF',
+    textDecorationLine: 'underline',
+    fontWeight: '600'
   }
 })

@@ -125,6 +125,45 @@ export const TrendChart: React.FC<TrendChartProps> = ({
 
   const { data, ranges } = prepareData()
 
+  // Get appropriate tick count based on time range
+  const getTickCount = (timeRange: string): number => {
+    switch (timeRange) {
+      case '7':
+        return 7 // Show all days
+      case '30':
+        return 5 // ~1 per week
+      case '90':
+        return 6 // ~1 per 2 weeks
+      case '365':
+        return 12 // ~1 per month
+      case 'max':
+        return 12 // Evenly distributed
+      default:
+        return 7
+    }
+  }
+
+  // Format date tick labels based on time range
+  const formatDateTick = (tick: any, timeRange: string): string => {
+    if (!tick) return ''
+
+    const date = new Date(tick)
+    if (isNaN(date.getTime())) return tick.toString()
+
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    const year = date.getFullYear().toString().slice(-2)
+
+    // For longer ranges, show month/year format
+    if (timeRange === '365' || timeRange === 'max') {
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      return `${monthNames[date.getMonth()]} '${year}`
+    }
+
+    // For shorter ranges, show month/day format
+    return `${month}/${day}`
+  }
+
   return (
     <View style={[styles.card, isDarkMode && styles.cardDark]}>
       {/* Header */}
@@ -243,9 +282,11 @@ export const TrendChart: React.FC<TrendChartProps> = ({
               containerComponent={<VictoryVoronoiContainer />}
             >
               <VictoryAxis
+                tickCount={getTickCount(chart.timeRange)}
+                tickFormat={(t) => formatDateTick(t, chart.timeRange)}
                 style={{
                   axis: { stroke: isDarkMode ? '#444' : '#ccc' },
-                  tickLabels: { fill: isDarkMode ? '#999' : '#666', fontSize: 10 }
+                  tickLabels: { fill: isDarkMode ? '#999' : '#666', fontSize: 10, angle: 0 }
                 }}
               />
               <VictoryAxis
