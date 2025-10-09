@@ -343,7 +343,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
 
 Hi there! I'm Juniper. We're honored to be part of your journey toward greater wellbeing and productivity. Together with my specialized agent team, we can help optimize your daily life - from tracking your health metrics to drafting and sending emails in your unique voice.
 
-What would you like to get started with today? If you aren't sure, starting with an integration is a great way to learn about what we can accomplish together.`,
+What would you like to get started with today? If you aren't sure, starting with an integration is a great way to learn about what we can do.`,
           timestamp: Date.now()
         };
         
