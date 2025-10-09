@@ -37,7 +37,16 @@
     NSLog(@"⚠️ WARNING: Expo.plist not found!");
   }
 
-  return [super application:application didFinishLaunchingWithOptions:launchOptions];
+  BOOL result = [super application:application didFinishLaunchingWithOptions:launchOptions];
+
+  // Log the actual bundle URL being used
+  NSLog(@"========== Bundle Source Verification ==========");
+  NSURL *bundleURL = [[self reactDelegate] bundleURL];
+  NSLog(@"Bundle URL: %@", bundleURL);
+  NSLog(@"Bundle is from embedded: %@", [bundleURL.scheme isEqualToString:@"file"] ? @"YES (file://)" : @"NO");
+  NSLog(@"===============================================");
+
+  return result;
 }
 
 // Linking API
