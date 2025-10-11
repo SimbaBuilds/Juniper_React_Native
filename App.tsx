@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Linking, Platform } from 'react-native';
+import { Linking, Platform, NativeModules } from 'react-native';
 import { VoiceProvider, useVoice } from './src/voice/VoiceContext';
 import { WakeWordProvider } from './src/wakeword/WakeWordContext';
 import WakeWordService from './src/wakeword/WakeWordService';
@@ -215,6 +215,23 @@ export default function App() {
     };
 
     checkForUpdates();
+  }, []);
+
+  // Log native expo-updates status using native module
+  useEffect(() => {
+    const logNativeUpdatesStatus = async () => {
+      try {
+        console.log('📦 Calling native UpdatesLoggerModule...');
+        const result = await NativeModules.UpdatesLoggerModule?.logUpdatesStatus();
+        console.log('📦 Native updates status result:', result);
+      } catch (error) {
+        console.error('❌ Error calling UpdatesLoggerModule:', error);
+      }
+    };
+
+    // Call after a short delay to ensure React Native is fully initialized
+    const timer = setTimeout(logNativeUpdatesStatus, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   // OAuth callback handlers for each service type

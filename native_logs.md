@@ -1,55 +1,41 @@
-09-23 16:34:01.881 D/AudioManager(25787): dispatching onAudioFocusChange(1) to android.media.AudioManager@1a4c637com.hightowerai.MobileJarvisNative.utils.AudioManager$$ExternalSyntheticLambda3@dd9a76c
-09-23 16:34:01.892 I/MediaFocusControl( 1607): abandonAudioFocus() from uid/pid 10544/25787 clientId=android.media.AudioManager@1a4c637com.hightowerai.MobileJarvisNative.utils.AudioManager$$ExternalSyntheticLambda3@dd9a76c
-09-23 16:34:01.915 I/ReactNativeJS(25787): '🔍 RN_BRIDGE_DEBUG: Current voice state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c'
-09-23 16:34:01.985 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - Previous state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f'
-09-23 16:34:01.986 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - New state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@376135'
-09-23 16:34:02.055 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - Previous state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f'
-09-23 16:34:02.056 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - New state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@376135'
-09-23 16:34:02.107 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - Previous state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@376135'
-09-23 16:34:02.107 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - New state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@376135'
-09-23 16:34:02.112 I/ReactNativeJS(25787): '🔴 VoiceAssistant: voiceState:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@376135'
-09-23 16:34:02.118 I/ReactNativeJS(25787): '🔄 VOICE_CONTEXT: Context voiceState:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@376135'
-09-23 16:34:02.123 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - Previous state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@376135'
-09-23 16:34:02.124 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - New state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@376135'
-09-23 16:34:18.138 I/MediaFocusControl( 1607): requestAudioFocus() from uid/pid 10544/25787 AA=USAGE_MEDIA/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@1a4c637com.hightowerai.MobileJarvisNative.utils.AudioManager$$ExternalSyntheticLambda3@c37eaf4 callingPack=com.hightowerai.MobileJarvisNative req=2 flags=0x0 sdk=35
-09-23 16:34:18.448 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - Previous state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@376135'
-09-23 16:34:18.462 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - Previous state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$PROCESSING@376135'
-09-23 16:34:30.204 I/MediaFocusControl( 1607): abandonAudioFocus() from uid/pid 10544/25787 clientId=android.media.AudioManager@1a4c637com.hightowerai.MobileJarvisNative.utils.AudioManager$$ExternalSyntheticLambda3@c37eaf4
-09-23 16:34:30.205 I/MediaFocusControl( 1607): requestAudioFocus() from uid/pid 10544/25787 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@1a4c637com.hightowerai.MobileJarvisNative.utils.AudioManager$$ExternalSyntheticLambda3@b8b69e4 callingPack=com.hightowerai.MobileJarvisNative req=1 flags=0x0 sdk=35
-09-23 16:34:30.510 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - New state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f'
-09-23 16:34:30.518 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - New state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f'
-09-23 16:34:30.593 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - Previous state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f'
-09-23 16:34:30.593 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - New state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f'
-09-23 16:34:30.597 I/ReactNativeJS(25787): '🔴 VoiceAssistant: voiceState:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f'
-09-23 16:34:30.602 I/ReactNativeJS(25787): '🔄 VOICE_CONTEXT: Context voiceState:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f'
-09-23 16:34:30.607 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - Previous state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f'
-09-23 16:34:30.608 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - New state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f'
-09-23 16:34:30.633 I/MediaFocusControl( 1607): abandonAudioFocus() from uid/pid 10544/25787 clientId=android.media.AudioManager@1a4c637com.hightowerai.MobileJarvisNative.utils.AudioManager$$ExternalSyntheticLambda3@b8b69e4
-09-23 16:34:30.634 I/MediaFocusControl( 1607): requestAudioFocus() from uid/pid 10544/25787 AA=USAGE_VOICE_COMMUNICATION/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@1a4c637com.hightowerai.MobileJarvisNative.utils.AudioManager$$ExternalSyntheticLambda3@950d1ac callingPack=com.hightowerai.MobileJarvisNative req=2 flags=0x0 sdk=35
-09-23 16:34:30.672 D/AudioManager(25787): dispatching onAudioFocusChange(-2) to android.media.AudioManager@1a4c637com.hightowerai.MobileJarvisNative.utils.AudioManager$$ExternalSyntheticLambda3@950d1ac
-09-23 16:34:35.753 D/AudioManager(25787): dispatching onAudioFocusChange(1) to android.media.AudioManager@1a4c637com.hightowerai.MobileJarvisNative.utils.AudioManager$$ExternalSyntheticLambda3@950d1ac
-09-23 16:34:35.869 I/MediaFocusControl( 1607): abandonAudioFocus() from uid/pid 10544/25787 clientId=android.media.AudioManager@1a4c637com.hightowerai.MobileJarvisNative.utils.AudioManager$$ExternalSyntheticLambda3@950d1ac
-09-23 16:34:35.880 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - Previous state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f'
-09-23 16:34:35.907 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - Previous state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$LISTENING@280452f'
-09-23 16:34:38.389 D/VoiceManager(25787): 🔄 WAKE_WORD_RESUME: Service intent action: com.hightowerai.MobileJarvisNative.RESUME_WAKE_WORD
-09-23 16:34:38.399 I/WakeWordService(25787): Service onStartCommand called with action: com.hightowerai.MobileJarvisNative.RESUME_WAKE_WORD
-09-23 16:34:38.407 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - New state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c'
-09-23 16:34:38.434 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - New state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c'
-09-23 16:34:38.534 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - Previous state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c'
-09-23 16:34:38.534 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - New state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c'
-09-23 16:34:38.539 I/ReactNativeJS(25787): '🔴 VoiceAssistant: voiceState:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c'
-09-23 16:34:38.545 I/ReactNativeJS(25787): '🔄 VOICE_CONTEXT: Context voiceState:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c'
-09-23 16:34:38.557 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - Previous state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c'
-09-23 16:34:38.558 I/ReactNativeJS(25787): '🔄 VOICE_STATE_HOOK: Functional setState - New state:', 'com.hightowerai.MobileJarvisNative.voice.VoiceManager$VoiceState$IDLE@b57379c'
-default	13:06:30.917005-0500	MobileJarvisNative	🔧 BackgroundApiModule: ✅ Simplified URLSession configured with long timeout
-default	13:06:30.917181-0500	MobileJarvisNative	🔧 BackgroundApiModule: ✅ Simplified URLSession configured with long timeout
-default	13:06:45.228245-0500	MobileJarvisNative	🌐 BackgroundApiModule: Starting background request 1758910005069-e5zsnzrzf
-default	13:06:45.228296-0500	MobileJarvisNative	🌐 BackgroundApiModule: URL: https://juniper-python-backend.onrender.com/api/chat
-default	13:06:45.228271-0500	MobileJarvisNative	🌐 BackgroundApiModule: Starting background request 1758910005069-e5zsnzrzf
-default	13:06:45.228344-0500	MobileJarvisNative	🌐 BackgroundApiModule: Method: POST
-default	13:06:45.228321-0500	MobileJarvisNative	🌐 BackgroundApiModule: URL: https://juniper-python-backend.onrender.com/api/chat
-default	13:06:45.228372-0500	MobileJarvisNative	🌐 BackgroundApiModule: Method: POST
-default	13:06:45.229923-0500	MobileJarvisNative	 🌐 BackgroundApiModule: Background task started for request 1758910005069-e5zsnzrzf
-default	13:06:45.229899-0500	MobileJarvisNative	 🌐 BackgroundApiModule: Background task started for request 1758910005069-e5zsnzrzf
-default	13:06:51.728502-0500	MobileJarvisNative	📊 BackgroundApiModule: Receiving data for request 1758910005069-e5zsnzrzf, bytes: 297
-default	13:06:51.728558-0500	MobileJarvisNative	📊 BackgroundApiModule: Receiving data for request 1758910005069-e5zsnzrzf, bytes: 297
+default	22:09:22.417975-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Starting expo-updates status check...
+default	22:09:22.417999-0500	MobileJarvisNative	📦 UpdatesLoggerModule: AppController initialized: YES
+default	22:09:22.418049-0500	MobileJarvisNative	📦 UpdatesLoggerModule: ========== CONFIGURATION ==========
+default	22:09:22.418072-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Enabled: YES
+default	22:09:22.418097-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Runtime Version: 1.0.0
+default	22:09:22.418148-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Check On Launch: ALWAYS
+default	22:09:22.418198-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Channel: preview
+default	22:09:22.418222-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Using Embedded Assets: NO
+default	22:09:22.418251-0500	MobileJarvisNative	📦 UpdatesLoggerModule: ========== LAUNCHED UPDATE ==========
+default	22:09:22.418324-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Update ID: 8E0C5086-0A64-4A44-B6F8-4CA9A400A708
+default	22:09:22.418349-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Commit Time: 1760152136469 ms since epoch
+default	22:09:22.418375-0500	MobileJarvisNative	📦 UpdatesLoggerModule: ========== EMBEDDED UPDATE ==========
+default	22:09:22.418430-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Is Embedded Launch: YES
+default	22:09:22.418479-0500	MobileJarvisNative	📦 UpdatesLoggerModule: ========== LAUNCH INFO ==========
+default	22:09:22.418503-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Launch Duration: 113.59 ms
+default	22:09:22.418550-0500	MobileJarvisNative	📦 UpdatesLoggerModule: ========== STATE MACHINE CONTEXT ==========
+default	22:09:22.418750-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Initial Context: {
+    checkError = "<null>";
+    downloadError = "<null>";
+    downloadedManifest = "<null>";
+    isChecking = 0;
+    isDownloading = 0;
+    isRestarting = 0;
+    isStartupProcedureRunning = 0;
+    isUpdateAvailable = 0;
+    isUpdatePending = 0;
+    lastCheckForUpdateTimeString = "2025-10-11T03:09:22Z";
+    latestManifest = "<null>";
+    restartCount = 0;
+    rollback = "<null>";
+    sequenceNumber = 6;
+}
+default	22:09:22.418823-0500	MobileJarvisNative	📦 UpdatesLoggerModule: ========== EXPO.PLIST COMPARISON ==========
+default	22:09:22.419166-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Expo.plist Enabled: YES
+default	22:09:22.419193-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Expo.plist URL: https://u.expo.dev/a1ca031e-4068-49f1-84f5-ab872bc450dc
+default	22:09:22.419218-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Expo.plist Runtime Version: 1.0.0
+default	22:09:22.419243-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Expo.plist Check On Launch: ALWAYS
+default	22:09:22.419291-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Expo.plist Channel: preview
+default	22:09:22.419315-0500	MobileJarvisNative	📦 UpdatesLoggerModule: ========== CONTROLLER INFO ==========
+default	22:09:22.419338-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Is Active Controller: YES
+default	22:09:22.419363-0500	MobileJarvisNative	📦 UpdatesLoggerModule: Launch Asset URL: file:///var/mobile/Containers/Data/Application/8598BCC6-8AFF-4151-8AAF-72A55D549351/Library/Application%20Support/.expo-internal/bundle-8e0c5086-0a64-4a44-b6f8-4ca9a400a708.jsbundle
