@@ -12,7 +12,6 @@
   <uses-permission android:name="android.permission.USE_CREDENTIALS"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-  <!-- Health Connect permissions for Google Fit integration -->
   <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED"/>
   <uses-permission android:name="android.permission.health.READ_BASAL_METABOLIC_RATE"/>
   <uses-permission android:name="android.permission.health.READ_BLOOD_GLUCOSE"/>
@@ -51,14 +50,12 @@
   <uses-permission android:name="android.permission.health.WRITE_SLEEP"/>
   <uses-permission android:name="android.permission.health.WRITE_STEPS"/>
   <uses-permission android:name="android.permission.health.WRITE_WEIGHT"/>
-  <!-- Additional Health Connect permissions -->
   <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED"/>
   <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY"/>
   <uses-permission android:name="android.permission.health.READ_VO2_MAX"/>
   <uses-permission android:name="android.permission.health.READ_FLOORS_CLIMBED"/>
   <queries>
-    <!-- Allow interaction with Health Connect -->
-    <package android:name="com.google.android.apps.healthdata" />
+    <package android:name="com.google.android.apps.healthdata"/>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
       <category android:name="android.intent.category.BROWSABLE"/>
@@ -70,27 +67,15 @@
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="https://u.expo.dev/a1ca031e-4068-49f1-84f5-ab872bc450dc"/>
-    <meta-data android:name="expo.modules.updates.EXPO_RUNTIME_VERSION" android:value="1.0.0"/>
+    <meta-data android:name="expo.modules.updates.EXPO_RUNTIME_VERSION" android:value="@string/expo_runtime_version"/>
     <meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="preview"/>
+    <meta-data android:name="expo.modules.updates.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY" android:value="{&quot;expo-channel-name&quot;:&quot;preview&quot;}"/>
     <service android:name=".wakeword.WakeWordService" android:enabled="true" android:exported="false" android:foregroundServiceType="microphone"/>
-    <!-- Health Connect permission rationale activities -->
-    <activity
-        android:name=".PermissionsRationaleActivity"
-        android:exported="true">
-        <intent-filter>
-            <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
-        </intent-filter>
+    <activity android:name=".PermissionsRationaleActivity" android:exported="true">
+      <intent-filter>
+        <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE"/>
+      </intent-filter>
     </activity>
-    <activity-alias
-        android:name="ViewPermissionUsageActivity"
-        android:exported="true"
-        android:targetActivity=".PermissionsRationaleActivity"
-        android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
-        <intent-filter>
-            <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
-            <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
-        </intent-filter>
-    </activity-alias>
     <activity android:name=".MainActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode" android:launchMode="singleTask" android:windowSoftInputMode="adjustNothing" android:theme="@style/Theme.App.SplashScreen" android:exported="true" android:screenOrientation="portrait">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
@@ -113,5 +98,11 @@
       </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" android:exported="false"/>
+    <activity-alias android:name="ViewPermissionUsageActivity" android:exported="true" android:targetActivity=".PermissionsRationaleActivity" android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW_PERMISSION_USAGE"/>
+        <category android:name="android.intent.category.HEALTH_PERMISSIONS"/>
+      </intent-filter>
+    </activity-alias>
   </application>
 </manifest>
