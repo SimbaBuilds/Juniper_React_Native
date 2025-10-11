@@ -36,7 +36,8 @@ const generateRedirectUri = (serviceName: string): string => {
 const getGoogleClientId = (): string => {
   const clientId = Constants.expoConfig?.extra?.GOOGLE_CLIENT_ID;
   if (!clientId) {
-    throw new Error('GOOGLE_CLIENT_ID not configured in environment');
+    console.warn('GOOGLE_CLIENT_ID not configured, using placeholder');
+    return 'placeholder-google-client-id';
   }
   return clientId;
 };
@@ -45,7 +46,8 @@ const getGoogleClientId = (): string => {
 const getGoogleClientSecret = (): string => {
   const clientSecret = Constants.expoConfig?.extra?.GOOGLE_CLIENT_SECRET;
   if (!clientSecret) {
-    throw new Error('GOOGLE_CLIENT_SECRET not configured in environment');
+    console.warn('GOOGLE_CLIENT_SECRET not configured, using placeholder');
+    return 'placeholder-google-client-secret';
   }
   return clientSecret;
 };
@@ -92,21 +94,33 @@ const getServiceClientSecret = (service: string): string | undefined => {
   return clientSecret;
 };
 
-export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
-  'google-calendar': {
-    serviceName: 'google-calendar',
-    clientId: getGoogleClientId(),
-    clientSecret: getGoogleClientSecret(),
-    scopes: ['https://www.googleapis.com/auth/calendar.events'],
-    redirectUri: generateRedirectUri('google-calendar'),
-    authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-    tokenEndpoint: 'https://oauth2.googleapis.com/token',
-    revokeEndpoint: 'https://oauth2.googleapis.com/revoke',
-    additionalParameters: {
-      access_type: 'offline',
-      prompt: 'consent'
-    }
-  },
+// Lazy-loaded OAuth configurations cache
+let cachedOAuthConfigs: Record<string, OAuthServiceConfig> | null = null;
+
+/**
+ * Get all OAuth configurations (lazy-loaded)
+ * This function builds the configs on first call and caches the result
+ */
+const getOAuthConfigs = (): Record<string, OAuthServiceConfig> => {
+  if (cachedOAuthConfigs) {
+    return cachedOAuthConfigs;
+  }
+
+  cachedOAuthConfigs = {
+    'google-calendar': {
+      serviceName: 'google-calendar',
+      clientId: getGoogleClientId(),
+      clientSecret: getGoogleClientSecret(),
+      scopes: ['https://www.googleapis.com/auth/calendar.events'],
+      redirectUri: generateRedirectUri('google-calendar'),
+      authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+      tokenEndpoint: 'https://oauth2.googleapis.com/token',
+      revokeEndpoint: 'https://oauth2.googleapis.com/revoke',
+      additionalParameters: {
+        access_type: 'offline',
+        prompt: 'consent'
+      }
+    },
 
   'gmail': {
     serviceName: 'gmail',
@@ -456,21 +470,25 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     tokenEndpoint: 'healthkit://permissions'
   },
 
-  'health-connect': {
-    serviceName: 'health-connect',
-    clientId: 'health-connect-permissions', // Health Connect doesn't use OAuth
-    scopes: ['read'],
-    redirectUri: generateRedirectUri('health-connect'),
-    authEndpoint: 'health-connect://permissions',
-    tokenEndpoint: 'health-connect://permissions'
-  }
+    'health-connect': {
+      serviceName: 'health-connect',
+      clientId: 'health-connect-permissions', // Health Connect doesn't use OAuth
+      scopes: ['read'],
+      redirectUri: generateRedirectUri('health-connect'),
+      authEndpoint: 'health-connect://permissions',
+      tokenEndpoint: 'health-connect://permissions'
+    }
+  };
+
+  return cachedOAuthConfigs;
 };
 
 /**
  * Get OAuth configuration for a service
  */
 export const getOAuthConfig = (serviceName: string): OAuthServiceConfig => {
-  const config = OAUTH_CONFIGS[serviceName];
+  const configs = getOAuthConfigs();
+  const config = configs[serviceName];
   if (!config) {
     throw new Error(`OAuth config not found for service: ${serviceName}`);
   }
@@ -490,7 +508,7 @@ export const getRedirectUri = (serviceName: string): string => {
  */
 export const buildAuthUrl = (serviceName: string, integrationId: string): string => {
   const config = getOAuthConfig(serviceName);
-  
+
   const params = new URLSearchParams({
     client_id: config.clientId,
     redirect_uri: config.redirectUri,
@@ -501,6 +519,4 @@ export const buildAuthUrl = (serviceName: string, integrationId: string): string
   });
 
   return `${config.authEndpoint}?${params}`;
-};
-
-export default OAUTH_CONFIGS; 
+}; 
