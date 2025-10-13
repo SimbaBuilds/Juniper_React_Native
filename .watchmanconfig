@@ -1,0 +1,14 @@
+{
+  "ignore_dirs": [
+    "node_modules/*/android/build",
+    "node_modules/*/.gradle",
+    "node_modules/*/ios/build",
+    "android/build",
+    "android/.gradle",
+    "ios/build",
+    "ios/Pods",
+    ".expo",
+    "dist",
+    ".git"
+  ]
+}

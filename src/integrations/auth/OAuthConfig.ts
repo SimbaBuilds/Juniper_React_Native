@@ -19,10 +19,9 @@ export interface OAuthServiceConfig {
 
 // Helper function to get site URL
 const getSiteUrl = (): string => {
-  const siteUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_SITE_URL || process.env.EXPO_PUBLIC_SITE_URL;
+  const siteUrl = Constants.expoConfig?.extra?.SITE_URL;
   if (!siteUrl) {
-    console.warn('EXPO_PUBLIC_SITE_URL not configured, using placeholder');
-    return 'https://juniperassistant.com';
+    throw new Error('SITE_URL not configured in environment');
   }
   return siteUrl;
 };
@@ -36,8 +35,7 @@ const generateRedirectUri = (serviceName: string): string => {
 const getGoogleClientId = (): string => {
   const clientId = Constants.expoConfig?.extra?.GOOGLE_CLIENT_ID;
   if (!clientId) {
-    console.warn('GOOGLE_CLIENT_ID not configured, using placeholder');
-    return 'placeholder-google-client-id';
+    throw new Error('GOOGLE_CLIENT_ID not configured in environment');
   }
   return clientId;
 };
@@ -46,18 +44,16 @@ const getGoogleClientId = (): string => {
 const getGoogleClientSecret = (): string => {
   const clientSecret = Constants.expoConfig?.extra?.GOOGLE_CLIENT_SECRET;
   if (!clientSecret) {
-    console.warn('GOOGLE_CLIENT_SECRET not configured, using placeholder');
-    return 'placeholder-google-client-secret';
+    throw new Error('GOOGLE_CLIENT_SECRET not configured in environment');
   }
   return clientSecret;
 };
 
-// Helper function to get Microsoft Client ID  
+// Helper function to get Microsoft Client ID
 const getMicrosoftClientId = (): string => {
   const clientId = Constants.expoConfig?.extra?.MICROSOFT_CLIENT_ID;
   if (!clientId || clientId.includes('your_microsoft_app_client_id')) {
-    console.warn('MICROSOFT_CLIENT_ID not configured, using placeholder');
-    return 'placeholder-microsoft-client-id';
+    throw new Error('MICROSOFT_CLIENT_ID not configured in environment');
   }
   return clientId;
 };
@@ -66,8 +62,7 @@ const getMicrosoftClientId = (): string => {
 const getMicrosoftClientSecret = (): string => {
   const clientSecret = Constants.expoConfig?.extra?.MICROSOFT_CLIENT_SECRET;
   if (!clientSecret || clientSecret.includes('your_microsoft_app_client_secret')) {
-    console.warn('MICROSOFT_CLIENT_SECRET not configured, using placeholder');
-    return 'placeholder-microsoft-client-secret';
+    throw new Error('MICROSOFT_CLIENT_SECRET not configured in environment');
   }
   return clientSecret;
 };
@@ -75,10 +70,9 @@ const getMicrosoftClientSecret = (): string => {
 // Helper function to get other service client IDs
 const getServiceClientId = (service: string): string => {
   const envKey = `${service.toUpperCase()}_CLIENT_ID`;
-  const clientId = Constants.expoConfig?.extra?.[envKey] || process.env[`EXPO_PUBLIC_${envKey}`];
+  const clientId = Constants.expoConfig?.extra?.[envKey];
   if (!clientId) {
-    console.warn(`${envKey} not configured, using placeholder`);
-    return 'placeholder-client-id';
+    throw new Error(`${envKey} not configured in environment`);
   }
   return clientId;
 };
@@ -86,7 +80,7 @@ const getServiceClientId = (service: string): string => {
 // Helper function to get other service client secrets
 const getServiceClientSecret = (service: string): string | undefined => {
   const envKey = `${service.toUpperCase()}_CLIENT_SECRET`;
-  const clientSecret = Constants.expoConfig?.extra?.[envKey] || process.env[`EXPO_PUBLIC_${envKey}`];
+  const clientSecret = Constants.expoConfig?.extra?.[envKey];
   if (!clientSecret) {
     console.warn(`${envKey} not configured, client secret will be undefined`);
     return undefined;

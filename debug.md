@@ -1,29 +1,41 @@
+› Installing /Users/cameronhightower/Library/Developer/Xcode/DerivedData/MobileJarvisNative-bevexqwvllxgjobwowrmbjzmsugf/Build/Products/Debug-iphoneos/MobileJarvisNative.app
+metro-file-map: Watchman crawl failed. Retrying once with node crawler.
+  Usually this happens when watchman isn't running. Create an empty `.watchmanconfig` file in your project's root folder or initialize a git or hg repository in your project.
+  Error: Watchman error: A non-recoverable condition has triggered.  Watchman needs your help!
+The triggering condition was at timestamp=1760377828: opendir(/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/expo-modules-core/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/expo/modules/core/logging) -> Too many open files
+All requests will continue to fail with this message until you resolve
+the underlying problem.  You will find more information on fixing this at
+https://facebook.github.io/watchman/docs/troubleshooting.html#poison-opendir. Make sure watchman is running for this project. See https://facebook.github.io/watchman/docs/troubleshooting.
+/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/@expo/cli/build/src/utils/errors.js:130
+    throw error;
+    ^
 
+Error: A non-recoverable condition has triggered.  Watchman needs your help!
+The triggering condition was at timestamp=1760377828: opendir(/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/expo-modules-core/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/expo/modules/core/logging) -> Too many open files
+All requests will continue to fail with this message until you resolve
+the underlying problem.  You will find more information on fixing this at
+https://facebook.github.io/watchman/docs/troubleshooting.html#poison-opendir
 
-❌  (ios/MobileJarvisNative/UpdatesLoggerModule.swift:101:48)
+    at ChildProcess.<anonymous> (/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/fb-watchman/index.js:212:21)
+    at ChildProcess.emit (node:events:519:28)
+    at maybeClose (node:internal/child_process:1105:16)
+    at Process.ChildProcess._handle.onexit (node:internal/child_process:305:5)
+Emitted 'error' event at:
+    at WatchmanWatcher.emitError (/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/metro-file-map/src/watchers/AbstractWatcher.js:70:19)
+    at Client.<anonymous> (/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/metro-file-map/src/watchers/WatchmanWatcher.js:70:12)
+    at Client.emit (node:events:519:28)
+    at ChildProcess.<anonymous> (/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/fb-watchman/index.js:219:12)
+    at ChildProcess.emit (node:events:519:28)
+    at maybeClose (node:internal/child_process:1105:16)
+    at Process.ChildProcess._handle.onexit (node:internal/child_process:305:5) {
+  watchmanResponse: {
+    version: '2025.08.18.00',
+    error: 'A non-recoverable condition has triggered.  Watchman needs your help!\n' +
+      'The triggering condition was at timestamp=1760377828: opendir(/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/expo-modules-core/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/expo/modules/core/logging) -> Too many open files\n' +
+      'All requests will continue to fail with this message until you resolve\n' +
+      'the underlying problem.  You will find more information on fixing this at\n' +
+      'https://facebook.github.io/watchman/docs/troubleshooting.html#poison-opendir\n'
+  }
+}
 
-   99 |             "channel": constants.requestHeaders["expo-channel-name"] ?? "",
-  100 |             "checkOnLaunch": constants.checkOnLaunch.asString,
-> 101 |             "isUsingEmbeddedAssets": constants.isUsingEmbeddedAssets
-      |                                                ^ 'isUsingEmbeddedAssets' is inaccessible due to 'internal' protection level
-  102 |         ]
-  103 | 
-  104 |         if let launchedUpdate = constants.launchedUpdate {
-
-
-❌  (ios/MobileJarvisNative/UpdatesLoggerModule.swift:104:43)
-
-  102 |         ]
-  103 | 
-> 104 |         if let launchedUpdate = constants.launchedUpdate {
-      |                                           ^ 'launchedUpdate' is inaccessible due to 'internal' protection level
-  105 |             response["updateId"] = launchedUpdate.updateId.uuidString
-  106 |             response["commitTime"] = launchedUpdate.commitTime.timeIntervalSince1970
-  107 |         }
-
-    Run script build phase '[CP-User] Generate updates resources for expo-updates' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'EXUpdates' from project 'Pods')
-
-› 18 error(s), and 25 warning(s)
-
-CommandError: Failed to build iOS project. "xcodebuild" exited with error code 65.
-zsh: command not found: --configuration
+Node.js v20.13.0
