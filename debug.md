@@ -2,16 +2,16 @@
 metro-file-map: Watchman crawl failed. Retrying once with node crawler.
   Usually this happens when watchman isn't running. Create an empty `.watchmanconfig` file in your project's root folder or initialize a git or hg repository in your project.
   Error: Watchman error: A non-recoverable condition has triggered.  Watchman needs your help!
-The triggering condition was at timestamp=1760377828: opendir(/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/expo-modules-core/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/expo/modules/core/logging) -> Too many open files
+The triggering condition was at timestamp=1760496661: opendir(/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/react-native-reanimated/android/.cxx/Debug/v304h1h3/x86/src/main/cpp/worklets/CMakeFiles/worklets.dir/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/react-native-reanimated/Common/cpp/worklets) -> Too many open files
 All requests will continue to fail with this message until you resolve
 the underlying problem.  You will find more information on fixing this at
 https://facebook.github.io/watchman/docs/troubleshooting.html#poison-opendir. Make sure watchman is running for this project. See https://facebook.github.io/watchman/docs/troubleshooting.
-/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/@expo/cli/build/src/utils/errors.js:130
+⠹ VerifyingApplication 40%/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/@expo/cli/build/src/utils/errors.js:130
     throw error;
     ^
 
 Error: A non-recoverable condition has triggered.  Watchman needs your help!
-The triggering condition was at timestamp=1760377828: opendir(/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/expo-modules-core/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/expo/modules/core/logging) -> Too many open files
+The triggering condition was at timestamp=1760496661: opendir(/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/react-native-reanimated/android/.cxx/Debug/v304h1h3/x86/src/main/cpp/worklets/CMakeFiles/worklets.dir/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/react-native-reanimated/Common/cpp/worklets) -> Too many open files
 All requests will continue to fail with this message until you resolve
 the underlying problem.  You will find more information on fixing this at
 https://facebook.github.io/watchman/docs/troubleshooting.html#poison-opendir
@@ -31,7 +31,7 @@ Emitted 'error' event at:
   watchmanResponse: {
     version: '2025.08.18.00',
     error: 'A non-recoverable condition has triggered.  Watchman needs your help!\n' +
-      'The triggering condition was at timestamp=1760377828: opendir(/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/expo-modules-core/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/expo/modules/core/logging) -> Too many open files\n' +
+      'The triggering condition was at timestamp=1760496661: opendir(/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/react-native-reanimated/android/.cxx/Debug/v304h1h3/x86/src/main/cpp/worklets/CMakeFiles/worklets.dir/Users/cameronhightower/Software_Projects/Mobile_Jarvis_React_Native/node_modules/react-native-reanimated/Common/cpp/worklets) -> Too many open files\n' +
       'All requests will continue to fail with this message until you resolve\n' +
       'the underlying problem.  You will find more information on fixing this at\n' +
       'https://facebook.github.io/watchman/docs/troubleshooting.html#poison-opendir\n'
