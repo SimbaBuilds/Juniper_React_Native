@@ -108,7 +108,7 @@ export const conversationService = {
     if (!user.user) throw new Error('User not authenticated');
 
     const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 30);
 
     try {
       const { data, error } = await supabase
