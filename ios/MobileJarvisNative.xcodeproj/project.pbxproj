@@ -18,6 +18,7 @@
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		47240C7517DC45F0AF1E6A46 /* TTSManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 811472427FA14A2699F94589 /* TTSManager.swift */; };
 		57AA8458E5084730B6394BA1 /* AppConfigModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE9A80A4DCB48E5AE0AC050 /* AppConfigModule.swift */; };
+		5E9A61F52E9F47520025394D /* config.properties in Resources */ = {isa = PBXBuildFile; fileRef = 5E9A61F42E9F47520025394D /* config.properties */; };
 		5EE3F4E42E99FB08001B567B /* UpdatesLoggerModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EE3F4E32E99FB08001B567B /* UpdatesLoggerModule.swift */; };
 		5EE3F4E52E99FB08001B567B /* UpdatesLoggerModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 5EE3F4E22E99FB08001B567B /* UpdatesLoggerModule.m */; };
 		61DFF015B14B4625A7BD597E /* DeepgramWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D588FEC60524850A91C00AE /* DeepgramWebSocketClient.swift */; };
@@ -48,6 +49,7 @@
 		486EAE1CBD3A89907C3C33F9 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-MobileJarvisNative/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		498414C2781B44E382B93CE0 /* VoiceModule.m */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.objc; name = VoiceModule.m; path = MobileJarvisNative/VoiceModule.m; sourceTree = "<group>"; };
 		5D1943945F6142828A1A6BA9 /* ConfigManager.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = ConfigManager.swift; path = MobileJarvisNative/ConfigManager.swift; sourceTree = "<group>"; };
+		5E9A61F42E9F47520025394D /* config.properties */ = {isa = PBXFileReference; lastKnownFileType = text; name = config.properties; path = MobileJarvisNative/config.properties; sourceTree = "<group>"; };
 		5EE3F4E22E99FB08001B567B /* UpdatesLoggerModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = UpdatesLoggerModule.m; path = MobileJarvisNative/UpdatesLoggerModule.m; sourceTree = "<group>"; };
 		5EE3F4E32E99FB08001B567B /* UpdatesLoggerModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UpdatesLoggerModule.swift; path = MobileJarvisNative/UpdatesLoggerModule.swift; sourceTree = "<group>"; };
 		6EE9A80A4DCB48E5AE0AC050 /* AppConfigModule.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = AppConfigModule.swift; path = MobileJarvisNative/AppConfigModule.swift; sourceTree = "<group>"; };
@@ -87,6 +89,7 @@
 		13B07FAE1A68108700A75B9A /* MobileJarvisNative */ = {
 			isa = PBXGroup;
 			children = (
+				5E9A61F42E9F47520025394D /* config.properties */,
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
 				F11748442D0722820044C1D9 /* MobileJarvisNative-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
@@ -266,6 +269,7 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				1CD0E556CC794A31BB373834 /* PrivacyInfo.xcprivacy in Resources */,
+				5E9A61F52E9F47520025394D /* config.properties in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -564,10 +568,7 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -622,10 +623,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
