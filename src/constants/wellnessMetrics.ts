@@ -163,12 +163,6 @@ export const AVAILABLE_METRICS: MetricDefinition[] = [
     color: { light: '#dc2626', dark: '#f87171' }
   },
   {
-    key: 'blood_glucose',
-    label: 'Blood Glucose',
-    group: 'Vitals',
-    color: { light: '#c2410c', dark: '#fb923c' }
-  },
-  {
     key: 'blood_pressure_systolic',
     label: 'Blood Pressure (Systolic)',
     group: 'Vitals',
@@ -391,21 +385,26 @@ export const AVAILABLE_METRICS: MetricDefinition[] = [
     label: 'Vitamin D',
     group: 'Lab Work',
     color: { light: '#ca8a04', dark: '#fde047' }
+  },
+  {
+    key: 'blood_glucose',
+    label: 'Blood Glucose',
+    group: 'Lab Work',
+    color: { light: '#c2410c', dark: '#fb923c' }
   }
 ]
 
 // Metric presets for quick selection
 export const METRIC_PRESETS: Record<string, string[]> = {
-  vitals: ['resting_hr', 'hrv_avg', 'body_temperature', 'blood_pressure_systolic', 'oxygen_saturation'],
+  vitals: ['resting_hr', 'hrv_avg', 'body_temperature', 'blood_pressure_systolic', 'blood_pressure_diastolic', 'oxygen_saturation'],
   activity: ['activity_score', 'total_steps', 'calories_burned', 'exercise_minutes', 'active_energy', 'distance'],
   recovery: ['sleep_score', 'readiness_score', 'recovery_score'],
   wellness: ['stress_level', 'resilience_score'],
   sleep: ['time_in_bed', 'time_asleep', 'light_sleep', 'deep_sleep', 'rem_sleep'],
   body: ['weight', 'body_fat_percentage', 'lean_body_mass', 'basal_metabolic_rate'],
-  blood: ['blood_glucose', 'blood_pressure_systolic', 'blood_pressure_diastolic'],
   fitness: ['vo2_max', 'time_in_daylight'],
   nutrition: ['hydration', 'nutrition_calories'],
-  labs: ['triglycerides', 'hdl', 'triglycerides_to_hdl', 'apob', 'hba1c', 'fasting_insulin', 'crp', 'hscrp', 'alt', 'ast', 'ggt', 'uric_acid', 'vitamin_d'],
+  labs: ['triglycerides', 'hdl', 'triglycerides_to_hdl', 'apob', 'hba1c', 'fasting_insulin', 'crp', 'hscrp', 'alt', 'ast', 'ggt', 'uric_acid', 'vitamin_d', 'blood_glucose'],
   all: AVAILABLE_METRICS.map(m => m.key)
 }
 

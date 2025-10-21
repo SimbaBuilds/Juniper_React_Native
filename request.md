@@ -1,17 +1,5 @@
-I've added the below metrics to the health metrics daily.  If the metrics list for the trends chart and summary charts on the wellness screen does not come directly from the database.  Please add these metrics to the shared metrics list in the apprpriate category.
+For the trends chart, when vitals are slelected, the 30 day selection causes non chnronological dates to show e.g. oct 12 then oct 4 then oct 16.  
 
-Metrics:
+Also, labs aren't showing in the trends chart when selected.
 
-- [ ]  triglycerides
-- [ ]  triglycerides_to_hdl
-- [ ]  hba1c
-- [ ]  hscrp
-- [ ]  apob
-- [ ]  alt
-- [ ]  ast
-- [ ]  uric_acid
-- [ ]  crp
-- [ ]  ggt
-- [ ]  vitamin_d
-- [ ]  hdl
-- [ ]  fasting_insulin
+Please add logging for both of the above issues with a chart emoji.
