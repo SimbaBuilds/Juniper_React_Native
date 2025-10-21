@@ -1,4 +1,5 @@
 import { Linking } from 'react-native';
+import Constants from 'expo-constants';
 import { BaseOAuthService, AuthResult } from '../BaseOAuthService';
 import { supabase } from '../../../supabase/supabase';
 
@@ -59,8 +60,8 @@ export class NotionAuthService extends BaseOAuthService {
 
       // Add environment debugging
       console.log('🔍 Notion environment check:', {
-        hasNotionClientId: !!(process.env.EXPO_PUBLIC_NOTION_CLIENT_ID || process.env.NOTION_CLIENT_ID),
-        hasNotionClientSecret: !!(process.env.EXPO_PUBLIC_NOTION_CLIENT_SECRET || process.env.NOTION_CLIENT_SECRET),
+        hasNotionClientId: !!Constants.expoConfig?.extra?.NOTION_CLIENT_ID,
+        hasNotionClientSecret: !!Constants.expoConfig?.extra?.NOTION_CLIENT_SECRET,
         configClientId: this.config.clientId,
         configClientSecret: this.config.clientSecret ? '***PRESENT***' : 'MISSING'
       });

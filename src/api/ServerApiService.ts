@@ -1,5 +1,6 @@
 import { ChatMessage } from '../voice/VoiceContext';
 import SettingsService from '../app-config/AppConfigService';
+import Constants from 'expo-constants';
 import api from './api';
 import { supabase } from '../supabase/supabase';
 import BackgroundApiService from './BackgroundApiService';
@@ -22,7 +23,7 @@ function toSnakeCase(str: string): string {
 
 // Default server configuration - prioritize React Native environment variables
 const DEFAULT_SERVER_CONFIG = {
-  baseUrl: process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL || 'https://juniper-python-backend.onrender.com',
+  baseUrl: Constants.expoConfig?.extra?.PYTHON_BACKEND_URL || 'https://juniper-python-backend.onrender.com',
   apiEndpoint: '/api/chat'
 };
 
@@ -94,8 +95,8 @@ class ServerApiService {
   private async loadConfig(): Promise<void> {
     try {
       // First, check if React Native environment variables are set
-      const envBaseUrl = process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL;
-      
+      const envBaseUrl = Constants.expoConfig?.extra?.PYTHON_BACKEND_URL;
+
       if (envBaseUrl) {
         const envConfig = {
           baseUrl: envBaseUrl,
