@@ -18,6 +18,9 @@
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		47240C7517DC45F0AF1E6A46 /* TTSManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 811472427FA14A2699F94589 /* TTSManager.swift */; };
 		57AA8458E5084730B6394BA1 /* AppConfigModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE9A80A4DCB48E5AE0AC050 /* AppConfigModule.swift */; };
+		5E9A61F52E9F47520025394D /* config.properties in Resources */ = {isa = PBXBuildFile; fileRef = 5E9A61F42E9F47520025394D /* config.properties */; };
+		5EE3F4E42E99FB08001B567B /* UpdatesLoggerModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EE3F4E32E99FB08001B567B /* UpdatesLoggerModule.swift */; };
+		5EE3F4E52E99FB08001B567B /* UpdatesLoggerModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 5EE3F4E22E99FB08001B567B /* UpdatesLoggerModule.m */; };
 		61DFF015B14B4625A7BD597E /* DeepgramWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D588FEC60524850A91C00AE /* DeepgramWebSocketClient.swift */; };
 		6CB22DA7D70BC469C4519B26 /* BackgroundApiModule.m in Sources */ = {isa = PBXBuildFile; fileRef = F9F79AB9D0570F6D53BE9D2A /* BackgroundApiModule.m */; };
 		6CC289BED30AD050D4CD4003 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486EAE1CBD3A89907C3C33F9 /* ExpoModulesProvider.swift */; };
@@ -46,6 +49,9 @@
 		486EAE1CBD3A89907C3C33F9 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-MobileJarvisNative/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		498414C2781B44E382B93CE0 /* VoiceModule.m */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.objc; name = VoiceModule.m; path = MobileJarvisNative/VoiceModule.m; sourceTree = "<group>"; };
 		5D1943945F6142828A1A6BA9 /* ConfigManager.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = ConfigManager.swift; path = MobileJarvisNative/ConfigManager.swift; sourceTree = "<group>"; };
+		5E9A61F42E9F47520025394D /* config.properties */ = {isa = PBXFileReference; lastKnownFileType = text; name = config.properties; path = MobileJarvisNative/config.properties; sourceTree = "<group>"; };
+		5EE3F4E22E99FB08001B567B /* UpdatesLoggerModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = UpdatesLoggerModule.m; path = MobileJarvisNative/UpdatesLoggerModule.m; sourceTree = "<group>"; };
+		5EE3F4E32E99FB08001B567B /* UpdatesLoggerModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UpdatesLoggerModule.swift; path = MobileJarvisNative/UpdatesLoggerModule.swift; sourceTree = "<group>"; };
 		6EE9A80A4DCB48E5AE0AC050 /* AppConfigModule.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = AppConfigModule.swift; path = MobileJarvisNative/AppConfigModule.swift; sourceTree = "<group>"; };
 		7BEA83D03A4433FCB69D645C /* Pods-MobileJarvisNative.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MobileJarvisNative.debug.xcconfig"; path = "Target Support Files/Pods-MobileJarvisNative/Pods-MobileJarvisNative.debug.xcconfig"; sourceTree = "<group>"; };
 		811472427FA14A2699F94589 /* TTSManager.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = TTSManager.swift; path = MobileJarvisNative/TTSManager.swift; sourceTree = "<group>"; };
@@ -62,7 +68,7 @@
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = MobileJarvisNative/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* MobileJarvisNative-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "MobileJarvisNative-Bridging-Header.h"; path = "MobileJarvisNative/MobileJarvisNative-Bridging-Header.h"; sourceTree = "<group>"; };
 		F11D511BCC6D4C83AE588D60 /* StringProcessingWrapper.m */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.objc; name = StringProcessingWrapper.m; path = MobileJarvisNative/StringProcessingWrapper.m; sourceTree = "<group>"; };
-		F1709C53F8DF577E5967C6F1 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = MobileJarvisNative/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		F1709C53F8DF577E5967C6F1 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = MobileJarvisNative/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F9F79AB9D0570F6D53BE9D2A /* BackgroundApiModule.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BackgroundApiModule.m; path = MobileJarvisNative/BackgroundApiModule.m; sourceTree = "<group>"; };
 		FA0247C69192400BAFEDF08D /* VoiceManager.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = VoiceManager.swift; path = MobileJarvisNative/VoiceManager.swift; sourceTree = "<group>"; };
 		FA5E40372028419C8FB950CC /* WhisperAPI.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = WhisperAPI.swift; path = MobileJarvisNative/WhisperAPI.swift; sourceTree = "<group>"; };
@@ -83,6 +89,7 @@
 		13B07FAE1A68108700A75B9A /* MobileJarvisNative */ = {
 			isa = PBXGroup;
 			children = (
+				5E9A61F42E9F47520025394D /* config.properties */,
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
 				F11748442D0722820044C1D9 /* MobileJarvisNative-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
@@ -91,6 +98,8 @@
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
 				F1709C53F8DF577E5967C6F1 /* PrivacyInfo.xcprivacy */,
 				0EFF2409EA8E4079A8F2F1DC /* VoiceModule.swift */,
+				5EE3F4E22E99FB08001B567B /* UpdatesLoggerModule.m */,
+				5EE3F4E32E99FB08001B567B /* UpdatesLoggerModule.swift */,
 				498414C2781B44E382B93CE0 /* VoiceModule.m */,
 				FA0247C69192400BAFEDF08D /* VoiceManager.swift */,
 				150BD7B32A17469BA7D020DD /* VoiceState.swift */,
@@ -134,7 +143,6 @@
 				7BEA83D03A4433FCB69D645C /* Pods-MobileJarvisNative.debug.xcconfig */,
 				DBCC6B89E0009275C488FF9E /* Pods-MobileJarvisNative.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -261,6 +269,7 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				1CD0E556CC794A31BB373834 /* PrivacyInfo.xcprivacy in Resources */,
+				5E9A61F52E9F47520025394D /* config.properties in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -350,10 +359,12 @@
 				"${PODS_ROOT}/Target Support Files/Pods-MobileJarvisNative/Pods-MobileJarvisNative-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXUpdates/EXUpdates.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/RCT-Folly/RCT-Folly_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/RNCAsyncStorage/RNCAsyncStorage_resources.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/RNSVG/RNSVGFilters.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ReachabilitySwift/ReachabilitySwift.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/boost/boost_privacy.bundle",
@@ -363,10 +374,12 @@
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXUpdates.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RCT-Folly_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNCAsyncStorage_resources.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNSVGFilters.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ReachabilitySwift.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/boost_privacy.bundle",
@@ -387,6 +400,8 @@
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
 				6CC289BED30AD050D4CD4003 /* ExpoModulesProvider.swift in Sources */,
 				CBADF963A8F542EF8E91B791 /* VoiceModule.swift in Sources */,
+				5EE3F4E42E99FB08001B567B /* UpdatesLoggerModule.swift in Sources */,
+				5EE3F4E52E99FB08001B567B /* UpdatesLoggerModule.m in Sources */,
 				CBADF963A8F542EF8E91B791 /* VoiceModule.swift in Sources */,
 				205CCA795A16415BBF92C835 /* VoiceModule.m in Sources */,
 				205CCA795A16415BBF92C835 /* VoiceModule.m in Sources */,
@@ -553,10 +568,7 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -611,10 +623,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

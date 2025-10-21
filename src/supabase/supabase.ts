@@ -1,11 +1,16 @@
 import 'react-native-url-polyfill/auto'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createClient } from '@supabase/supabase-js'
+import Constants from 'expo-constants'
 import { HotPhrase, Request } from './tables'
 import { DEFAULT_WAKE_PHRASE } from '../wakeword/constants';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = Constants.expoConfig?.extra?.SUPABASE_URL
+const supabaseAnonKey = Constants.expoConfig?.extra?.SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Supabase configuration missing. Ensure SUPABASE_URL and SUPABASE_ANON_KEY are set in your environment variables.')
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

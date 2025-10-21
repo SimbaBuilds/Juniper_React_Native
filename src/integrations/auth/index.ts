@@ -1,6 +1,6 @@
 // Base OAuth system
 export { BaseOAuthService } from './BaseOAuthService';
-export { OAUTH_CONFIGS, getOAuthConfig, getRedirectUri, buildAuthUrl } from './OAuthConfig';
+export { getOAuthConfig, getRedirectUri, buildAuthUrl } from './OAuthConfig';
 export type { OAuthServiceConfig } from './OAuthConfig';
 export type { AuthResult, StoredTokenData } from './BaseOAuthService';
 

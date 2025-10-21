@@ -19,10 +19,9 @@ export interface OAuthServiceConfig {
 
 // Helper function to get site URL
 const getSiteUrl = (): string => {
-  const siteUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_SITE_URL || process.env.EXPO_PUBLIC_SITE_URL;
+  const siteUrl = Constants.expoConfig?.extra?.SITE_URL;
   if (!siteUrl) {
-    console.warn('EXPO_PUBLIC_SITE_URL not configured, using placeholder');
-    return 'https://juniperassistant.com';
+    throw new Error('SITE_URL not configured in environment');
   }
   return siteUrl;
 };
@@ -50,12 +49,11 @@ const getGoogleClientSecret = (): string => {
   return clientSecret;
 };
 
-// Helper function to get Microsoft Client ID  
+// Helper function to get Microsoft Client ID
 const getMicrosoftClientId = (): string => {
   const clientId = Constants.expoConfig?.extra?.MICROSOFT_CLIENT_ID;
   if (!clientId || clientId.includes('your_microsoft_app_client_id')) {
-    console.warn('MICROSOFT_CLIENT_ID not configured, using placeholder');
-    return 'placeholder-microsoft-client-id';
+    throw new Error('MICROSOFT_CLIENT_ID not configured in environment');
   }
   return clientId;
 };
@@ -64,8 +62,7 @@ const getMicrosoftClientId = (): string => {
 const getMicrosoftClientSecret = (): string => {
   const clientSecret = Constants.expoConfig?.extra?.MICROSOFT_CLIENT_SECRET;
   if (!clientSecret || clientSecret.includes('your_microsoft_app_client_secret')) {
-    console.warn('MICROSOFT_CLIENT_SECRET not configured, using placeholder');
-    return 'placeholder-microsoft-client-secret';
+    throw new Error('MICROSOFT_CLIENT_SECRET not configured in environment');
   }
   return clientSecret;
 };
@@ -73,10 +70,9 @@ const getMicrosoftClientSecret = (): string => {
 // Helper function to get other service client IDs
 const getServiceClientId = (service: string): string => {
   const envKey = `${service.toUpperCase()}_CLIENT_ID`;
-  const clientId = Constants.expoConfig?.extra?.[envKey] || process.env[`EXPO_PUBLIC_${envKey}`];
+  const clientId = Constants.expoConfig?.extra?.[envKey];
   if (!clientId) {
-    console.warn(`${envKey} not configured, using placeholder`);
-    return 'placeholder-client-id';
+    throw new Error(`${envKey} not configured in environment`);
   }
   return clientId;
 };
@@ -84,7 +80,7 @@ const getServiceClientId = (service: string): string => {
 // Helper function to get other service client secrets
 const getServiceClientSecret = (service: string): string | undefined => {
   const envKey = `${service.toUpperCase()}_CLIENT_SECRET`;
-  const clientSecret = Constants.expoConfig?.extra?.[envKey] || process.env[`EXPO_PUBLIC_${envKey}`];
+  const clientSecret = Constants.expoConfig?.extra?.[envKey];
   if (!clientSecret) {
     console.warn(`${envKey} not configured, client secret will be undefined`);
     return undefined;
@@ -92,21 +88,33 @@ const getServiceClientSecret = (service: string): string | undefined => {
   return clientSecret;
 };
 
-export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
-  'google-calendar': {
-    serviceName: 'google-calendar',
-    clientId: getGoogleClientId(),
-    clientSecret: getGoogleClientSecret(),
-    scopes: ['https://www.googleapis.com/auth/calendar.events'],
-    redirectUri: generateRedirectUri('google-calendar'),
-    authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-    tokenEndpoint: 'https://oauth2.googleapis.com/token',
-    revokeEndpoint: 'https://oauth2.googleapis.com/revoke',
-    additionalParameters: {
-      access_type: 'offline',
-      prompt: 'consent'
-    }
-  },
+// Lazy-loaded OAuth configurations cache
+let cachedOAuthConfigs: Record<string, OAuthServiceConfig> | null = null;
+
+/**
+ * Get all OAuth configurations (lazy-loaded)
+ * This function builds the configs on first call and caches the result
+ */
+const getOAuthConfigs = (): Record<string, OAuthServiceConfig> => {
+  if (cachedOAuthConfigs) {
+    return cachedOAuthConfigs;
+  }
+
+  cachedOAuthConfigs = {
+    'google-calendar': {
+      serviceName: 'google-calendar',
+      clientId: getGoogleClientId(),
+      clientSecret: getGoogleClientSecret(),
+      scopes: ['https://www.googleapis.com/auth/calendar.events'],
+      redirectUri: generateRedirectUri('google-calendar'),
+      authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+      tokenEndpoint: 'https://oauth2.googleapis.com/token',
+      revokeEndpoint: 'https://oauth2.googleapis.com/revoke',
+      additionalParameters: {
+        access_type: 'offline',
+        prompt: 'consent'
+      }
+    },
 
   'gmail': {
     serviceName: 'gmail',
@@ -456,21 +464,25 @@ export const OAUTH_CONFIGS: Record<string, OAuthServiceConfig> = {
     tokenEndpoint: 'healthkit://permissions'
   },
 
-  'health-connect': {
-    serviceName: 'health-connect',
-    clientId: 'health-connect-permissions', // Health Connect doesn't use OAuth
-    scopes: ['read'],
-    redirectUri: generateRedirectUri('health-connect'),
-    authEndpoint: 'health-connect://permissions',
-    tokenEndpoint: 'health-connect://permissions'
-  }
+    'health-connect': {
+      serviceName: 'health-connect',
+      clientId: 'health-connect-permissions', // Health Connect doesn't use OAuth
+      scopes: ['read'],
+      redirectUri: generateRedirectUri('health-connect'),
+      authEndpoint: 'health-connect://permissions',
+      tokenEndpoint: 'health-connect://permissions'
+    }
+  };
+
+  return cachedOAuthConfigs;
 };
 
 /**
  * Get OAuth configuration for a service
  */
 export const getOAuthConfig = (serviceName: string): OAuthServiceConfig => {
-  const config = OAUTH_CONFIGS[serviceName];
+  const configs = getOAuthConfigs();
+  const config = configs[serviceName];
   if (!config) {
     throw new Error(`OAuth config not found for service: ${serviceName}`);
   }
@@ -490,7 +502,7 @@ export const getRedirectUri = (serviceName: string): string => {
  */
 export const buildAuthUrl = (serviceName: string, integrationId: string): string => {
   const config = getOAuthConfig(serviceName);
-  
+
   const params = new URLSearchParams({
     client_id: config.clientId,
     redirect_uri: config.redirectUri,
@@ -501,6 +513,4 @@ export const buildAuthUrl = (serviceName: string, integrationId: string): string
   });
 
   return `${config.authEndpoint}?${params}`;
-};
-
-export default OAUTH_CONFIGS; 
+}; 

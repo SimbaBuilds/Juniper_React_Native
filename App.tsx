@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Linking, Platform } from 'react-native';
+import { Linking, Platform, NativeModules } from 'react-native';
 import { VoiceProvider, useVoice } from './src/voice/VoiceContext';
 import { WakeWordProvider } from './src/wakeword/WakeWordContext';
 import WakeWordService from './src/wakeword/WakeWordService';
@@ -10,7 +10,7 @@ import { GoogleAuthService } from './src/auth/GoogleAuthService';
 import { HomeScreen } from './src/HomeScreen';
 import { SettingsScreen } from './src/settings/SettingsScreen';
 import { IntegrationsScreen } from './src/integrations/IntegrationsScreen';
-
+import WellnessScreen from './src/WellnessScreen';
 import { RepoScreen } from './src/repo/RepoScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { Session } from '@supabase/supabase-js';
@@ -27,12 +27,14 @@ import { colors } from './src/shared/theme/colors';
 // Error boundaries removed - let React Native handle errors naturally
 import { Storage } from './src/utils/storage';
 import HealthSyncService from './src/integrations/data/HealthSyncService';
+import * as Updates from 'expo-updates';
 
 type RootStackParamList = {
   MainTabs: undefined;
   Home: undefined;
   Settings: undefined;
   Integrations: undefined;
+  Wellness: undefined;
   Memories: undefined;
   Login: undefined;
   SignUp: undefined;
@@ -45,6 +47,7 @@ type RootStackParamList = {
 type TabParamList = {
   Juniper: undefined;
   Integrations: undefined;
+  Wellness: undefined;
   Repo: undefined;
   Settings: undefined;
 };
@@ -181,6 +184,54 @@ export default function App() {
         });
       }
     };
+  }, []);
+
+  // Log EAS Updates configuration on app launch
+  useEffect(() => {
+    console.log('========== EAS Updates Configuration (JS) ==========');
+    console.log('Channel:', Updates.channel);
+    console.log('Runtime Version:', Updates.runtimeVersion);
+    console.log('Update ID:', Updates.updateId);
+    console.log('Is Embedded Launch:', Updates.isEmbeddedLaunch);
+    console.log('===================================================');
+
+    // Automatically check for updates on launch
+    const checkForUpdates = async () => {
+      try {
+        console.log('🔄 Checking for updates...');
+        const update = await Updates.checkForUpdateAsync();
+
+        if (update.isAvailable) {
+          console.log('✅ Update available! Fetching...');
+          await Updates.fetchUpdateAsync();
+          console.log('✅ Update downloaded. Reloading now...');
+          await Updates.reloadAsync();
+        } else {
+          console.log('✅ App is up to date');
+        }
+      } catch (error) {
+        console.error('❌ Error checking for updates:', error);
+      }
+    };
+
+    checkForUpdates();
+  }, []);
+
+  // Log native expo-updates status using native module
+  useEffect(() => {
+    const logNativeUpdatesStatus = async () => {
+      try {
+        console.log('📦 Calling native UpdatesLoggerModule...');
+        const result = await NativeModules.UpdatesLoggerModule?.logUpdatesStatus();
+        console.log('📦 Native updates status result:', result);
+      } catch (error) {
+        console.error('❌ Error calling UpdatesLoggerModule:', error);
+      }
+    };
+
+    // Call after a short delay to ensure React Native is fully initialized
+    const timer = setTimeout(logNativeUpdatesStatus, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   // OAuth callback handlers for each service type
@@ -780,6 +831,8 @@ function MainTabNavigator() {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Integrations') {
             iconName = focused ? 'link' : 'link-outline';
+          } else if (route.name === 'Wellness') {
+            iconName = focused ? 'fitness' : 'fitness-outline';
           } else if (route.name === 'Repo') {
             iconName = focused ? 'bookmark' : 'bookmark-outline';
           } else if (route.name === 'Settings') {
@@ -806,31 +859,39 @@ function MainTabNavigator() {
       })}
     >
 
-      <Tab.Screen 
-        name="Integrations" 
+      <Tab.Screen
+        name="Integrations"
         component={IntegrationsScreen}
         options={{
           title: 'Integrations',
           tabBarBadge: integrationInProgress ? '●' : undefined,
         }}
+        />
+        <Tab.Screen
+          name="Wellness"
+          component={WellnessScreen}
+          options={{
+            title: 'Wellness',
+          }}
       />
-      <Tab.Screen 
-        name="Juniper" 
+      <Tab.Screen
+        name="Juniper"
         component={HomeScreen}
         options={{
           title: 'Juniper',
         }}
+
       />
-      <Tab.Screen 
-        name="Repo" 
+      <Tab.Screen
+        name="Repo"
         component={RepoScreen}
         options={{
           title: 'Repo',
           tabBarBadge: expiringResourcesCount > 0 ? expiringResourcesCount : undefined,
         }}
       />
-      <Tab.Screen 
-        name="Settings" 
+      <Tab.Screen
+        name="Settings"
         component={SettingsScreen}
         options={{
           title: 'Settings',

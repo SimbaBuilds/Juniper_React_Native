@@ -1,13 +1,14 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { supabase } from '../supabase/supabase';
 
 // const supabase = createClient();
 
 // Log the backend URL being used
-const backendUrl = process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL || 'https://juniper-python-backend.onrender.com';
+const backendUrl = Constants.expoConfig?.extra?.PYTHON_BACKEND_URL || 'https://juniper-python-backend.onrender.com';
 console.log('🌐 API: Using backend URL:', backendUrl);
-console.log('🔍 Environment variable present:', !!process.env.EXPO_PUBLIC_PYTHON_BACKEND_URL);
+console.log('🔍 Environment variable present:', !!Constants.expoConfig?.extra?.PYTHON_BACKEND_URL);
 
 const api = axios.create({
   baseURL: backendUrl,

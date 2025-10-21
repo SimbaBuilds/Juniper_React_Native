@@ -108,7 +108,7 @@ export const conversationService = {
     if (!user.user) throw new Error('User not authenticated');
 
     const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 30);
 
     try {
       const { data, error } = await supabase
@@ -119,7 +119,7 @@ export const conversationService = {
           summary,
           created_at,
           updated_at,
-          metadata
+          messages(count)
         `)
         .eq('user_id', user.user.id)
         .gte('created_at', oneWeekAgo.toISOString())
@@ -133,7 +133,7 @@ export const conversationService = {
         summary: conv.summary,
         created_at: new Date(conv.created_at),
         updated_at: new Date(conv.updated_at),
-        messageCount: conv.metadata?.messageCount || 0
+        messageCount: (conv.messages as any)?.[0]?.count ?? 0
       })) || [];
     } catch (error) {
       console.error('❌ Error fetching recent conversations:', error);

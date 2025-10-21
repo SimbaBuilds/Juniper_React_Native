@@ -614,7 +614,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                   minimumValue={0}
                   maximumValue={1}
                   step={1e-5}
-                  description="The threshold level for wake word detection (0 = more sensitive, 1 = less sensitive).  Note: threshold must be set lower for the word to be detected when the app is closed.  Also note: the wake word engine takes a few moments to restart when the app is moved to the background."
+                  description="The threshold level for wake word detection (0 = more sensitive, 1 = less sensitive).  Note: threshold must be set lower for the word to be detected when the app is closed.  The wake word engine takes a few moments to restart when the app is moved to the background."
                   formatValue={(value) => `${Math.round(value * 100)}%`}
                 />
               </View>
@@ -631,7 +631,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               await handleVoiceSettingsUpdate({ deepgramEnabled });
               console.log('🎵 DEEPGRAM_TOGGLE: ✅ Deepgram toggle update completed');
             }}
-            description="Choose from a variety of voices; when disabled, the application falls back to on device text-to-speech. Note: Voice interaction with Deepgram is a bit slower than with on device text-to-speech."
+            description="Choose from a variety of voices. When disabled, the application falls back to on device text-to-speech. Note: voice interaction with Deepgram is a bit slower than device text-to-speech."
             hasSubSettings={true}
           >
             <VoiceSelectionDropdown

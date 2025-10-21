@@ -35,8 +35,6 @@ const EpicProviderPickerModal: React.FC<EpicProviderPickerModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const epicService = MultiIssuerEpicAuthService.getInstance();
-
   useEffect(() => {
     if (visible) {
       loadIssuers();
@@ -54,6 +52,7 @@ const EpicProviderPickerModal: React.FC<EpicProviderPickerModalProps> = ({
     try {
       setLoading(true);
       setError(null);
+      const epicService = MultiIssuerEpicAuthService.getInstance();
       const data = await epicService.getEpicIssuers();
       setIssuers(data);
       setFilteredIssuers(data);
