@@ -305,7 +305,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({
                 return (
                   <VictoryLine
                     key={metricKey}
-                    data={data}
+                    data={data.filter(d => d[metricKey] != null)}
                     x="date"
                     y={metricKey}
                     style={{

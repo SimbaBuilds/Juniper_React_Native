@@ -803,6 +803,20 @@ export type UserProfile = {
     light_sleep?: number;
     deep_sleep?: number;
     rem_sleep?: number;
+    // Lab Work & Biomarkers
+    triglycerides?: number;
+    triglycerides_to_hdl?: number;
+    hba1c?: number;
+    hscrp?: number;
+    apob?: number;
+    alt?: number;
+    ast?: number;
+    uric_acid?: number;
+    crp?: number;
+    ggt?: number;
+    vitamin_d?: number;
+    hdl?: number;
+    fasting_insulin?: number;
   };
 
   export const healthMetricsDailyFields = [
@@ -813,7 +827,9 @@ export type UserProfile = {
     'blood_pressure_systolic', 'blood_pressure_diastolic', 'oxygen_saturation', 'respiratory_rate',
     'time_in_daylight', 'vo2_max', 'menstruation_flow', 'hydration', 'nutrition_calories',
     'exercise_minutes', 'active_energy', 'distance', 'time_in_bed', 'time_asleep', 'awake_in_bed',
-    'light_sleep', 'deep_sleep', 'rem_sleep', 'created_at', 'updated_at'
+    'light_sleep', 'deep_sleep', 'rem_sleep', 'triglycerides', 'triglycerides_to_hdl', 'hba1c',
+    'hscrp', 'apob', 'alt', 'ast', 'uric_acid', 'crp', 'ggt', 'vitamin_d', 'hdl', 'fasting_insulin',
+    'created_at', 'updated_at'
   ] as const;
   export type HealthMetricsDailyField = (typeof healthMetricsDailyFields)[number];
 

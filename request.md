@@ -1,6 +1,17 @@
-OAuth is working in local environment but not in eas builds or prod builds.  It is likely from changes made to move to lazy loading so that eas build would work and the config could be loaded only after the app is initalized.  Please review changes in git commit "eas updates for ios fully functional" to see what changes were made that is causing this error of OAuth no longer working in prod, and create a debug and fix plan.
+I've added the below metrics to the health metrics daily.  If the metrics list for the trends chart and summary charts on the wellness screen does not come directly from the database.  Please add these metrics to the shared metrics list in the apprpriate category.
 
-Timeline:
-- Oauth working for production iOS app and npx expo run:ios builds
-- Lazy loading change was made
-- Oauth no longer working for eas builds or in the public Apple app, but still working for npx expo run:ios and npx expo run:ios --device --configuration Release
+Metrics:
+
+- [ ]  triglycerides
+- [ ]  triglycerides_to_hdl
+- [ ]  hba1c
+- [ ]  hscrp
+- [ ]  apob
+- [ ]  alt
+- [ ]  ast
+- [ ]  uric_acid
+- [ ]  crp
+- [ ]  ggt
+- [ ]  vitamin_d
+- [ ]  hdl
+- [ ]  fasting_insulin

@@ -38,6 +38,19 @@ export interface HealthMetric {
   hydration?: number | null
   nutrition_calories?: number | null
   menstruation_flow?: number | null
+  triglycerides?: number | null
+  triglycerides_to_hdl?: number | null
+  hba1c?: number | null
+  hscrp?: number | null
+  apob?: number | null
+  alt?: number | null
+  ast?: number | null
+  uric_acid?: number | null
+  crp?: number | null
+  ggt?: number | null
+  vitamin_d?: number | null
+  hdl?: number | null
+  fasting_insulin?: number | null
   created_at: string
   updated_at: string
   native_scores: any
@@ -298,6 +311,86 @@ export const AVAILABLE_METRICS: MetricDefinition[] = [
     label: 'Menstruation Flow',
     group: "Women's Health",
     color: { light: '#be185d', dark: '#ec4899' }
+  },
+
+  // Lab Work & Biomarkers
+  {
+    key: 'triglycerides',
+    label: 'Triglycerides',
+    group: 'Lab Work',
+    color: { light: '#b91c1c', dark: '#f87171' }
+  },
+  {
+    key: 'hdl',
+    label: 'HDL Cholesterol',
+    group: 'Lab Work',
+    color: { light: '#059669', dark: '#34d399' }
+  },
+  {
+    key: 'triglycerides_to_hdl',
+    label: 'Triglycerides/HDL Ratio',
+    group: 'Lab Work',
+    color: { light: '#dc2626', dark: '#ef4444' }
+  },
+  {
+    key: 'apob',
+    label: 'Apolipoprotein B',
+    group: 'Lab Work',
+    color: { light: '#991b1b', dark: '#dc2626' }
+  },
+  {
+    key: 'hba1c',
+    label: 'HbA1c',
+    group: 'Lab Work',
+    color: { light: '#c2410c', dark: '#fb923c' }
+  },
+  {
+    key: 'fasting_insulin',
+    label: 'Fasting Insulin',
+    group: 'Lab Work',
+    color: { light: '#ea580c', dark: '#f97316' }
+  },
+  {
+    key: 'crp',
+    label: 'C-Reactive Protein',
+    group: 'Lab Work',
+    color: { light: '#d97706', dark: '#fbbf24' }
+  },
+  {
+    key: 'hscrp',
+    label: 'High-Sensitivity CRP',
+    group: 'Lab Work',
+    color: { light: '#ca8a04', dark: '#facc15' }
+  },
+  {
+    key: 'alt',
+    label: 'ALT (Liver)',
+    group: 'Lab Work',
+    color: { light: '#65a30d', dark: '#a3e635' }
+  },
+  {
+    key: 'ast',
+    label: 'AST (Liver)',
+    group: 'Lab Work',
+    color: { light: '#4d7c0f', dark: '#84cc16' }
+  },
+  {
+    key: 'ggt',
+    label: 'GGT (Liver)',
+    group: 'Lab Work',
+    color: { light: '#166534', dark: '#22c55e' }
+  },
+  {
+    key: 'uric_acid',
+    label: 'Uric Acid',
+    group: 'Lab Work',
+    color: { light: '#0369a1', dark: '#38bdf8' }
+  },
+  {
+    key: 'vitamin_d',
+    label: 'Vitamin D',
+    group: 'Lab Work',
+    color: { light: '#ca8a04', dark: '#fde047' }
   }
 ]
 
@@ -312,6 +405,7 @@ export const METRIC_PRESETS: Record<string, string[]> = {
   blood: ['blood_glucose', 'blood_pressure_systolic', 'blood_pressure_diastolic'],
   fitness: ['vo2_max', 'time_in_daylight'],
   nutrition: ['hydration', 'nutrition_calories'],
+  labs: ['triglycerides', 'hdl', 'triglycerides_to_hdl', 'apob', 'hba1c', 'fasting_insulin', 'crp', 'hscrp', 'alt', 'ast', 'ggt', 'uric_acid', 'vitamin_d'],
   all: AVAILABLE_METRICS.map(m => m.key)
 }
 
@@ -354,7 +448,20 @@ export const getMetricUnit = (key: string): string => {
     vo2_max: 'ml/kg/min',
     time_in_daylight: 'hours',
     hydration: 'ml',
-    menstruation_flow: 'level'
+    menstruation_flow: 'level',
+    triglycerides: 'mg/dL',
+    hdl: 'mg/dL',
+    triglycerides_to_hdl: 'ratio',
+    apob: 'mg/dL',
+    hba1c: '%',
+    fasting_insulin: 'μIU/mL',
+    crp: 'mg/L',
+    hscrp: 'mg/L',
+    alt: 'U/L',
+    ast: 'U/L',
+    ggt: 'U/L',
+    uric_acid: 'mg/dL',
+    vitamin_d: 'ng/mL'
   }
 
   if (key.includes('score')) return '/100'
@@ -395,7 +502,20 @@ export const getMetricTooltip = (key: string): string => {
     time_in_daylight: 'Average time spent in daylight per day.',
     hydration: 'Average daily water intake.',
     nutrition_calories: 'Average calories consumed per day.',
-    menstruation_flow: 'Menstruation flow intensity level.'
+    menstruation_flow: 'Menstruation flow intensity level.',
+    triglycerides: 'Blood triglycerides level - measures fat in your blood.',
+    hdl: 'HDL (good) cholesterol - higher is generally better.',
+    triglycerides_to_hdl: 'Triglycerides to HDL ratio - important cardiac risk marker.',
+    apob: 'Apolipoprotein B - key marker of cardiovascular risk.',
+    hba1c: 'Hemoglobin A1c - measures average blood sugar over 3 months.',
+    fasting_insulin: 'Insulin levels after fasting - marker of insulin resistance.',
+    crp: 'C-Reactive Protein - marker of inflammation in the body.',
+    hscrp: 'High-sensitivity CRP - more precise inflammation marker.',
+    alt: 'Alanine aminotransferase - liver enzyme, marker of liver health.',
+    ast: 'Aspartate aminotransferase - liver enzyme, marker of liver health.',
+    ggt: 'Gamma-glutamyl transferase - liver enzyme, marker of liver health.',
+    uric_acid: 'Uric acid levels - related to gout and kidney function.',
+    vitamin_d: 'Vitamin D levels - important for bone health and immunity.'
   }
 
   return tooltips[key] || 'Health metric average for selected period.'
