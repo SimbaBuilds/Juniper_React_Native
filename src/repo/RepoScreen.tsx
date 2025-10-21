@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, Modal, TextInput, KeyboardAvoidingView, Platform, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TagSelector } from './components/TagSelector';
 import { NUM_DISPLAYED_RESOURCES, useRepoScreen } from './hooks/useRepoScreen';
@@ -750,6 +750,19 @@ export const RepoScreen: React.FC = () => {
           </SafeAreaView>
         </Modal>
 
+        {/* Upload Medical Records Footer */}
+        <View style={styles.uploadFooter}>
+          <Text style={styles.uploadText}>
+            Upload medical records in the{' '}
+            <Text
+              style={styles.uploadLink}
+              onPress={() => Linking.openURL('https://juniperassistant.com/repository')}
+            >
+              web app
+            </Text>
+          </Text>
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -1278,5 +1291,21 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: '#333333',
+  },
+  uploadFooter: {
+    padding: 20,
+    paddingTop: 8,
+    paddingBottom: 32,
+    alignItems: 'center',
+  },
+  uploadText: {
+    fontSize: 13,
+    color: colors.text.secondary,
+    textAlign: 'center',
+  },
+  uploadLink: {
+    color: '#007AFF',
+    textDecorationLine: 'underline',
+    fontWeight: '600',
   },
 }); 
