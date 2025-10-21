@@ -291,17 +291,23 @@ export const IntegrationsScreen: React.FC = () => {
   const filterServicesByPlatform = (services: ServiceWithStatus[]): ServiceWithStatus[] => {
     return services.filter(service => {
       const serviceName = service.service_name.toLowerCase();
-      
+
       // iOS-only services
       if (serviceName === 'apple health' || serviceName === 'apple healthkit') {
         return Platform.OS === 'ios';
       }
-      
+
       // Android-only services
+      // Temporarily commented out Google Health Connect
+      // if (serviceName === 'google health connect') {
+      //   return Platform.OS === 'android';
+      // }
+
+      // Exclude Google Health Connect from UI
       if (serviceName === 'google health connect') {
-        return Platform.OS === 'android';
+        return false;
       }
-      
+
       // All other services are cross-platform
       return true;
     });
