@@ -400,7 +400,7 @@ export const METRIC_PRESETS: Record<string, string[]> = {
   activity: ['activity_score', 'total_steps', 'calories_burned', 'exercise_minutes', 'active_energy', 'distance'],
   recovery: ['sleep_score', 'readiness_score', 'recovery_score'],
   wellness: ['stress_level', 'resilience_score'],
-  sleep: ['time_in_bed', 'time_asleep', 'light_sleep', 'deep_sleep', 'rem_sleep'],
+  sleep: ['sleep_score', 'time_in_bed', 'time_asleep', 'light_sleep', 'deep_sleep', 'rem_sleep'],
   body: ['weight', 'body_fat_percentage', 'lean_body_mass', 'basal_metabolic_rate'],
   fitness: ['vo2_max', 'time_in_daylight'],
   nutrition: ['hydration', 'nutrition_calories'],

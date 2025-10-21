@@ -111,8 +111,22 @@ export const TrendChart: React.FC<TrendChartProps> = ({
 
   // Prepare chart data with normalization if needed
   const prepareData = () => {
+    console.log('📊 TrendChart prepareData:', {
+      chartDataLength: chartData.length,
+      selectedMetrics: chart.selectedMetrics,
+      timeRange: chart.timeRange,
+      isNormalized: chart.isNormalized
+    })
+
     if (chartData.length === 0 || chart.selectedMetrics.length === 0) {
+      console.log('📊 No data or no metrics selected')
       return { data: [], ranges: {} }
+    }
+
+    // Log sample of dates to check chronological order
+    if (chartData.length > 0) {
+      const sampleDates = chartData.slice(0, 5).map(d => d.date)
+      console.log('📊 Sample dates (first 5):', sampleDates)
     }
 
     if (chart.isNormalized) {
@@ -302,10 +316,17 @@ export const TrendChart: React.FC<TrendChartProps> = ({
                 const metric = AVAILABLE_METRICS.find(m => m.key === metricKey)
                 if (!metric) return null
 
+                const filteredData = data.filter(d => d[metricKey] != null)
+                console.log(`📊 Rendering ${metricKey}:`, {
+                  totalDataPoints: data.length,
+                  nonNullDataPoints: filteredData.length,
+                  group: metric.group
+                })
+
                 return (
                   <VictoryLine
                     key={metricKey}
-                    data={data.filter(d => d[metricKey] != null)}
+                    data={filteredData}
                     x="date"
                     y={metricKey}
                     style={{

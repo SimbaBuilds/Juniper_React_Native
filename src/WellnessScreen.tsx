@@ -145,6 +145,13 @@ export default function WellnessScreen() {
         return []
       }
 
+      console.log('📊 Fetched health data:', {
+        recordCount: data?.length || 0,
+        timeRange,
+        firstDate: data?.[0]?.date,
+        lastDate: data?.[data.length - 1]?.date
+      })
+
       return data || []
     } catch (error) {
       console.error('Error in fetchHealthDataForRange:', error)

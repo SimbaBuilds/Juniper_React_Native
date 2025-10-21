@@ -95,9 +95,6 @@ export const calculateSummaryStats = (data: HealthMetric[]) => {
     deep_sleep: calculateAverage(data, 'deep_sleep'),
     rem_sleep: calculateAverage(data, 'rem_sleep'),
 
-    // Blood Metrics
-    blood_glucose: calculateAverage(data, 'blood_glucose'),
-
     // Fitness & Performance
     vo2_max: calculateAverage(data, 'vo2_max'),
     time_in_daylight: calculateAverage(data, 'time_in_daylight'),
@@ -107,14 +104,31 @@ export const calculateSummaryStats = (data: HealthMetric[]) => {
     nutrition_calories: calculateAverage(data, 'nutrition_calories'),
 
     // Women's Health
-    menstruation_flow: calculateAverage(data, 'menstruation_flow')
+    menstruation_flow: calculateAverage(data, 'menstruation_flow'),
+
+    // Lab Work & Biomarkers
+    blood_glucose: calculateAverage(data, 'blood_glucose'),
+    triglycerides: calculateAverage(data, 'triglycerides'),
+    hdl: calculateAverage(data, 'hdl'),
+    triglycerides_to_hdl: calculateAverage(data, 'triglycerides_to_hdl'),
+    apob: calculateAverage(data, 'apob'),
+    hba1c: calculateAverage(data, 'hba1c'),
+    fasting_insulin: calculateAverage(data, 'fasting_insulin'),
+    crp: calculateAverage(data, 'crp'),
+    hscrp: calculateAverage(data, 'hscrp'),
+    alt: calculateAverage(data, 'alt'),
+    ast: calculateAverage(data, 'ast'),
+    ggt: calculateAverage(data, 'ggt'),
+    uric_acid: calculateAverage(data, 'uric_acid'),
+    vitamin_d: calculateAverage(data, 'vitamin_d')
   }
 }
 
 // Prepare chart data from health metrics
 export const prepareChartData = (healthData: HealthMetric[]) => {
+  console.log('📊 Preparing chart data for', healthData.length, 'records')
   return healthData.map(d => ({
-    date: new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    date: new Date(d.date + 'T12:00:00'),
     // Recovery & Sleep scores
     sleep_score: (d.sleep_score && d.sleep_score > 0) ? d.sleep_score : null,
     readiness_score: (d.readiness_score && d.readiness_score > 0) ? d.readiness_score : null,
@@ -166,7 +180,22 @@ export const prepareChartData = (healthData: HealthMetric[]) => {
     nutrition_calories: (d.nutrition_calories && d.nutrition_calories > 0) ? d.nutrition_calories : null,
 
     // Women's health
-    menstruation_flow: (d.menstruation_flow && d.menstruation_flow > 0) ? d.menstruation_flow : null
+    menstruation_flow: (d.menstruation_flow && d.menstruation_flow > 0) ? d.menstruation_flow : null,
+
+    // Lab Work & Biomarkers
+    triglycerides: (d.triglycerides && d.triglycerides > 0) ? d.triglycerides : null,
+    hdl: (d.hdl && d.hdl > 0) ? d.hdl : null,
+    triglycerides_to_hdl: (d.triglycerides_to_hdl && d.triglycerides_to_hdl > 0) ? d.triglycerides_to_hdl : null,
+    apob: (d.apob && d.apob > 0) ? d.apob : null,
+    hba1c: (d.hba1c && d.hba1c > 0) ? d.hba1c : null,
+    fasting_insulin: (d.fasting_insulin && d.fasting_insulin > 0) ? d.fasting_insulin : null,
+    crp: (d.crp && d.crp > 0) ? d.crp : null,
+    hscrp: (d.hscrp && d.hscrp > 0) ? d.hscrp : null,
+    alt: (d.alt && d.alt > 0) ? d.alt : null,
+    ast: (d.ast && d.ast > 0) ? d.ast : null,
+    ggt: (d.ggt && d.ggt > 0) ? d.ggt : null,
+    uric_acid: (d.uric_acid && d.uric_acid > 0) ? d.uric_acid : null,
+    vitamin_d: (d.vitamin_d && d.vitamin_d > 0) ? d.vitamin_d : null
   }))
 }
 
