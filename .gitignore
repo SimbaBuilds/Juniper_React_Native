@@ -61,3 +61,5 @@ android/.gradle/buildOutputCleanup/buildOutputCleanup.lock
 android/.gradle/buildOutputCleanup/cache.properties
 android/.gradle/vcs-1/gc.properties
 CLAUDE.md
+
+/logs
